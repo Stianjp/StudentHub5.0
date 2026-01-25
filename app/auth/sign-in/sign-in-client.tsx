@@ -31,10 +31,20 @@ export function SignInClient() {
     setStatus("loading");
     setError(null);
 
+    const formData = new FormData(event.currentTarget);
+    const emailValue = String(formData.get("email") ?? "").trim();
+    const roleValue = String(formData.get("role") ?? role);
+
+    if (!emailValue) {
+      setStatus("error");
+      setError("E-post er påkrevd.");
+      return;
+    }
+
     const response = await fetch("/api/auth/magic-link", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, role, next }),
+      body: JSON.stringify({ email: emailValue, role: roleValue, next }),
     });
 
     const payload = await response.json().catch(() => ({}));
@@ -64,7 +74,7 @@ export function SignInClient() {
         <form className="flex flex-col gap-4" onSubmit={onSubmit}>
           <label className="flex flex-col gap-2 text-sm font-semibold text-primary">
             Rolle
-            <Select value={role} onChange={(e) => setRole(e.target.value as Role)}>
+            <Select name="role" value={role} onChange={(e) => setRole(e.target.value as Role)}>
               <option value="company">Bedrift</option>
               <option value="student">Student</option>
               <option value="admin">Admin</option>
@@ -73,6 +83,7 @@ export function SignInClient() {
           <label className="flex flex-col gap-2 text-sm font-semibold text-primary">
             E-post
             <Input
+              name="email"
               required
               type="email"
               placeholder="navn@bedrift.no"
