@@ -10,28 +10,47 @@ export function CallbackClient() {
   const params = useSearchParams();
   const code = params.get("code");
   const nextPath = params.get("next") ?? "/company";
-  const [message, setMessage] = useState(() =>
-    code ? "Fullfører innlogging…" : "Mangler kode i magic link. Prøv igjen.",
-  );
+  const [message, setMessage] = useState(() => "Fullfører innlogging…");
 
   useEffect(() => {
-    if (!code) {
-      return;
-    }
-
     const supabase = createClient();
-    supabase.auth
-      .exchangeCodeForSession(code)
-      .then(({ error }) => {
+
+    async function completeAuth() {
+      // Support both PKCE (code) and implicit hash tokens.
+      const hash = typeof window !== "undefined" ? window.location.hash : "";
+      const hashParams = new URLSearchParams(hash.replace(/^#/, ""));
+      const accessToken = hashParams.get("access_token");
+      const refreshToken = hashParams.get("refresh_token");
+
+      if (accessToken && refreshToken) {
+        const { error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
         if (error) {
           setMessage(error.message);
           return;
         }
         router.replace(nextPath);
-      })
-      .catch((error) => {
-        setMessage(error instanceof Error ? error.message : "Ukjent feil under innlogging.");
-      });
+        return;
+      }
+
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (error) {
+          setMessage(error.message);
+          return;
+        }
+        router.replace(nextPath);
+        return;
+      }
+
+      setMessage("Mangler kode i magic link. Prøv igjen.");
+    }
+
+    void completeAuth().catch((error) => {
+      setMessage(error instanceof Error ? error.message : "Ukjent feil under innlogging.");
+    });
   }, [code, nextPath, router]);
 
   return (
