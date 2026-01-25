@@ -1,0 +1,109 @@
+import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { SectionHeader } from "@/components/ui/section-header";
+import { cn } from "@/lib/utils";
+import { requireRole } from "@/lib/auth";
+import { getCompanyRegistrations, getOrCreateCompanyForUser } from "@/lib/company";
+import { listActiveEvents } from "@/lib/events";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
+
+function packageVariant(pkg: string) {
+  if (pkg === "platinum") return "success" as const;
+  if (pkg === "pro") return "info" as const;
+  return "default" as const;
+}
+
+export default async function CompanyEventsPage() {
+  const profile = await requireRole("company");
+  const supabase = createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("User not found");
+
+  const company = await getOrCreateCompanyForUser(profile.id, user.email);
+  const [registrations, events] = await Promise.all([
+    getCompanyRegistrations(company.id),
+    listActiveEvents(),
+  ]);
+
+  const registeredEventIds = new Set(registrations.map((reg) => reg.event_id));
+  const openEvents = events.filter((event) => !registeredEventIds.has(event.id));
+
+  return (
+    <div className="flex flex-col gap-8">
+      <SectionHeader
+        eyebrow="Events"
+        title="Dine event-deltakelser"
+        description="Pakke og premium-tilgang styres av OSH-admin per event."
+        actions={
+          <Link
+            className={cn(
+              "inline-flex items-center justify-center rounded-xl bg-secondary px-4 py-2 text-sm font-semibold text-primary transition hover:bg-secondary/90",
+            )}
+            href="/company"
+          >
+            Meld på nytt event
+          </Link>
+        }
+      />
+
+      <Card className="flex flex-col gap-4">
+        <h3 className="text-lg font-bold text-primary">Registrerte events</h3>
+        {registrations.length === 0 ? (
+          <p className="text-sm text-ink/70">Ingen påmeldinger enda.</p>
+        ) : (
+          <div className="grid gap-3">
+            {registrations.map((registration) => (
+              <div key={registration.id} className="rounded-xl border border-primary/10 bg-primary/5 p-4">
+                <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <p className="text-base font-semibold text-primary">{registration.event.name}</p>
+                    <p className="text-xs text-ink/70">
+                      {new Date(registration.event.starts_at).toLocaleString("nb-NO")} – {" "}
+                      {new Date(registration.event.ends_at).toLocaleString("nb-NO")}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={packageVariant(registration.package)}>{registration.package}</Badge>
+                    {registration.stand_type ? (
+                      <Badge variant="default">{registration.stand_type}</Badge>
+                    ) : null}
+                  </div>
+                </div>
+                <div className="mt-3 grid gap-2 text-xs text-ink/80 md:grid-cols-2">
+                  <div>
+                    <p className="font-semibold text-primary">Mål</p>
+                    <p>{registration.goals.join(", ") || "Ikke satt"}</p>
+                  </div>
+                  <div>
+                    <p className="font-semibold text-primary">KPI-er</p>
+                    <p>{registration.kpis.join(", ") || "Ikke satt"}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      <Card className="flex flex-col gap-4">
+        <h3 className="text-lg font-bold text-primary">Åpne events</h3>
+        {openEvents.length === 0 ? (
+          <p className="text-sm text-ink/70">Du er allerede registrert på alle aktive events.</p>
+        ) : (
+          <ul className="grid gap-2 text-sm text-ink/80">
+            {openEvents.map((event) => (
+              <li key={event.id} className="rounded-xl border border-primary/10 bg-surface p-4">
+                <p className="font-semibold text-primary">{event.name}</p>
+                <p className="text-xs">{event.location ?? "Lokasjon kommer"}</p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+    </div>
+  );
+}
