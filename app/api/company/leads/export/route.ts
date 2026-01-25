@@ -4,7 +4,7 @@ import { getCompanyLeads, getOrCreateCompanyForUser } from "@/lib/company";
 import { toCsv } from "@/lib/csv";
 
 export async function GET() {
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const {
     data: { user },
     error: userError,

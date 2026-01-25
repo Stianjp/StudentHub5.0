@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 
 export default async function CompanyLayout({ children }: { children: React.ReactNode }) {
   const profile = await requireRole("company");
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

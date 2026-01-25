@@ -7,7 +7,7 @@ import { getOrCreateStudentForUser, listStudentConsents } from "@/lib/student";
 
 export default async function StudentConsentsPage() {
   const profile = await requireRole("student");
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

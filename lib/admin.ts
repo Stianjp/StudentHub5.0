@@ -13,7 +13,7 @@ type EventWithStats = Event & {
 };
 
 export async function listEventsWithStats(): Promise<EventWithStats[]> {
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const { data: events, error: eventsError } = await supabase
     .from("events")
     .select("*")
@@ -53,14 +53,14 @@ export async function listEventsWithStats(): Promise<EventWithStats[]> {
 }
 
 export async function listCompanies() {
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase.from("companies").select("*").order("name");
   if (error) throw error;
   return (data ?? []) as Company[];
 }
 
 export async function listEventCompanies(eventId: string) {
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
     .from("event_companies")
     .select("*, company:companies(*)")
@@ -81,7 +81,7 @@ export async function upsertEvent(input: {
   ends_at: string;
   is_active: boolean;
 }) {
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const now = new Date().toISOString();
 
   const payload = {
@@ -117,7 +117,7 @@ export async function inviteCompanyToEvent(input: {
   companyId: string;
   email: string;
 }) {
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const now = new Date().toISOString();
 
   const { data: eventCompany, error: upsertError } = await supabase
@@ -166,7 +166,7 @@ export async function setPackageForCompany(input: {
   accessFrom?: string | null;
   accessUntil?: string | null;
 }) {
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const now = new Date().toISOString();
 
   const { data, error } = await supabase

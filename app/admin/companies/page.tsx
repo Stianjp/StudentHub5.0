@@ -28,7 +28,7 @@ function toLocalInput(value: string | null) {
 
 export default async function AdminCompaniesPage({ searchParams }: CompaniesPageProps) {
   const params = await searchParams;
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
 
   const [{ data: events, error: eventsError }, companies] = await Promise.all([
     supabase.from("events").select("*").order("starts_at", { ascending: false }),

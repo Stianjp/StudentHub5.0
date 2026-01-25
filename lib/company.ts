@@ -25,7 +25,7 @@ function deriveCompanyName(email: string | null | undefined) {
 }
 
 export async function getOrCreateCompanyForUser(userId: string, email?: string | null) {
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
 
   const { data: existing, error: readError } = await supabase
     .from("companies")
@@ -53,7 +53,7 @@ export async function getOrCreateCompanyForUser(userId: string, email?: string |
 }
 
 export async function getCompanyRegistrations(companyId: string) {
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
     .from("event_companies")
     .select("*, event:events(*)")
@@ -65,7 +65,7 @@ export async function getCompanyRegistrations(companyId: string) {
 }
 
 export async function getCompanyLeads(companyId: string) {
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
 
   const { data: consents, error: consentError } = await supabase
     .from("consents")
@@ -98,7 +98,7 @@ export async function getCompanyLeads(companyId: string) {
 
 export async function computeAndStoreMatches(company: Company, eventId?: string | null) {
   if (!eventId) return [];
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
 
   const { data: students, error: studentsError } = await supabase
     .from("student_public_profiles")
@@ -136,7 +136,7 @@ export async function computeAndStoreMatches(company: Company, eventId?: string 
 
 export async function getTopMatches(company: Company, eventId?: string | null) {
   if (!eventId) return [];
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
 
   const { data: existing, error } = await supabase
     .from("match_scores")
@@ -157,7 +157,7 @@ export async function getTopMatches(company: Company, eventId?: string | null) {
 }
 
 export async function hasPlatinumAccess(userId: string, eventId: string, companyId: string) {
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase.rpc("has_platinum_access", {
     uid: userId,
     event_uuid: eventId,
@@ -168,7 +168,7 @@ export async function hasPlatinumAccess(userId: string, eventId: string, company
 }
 
 export async function getRoiMetrics(companyId: string, eventId: string) {
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
 
   const [{ data: visits, error: visitsError }, { data: consents, error: consentsError }] =
     await Promise.all([

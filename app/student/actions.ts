@@ -8,7 +8,7 @@ import { getOrCreateStudentForUser } from "@/lib/student";
 
 export async function saveStudentProfile(formData: FormData) {
   const profile = await requireRole("student");
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

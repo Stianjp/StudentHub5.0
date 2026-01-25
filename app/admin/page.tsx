@@ -7,7 +7,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 
 export default async function AdminOverviewPage() {
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
 
   const [events, companiesCount, studentsCount, visitsCount, leadsCount] = await Promise.all([
     listEventsWithStats(),

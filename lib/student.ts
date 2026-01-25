@@ -30,7 +30,7 @@ function deriveStudentName(email: string | null | undefined) {
 }
 
 export async function getOrCreateStudentForUser(userId: string, email?: string | null) {
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
 
   const { data: existing, error: readError } = await supabase
     .from("students")
@@ -59,7 +59,7 @@ export async function getOrCreateStudentForUser(userId: string, email?: string |
 }
 
 export async function listStudentConsents(studentId: string) {
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
     .from("consents")
     .select("*, company:companies(id, name), event:events(id, name)")
@@ -71,7 +71,7 @@ export async function listStudentConsents(studentId: string) {
 }
 
 export async function submitConsent(input: ConsentInput) {
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const now = new Date().toISOString();
 
   const { data: consentRow, error: consentError } = await supabase
@@ -115,7 +115,7 @@ export async function recordStandVisit(input: {
   source: "qr" | "kiosk";
   metadata?: Record<string, string | number | boolean | null>;
 }) {
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const { error } = await supabase.from("stand_visits").insert({
     event_id: input.eventId,
     company_id: input.companyId ?? null,
@@ -131,7 +131,7 @@ export async function submitKioskSurvey(input: {
   eventId: string;
   answers: Record<string, string | string[]>;
 }) {
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const { error } = await supabase.from("survey_responses").insert({
     event_id: input.eventId,
     answers: input.answers,

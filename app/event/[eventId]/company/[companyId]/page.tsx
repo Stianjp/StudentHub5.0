@@ -14,7 +14,7 @@ type StandPageProps = {
 
 export default async function StandPage({ params }: StandPageProps) {
   const { eventId, companyId } = await params;
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
 
   const [{ data: event, error: eventError }, { data: company, error: companyError }] =
     await Promise.all([

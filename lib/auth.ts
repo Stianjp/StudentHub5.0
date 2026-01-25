@@ -5,7 +5,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 type Profile = TableRow<"profiles">;
 
 export async function getUser() {
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase.auth.getUser();
 
   if (error) {
@@ -21,7 +21,7 @@ export async function getProfile() {
     return null;
   }
 
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
     .from("profiles")
     .select("*")
@@ -41,7 +41,7 @@ export async function ensureProfile(role: Profile["role"]) {
     redirect(`/auth/sign-in?role=${role}`);
   }
 
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const now = new Date().toISOString();
 
   const { data: existing, error: readError } = await supabase

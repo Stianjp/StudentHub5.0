@@ -71,7 +71,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "event_id og company_id er påkrevd" }, { status: 400 });
   }
 
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 
 export default async function CompanyLeadsPage() {
   const profile = await requireRole("company");
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

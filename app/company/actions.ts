@@ -14,7 +14,7 @@ import { sendTransactionalEmail } from "@/lib/resend";
 
 async function getCompanyContext() {
   const profile = await requireRole("company");
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

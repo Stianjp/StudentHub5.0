@@ -11,7 +11,7 @@ import { LikedCompanies } from "@/components/student/liked-companies";
 
 export default async function StudentProfilePage() {
   const profile = await requireRole("student");
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

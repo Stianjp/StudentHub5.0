@@ -21,7 +21,7 @@ type RoiPageProps = {
 export default async function CompanyRoiPage({ searchParams }: RoiPageProps) {
   const params = await searchParams;
   const profile = await requireRole("company");
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

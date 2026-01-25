@@ -5,7 +5,7 @@ type Event = TableRow<"events">;
 type Company = TableRow<"companies">;
 
 export async function listActiveEvents() {
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
     .from("events")
     .select("*")
@@ -17,14 +17,14 @@ export async function listActiveEvents() {
 }
 
 export async function getEvent(eventId: string) {
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase.from("events").select("*").eq("id", eventId).single();
   if (error) throw error;
   return data as Event;
 }
 
 export async function getEventCompanies(eventId: string) {
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
     .from("event_companies")
     .select("*, company:companies(*)")

@@ -16,7 +16,7 @@ function packageVariant(pkg: string) {
 
 export default async function CompanyEventsPage() {
   const profile = await requireRole("company");
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

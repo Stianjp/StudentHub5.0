@@ -22,7 +22,7 @@ import {
 
 export default async function CompanyDashboardPage() {
   const profile = await requireRole("company");
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
