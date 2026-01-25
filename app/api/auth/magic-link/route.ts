@@ -14,7 +14,8 @@ export async function POST(request: Request) {
   const parsed = magicLinkSchema.safeParse(body);
 
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    const message = parsed.error.issues.map((issue) => issue.message).join(", ");
+    return NextResponse.json({ error: message || "Ugyldig input" }, { status: 400 });
   }
 
   const { email, role, next } = parsed.data;

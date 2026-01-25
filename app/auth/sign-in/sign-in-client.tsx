@@ -40,7 +40,13 @@ export function SignInClient() {
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
       setStatus("error");
-      setError(payload?.error ?? "Kunne ikke sende magic link");
+      const errorMessage =
+        typeof payload?.error === "string"
+          ? payload.error
+          : payload?.error
+            ? "Kunne ikke sende magic link (ugyldig input)"
+            : "Kunne ikke sende magic link";
+      setError(errorMessage);
       return;
     }
 
