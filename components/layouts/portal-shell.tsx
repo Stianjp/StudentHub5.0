@@ -28,7 +28,7 @@ export function PortalShell({
             <div className="flex items-center gap-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-surface/10 ring-1 ring-white/15">
                 <Image
-                  src="/brand/logo.svg"
+                  src="/brand/Logo_OSH.svg"
                   alt="Oslo Student Hub"
                   width={36}
                   height={36}
