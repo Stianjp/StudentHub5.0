@@ -45,5 +45,9 @@ export const companyEventSignupSchema = z.object({
 export const magicLinkSchema = z.object({
   email: z.string().email("Ugyldig e-post"),
   role: z.enum(["student", "company", "admin"]),
-  next: z.string().optional(),
+  next: z
+    .string()
+    .nullable()
+    .optional()
+    .transform((value) => (value === null ? undefined : value)),
 });
