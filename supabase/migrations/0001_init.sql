@@ -19,6 +19,15 @@ begin
 end;
 $$;
 
+-- Tables
+create table if not exists public.profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  role public.app_role not null,
+  full_name text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 create or replace function public.is_admin(uid uuid)
 returns boolean
 language sql
@@ -32,15 +41,6 @@ as $$
     where p.id = uid and p.role = 'admin'
   );
 $$;
-
--- Tables
-create table if not exists public.profiles (
-  id uuid primary key references auth.users(id) on delete cascade,
-  role public.app_role not null,
-  full_name text,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
 
 create table if not exists public.companies (
   id uuid primary key default gen_random_uuid(),
