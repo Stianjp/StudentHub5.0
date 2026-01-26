@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import {
@@ -59,6 +60,10 @@ export async function saveCompanyInfo(formData: FormData) {
 
   if (error) throw error;
   revalidatePath("/company");
+  const nextPath = formData.get("next");
+  if (typeof nextPath === "string" && nextPath.startsWith("/")) {
+    redirect(nextPath);
+  }
 }
 
 export async function saveCompanyRecruitment(formData: FormData) {
@@ -91,6 +96,10 @@ export async function saveCompanyRecruitment(formData: FormData) {
 
   if (error) throw error;
   revalidatePath("/company");
+  const nextPath = formData.get("next");
+  if (typeof nextPath === "string" && nextPath.startsWith("/")) {
+    redirect(nextPath);
+  }
 }
 
 export async function saveCompanyBranding(formData: FormData) {
@@ -119,6 +128,10 @@ export async function saveCompanyBranding(formData: FormData) {
 
   if (error) throw error;
   revalidatePath("/company");
+  const nextPath = formData.get("next");
+  if (typeof nextPath === "string" && nextPath.startsWith("/")) {
+    redirect(nextPath);
+  }
 }
 
 export async function signupForEvent(formData: FormData) {

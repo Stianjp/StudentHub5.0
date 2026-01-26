@@ -2,8 +2,18 @@
 
 import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth";
-import { inviteCompanySchema, eventSchema, setPackageSchema } from "@/lib/validation/admin";
-import { inviteCompanyToEvent, setPackageForCompany, upsertEvent } from "@/lib/admin";
+import {
+  inviteCompanySchema,
+  eventSchema,
+  registerCompanySchema,
+  setPackageSchema,
+} from "@/lib/validation/admin";
+import {
+  inviteCompanyToEvent,
+  registerCompanyForEvent,
+  setPackageForCompany,
+  upsertEvent,
+} from "@/lib/admin";
 
 export async function saveEvent(formData: FormData) {
   await requireRole("admin");
@@ -84,4 +94,26 @@ export async function setPackage(formData: FormData) {
 
   revalidatePath("/admin/companies");
   revalidatePath("/company/roi");
+}
+
+export async function registerCompany(formData: FormData) {
+  await requireRole("admin");
+  const parsed = registerCompanySchema.safeParse({
+    eventId: formData.get("eventId"),
+    companyId: formData.get("companyId"),
+    standType: formData.get("standType"),
+  });
+
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues.map((issue) => issue.message).join(", "));
+  }
+
+  await registerCompanyForEvent({
+    eventId: parsed.data.eventId,
+    companyId: parsed.data.companyId,
+    standType: parsed.data.standType || "Standard",
+  });
+
+  revalidatePath("/admin/companies");
+  revalidatePath("/company/events");
 }

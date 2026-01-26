@@ -10,8 +10,17 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 function packageVariant(pkg: string) {
   if (pkg === "platinum") return "success" as const;
-  if (pkg === "pro") return "info" as const;
+  if (pkg === "gold") return "info" as const;
+  if (pkg === "silver") return "warning" as const;
   return "default" as const;
+}
+
+function packageLabel(pkg: string) {
+  if (pkg === "standard") return "Standard";
+  if (pkg === "silver") return "Sølv";
+  if (pkg === "gold") return "Gull";
+  if (pkg === "platinum") return "Platinum";
+  return pkg;
 }
 
 export default async function CompanyEventsPage() {
@@ -67,7 +76,9 @@ export default async function CompanyEventsPage() {
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge variant={packageVariant(registration.package)}>{registration.package}</Badge>
+                    <Badge variant={packageVariant(registration.package)}>
+                      {packageLabel(registration.package)}
+                    </Badge>
                     {registration.stand_type ? (
                       <Badge variant="default">{registration.stand_type}</Badge>
                     ) : null}

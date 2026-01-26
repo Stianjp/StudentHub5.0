@@ -43,7 +43,13 @@ export default async function EventPage({ params }: EventPageProps) {
               <div className="flex items-center justify-between">
                 <p className="text-xs font-semibold uppercase tracking-wide text-primary/60">Stand</p>
                 <Badge variant={registration.package === "platinum" ? "success" : "default"}>
-                  {registration.package}
+                  {registration.package === "standard"
+                    ? "Standard"
+                    : registration.package === "silver"
+                      ? "Sølv"
+                      : registration.package === "gold"
+                        ? "Gull"
+                        : "Platinum"}
                 </Badge>
               </div>
               <h3 className="text-xl font-bold text-primary">{registration.company.name}</h3>

@@ -162,7 +162,7 @@ export async function inviteCompanyToEvent(input: {
 export async function setPackageForCompany(input: {
   eventId: string;
   companyId: string;
-  package: "basic" | "pro" | "platinum";
+  package: "standard" | "silver" | "gold" | "platinum";
   accessFrom?: string | null;
   accessUntil?: string | null;
 }) {
@@ -178,6 +178,33 @@ export async function setPackageForCompany(input: {
         package: input.package,
         access_from: input.accessFrom || null,
         access_until: input.accessUntil || null,
+        updated_at: now,
+      },
+      { onConflict: "event_id,company_id" },
+    )
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function registerCompanyForEvent(input: {
+  eventId: string;
+  companyId: string;
+  standType?: string | null;
+}) {
+  const supabase = await createServerSupabaseClient();
+  const now = new Date().toISOString();
+
+  const { data, error } = await supabase
+    .from("event_companies")
+    .upsert(
+      {
+        event_id: input.eventId,
+        company_id: input.companyId,
+        stand_type: input.standType ?? "Standard",
+        registered_at: now,
         updated_at: now,
       },
       { onConflict: "event_id,company_id" },

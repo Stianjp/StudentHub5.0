@@ -31,6 +31,7 @@ export default async function CompanyOnboardingRecruitmentPage() {
 
       <Card className="flex flex-col gap-4">
         <form action={saveCompanyRecruitment} className="grid gap-4">
+          <input type="hidden" name="next" value="/company/onboarding/branding" />
           <label className="text-sm font-semibold text-primary">
             Roller
             <Input name="recruitmentRoles" defaultValue={company.recruitment_roles.join(", ")} placeholder="Frontendutvikler, Analytiker" />

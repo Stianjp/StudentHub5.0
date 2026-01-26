@@ -31,6 +31,7 @@ export default async function CompanyOnboardingInfoPage() {
 
       <Card className="flex flex-col gap-4">
         <form action={saveCompanyInfo} className="grid gap-4">
+          <input type="hidden" name="next" value="/company/onboarding/recruitment" />
           <label className="text-sm font-semibold text-primary">
             Firmanavn
             <Input name="name" defaultValue={company.name} required />

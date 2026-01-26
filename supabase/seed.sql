@@ -66,7 +66,7 @@ values
     'Standard',
     array['Rekruttering'],
     array['80 besøk', '15 leads'],
-    'pro',
+    'silver',
     null,
     null,
     now()

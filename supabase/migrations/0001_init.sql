@@ -5,7 +5,7 @@ create extension if not exists pgcrypto;
 
 -- Enums
 create type public.app_role as enum ('student', 'company', 'admin');
-create type public.package_tier as enum ('basic', 'pro', 'platinum');
+create type public.package_tier as enum ('standard', 'silver', 'gold', 'platinum');
 create type public.visit_source as enum ('qr', 'kiosk');
 
 -- Helpers
@@ -116,7 +116,7 @@ create table if not exists public.event_companies (
   stand_type text,
   goals text[] not null default '{}',
   kpis text[] not null default '{}',
-  package public.package_tier not null default 'basic',
+  package public.package_tier not null default 'standard',
   access_from timestamptz,
   access_until timestamptz,
   invited_email text,

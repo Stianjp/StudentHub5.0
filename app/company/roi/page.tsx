@@ -83,7 +83,16 @@ export default async function CompanyRoiPage({ searchParams }: RoiPageProps) {
         <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
           <div>
             <p className="text-sm font-semibold text-primary">{currentRegistration.event.name}</p>
-            <p className="text-xs text-ink/70">Pakke: {currentRegistration.package}</p>
+            <p className="text-xs text-ink/70">
+              Pakke:{" "}
+              {currentRegistration.package === "standard"
+                ? "Standard"
+                : currentRegistration.package === "silver"
+                  ? "Sølv"
+                  : currentRegistration.package === "gold"
+                    ? "Gull"
+                    : "Platinum"}
+            </p>
           </div>
           <Badge variant={currentRegistration.package === "platinum" ? "success" : "warning"}>
             {currentRegistration.package}

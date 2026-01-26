@@ -32,6 +32,7 @@ export default async function CompanyOnboardingBrandingPage() {
 
       <Card className="flex flex-col gap-4">
         <form action={saveCompanyBranding} className="grid gap-4">
+          <input type="hidden" name="next" value="/company/onboarding/complete" />
           <label className="text-sm font-semibold text-primary">
             Verdier (tags)
             <Input name="brandingValues" defaultValue={company.branding_values.join(", ")} placeholder="Læring, Autonomi" />

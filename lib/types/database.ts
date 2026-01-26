@@ -242,7 +242,7 @@ export type Database = {
           stand_type: string | null;
           goals: string[];
           kpis: string[];
-          package: "basic" | "pro" | "platinum";
+          package: "standard" | "silver" | "gold" | "platinum";
           access_from: string | null;
           access_until: string | null;
           invited_email: string | null;
@@ -258,7 +258,7 @@ export type Database = {
           stand_type?: string | null;
           goals?: string[];
           kpis?: string[];
-          package?: "basic" | "pro" | "platinum";
+          package?: "standard" | "silver" | "gold" | "platinum";
           access_from?: string | null;
           access_until?: string | null;
           invited_email?: string | null;
@@ -274,7 +274,7 @@ export type Database = {
           stand_type?: string | null;
           goals?: string[];
           kpis?: string[];
-          package?: "basic" | "pro" | "platinum";
+          package?: "standard" | "silver" | "gold" | "platinum";
           access_from?: string | null;
           access_until?: string | null;
           invited_email?: string | null;
@@ -452,7 +452,7 @@ export type Database = {
     };
     Enums: {
       app_role: "student" | "company" | "admin";
-      package_tier: "basic" | "pro" | "platinum";
+      package_tier: "standard" | "silver" | "gold" | "platinum";
       visit_source: "qr" | "kiosk";
     };
     CompositeTypes: Record<string, never>;

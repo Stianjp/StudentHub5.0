@@ -22,7 +22,13 @@ export const inviteCompanySchema = z.object({
 export const setPackageSchema = z.object({
   eventId: z.string().uuid(),
   companyId: z.string().uuid(),
-  package: z.enum(["basic", "pro", "platinum"]),
+  package: z.enum(["standard", "silver", "gold", "platinum"]),
   accessFrom: z.string().optional().or(z.literal("")),
   accessUntil: z.string().optional().or(z.literal("")),
+});
+
+export const registerCompanySchema = z.object({
+  eventId: z.string().uuid(),
+  companyId: z.string().uuid(),
+  standType: z.string().optional().or(z.literal("")),
 });
