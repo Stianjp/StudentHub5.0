@@ -29,6 +29,7 @@ function shouldBypass(pathname: string) {
   return (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/api") ||
+    pathname.startsWith("/auth") ||
     pathname === "/favicon.ico" ||
     pathname.startsWith("/public")
   );
