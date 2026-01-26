@@ -5,6 +5,20 @@ import { requireRole } from "@/lib/auth";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getOrCreateStudentForUser } from "@/lib/student";
 
+function getFormValue(formData: FormData, name: string) {
+  const direct = formData.get(name);
+  if (direct !== null) return String(direct);
+
+  for (const [key, value] of formData.entries()) {
+    if (key === name) continue;
+    if (key.endsWith(`_${name}`) || key.endsWith(name)) {
+      return String(value);
+    }
+  }
+
+  return "";
+}
+
 export async function giveConsentToCompany(formData: FormData) {
   await requireRole("student");
   const supabase = await createServerSupabaseClient();
@@ -15,8 +29,8 @@ export async function giveConsentToCompany(formData: FormData) {
   if (!user) throw new Error("User not found");
 
   const student = await getOrCreateStudentForUser(user.id, user.email);
-  const eventId = formData.get("eventId")?.toString() ?? "";
-  const companyId = formData.get("companyId")?.toString() ?? "";
+  const eventId = getFormValue(formData, "eventId");
+  const companyId = getFormValue(formData, "companyId");
 
   if (!eventId || !companyId) {
     throw new Error("Event og bedrift må være valgt.");
@@ -52,8 +66,8 @@ export async function giveConsentToAll(formData: FormData) {
   if (!user) throw new Error("User not found");
 
   const student = await getOrCreateStudentForUser(user.id, user.email);
-  const eventId = formData.get("eventId")?.toString() ?? "";
-  const industry = formData.get("industry")?.toString() ?? "";
+  const eventId = getFormValue(formData, "eventId");
+  const industry = getFormValue(formData, "industry");
 
   if (!eventId) {
     throw new Error("Event må være valgt.");
