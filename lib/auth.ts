@@ -4,11 +4,25 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 type Profile = TableRow<"profiles">;
 
+const roleRedirect: Record<Profile["role"], string> = {
+  company: "/company",
+  student: "/student",
+  admin: "/admin",
+};
+
 export async function getUser() {
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase.auth.getUser();
 
   if (error) {
+    const isMissingSession =
+      (error as { name?: string; message?: string }).name === "AuthSessionMissingError" ||
+      (error as { message?: string }).message?.includes("Auth session missing");
+
+    if (isMissingSession) {
+      return null;
+    }
+
     throw error;
   }
 
@@ -38,7 +52,8 @@ export async function getProfile() {
 export async function ensureProfile(role: Profile["role"]) {
   const user = await getUser();
   if (!user) {
-    redirect(`/auth/sign-in?role=${role}`);
+    const nextPath = roleRedirect[role] ?? "/";
+    redirect(`/auth/sign-in?role=${role}&next=${encodeURIComponent(nextPath)}`);
   }
 
   const supabase = await createServerSupabaseClient();
@@ -56,13 +71,14 @@ export async function ensureProfile(role: Profile["role"]) {
 
   if (existing) {
     if (existing.role !== role && existing.role !== "admin") {
-      redirect(`/auth/sign-in?role=${role}`);
+      const nextPath = roleRedirect[role] ?? "/";
+      redirect(`/auth/sign-in?role=${role}&next=${encodeURIComponent(nextPath)}`);
     }
     return existing;
   }
 
   if (role === "admin") {
-    redirect("/auth/sign-in?role=admin&reason=admin-required");
+    redirect("/auth/sign-in?role=admin&reason=admin-required&next=%2Fadmin");
   }
 
   const { data: created, error: insertError } = await supabase

@@ -27,13 +27,15 @@ function deriveCompanyName(email: string | null | undefined) {
 export async function getOrCreateCompanyForUser(userId: string, email?: string | null) {
   const supabase = await createServerSupabaseClient();
 
-  const { data: existing, error: readError } = await supabase
+  const { data: existingRows, error: readError } = await supabase
     .from("companies")
     .select("*")
     .eq("user_id", userId)
-    .maybeSingle();
+    .order("created_at", { ascending: false })
+    .limit(1);
 
   if (readError) throw readError;
+  const existing = existingRows?.[0] ?? null;
   if (existing) return existing;
 
   const now = new Date().toISOString();
