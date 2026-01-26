@@ -47,7 +47,7 @@ export default async function AdminEventDetailPage({ params }: PageProps) {
         title={eventData.event.name}
         description="Oversikt over registrerte bedrifter og mulighet til å legge til flere."
         actions={
-          <Link className="text-sm font-semibold text-primary/70 hover:text-primary" href="/admin/events">
+          <Link className="text-sm font-semibold text-primary/70 transition hover:text-primary" href="/admin/events">
             ← Tilbake
           </Link>
         }
@@ -55,26 +55,30 @@ export default async function AdminEventDetailPage({ params }: PageProps) {
 
       <Card className="flex flex-col gap-4">
         <h3 className="text-lg font-bold text-primary">Registrer bedrift til event</h3>
-        <form action={registerCompany} className="grid gap-3 md:grid-cols-3">
-          <input name="eventId" type="hidden" value={eventId} readOnly />
-          <label className="text-sm font-semibold text-primary">
-            Bedrift
-            <Select name="companyId" required defaultValue={companies[0]?.id}>
-              {companies.map((company) => (
-                <option key={company.id} value={company.id}>
-                  {company.name}
-                </option>
-              ))}
-            </Select>
-          </label>
-          <label className="text-sm font-semibold text-primary">
-            Standtype (valgfritt)
-            <Input name="standType" placeholder="Standard, Premium" />
-          </label>
-          <Button variant="secondary" className="md:col-span-3" type="submit">
-            Registrer til event
-          </Button>
-        </form>
+        {availableCompanies.length === 0 ? (
+          <p className="text-sm text-ink/70">Alle bedrifter er allerede registrert.</p>
+        ) : (
+          <form action={registerCompany} className="grid gap-3 md:grid-cols-3">
+            <input name="eventId" type="hidden" value={eventId} readOnly />
+            <label className="text-sm font-semibold text-primary">
+              Bedrift
+              <Select name="companyId" required defaultValue={availableCompanies[0]?.id}>
+                {availableCompanies.map((company) => (
+                  <option key={company.id} value={company.id}>
+                    {company.name}
+                  </option>
+                ))}
+              </Select>
+            </label>
+            <label className="text-sm font-semibold text-primary">
+              Standtype (valgfritt)
+              <Input name="standType" placeholder="Standard, Premium" />
+            </label>
+            <Button variant="secondary" className="md:col-span-3" type="submit">
+              Registrer til event
+            </Button>
+          </form>
+        )}
       </Card>
 
       <Card className="flex flex-col gap-4">

@@ -50,7 +50,7 @@ export default async function AdminCompanyDetailPage({ params }: PageProps) {
         title={company.name}
         description={company.industry ?? "Bransje ikke satt"}
         actions={
-          <Link className="text-sm font-semibold text-primary/70 hover:text-primary" href="/admin/companies">
+          <Link className="text-sm font-semibold text-primary/70 transition hover:text-primary" href="/admin/companies">
             ← Tilbake
           </Link>
         }

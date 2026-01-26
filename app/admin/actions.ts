@@ -14,6 +14,7 @@ import {
   setPackageForCompany,
   upsertEvent,
 } from "@/lib/admin";
+import { isUuid } from "@/lib/utils";
 
 export async function saveEvent(formData: FormData) {
   await requireRole("admin");
@@ -126,6 +127,10 @@ export async function registerCompaniesBulk(formData: FormData) {
 
   if (!eventId || companyIds.length === 0) {
     throw new Error("Velg event og minst én bedrift.");
+  }
+
+  if (!isUuid(eventId) || companyIds.some((id) => !isUuid(id))) {
+    throw new Error("Ugyldig event eller bedrift. Velg på nytt.");
   }
 
   await Promise.all(

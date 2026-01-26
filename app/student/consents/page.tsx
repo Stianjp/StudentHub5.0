@@ -69,18 +69,10 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
       />
 
       <Card className="flex flex-col gap-4">
-        <div className="grid gap-3 md:grid-cols-2">
+        <form className="grid gap-3 md:grid-cols-2" method="get">
           <label className="text-sm font-semibold text-primary">
             Event
-            <Select
-              value={eventId}
-              onChange={(event) => {
-                const value = event.target.value;
-                const url = new URL(window.location.href);
-                url.searchParams.set("eventId", value);
-                window.location.href = url.toString();
-              }}
-            >
+            <Select name="eventId" defaultValue={eventId}>
               {(events ?? []).map((event) => (
                 <option key={event.id} value={event.id}>
                   {event.name}
@@ -90,15 +82,7 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
           </label>
           <label className="text-sm font-semibold text-primary">
             Bransjefilter
-            <Select
-              value={selectedIndustry}
-              onChange={(event) => {
-                const value = event.target.value;
-                const url = new URL(window.location.href);
-                url.searchParams.set("industry", value);
-                window.location.href = url.toString();
-              }}
-            >
+            <Select name="industry" defaultValue={selectedIndustry}>
               <option value={INDUSTRY_ALL}>Alle bransjer</option>
               {industries.map((industry) => (
                 <option key={industry} value={industry}>
@@ -107,7 +91,12 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
               ))}
             </Select>
           </label>
-        </div>
+          <div className="md:col-span-2">
+            <Button variant="secondary" type="submit">
+              Oppdater filter
+            </Button>
+          </div>
+        </form>
 
         <div className="flex flex-wrap gap-3">
           <form action={giveConsentToAll}>
@@ -129,7 +118,7 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
       <Card className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-bold text-primary">Bedrifter ({filteredCompanies.length})</h3>
-          <Link className="text-sm font-semibold text-primary/70 hover:text-primary" href="/student">
+          <Link className="text-sm font-semibold text-primary/70 transition hover:text-primary" href="/student">
             Tilbake til profil
           </Link>
         </div>

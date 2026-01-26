@@ -100,59 +100,67 @@ export default async function AdminCompaniesPage({ searchParams }: CompaniesPage
 
       <Card className="flex flex-col gap-4">
         <h3 className="text-lg font-bold text-primary">Inviter bedrift (e-post)</h3>
-        <form action={inviteCompany} className="grid gap-3 md:grid-cols-3">
-          <input name="eventId" type="hidden" value={currentEvent.id} readOnly />
-          <label className="text-sm font-semibold text-primary">
-            Bedrift
-            <Select name="companyId" required defaultValue={filteredCompanies[0]?.id}>
-              {filteredCompanies.map((company) => (
-                <option key={company.id} value={company.id}>
-                  {company.name}
-                </option>
-              ))}
-            </Select>
-          </label>
-          <label className="text-sm font-semibold text-primary md:col-span-2">
-            Kontakt e-post
-            <Input name="email" required placeholder="kontakt@bedrift.no" />
-          </label>
-          <Button className="md:col-span-3" type="submit">
-            Send invitasjon
-          </Button>
-        </form>
+        {filteredCompanies.length === 0 ? (
+          <p className="text-sm text-ink/70">Ingen bedrifter å invitere. Fjern filter eller opprett en bedrift.</p>
+        ) : (
+          <form action={inviteCompany} className="grid gap-3 md:grid-cols-3">
+            <input name="eventId" type="hidden" value={currentEvent.id} readOnly />
+            <label className="text-sm font-semibold text-primary">
+              Bedrift
+              <Select name="companyId" required defaultValue={filteredCompanies[0]?.id}>
+                {filteredCompanies.map((company) => (
+                  <option key={company.id} value={company.id}>
+                    {company.name}
+                  </option>
+                ))}
+              </Select>
+            </label>
+            <label className="text-sm font-semibold text-primary md:col-span-2">
+              Kontakt e-post
+              <Input name="email" required placeholder="kontakt@bedrift.no" />
+            </label>
+            <Button className="md:col-span-3" type="submit">
+              Send invitasjon
+            </Button>
+          </form>
+        )}
       </Card>
 
       <Card className="flex flex-col gap-4">
         <h3 className="text-lg font-bold text-primary">Registrer bedrift til event</h3>
-        <form action={registerCompany} className="grid gap-3 md:grid-cols-3">
-          <label className="text-sm font-semibold text-primary">
-            Event
-            <Select name="eventId" required defaultValue={currentEvent.id}>
-              {events.map((event) => (
-                <option key={event.id} value={event.id}>
-                  {event.name}
-                </option>
-              ))}
-            </Select>
-          </label>
-          <label className="text-sm font-semibold text-primary">
-            Bedrift
-            <Select name="companyId" required defaultValue={filteredCompanies[0]?.id}>
-              {filteredCompanies.map((company) => (
-                <option key={company.id} value={company.id}>
-                  {company.name}
-                </option>
-              ))}
-            </Select>
-          </label>
-          <label className="text-sm font-semibold text-primary">
-            Standtype (valgfritt)
-            <Input name="standType" placeholder="Standard, Premium" />
-          </label>
-          <Button className="md:col-span-3" variant="secondary" type="submit">
-            Registrer til event
-          </Button>
-        </form>
+        {filteredCompanies.length === 0 ? (
+          <p className="text-sm text-ink/70">Ingen bedrifter å registrere. Fjern filter eller opprett en bedrift.</p>
+        ) : (
+          <form action={registerCompany} className="grid gap-3 md:grid-cols-3">
+            <label className="text-sm font-semibold text-primary">
+              Event
+              <Select name="eventId" required defaultValue={currentEvent.id}>
+                {events.map((event) => (
+                  <option key={event.id} value={event.id}>
+                    {event.name}
+                  </option>
+                ))}
+              </Select>
+            </label>
+            <label className="text-sm font-semibold text-primary">
+              Bedrift
+              <Select name="companyId" required defaultValue={filteredCompanies[0]?.id}>
+                {filteredCompanies.map((company) => (
+                  <option key={company.id} value={company.id}>
+                    {company.name}
+                  </option>
+                ))}
+              </Select>
+            </label>
+            <label className="text-sm font-semibold text-primary">
+              Standtype (valgfritt)
+              <Input name="standType" placeholder="Standard, Premium" />
+            </label>
+            <Button className="md:col-span-3" variant="secondary" type="submit">
+              Registrer til event
+            </Button>
+          </form>
+        )}
       </Card>
 
       <section className="grid gap-4">
