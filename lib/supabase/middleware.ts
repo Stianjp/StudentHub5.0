@@ -4,7 +4,8 @@ import type { Database } from "@/lib/types/database";
 import { assertSupabaseEnv } from "@/lib/supabase/env";
 
 export async function updateSession(request: NextRequest) {
-  const { supabaseUrl, supabaseAnonKey } = assertSupabaseEnv();
+  const { supabaseUrl, supabaseAnonKey, cookieDomain } = assertSupabaseEnv();
+  const domain = cookieDomain ?? undefined;
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
@@ -13,14 +14,14 @@ export async function updateSession(request: NextRequest) {
         return request.cookies.get(name)?.value;
       },
       set(name: string, value: string, options: CookieOptions) {
-        request.cookies.set({ name, value, ...options });
+        request.cookies.set({ name, value, ...options, domain });
         response = NextResponse.next({ request });
-        response.cookies.set({ name, value, ...options });
+        response.cookies.set({ name, value, ...options, domain });
       },
       remove(name: string, options: CookieOptions) {
-        request.cookies.set({ name, value: "", ...options });
+        request.cookies.set({ name, value: "", ...options, domain });
         response = NextResponse.next({ request });
-        response.cookies.set({ name, value: "", ...options });
+        response.cookies.set({ name, value: "", ...options, domain });
       },
     },
   });

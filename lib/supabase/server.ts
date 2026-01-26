@@ -5,7 +5,8 @@ import { assertSupabaseEnv } from "@/lib/supabase/env";
 
 export async function createServerSupabaseClient() {
   const cookieStore = await cookies();
-  const { supabaseUrl, supabaseAnonKey } = assertSupabaseEnv();
+  const { supabaseUrl, supabaseAnonKey, cookieDomain } = assertSupabaseEnv();
+  const domain = cookieDomain ?? undefined;
 
   return createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
     cookies: {
@@ -14,14 +15,14 @@ export async function createServerSupabaseClient() {
       },
       set(name: string, value: string, options: CookieOptions) {
         try {
-          cookieStore.set({ name, value, ...options });
+          cookieStore.set({ name, value, ...options, domain });
         } catch {
           // Setting cookies can fail in Server Components. Middleware handles refresh.
         }
       },
       remove(name: string, options: CookieOptions) {
         try {
-          cookieStore.set({ name, value: "", ...options });
+          cookieStore.set({ name, value: "", ...options, domain });
         } catch {
           // No-op in Server Components.
         }
