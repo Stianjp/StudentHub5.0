@@ -117,3 +117,23 @@ export async function registerCompany(formData: FormData) {
   revalidatePath("/admin/companies");
   revalidatePath("/company/events");
 }
+
+export async function registerCompaniesBulk(formData: FormData) {
+  await requireRole("admin");
+  const eventId = formData.get("eventId")?.toString() ?? "";
+  const standType = formData.get("standType")?.toString() ?? "Standard";
+  const companyIds = formData.getAll("companyIds").map((value) => String(value));
+
+  if (!eventId || companyIds.length === 0) {
+    throw new Error("Velg event og minst én bedrift.");
+  }
+
+  await Promise.all(
+    companyIds.map((companyId) =>
+      registerCompanyForEvent({ eventId, companyId, standType }),
+    ),
+  );
+
+  revalidatePath(`/admin/events/${eventId}`);
+  revalidatePath("/admin/companies");
+}

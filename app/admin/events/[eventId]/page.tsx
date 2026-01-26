@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { requireRole } from "@/lib/auth";
 import { getEventWithRegistrations, listCompanies } from "@/lib/admin";
-import { registerCompany } from "@/app/admin/actions";
+import { registerCompaniesBulk, registerCompany } from "@/app/admin/actions";
 
 const packageLabel: Record<string, string> = {
   standard: "Standard",
@@ -32,8 +32,13 @@ export default async function AdminEventDetailPage({ params }: PageProps) {
     id: string;
     stand_type: string | null;
     package: string;
-    company?: { name?: string };
+    company?: { id?: string; name?: string };
   }>;
+  const registeredCompanyIds = new Set(
+    registrations.map((reg) => reg.company?.id).filter(Boolean) as string[],
+  );
+
+  const availableCompanies = companies.filter((company) => !registeredCompanyIds.has(company.id));
 
   return (
     <div className="flex flex-col gap-8">
@@ -68,6 +73,40 @@ export default async function AdminEventDetailPage({ params }: PageProps) {
           </label>
           <Button variant="secondary" className="md:col-span-3" type="submit">
             Registrer til event
+          </Button>
+        </form>
+      </Card>
+
+      <Card className="flex flex-col gap-4">
+        <h3 className="text-lg font-bold text-primary">Bulk-registrering</h3>
+        <form action={registerCompaniesBulk} className="grid gap-4">
+          <input name="eventId" type="hidden" value={eventId} readOnly />
+          <label className="text-sm font-semibold text-primary">
+            Standtype (valgfritt)
+            <Input name="standType" placeholder="Standard, Premium" />
+          </label>
+          {availableCompanies.length === 0 ? (
+            <p className="text-sm text-ink/70">Alle bedrifter er allerede registrert.</p>
+          ) : (
+            <div className="grid gap-2 md:grid-cols-2">
+              {availableCompanies.map((company) => (
+                <label
+                  key={company.id}
+                  className="flex items-center gap-2 rounded-xl border border-primary/10 bg-surface px-3 py-2 text-sm"
+                >
+                  <input
+                    type="checkbox"
+                    name="companyIds"
+                    value={company.id}
+                    className="h-4 w-4 rounded border-primary/30 text-primary focus:ring-primary"
+                  />
+                  <span className="font-semibold text-primary">{company.name}</span>
+                </label>
+              ))}
+            </div>
+          )}
+          <Button variant="secondary" type="submit">
+            Registrer valgte bedrifter
           </Button>
         </form>
       </Card>

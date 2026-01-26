@@ -64,6 +64,11 @@ export default async function AdminCompaniesPage({ searchParams }: CompaniesPage
   const requestedEventId = typeof params.eventId === "string" ? params.eventId : events[0].id;
   const currentEvent = events.find((event) => event.id === requestedEventId) ?? events[0];
 
+  const query = typeof params.q === "string" ? params.q.toLowerCase() : "";
+  const filteredCompanies = companies.filter((company) =>
+    query.length === 0 ? true : company.name.toLowerCase().includes(query),
+  );
+
   const eventCompanies = await listEventCompanies(currentEvent.id);
   const eventCompanyMap = new Map(eventCompanies.map((row) => [row.company_id, row]));
 
@@ -99,8 +104,8 @@ export default async function AdminCompaniesPage({ searchParams }: CompaniesPage
           <input name="eventId" type="hidden" value={currentEvent.id} readOnly />
           <label className="text-sm font-semibold text-primary">
             Bedrift
-            <Select name="companyId" required defaultValue={companies[0]?.id}>
-              {companies.map((company) => (
+            <Select name="companyId" required defaultValue={filteredCompanies[0]?.id}>
+              {filteredCompanies.map((company) => (
                 <option key={company.id} value={company.id}>
                   {company.name}
                 </option>
@@ -132,8 +137,8 @@ export default async function AdminCompaniesPage({ searchParams }: CompaniesPage
           </label>
           <label className="text-sm font-semibold text-primary">
             Bedrift
-            <Select name="companyId" required defaultValue={companies[0]?.id}>
-              {companies.map((company) => (
+            <Select name="companyId" required defaultValue={filteredCompanies[0]?.id}>
+              {filteredCompanies.map((company) => (
                 <option key={company.id} value={company.id}>
                   {company.name}
                 </option>
@@ -151,7 +156,21 @@ export default async function AdminCompaniesPage({ searchParams }: CompaniesPage
       </Card>
 
       <section className="grid gap-4">
-        {companies.map((company) => {
+        <Card className="flex flex-col gap-3">
+          <h3 className="text-lg font-bold text-primary">Søk i bedrifter</h3>
+          <form className="flex flex-col gap-3 md:flex-row md:items-end" method="get">
+            <input type="hidden" name="eventId" value={currentEvent.id} />
+            <label className="text-sm font-semibold text-primary md:flex-1">
+              Søk
+              <Input name="q" defaultValue={query} placeholder="Søk på bedriftsnavn" />
+            </label>
+            <Button variant="secondary" type="submit">
+              Filtrer
+            </Button>
+          </form>
+        </Card>
+
+        {filteredCompanies.map((company) => {
           const registration = eventCompanyMap.get(company.id);
           return (
             <Card key={company.id} className="flex flex-col gap-3">

@@ -53,6 +53,13 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
     return company.industry === selectedIndustry;
   });
 
+  const consentedCompanyIds = new Set(
+    consents
+      .filter((consent) => consent.event?.id === eventId)
+      .map((consent) => consent.company?.id)
+      .filter(Boolean) as string[],
+  );
+
   return (
     <div className="flex flex-col gap-8">
       <SectionHeader
@@ -139,9 +146,13 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
                 <form action={giveConsentToCompany}>
                   <input type="hidden" name="eventId" value={eventId} />
                   <input type="hidden" name="companyId" value={company.id} />
-                  <Button variant="secondary" type="submit">
-                    Gi samtykke
-                  </Button>
+                  {consentedCompanyIds.has(company.id) ? (
+                    <Badge variant="success">Samtykke gitt</Badge>
+                  ) : (
+                    <Button variant="secondary" type="submit">
+                      Gi samtykke
+                    </Button>
+                  )}
                 </form>
               </li>
             ))}
