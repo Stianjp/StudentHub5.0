@@ -76,8 +76,8 @@ export default async function CompanyDashboardPage() {
           <h3 className="text-lg font-bold text-primary">Hva skjer nå?</h3>
           <ol className="list-decimal space-y-2 pl-5 text-sm text-ink/80">
             <li>Fullfør alle stegene i registreringen.</li>
-            <li>Meld dere på minst ett event.</li>
-            <li>Admin setter pakke (basic/pro/platinum).</li>
+            <li>Be OSH-teamet registrere dere på ønsket event.</li>
+            <li>Admin setter pakke (Standard/Sølv/Gull/Platinum).</li>
             <li>Se leads og ROI i dashboardet.</li>
           </ol>
           <Link href="/company/events">

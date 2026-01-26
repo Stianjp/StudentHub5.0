@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -70,7 +71,9 @@ export default async function AdminEventsPage() {
           <Card key={event.id} className="flex flex-col gap-3">
             <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
               <div>
-                <p className="text-lg font-bold text-primary">{event.name}</p>
+                <Link href={`/admin/events/${event.id}`} className="text-lg font-bold text-primary hover:underline">
+                  {event.name}
+                </Link>
                 <p className="text-xs text-ink/70">/{event.slug}</p>
               </div>
               <div className="text-xs font-semibold text-primary/70">

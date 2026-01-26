@@ -68,7 +68,7 @@ export default async function AdminOverviewPage() {
             <code className="rounded bg-primary/10 px-1 py-0.5 text-primary">profiles.role=&apos;admin&apos;</code>.
           </li>
           <li>Bruk seed.sql for demo-data, men knytt user_id til ekte brukere i dev.</li>
-          <li>Premium-tilgang styres via event_companies.package + access_from/until.</li>
+          <li>Pakker styres via event_companies.package (Standard/Sølv/Gull/Platinum).</li>
         </ul>
       </Card>
     </div>

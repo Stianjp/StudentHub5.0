@@ -105,7 +105,7 @@ export async function registerCompany(formData: FormData) {
   });
 
   if (!parsed.success) {
-    throw new Error(parsed.error.issues.map((issue) => issue.message).join(", "));
+    throw new Error("Ugyldig event eller bedrift. Velg på nytt.");
   }
 
   await registerCompanyForEvent({

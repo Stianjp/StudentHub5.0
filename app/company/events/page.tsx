@@ -105,14 +105,19 @@ export default async function CompanyEventsPage() {
         {openEvents.length === 0 ? (
           <p className="text-sm text-ink/70">Du er allerede registrert på alle aktive events.</p>
         ) : (
-          <ul className="grid gap-2 text-sm text-ink/80">
-            {openEvents.map((event) => (
-              <li key={event.id} className="rounded-xl border border-primary/10 bg-surface p-4">
-                <p className="font-semibold text-primary">{event.name}</p>
-                <p className="text-xs">{event.location ?? "Lokasjon kommer"}</p>
-              </li>
-            ))}
-          </ul>
+          <div className="grid gap-3 text-sm text-ink/80">
+            <p>
+              Påmelding håndteres av OSH-teamet. Ta kontakt på e-post dersom dere ønsker å delta.
+            </p>
+            <ul className="grid gap-2">
+              {openEvents.map((event) => (
+                <li key={event.id} className="rounded-xl border border-primary/10 bg-surface p-4">
+                  <p className="font-semibold text-primary">{event.name}</p>
+                  <p className="text-xs">{event.location ?? "Lokasjon kommer"}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
       </Card>
     </div>

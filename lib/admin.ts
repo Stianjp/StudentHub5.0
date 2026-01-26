@@ -71,6 +71,54 @@ export async function listEventCompanies(eventId: string) {
   return (data ?? []) as unknown as Array<EventCompany & { company: Company }>;
 }
 
+export async function getCompanyWithDetails(companyId: string) {
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase.from("companies").select("*").eq("id", companyId).single();
+  if (error) throw error;
+  return data as Company;
+}
+
+export async function listCompanyLeads(companyId: string) {
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase
+    .from("consents")
+    .select("*, student:students(*), event:events(id, name)")
+    .eq("company_id", companyId)
+    .eq("consent", true)
+    .order("consented_at", { ascending: false });
+
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function listCompanyRegistrations(companyId: string) {
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase
+    .from("event_companies")
+    .select("*, event:events(*)")
+    .eq("company_id", companyId)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function getEventWithRegistrations(eventId: string) {
+  const supabase = await createServerSupabaseClient();
+  const [{ data: event, error: eventError }, { data: registrations, error: regError }] = await Promise.all([
+    supabase.from("events").select("*").eq("id", eventId).single(),
+    supabase.from("event_companies").select("*, company:companies(*)").eq("event_id", eventId),
+  ]);
+
+  if (eventError) throw eventError;
+  if (regError) throw regError;
+
+  return {
+    event: event as Event,
+    registrations: (registrations ?? []) as unknown as Array<EventCompany & { company: Company }>,
+  };
+}
+
 export async function upsertEvent(input: {
   id?: string;
   name: string;

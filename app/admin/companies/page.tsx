@@ -72,7 +72,7 @@ export default async function AdminCompaniesPage({ searchParams }: CompaniesPage
       <SectionHeader
         eyebrow="Bedrifter"
         title="Invitasjoner og pakker"
-        description="Sett pakker per bedrift per event. Platinum styrer ROI-tilgang."
+        description="Sett pakker per bedrift per event. Connect Hub 2026-pakker styrer ROI-tilgang."
         actions={
           <div className="flex flex-wrap gap-2">
             {events.map((event) => (
@@ -94,7 +94,7 @@ export default async function AdminCompaniesPage({ searchParams }: CompaniesPage
       />
 
       <Card className="flex flex-col gap-4">
-        <h3 className="text-lg font-bold text-primary">Inviter bedrift</h3>
+        <h3 className="text-lg font-bold text-primary">Inviter bedrift (e-post)</h3>
         <form action={inviteCompany} className="grid gap-3 md:grid-cols-3">
           <input name="eventId" type="hidden" value={currentEvent.id} readOnly />
           <label className="text-sm font-semibold text-primary">
@@ -117,6 +117,39 @@ export default async function AdminCompaniesPage({ searchParams }: CompaniesPage
         </form>
       </Card>
 
+      <Card className="flex flex-col gap-4">
+        <h3 className="text-lg font-bold text-primary">Registrer bedrift til event</h3>
+        <form action={registerCompany} className="grid gap-3 md:grid-cols-3">
+          <label className="text-sm font-semibold text-primary">
+            Event
+            <Select name="eventId" required defaultValue={currentEvent.id}>
+              {events.map((event) => (
+                <option key={event.id} value={event.id}>
+                  {event.name}
+                </option>
+              ))}
+            </Select>
+          </label>
+          <label className="text-sm font-semibold text-primary">
+            Bedrift
+            <Select name="companyId" required defaultValue={companies[0]?.id}>
+              {companies.map((company) => (
+                <option key={company.id} value={company.id}>
+                  {company.name}
+                </option>
+              ))}
+            </Select>
+          </label>
+          <label className="text-sm font-semibold text-primary">
+            Standtype (valgfritt)
+            <Input name="standType" placeholder="Standard, Premium" />
+          </label>
+          <Button className="md:col-span-3" variant="secondary" type="submit">
+            Registrer til event
+          </Button>
+        </form>
+      </Card>
+
       <section className="grid gap-4">
         {companies.map((company) => {
           const registration = eventCompanyMap.get(company.id);
@@ -124,7 +157,9 @@ export default async function AdminCompaniesPage({ searchParams }: CompaniesPage
             <Card key={company.id} className="flex flex-col gap-3">
               <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
                 <div>
-                  <p className="text-lg font-bold text-primary">{company.name}</p>
+                  <Link href={`/admin/companies/${company.id}`} className="text-lg font-bold text-primary hover:underline">
+                    {company.name}
+                  </Link>
                   <p className="text-xs text-ink/70">{company.industry ?? "Bransje ikke satt"}</p>
                 </div>
                 <div className="flex items-center gap-2">
@@ -133,17 +168,6 @@ export default async function AdminCompaniesPage({ searchParams }: CompaniesPage
                   </Badge>
                 </div>
               </div>
-              <form action={registerCompany} className="grid gap-3 md:grid-cols-3">
-                <input name="eventId" type="hidden" value={currentEvent.id} readOnly />
-                <input name="companyId" type="hidden" value={company.id} readOnly />
-                <label className="text-sm font-semibold text-primary md:col-span-2">
-                  Standtype (valgfritt)
-                  <Input name="standType" defaultValue={registration?.stand_type ?? ""} placeholder="Standard, Premium" />
-                </label>
-                <Button variant="secondary" className="md:self-end" type="submit">
-                  Registrer til event
-                </Button>
-              </form>
               <form action={setPackage} className="grid gap-3 md:grid-cols-4">
                 <input name="eventId" type="hidden" value={currentEvent.id} readOnly />
                 <input name="companyId" type="hidden" value={company.id} readOnly />
