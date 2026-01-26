@@ -4,6 +4,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getOrCreateCompanyForUser } from "@/lib/company";
 
 const nav = [
+  { href: "/company/onboarding", label: "Registrering" },
   { href: "/company", label: "Dashboard" },
   { href: "/company/events", label: "Events" },
   { href: "/company/leads", label: "Leads" },
