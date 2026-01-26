@@ -14,12 +14,12 @@ export async function updateSession(request: NextRequest) {
         return request.cookies.get(name)?.value;
       },
       set(name: string, value: string, options: CookieOptions) {
-        request.cookies.set({ name, value, ...options, domain });
+        request.cookies.set({ name, value, ...options });
         response = NextResponse.next({ request });
         response.cookies.set({ name, value, ...options, domain });
       },
       remove(name: string, options: CookieOptions) {
-        request.cookies.set({ name, value: "", ...options, domain });
+        request.cookies.set({ name, value: "", ...options });
         response = NextResponse.next({ request });
         response.cookies.set({ name, value: "", ...options, domain });
       },
