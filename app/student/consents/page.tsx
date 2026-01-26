@@ -7,7 +7,7 @@ import { Select } from "@/components/ui/select";
 import { requireRole } from "@/lib/auth";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getOrCreateStudentForUser, listStudentConsents } from "@/lib/student";
-import { giveConsentToAll, giveConsentToCompany } from "@/app/student/consents/actions";
+import { giveConsentToAll, giveConsentToCompany, withdrawConsent } from "@/app/student/consents/actions";
 
 const INDUSTRY_ALL = "all";
 
@@ -37,12 +37,10 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
   if (eventsError) throw eventsError;
   if (companiesError) throw companiesError;
 
-  const eventId =
-    typeof params.eventId === "string"
-      ? params.eventId
-      : events?.[0]?.id ?? "";
+  const eventId = events?.[0]?.id ?? "";
   const selectedIndustry =
     typeof params.industry === "string" ? params.industry : INDUSTRY_ALL;
+  const hasEvent = Boolean(eventId);
 
   const industries = Array.from(
     new Set((companies ?? []).map((company) => company.industry).filter(Boolean)),
@@ -55,7 +53,7 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
 
   const consentedCompanyIds = new Set(
     consents
-      .filter((consent) => consent.event?.id === eventId)
+      .filter((consent) => consent.consent)
       .map((consent) => consent.company?.id)
       .filter(Boolean) as string[],
   );
@@ -65,49 +63,47 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
       <SectionHeader
         eyebrow="Samtykke"
         title="Gi samtykke til bedrifter"
-        description="Velg event og gi samtykke til flere bedrifter samtidig."
+        description="Gi samtykke til bedrifter du vil at skal kunne kontakte deg."
       />
 
       <Card className="flex flex-col gap-4">
-        <form className="grid gap-3 md:grid-cols-2" method="get">
-          <label className="text-sm font-semibold text-primary">
-            Event
-            <Select name="eventId" defaultValue={eventId}>
-              {(events ?? []).map((event) => (
-                <option key={event.id} value={event.id}>
-                  {event.name}
-                </option>
-              ))}
-            </Select>
-          </label>
-          <label className="text-sm font-semibold text-primary">
-            Bransjefilter
-            <Select name="industry" defaultValue={selectedIndustry}>
-              <option value={INDUSTRY_ALL}>Alle bransjer</option>
-              {industries.map((industry) => (
-                <option key={industry} value={industry}>
-                  {industry}
-                </option>
-              ))}
-            </Select>
-          </label>
-          <div className="md:col-span-2">
-            <Button variant="secondary" type="submit">
-              Oppdater filter
-            </Button>
-          </div>
-        </form>
+        {eventId ? (
+          <form className="grid gap-3 md:grid-cols-2" method="get">
+            <label className="text-sm font-semibold text-primary">
+              Bransjefilter
+              <Select name="industry" defaultValue={selectedIndustry}>
+                <option value={INDUSTRY_ALL}>Alle bransjer</option>
+                {industries.map((industry) => (
+                  <option key={industry} value={industry}>
+                    {industry}
+                  </option>
+                ))}
+              </Select>
+            </label>
+            <div className="md:col-span-2">
+              <Button variant="secondary" type="submit">
+                Oppdater filter
+              </Button>
+            </div>
+          </form>
+        ) : (
+          <p className="text-sm text-ink/70">
+            Ingen aktive events er opprettet enda. Opprett et event for å aktivere samtykker.
+          </p>
+        )}
 
         <div className="flex flex-wrap gap-3">
           <form action={giveConsentToAll}>
             <input type="hidden" name="eventId" value={eventId} />
-            <Button type="submit">Gi samtykke til alle bedrifter</Button>
+            <Button type="submit" disabled={!hasEvent}>
+              Gi samtykke til alle bedrifter
+            </Button>
           </form>
           {selectedIndustry !== INDUSTRY_ALL ? (
             <form action={giveConsentToAll}>
               <input type="hidden" name="eventId" value={eventId} />
               <input type="hidden" name="industry" value={selectedIndustry} />
-              <Button variant="secondary" type="submit">
+              <Button variant="secondary" type="submit" disabled={!hasEvent}>
                 Gi samtykke til alle {selectedIndustry}-bedrifter
               </Button>
             </form>
@@ -132,17 +128,26 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
                   <p className="font-semibold text-primary">{company.name}</p>
                   <p className="text-xs text-ink/60">{company.industry ?? "Bransje ikke satt"}</p>
                 </div>
-                <form action={giveConsentToCompany}>
-                  <input type="hidden" name="eventId" value={eventId} />
-                  <input type="hidden" name="companyId" value={company.id} />
-                  {consentedCompanyIds.has(company.id) ? (
+                {consentedCompanyIds.has(company.id) ? (
+                  <div className="flex items-center gap-2">
                     <Badge variant="success">Samtykke gitt</Badge>
-                  ) : (
-                    <Button variant="secondary" type="submit">
+                    <form action={withdrawConsent}>
+                      <input type="hidden" name="eventId" value={eventId} />
+                      <input type="hidden" name="companyId" value={company.id} />
+                      <Button variant="ghost" type="submit" disabled={!hasEvent}>
+                        Fjern samtykke
+                      </Button>
+                    </form>
+                  </div>
+                ) : (
+                  <form action={giveConsentToCompany}>
+                    <input type="hidden" name="eventId" value={eventId} />
+                    <input type="hidden" name="companyId" value={company.id} />
+                    <Button variant="secondary" type="submit" disabled={!hasEvent}>
                       Gi samtykke
                     </Button>
-                  )}
-                </form>
+                  </form>
+                )}
               </li>
             ))}
           </ul>
@@ -167,6 +172,23 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
                   </Badge>
                 </div>
                 <p className="mt-2 text-xs text-ink/80">Scope: {consent.scope}</p>
+                {consent.consent ? (
+                  <form action={withdrawConsent} className="mt-3">
+                    <input type="hidden" name="eventId" value={consent.event?.id ?? eventId} />
+                    <input type="hidden" name="companyId" value={consent.company?.id ?? ""} />
+                    <Button variant="ghost" type="submit">
+                      Fjern samtykke
+                    </Button>
+                  </form>
+                ) : (
+                  <form action={giveConsentToCompany} className="mt-3">
+                    <input type="hidden" name="eventId" value={consent.event?.id ?? eventId} />
+                    <input type="hidden" name="companyId" value={consent.company?.id ?? ""} />
+                    <Button variant="secondary" type="submit">
+                      Gi samtykke igjen
+                    </Button>
+                  </form>
+                )}
               </li>
             ))}
           </ul>

@@ -56,6 +56,43 @@ export async function giveConsentToCompany(formData: FormData) {
   revalidatePath("/student/consents");
 }
 
+export async function withdrawConsent(formData: FormData) {
+  await requireRole("student");
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("User not found");
+
+  const student = await getOrCreateStudentForUser(user.id, user.email);
+  const eventId = getFormValue(formData, "eventId");
+  const companyId = getFormValue(formData, "companyId");
+
+  if (!eventId || !companyId) {
+    throw new Error("Event og bedrift må være valgt.");
+  }
+
+  const now = new Date().toISOString();
+  const { error } = await supabase
+    .from("consents")
+    .upsert(
+      {
+        event_id: eventId,
+        company_id: companyId,
+        student_id: student.id,
+        consent: false,
+        scope: "contact",
+        consented_at: now,
+        created_at: now,
+      },
+      { onConflict: "event_id,company_id,student_id" },
+    );
+
+  if (error) throw error;
+  revalidatePath("/student/consents");
+}
+
 export async function giveConsentToAll(formData: FormData) {
   await requireRole("student");
   const supabase = await createServerSupabaseClient();
