@@ -13,7 +13,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   await requireRole("admin");
 
   return (
-    <PortalShell roleLabel="Admin" title="OSH Admin" nav={nav}>
+    <PortalShell roleLabel="Admin" roleKey="admin" title="OSH Admin" nav={nav}>
       {children}
     </PortalShell>
   );

@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { LogoutButton } from "@/components/navigation/logout-button";
 
 type NavItem = { href: string; label: string };
 
@@ -11,11 +12,13 @@ export function PortalShell({
   roleLabel,
   title,
   nav,
+  roleKey,
   children,
 }: {
   roleLabel: string;
   title: string;
   nav: NavItem[];
+  roleKey: "student" | "company" | "admin";
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -46,6 +49,7 @@ export function PortalShell({
               <span className="rounded-full bg-secondary px-3 py-1 text-xs font-bold uppercase tracking-wide text-primary">
                 {roleLabel}
               </span>
+              <LogoutButton role={roleKey} />
               <Link
                 href="/"
                 className="rounded-full bg-surface/10 px-4 py-2 text-xs font-semibold text-surface transition hover:bg-surface/20"

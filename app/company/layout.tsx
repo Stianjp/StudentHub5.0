@@ -24,7 +24,7 @@ export default async function CompanyLayout({ children }: { children: React.Reac
   const title = company?.name ?? "Bedriftsportal";
 
   return (
-    <PortalShell roleLabel="Bedrift" title={title} nav={nav}>
+    <PortalShell roleLabel="Bedrift" roleKey="company" title={title} nav={nav}>
       {children}
     </PortalShell>
   );
