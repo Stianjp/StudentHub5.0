@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getOrCreateStudentForUser } from "@/lib/student";
+import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 
 function getFormValue(formData: FormData, name: string) {
   const direct = formData.get(name);
@@ -37,7 +38,8 @@ export async function giveConsentToCompany(formData: FormData) {
   }
 
   const now = new Date().toISOString();
-  const { error } = await supabase
+  const adminSupabase = createAdminSupabaseClient();
+  const { error } = await adminSupabase
     .from("consents")
     .upsert(
       {
@@ -74,7 +76,8 @@ export async function withdrawConsent(formData: FormData) {
   }
 
   const now = new Date().toISOString();
-  const { error } = await supabase
+  const adminSupabase = createAdminSupabaseClient();
+  const { error } = await adminSupabase
     .from("consents")
     .upsert(
       {
@@ -131,7 +134,8 @@ export async function giveConsentToAll(formData: FormData) {
     created_at: now,
   }));
 
-  const { error } = await supabase
+  const adminSupabase = createAdminSupabaseClient();
+  const { error } = await adminSupabase
     .from("consents")
     .upsert(payload, { onConflict: "event_id,company_id,student_id" });
 
