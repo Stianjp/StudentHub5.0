@@ -140,15 +140,20 @@ export async function registerCompany(formData: FormData) {
   await requireRole("admin");
   const returnTo = formData.get("returnTo");
   try {
+    const eventId = String(getFormValue(formData, "eventId") ?? "").trim();
+    const companyId = String(getFormValue(formData, "companyId") ?? "").trim();
+    const standType = String(getFormValue(formData, "standType") ?? "").trim();
+    const packageTier = String(getFormValue(formData, "package") ?? "standard").trim();
+
     const parsed = registerCompanySchema.safeParse({
-      eventId: getFormValue(formData, "eventId"),
-      companyId: getFormValue(formData, "companyId"),
-      standType: getFormValue(formData, "standType"),
-      package: getFormValue(formData, "package"),
+      eventId,
+      companyId,
+      standType,
+      package: packageTier,
     });
 
     if (!parsed.success) {
-      throw new Error("Ugyldig event eller bedrift. Velg på nytt.");
+      throw new Error(parsed.error.issues.map((issue) => issue.message).join(", "));
     }
 
     await registerCompanyForEvent({
