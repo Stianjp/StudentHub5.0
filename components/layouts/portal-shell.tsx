@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { LogoutButton } from "@/components/navigation/logout-button";
+import { SessionGuard } from "@/components/supabase/session-guard";
 
 type NavItem = { href: string; label: string };
 
@@ -29,6 +30,7 @@ export function PortalShell({
 
   return (
     <div className={cn("min-h-screen", backgroundClass)}>
+      <SessionGuard />
       <header className="border-b border-primary/10">
         <div className="bg-primary text-surface">
           <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-6 py-6 md:flex-row md:items-center md:justify-between">
