@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -91,7 +92,11 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
           <tbody className="divide-y divide-primary/5">
             {(students ?? []).map((student) => (
               <tr key={student.id}>
-                <td className="px-4 py-3 font-semibold text-primary">{student.full_name ?? "Ukjent"}</td>
+                <td className="px-4 py-3 font-semibold text-primary">
+                  <Link className="hover:underline" href={`/admin/students/${student.id}`}>
+                    {student.full_name ?? "Ukjent"}
+                  </Link>
+                </td>
                 <td className="px-4 py-3 text-ink/80">{student.email ?? "—"}</td>
                 <td className="px-4 py-3 text-ink/80">{student.study_program ?? "—"}</td>
                 <td className="px-4 py-3 text-ink/80">{student.study_level ?? "—"}</td>

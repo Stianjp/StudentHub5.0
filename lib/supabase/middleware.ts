@@ -2,10 +2,11 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import type { Database } from "@/lib/types/database";
 import { assertSupabaseEnv } from "@/lib/supabase/env";
+import { resolveCookieDomain } from "@/lib/supabase/cookie-domain";
 
 export async function updateSession(request: NextRequest) {
   const { supabaseUrl, supabaseAnonKey, cookieDomain } = assertSupabaseEnv();
-  const domain = cookieDomain ?? undefined;
+  const domain = resolveCookieDomain(request.headers.get("host"), cookieDomain);
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {

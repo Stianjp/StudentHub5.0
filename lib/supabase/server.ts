@@ -1,12 +1,14 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import type { Database } from "@/lib/types/database";
 import { assertSupabaseEnv } from "@/lib/supabase/env";
+import { resolveCookieDomain } from "@/lib/supabase/cookie-domain";
 
 export async function createServerSupabaseClient() {
   const cookieStore = await cookies();
+  const host = (await headers()).get("host");
   const { supabaseUrl, supabaseAnonKey, cookieDomain } = assertSupabaseEnv();
-  const domain = cookieDomain ?? undefined;
+  const domain = resolveCookieDomain(host, cookieDomain);
 
   return createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
     cookies: {

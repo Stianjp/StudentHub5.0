@@ -3,6 +3,7 @@
 import { createBrowserClient } from "@supabase/ssr";
 import type { Database } from "@/lib/types/database";
 import { assertSupabaseEnv } from "@/lib/supabase/env";
+import { resolveCookieDomain } from "@/lib/supabase/cookie-domain";
 
 type CookieOptions = {
   path?: string;
@@ -56,6 +57,8 @@ export function createClient() {
     return createBrowserClient<Database>(supabaseUrl, supabaseAnonKey);
   }
 
+  const domain = resolveCookieDomain(window.location.hostname, cookieDomain);
+
   return createBrowserClient<Database>(supabaseUrl, supabaseAnonKey, {
     cookies: {
       getAll() {
@@ -70,7 +73,7 @@ export function createClient() {
             expires: options?.expires,
             sameSite: options?.sameSite,
             secure: options?.secure,
-            domain: cookieDomain ?? undefined,
+            domain,
           });
           document.cookie = cookieString;
         });
