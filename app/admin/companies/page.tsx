@@ -37,7 +37,8 @@ function packageLabel(pkg?: string | null) {
 export default async function AdminCompaniesPage({ searchParams }: CompaniesPageProps) {
   const params = await searchParams;
   const saved = params.saved === "1";
-  const error = params.error === "1";
+  const errorMessage = typeof params.error === "string" ? params.error : "";
+  const error = Boolean(errorMessage) && errorMessage !== "1";
   const supabase = await createServerSupabaseClient();
 
   const [{ data: events, error: eventsError }, companies, { data: eventCompanies, error: eventCompaniesError }] =
@@ -101,7 +102,7 @@ export default async function AdminCompaniesPage({ searchParams }: CompaniesPage
       ) : null}
       {error ? (
         <Card className="border border-error/30 bg-error/10 text-sm text-error">
-          Kunne ikke lagre. Sjekk feltene og prøv igjen.
+          {errorMessage ? decodeURIComponent(errorMessage) : "Kunne ikke lagre. Sjekk feltene og prøv igjen."}
         </Card>
       ) : null}
 
@@ -148,7 +149,7 @@ export default async function AdminCompaniesPage({ searchParams }: CompaniesPage
         {filteredCompanies.length === 0 ? (
           <p className="text-sm text-ink/70">Ingen bedrifter å registrere. Fjern filter eller opprett en bedrift.</p>
         ) : (
-          <form action={registerCompany} className="grid gap-3 md:grid-cols-3">
+          <form action={registerCompany} className="grid gap-3 md:grid-cols-4">
             <input type="hidden" name="returnTo" value="/admin/companies" />
             <label className="text-sm font-semibold text-primary">
               Event
@@ -171,10 +172,19 @@ export default async function AdminCompaniesPage({ searchParams }: CompaniesPage
               </Select>
             </label>
             <label className="text-sm font-semibold text-primary">
+              Pakke
+              <Select name="package" defaultValue="standard">
+                <option value="standard">Standard</option>
+                <option value="silver">Sølv</option>
+                <option value="gold">Gull</option>
+                <option value="platinum">Platinum</option>
+              </Select>
+            </label>
+            <label className="text-sm font-semibold text-primary">
               Standtype (valgfritt)
               <Input name="standType" placeholder="Standard, Premium" />
             </label>
-            <Button className="md:col-span-3" variant="secondary" type="submit">
+            <Button className="md:col-span-4" variant="secondary" type="submit">
               Registrer til event
             </Button>
           </form>

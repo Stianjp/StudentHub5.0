@@ -25,7 +25,8 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
   const { eventId } = await params;
   const paramsData = (await (searchParams ?? Promise.resolve({}))) as Record<string, string | string[] | undefined>;
   const saved = paramsData.saved === "1";
-  const error = paramsData.error === "1";
+  const errorMessage = typeof paramsData.error === "string" ? paramsData.error : "";
+  const error = Boolean(errorMessage) && errorMessage !== "1";
 
   const [eventData, companies] = await Promise.all([
     getEventWithRegistrations(eventId),
@@ -64,7 +65,7 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
       ) : null}
       {error ? (
         <Card className="border border-error/30 bg-error/10 text-sm text-error">
-          Kunne ikke lagre. Sjekk feltene og prøv igjen.
+          {errorMessage ? decodeURIComponent(errorMessage) : "Kunne ikke lagre. Sjekk feltene og prøv igjen."}
         </Card>
       ) : null}
 

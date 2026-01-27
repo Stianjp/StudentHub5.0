@@ -46,7 +46,7 @@ export function LikedCompanies({
               onClick={() => toggle(company.id)}
               className={`flex items-center justify-between rounded-xl border px-3 py-2 text-left text-sm transition-all ${
                 active
-                  ? "border-secondary bg-secondary/20 text-surface shadow-[0_0_0_3px_rgba(254,154,112,0.6)] outline outline-2 outline-secondary"
+                  ? "border-2 border-secondary bg-secondary/20 text-surface shadow-[0_0_0_4px_rgba(254,154,112,0.65)] outline outline-2 outline-secondary"
                   : "border-surface/20 bg-primary/20 text-surface hover:border-secondary/60 hover:bg-primary/30 hover:shadow-soft"
               }`}
             >

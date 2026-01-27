@@ -77,7 +77,8 @@ export async function inviteCompany(formData: FormData) {
     }
   } catch (error) {
     if (typeof returnTo === "string" && returnTo.startsWith("/")) {
-      redirect(`${returnTo}?error=1`);
+      const message = error instanceof Error ? error.message : "Ukjent feil";
+      redirect(`${returnTo}?error=${encodeURIComponent(message)}`);
     }
     throw error;
   }
@@ -114,7 +115,8 @@ export async function setPackage(formData: FormData) {
     }
   } catch (error) {
     if (typeof returnTo === "string" && returnTo.startsWith("/")) {
-      redirect(`${returnTo}?error=1`);
+      const message = error instanceof Error ? error.message : "Ukjent feil";
+      redirect(`${returnTo}?error=${encodeURIComponent(message)}`);
     }
     throw error;
   }
@@ -149,7 +151,8 @@ export async function registerCompany(formData: FormData) {
     }
   } catch (error) {
     if (typeof returnTo === "string" && returnTo.startsWith("/")) {
-      redirect(`${returnTo}?error=1`);
+      const message = error instanceof Error ? error.message : "Ukjent feil";
+      redirect(`${returnTo}?error=${encodeURIComponent(message)}`);
     }
     throw error;
   }
@@ -185,7 +188,8 @@ export async function registerCompaniesBulk(formData: FormData) {
     }
   } catch (error) {
     if (typeof returnTo === "string" && returnTo.startsWith("/")) {
-      redirect(`${returnTo}?error=1`);
+      const message = error instanceof Error ? error.message : "Ukjent feil";
+      redirect(`${returnTo}?error=${encodeURIComponent(message)}`);
     }
     throw error;
   }

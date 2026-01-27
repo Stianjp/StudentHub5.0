@@ -44,6 +44,7 @@ export default async function AdminStudentDetailPage({ params }: PageProps) {
     company: { id: string; name: string | null } | null;
     event: { id: string; name: string | null } | null;
   }>;
+  const activeConsents = typedConsents.filter((consent) => consent.consent);
 
   return (
     <div className="flex flex-col gap-8">
@@ -135,11 +136,11 @@ export default async function AdminStudentDetailPage({ params }: PageProps) {
 
       <Card className="flex flex-col gap-4">
         <h3 className="text-lg font-bold text-primary">Samtykker</h3>
-        {typedConsents.length === 0 ? (
+        {activeConsents.length === 0 ? (
           <p className="text-sm text-ink/70">Ingen samtykker registrert.</p>
         ) : (
           <div className="grid gap-3">
-            {typedConsents.map((consent) => (
+            {activeConsents.map((consent) => (
               <div key={consent.id} className="rounded-xl border border-primary/10 bg-primary/5 p-4">
                 <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                   <div>

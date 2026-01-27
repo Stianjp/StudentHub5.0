@@ -82,7 +82,7 @@ export async function ensureProfile(role: Profile["role"]) {
   }
 
   if (existing) {
-    if (hostRole && existing.role !== hostRole) {
+    if (hostRole && existing.role !== hostRole && !(existing.role === "admin" && hostRole === "company")) {
       const nextPath = defaultPathForRole(hostRole);
       redirect(`/auth/sign-in?role=${hostRole}&next=${encodeURIComponent(nextPath)}`);
     }

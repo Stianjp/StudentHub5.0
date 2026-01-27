@@ -139,8 +139,12 @@ export function SignInClient({
     }
 
     if (allowedRole) {
-      const { data: profile } = await supabase.from("profiles").select("role").eq("id", (await supabase.auth.getUser()).data.user?.id ?? "").maybeSingle();
-      if (profile?.role && profile.role !== allowedRole) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", (await supabase.auth.getUser()).data.user?.id ?? "")
+        .maybeSingle();
+      if (profile?.role && profile.role !== allowedRole && !(profile.role === "admin" && allowedRole === "company")) {
         await supabase.auth.signOut();
         setStatus("error");
         setError("Denne kontoen har ikke tilgang til dette domenet.");
