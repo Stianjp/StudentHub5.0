@@ -39,7 +39,8 @@ export async function saveCompanyInfo(formData: FormData) {
   });
 
   if (!parsed.success) {
-    throw new Error(parsed.error.issues.map((issue) => issue.message).join(", "));
+    const message = parsed.error.issues.map((issue) => issue.message).join(", ");
+    redirect(`/company/onboarding?error=${encodeURIComponent(message)}`);
   }
 
   const { supabase, company } = await getCompanyContext();
@@ -53,7 +54,7 @@ export async function saveCompanyInfo(formData: FormData) {
       industry: parsed.data.industry || null,
       size: parsed.data.size || null,
       location: parsed.data.location || null,
-      website: parsed.data.website || null,
+      website: parsed.data.website ? parsed.data.website : null,
       updated_at: now,
     })
     .eq("id", company.id);

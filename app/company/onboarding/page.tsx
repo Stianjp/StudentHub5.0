@@ -9,7 +9,13 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { saveCompanyInfo } from "@/app/company/actions";
 import { OnboardingSteps } from "@/components/company/onboarding-steps";
 
-export default async function CompanyOnboardingInfoPage() {
+type PageProps = {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function CompanyOnboardingInfoPage({ searchParams }: PageProps) {
+  const params = (await searchParams) ?? {};
+  const errorParam = typeof params.error === "string" ? params.error : null;
   const profile = await requireRole("company");
   const supabase = await createServerSupabaseClient();
   const {
@@ -28,6 +34,12 @@ export default async function CompanyOnboardingInfoPage() {
       />
 
       <OnboardingSteps current="info" />
+
+      {errorParam ? (
+        <Card className="rounded-2xl border border-error/40 bg-error/10 px-4 py-3 text-sm font-semibold text-error">
+          {errorParam}
+        </Card>
+      ) : null}
 
       <Card className="flex flex-col gap-4">
         <form action={saveCompanyInfo} className="grid gap-4">

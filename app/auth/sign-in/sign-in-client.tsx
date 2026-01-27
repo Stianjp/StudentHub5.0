@@ -24,9 +24,10 @@ export function SignInClient({
   const initialRole = allowedRole ?? (paramRole === "admin" ? "company" : paramRole ?? "company");
   const next = params.get("next");
   const reason = params.get("reason");
+  const defaultMode = allowedRole === "company" && !params.get("mode") ? "register" : "login";
 
   const [role, setRole] = useState<Role>(allowedRole ?? initialRole);
-  const [mode, setMode] = useState<Mode>("login");
+  const [mode, setMode] = useState<Mode>(defaultMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "sent" | "error">("idle");
@@ -65,7 +66,12 @@ export function SignInClient({
     }
 
     const supabase = createClient();
-    const nextPath = typeof next === "string" ? next : `/${roleValue}`;
+    const nextPath =
+      typeof next === "string"
+        ? next
+        : roleValue === "company"
+          ? "/company/onboarding"
+          : `/${roleValue}`;
 
     if (mode === "reset") {
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(emailValue, {
@@ -106,24 +112,12 @@ export function SignInClient({
 
       if (signUpError) {
         setStatus("error");
-        setError(signUpError.message);
+        setError("Kunne ikke opprette konto. Sjekk e-post og prøv igjen.");
         return;
       }
 
-      if (data.user) {
-        const { error: profileError } = await supabase.from("profiles").insert({
-          id: data.user.id,
-          role: roleValue as Role,
-        });
-        if (profileError) {
-          setStatus("error");
-          setError(profileError.message);
-          return;
-        }
-      }
-
       setStatus("sent");
-      setError("Registrering OK. Sjekk e-post for bekreftelse eller logg inn.");
+      setError("Registrering OK. Bekreft e-posten din før du kan logge inn.");
       return;
     }
 
@@ -134,7 +128,11 @@ export function SignInClient({
 
     if (signInError) {
       setStatus("error");
-      setError("Feil e-post eller passord. Prøv igjen.");
+      const message = signInError.message.toLowerCase().includes("confirm") ||
+        signInError.message.toLowerCase().includes("verified")
+        ? "Bekreft e-posten din før du kan logge inn."
+        : "Feil e-post eller passord. Prøv igjen.";
+      setError(message);
       return;
     }
 
@@ -160,7 +158,7 @@ export function SignInClient({
       <Card className="flex flex-col gap-6">
         <div className="flex flex-col items-center gap-3 text-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
-            <Image src="/brand/Logo_OSH.svg" alt="Oslo Student Hub" width={40} height={40} />
+            <Image src="/brand/logo.svg" alt="Oslo Student Hub" width={40} height={40} />
           </div>
           <p className="text-xs font-semibold uppercase tracking-wide text-primary/60">Oslo Student Hub</p>
           <h1 className="mt-2 text-2xl font-bold text-primary">{title}</h1>

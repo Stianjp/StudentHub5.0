@@ -20,7 +20,18 @@ export const companyInfoSchema = z.object({
   industry: z.string().optional().or(z.literal("")),
   size: z.string().optional().or(z.literal("")),
   location: z.string().optional().or(z.literal("")),
-  website: z.string().url("Nettside må være en gyldig URL").optional().or(z.literal("")),
+  website: z.preprocess(
+    (value) => {
+      if (typeof value !== "string") return value;
+      const trimmed = value.trim();
+      if (!trimmed) return "";
+      if (!/^https?:\/\//i.test(trimmed)) {
+        return `https://${trimmed}`;
+      }
+      return trimmed;
+    },
+    z.union([z.string().url("Nettside må være en gyldig URL"), z.literal("")]),
+  ),
 });
 
 export const companyRecruitmentSchema = z.object({

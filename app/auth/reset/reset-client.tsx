@@ -49,7 +49,7 @@ export function ResetClient() {
       <Card className="flex flex-col gap-6">
         <div className="flex flex-col items-center gap-3 text-center">
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
-            <Image src="/brand/Logo_OSH.svg" alt="Oslo Student Hub" width={40} height={40} />
+            <Image src="/brand/logo.svg" alt="Oslo Student Hub" width={40} height={40} />
           </div>
           <p className="text-xs font-semibold uppercase tracking-wide text-primary/60">Oslo Student Hub</p>
           <h1 className="text-2xl font-bold text-primary">Sett nytt passord</h1>
