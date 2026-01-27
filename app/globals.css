@@ -53,4 +53,29 @@ table tbody tr:active {
     border-color: #FE9A70;
     box-shadow: 0 0 0 2px rgba(254, 154, 112, 0.5), 0 0 0 4px #140249;
   }
+
+  .portal-top-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #FFFFFF;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    background: transparent;
+    transition: all 150ms ease;
+  }
+
+  .portal-top-link:hover {
+    color: #FE9A70;
+    border-color: #FE9A70;
+    box-shadow: 0 0 0 2px rgba(254, 154, 112, 0.6), 0 0 0 4px #140249;
+    background-color: rgba(254, 154, 112, 0.1);
+  }
+
+  .portal-top-link:focus-visible {
+    box-shadow: 0 0 0 2px rgba(254, 154, 112, 0.7), 0 0 0 4px #140249;
+  }
 }

@@ -56,10 +56,7 @@ export function PortalShell({
                 {roleLabel}
               </span>
                 <LogoutButton role={roleKey} />
-                <Link
-                  href="/"
-                  className="rounded-full bg-surface/10 px-4 py-2 text-xs font-semibold text-surface transition hover:bg-secondary/15 hover:text-secondary hover:ring-2 hover:ring-secondary/40 hover:ring-offset-2 hover:ring-offset-primary"
-                >
+                <Link href="/" className="portal-top-link">
                   Hjem
                 </Link>
             </div>
@@ -72,7 +69,10 @@ export function PortalShell({
             </p>
             <nav className="flex flex-wrap items-center gap-2">
               {nav.map((item) => {
-                const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+                const isRoot = ["/company", "/student", "/admin"].includes(item.href);
+                const isActive = isRoot
+                  ? pathname === item.href
+                  : pathname === item.href || pathname.startsWith(`${item.href}/`);
                 return (
                   <Link
                     key={item.href}
