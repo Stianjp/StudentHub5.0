@@ -50,7 +50,14 @@ export function LikedCompanies({
                   : "border-surface/60 bg-surface text-primary hover:border-secondary/40 hover:shadow-soft"
               }`}
             >
-              <span className="font-semibold">{company.name}</span>
+              <span className="flex items-center gap-2 font-semibold">
+                {active ? (
+                  <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-secondary text-[10px] font-bold text-primary">
+                    ✓
+                  </span>
+                ) : null}
+                {company.name}
+              </span>
               <Badge variant={active ? "success" : "default"}>{company.industry ?? "Bedrift"}</Badge>
             </button>
           );

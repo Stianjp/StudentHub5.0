@@ -8,8 +8,15 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getOrCreateStudentForUser } from "@/lib/student";
 import { saveStudentProfile } from "@/app/student/actions";
 import { LikedCompanies } from "@/components/student/liked-companies";
+import { SaveProfileButton } from "@/components/student/save-profile-button";
 
-export default async function StudentProfilePage() {
+type PageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function StudentProfilePage({ searchParams }: PageProps) {
+  const params = await searchParams;
+  const showSaved = params.saved === "1";
   const profile = await requireRole("student");
   const supabase = await createServerSupabaseClient();
   const {
@@ -38,6 +45,11 @@ export default async function StudentProfilePage() {
         />
 
         <Card className="mt-8 flex flex-col gap-5 text-ink">
+        {showSaved ? (
+          <div className="rounded-xl border border-success/30 bg-success/10 px-4 py-3 text-sm text-success">
+            Profilen er lagret.
+          </div>
+        ) : null}
         <form action={saveStudentProfile} className="grid gap-4">
           <div className="grid gap-4 md:grid-cols-2">
             <label className="text-sm font-semibold text-primary">
@@ -128,9 +140,7 @@ export default async function StudentProfilePage() {
             </p>
           </label>
 
-          <Button className="mt-2 w-full" type="submit">
-            Lagre profil
-          </Button>
+          <SaveProfileButton />
         </form>
         </Card>
       </div>

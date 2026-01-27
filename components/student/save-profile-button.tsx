@@ -1,0 +1,14 @@
+"use client";
+
+import { useFormStatus } from "react-dom";
+import { Button } from "@/components/ui/button";
+
+export function SaveProfileButton() {
+  const { pending } = useFormStatus();
+
+  return (
+    <Button className="mt-2 w-full" type="submit" disabled={pending}>
+      {pending ? "Lagrer..." : "Lagre profil"}
+    </Button>
+  );
+}
