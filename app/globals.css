@@ -37,7 +37,8 @@ table tbody tr:active {
   }
 
   .portal-nav-link:hover {
-    @apply border-secondary bg-secondary/15 text-secondary ring-2 ring-secondary/40 ring-offset-2 ring-offset-primary;
+    @apply bg-secondary/15 text-secondary ring-2 ring-secondary/40 ring-offset-2 ring-offset-primary;
+    border-color: #FE9A70;
   }
 
   .portal-nav-link:focus-visible {
@@ -45,6 +46,7 @@ table tbody tr:active {
   }
 
   .portal-nav-link--active {
-    @apply border-secondary bg-secondary/20 text-secondary ring-2 ring-secondary/50 ring-offset-2 ring-offset-primary;
+    @apply bg-secondary/20 text-secondary ring-2 ring-secondary/50 ring-offset-2 ring-offset-primary;
+    border-color: #FE9A70;
   }
 }
