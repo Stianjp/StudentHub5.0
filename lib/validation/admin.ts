@@ -31,4 +31,5 @@ export const registerCompanySchema = z.object({
   eventId: z.string().uuid(),
   companyId: z.string().uuid(),
   standType: z.string().optional().or(z.literal("")),
+  package: z.enum(["standard", "silver", "gold", "platinum"]).optional(),
 });

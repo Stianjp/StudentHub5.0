@@ -87,6 +87,15 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
               </Select>
             </label>
             <label className="text-sm font-semibold text-primary">
+              Pakke
+              <Select name="package" defaultValue="standard">
+                <option value="standard">Standard</option>
+                <option value="silver">Sølv</option>
+                <option value="gold">Gull</option>
+                <option value="platinum">Platinum</option>
+              </Select>
+            </label>
+            <label className="text-sm font-semibold text-primary">
               Standtype (valgfritt)
               <Input name="standType" placeholder="Standard, Premium" />
             </label>
@@ -105,6 +114,15 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
           <label className="text-sm font-semibold text-primary">
             Standtype (valgfritt)
             <Input name="standType" placeholder="Standard, Premium" />
+          </label>
+          <label className="text-sm font-semibold text-primary">
+            Pakke
+            <Select name="package" defaultValue="standard">
+              <option value="standard">Standard</option>
+              <option value="silver">Sølv</option>
+              <option value="gold">Gull</option>
+              <option value="platinum">Platinum</option>
+            </Select>
           </label>
           {availableCompanies.length === 0 ? (
             <p className="text-sm text-ink/70">Alle bedrifter er allerede registrert.</p>

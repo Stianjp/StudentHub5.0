@@ -115,7 +115,7 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
           </div>
         </Card>
 
-        <Card className="flex flex-col gap-4 bg-primary/20 text-surface ring-1 ring-white/10">
+        <Card className="flex flex-col gap-6 bg-primary/20 text-surface ring-1 ring-white/10">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-bold text-surface">Bedrifter ({filteredCompanies.length})</h3>
             <Link className="text-sm font-semibold text-surface/80 transition hover:text-surface" href="/student">
@@ -125,28 +125,32 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
           {filteredCompanies.length === 0 ? (
             <p className="text-sm text-surface/70">Ingen bedrifter i denne bransjen.</p>
           ) : (
-            <ul className="grid gap-2 text-sm text-surface/80">
-              {filteredCompanies.map((company) => (
-                <li
-                  key={company.id}
-                  className="flex flex-col gap-2 rounded-xl border border-surface/10 bg-primary/30 p-4 md:flex-row md:items-center md:justify-between"
-                >
-                  <div>
-                    <p className="font-semibold text-surface">{company.name}</p>
-                    <p className="text-xs text-surface/70">{company.industry ?? "Bransje ikke satt"}</p>
+          <ul className="grid gap-4 text-sm text-surface/80">
+            {filteredCompanies.map((company) => (
+              <li
+                key={company.id}
+                className={`flex flex-col gap-2 rounded-xl border p-4 md:flex-row md:items-center md:justify-between ${
+                  consentedCompanyIds.has(company.id)
+                    ? "border-secondary/60 bg-secondary/15 shadow-soft"
+                    : "border-surface/10 bg-primary/30"
+                }`}
+              >
+                <div>
+                  <p className="font-semibold text-surface">{company.name}</p>
+                  <p className="text-xs text-surface/70">{company.industry ?? "Bransje ikke satt"}</p>
+                </div>
+                {consentedCompanyIds.has(company.id) ? (
+                  <div className="flex items-center gap-2">
+                    <Badge className="bg-secondary/30 text-secondary">Samtykke gitt</Badge>
+                    <form action={withdrawConsent}>
+                      <input type="hidden" name="eventId" value={eventId} />
+                      <input type="hidden" name="companyId" value={company.id} />
+                      <Button variant="ghost" type="submit" disabled={!hasEvent}>
+                        Fjern samtykke
+                      </Button>
+                    </form>
                   </div>
-                  {consentedCompanyIds.has(company.id) ? (
-                    <div className="flex items-center gap-2">
-                      <Badge variant="success">Samtykke gitt</Badge>
-                      <form action={withdrawConsent}>
-                        <input type="hidden" name="eventId" value={eventId} />
-                        <input type="hidden" name="companyId" value={company.id} />
-                        <Button variant="ghost" type="submit" disabled={!hasEvent}>
-                          Fjern samtykke
-                        </Button>
-                      </form>
-                    </div>
-                  ) : (
+                ) : (
                     <form action={giveConsentToCompany}>
                       <input type="hidden" name="eventId" value={eventId} />
                       <input type="hidden" name="companyId" value={company.id} />
@@ -161,14 +165,14 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
           )}
         </Card>
 
-        <Card className="flex flex-col gap-4 bg-primary/20 text-surface ring-1 ring-white/10">
+        <Card className="flex flex-col gap-6 bg-primary/20 text-surface ring-1 ring-white/10">
           <h3 className="text-lg font-bold text-surface">Dine samtykker</h3>
           {activeConsents.length === 0 ? (
             <p className="text-sm text-surface/70">Du har ikke gitt samtykke til noen bedrifter ennå.</p>
           ) : (
-            <ul className="grid gap-3">
+            <ul className="grid gap-4">
               {activeConsents.map((consent) => (
-                <li key={consent.id} className="rounded-xl border border-surface/10 bg-primary/30 p-4">
+                <li key={consent.id} className="rounded-xl border border-secondary/60 bg-secondary/15 p-4 shadow-soft">
                   <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                     <div>
                       <p className="text-base font-semibold text-surface">{consent.company?.name ?? "Bedrift"}</p>

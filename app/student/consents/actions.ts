@@ -39,24 +39,33 @@ export async function giveConsentToCompany(formData: FormData) {
 
   const now = new Date().toISOString();
   const adminSupabase = createAdminSupabaseClient();
+  const payload = {
+    event_id: eventId,
+    company_id: companyId,
+    student_id: student.id,
+    consent: true,
+    scope: "contact",
+    consented_at: now,
+    created_at: now,
+    updated_at: now,
+    updated_by: user.id,
+  };
+
   const { error } = await adminSupabase
     .from("consents")
-    .upsert(
-      {
-        event_id: eventId,
-        company_id: companyId,
-        student_id: student.id,
-        consent: true,
-        scope: "contact",
-        consented_at: now,
-        created_at: now,
-        updated_at: now,
-        updated_by: user.id,
-      },
-      { onConflict: "event_id,company_id,student_id" },
-    );
+    .upsert(payload, { onConflict: "event_id,company_id,student_id" });
 
-  if (error) throw error;
+  if (error?.code === "PGRST204" || error?.message?.includes("updated_at")) {
+    const fallback = { ...payload };
+    delete (fallback as { updated_at?: string }).updated_at;
+    delete (fallback as { updated_by?: string }).updated_by;
+    const { error: fallbackError } = await adminSupabase
+      .from("consents")
+      .upsert(fallback, { onConflict: "event_id,company_id,student_id" });
+    if (fallbackError) throw fallbackError;
+  } else if (error) {
+    throw error;
+  }
   revalidatePath("/student/consents");
 }
 
@@ -79,24 +88,33 @@ export async function withdrawConsent(formData: FormData) {
 
   const now = new Date().toISOString();
   const adminSupabase = createAdminSupabaseClient();
+  const payload = {
+    event_id: eventId,
+    company_id: companyId,
+    student_id: student.id,
+    consent: false,
+    scope: "contact",
+    consented_at: now,
+    created_at: now,
+    updated_at: now,
+    updated_by: user.id,
+  };
+
   const { error } = await adminSupabase
     .from("consents")
-    .upsert(
-      {
-        event_id: eventId,
-        company_id: companyId,
-        student_id: student.id,
-        consent: false,
-        scope: "contact",
-        consented_at: now,
-        created_at: now,
-        updated_at: now,
-        updated_by: user.id,
-      },
-      { onConflict: "event_id,company_id,student_id" },
-    );
+    .upsert(payload, { onConflict: "event_id,company_id,student_id" });
 
-  if (error) throw error;
+  if (error?.code === "PGRST204" || error?.message?.includes("updated_at")) {
+    const fallback = { ...payload };
+    delete (fallback as { updated_at?: string }).updated_at;
+    delete (fallback as { updated_by?: string }).updated_by;
+    const { error: fallbackError } = await adminSupabase
+      .from("consents")
+      .upsert(fallback, { onConflict: "event_id,company_id,student_id" });
+    if (fallbackError) throw fallbackError;
+  } else if (error) {
+    throw error;
+  }
   revalidatePath("/student/consents");
 }
 
@@ -145,6 +163,19 @@ export async function giveConsentToAll(formData: FormData) {
     .from("consents")
     .upsert(payload, { onConflict: "event_id,company_id,student_id" });
 
-  if (error) throw error;
+  if (error?.code === "PGRST204" || error?.message?.includes("updated_at")) {
+    const fallbackPayload = payload.map((row) => {
+      const cleaned = { ...row } as { updated_at?: string; updated_by?: string };
+      delete cleaned.updated_at;
+      delete cleaned.updated_by;
+      return cleaned;
+    }) as unknown as typeof payload;
+    const { error: fallbackError } = await adminSupabase
+      .from("consents")
+      .upsert(fallbackPayload, { onConflict: "event_id,company_id,student_id" });
+    if (fallbackError) throw fallbackError;
+  } else if (error) {
+    throw error;
+  }
   revalidatePath("/student/consents");
 }

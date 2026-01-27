@@ -287,6 +287,7 @@ export async function registerCompanyForEvent(input: {
   eventId: string;
   companyId: string;
   standType?: string | null;
+  package?: "standard" | "silver" | "gold" | "platinum";
 }) {
   const supabase = createAdminSupabaseClient();
   const now = new Date().toISOString();
@@ -298,6 +299,7 @@ export async function registerCompanyForEvent(input: {
         event_id: input.eventId,
         company_id: input.companyId,
         stand_type: input.standType ?? "Standard",
+        package: input.package ?? "standard",
         registered_at: now,
         updated_at: now,
       },

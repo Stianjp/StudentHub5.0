@@ -128,6 +128,7 @@ export async function registerCompany(formData: FormData) {
       eventId: formData.get("eventId"),
       companyId: formData.get("companyId"),
       standType: formData.get("standType"),
+      package: formData.get("package"),
     });
 
     if (!parsed.success) {
@@ -138,6 +139,7 @@ export async function registerCompany(formData: FormData) {
       eventId: parsed.data.eventId,
       companyId: parsed.data.companyId,
       standType: parsed.data.standType || "Standard",
+      package: parsed.data.package ?? "standard",
     });
 
     revalidatePath("/admin/companies");
@@ -157,6 +159,7 @@ export async function registerCompaniesBulk(formData: FormData) {
   await requireRole("admin");
   const eventId = formData.get("eventId")?.toString() ?? "";
   const standType = formData.get("standType")?.toString() ?? "Standard";
+  const packageTier = formData.get("package")?.toString() ?? "standard";
   const companyIds = formData.getAll("companyIds").map((value) => String(value));
   const returnTo = formData.get("returnTo");
 
@@ -171,7 +174,7 @@ export async function registerCompaniesBulk(formData: FormData) {
 
     await Promise.all(
       companyIds.map((companyId) =>
-        registerCompanyForEvent({ eventId, companyId, standType }),
+        registerCompanyForEvent({ eventId, companyId, standType, package: packageTier as "standard" | "silver" | "gold" | "platinum" }),
       ),
     );
 
