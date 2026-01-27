@@ -61,14 +61,16 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
   const activeConsents = consents.filter((consent) => consent.consent);
 
   return (
-    <div className="flex flex-col gap-8">
-      <SectionHeader
-        eyebrow="Samtykke"
-        title="Gi samtykke til bedrifter"
-        description="Gi samtykke til bedrifter du vil at skal kunne kontakte deg."
-      />
+    <div className="flex flex-col gap-8 text-surface">
+      <div className="rounded-3xl border border-surface/10 bg-surface/5 p-6 md:p-10">
+        <SectionHeader
+          eyebrow="Samtykke"
+          title="Gi samtykke til bedrifter"
+          description="Gi samtykke til bedrifter du vil at skal kunne kontakte deg."
+          tone="light"
+        />
 
-      <Card className="flex flex-col gap-4">
+        <Card className="mt-8 flex flex-col gap-4 text-ink">
         {eventId ? (
           <form className="grid gap-3 md:grid-cols-2" method="get">
             <label className="text-sm font-semibold text-primary">
@@ -113,7 +115,7 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
         </div>
       </Card>
 
-      <Card className="flex flex-col gap-4">
+      <Card className="flex flex-col gap-4 text-ink">
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-bold text-primary">Bedrifter ({filteredCompanies.length})</h3>
           <Link className="text-sm font-semibold text-primary/70 transition hover:text-primary" href="/student">
@@ -156,7 +158,7 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
         )}
       </Card>
 
-      <Card className="flex flex-col gap-4">
+      <Card className="flex flex-col gap-4 text-ink">
         <h3 className="text-lg font-bold text-primary">Dine samtykker</h3>
         {activeConsents.length === 0 ? (
           <p className="text-sm text-ink/70">Du har ikke gitt samtykke til noen bedrifter ennå.</p>
@@ -186,6 +188,7 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
           </ul>
         )}
       </Card>
+      </div>
     </div>
   );
 }

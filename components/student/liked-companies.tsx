@@ -42,10 +42,11 @@ export function LikedCompanies({
             <button
               key={company.id}
               type="button"
+              aria-pressed={active}
               onClick={() => toggle(company.id)}
               className={`flex items-center justify-between rounded-xl border px-3 py-2 text-left text-sm transition-all ${
                 active
-                  ? "border-secondary/70 bg-secondary/10 text-primary shadow-soft ring-2 ring-secondary/60"
+                  ? "border-secondary bg-secondary/15 text-primary shadow-soft ring-2 ring-secondary ring-offset-2 ring-offset-primary"
                   : "border-surface/60 bg-surface text-primary hover:border-secondary/40 hover:shadow-soft"
               }`}
             >

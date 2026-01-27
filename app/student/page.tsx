@@ -28,7 +28,7 @@ export default async function StudentProfilePage() {
   if (companiesError) throw companiesError;
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-8 text-surface">
       <div className="rounded-3xl border border-surface/10 bg-surface/5 p-6 md:p-10">
         <SectionHeader
           eyebrow="Profil"
@@ -37,7 +37,7 @@ export default async function StudentProfilePage() {
           tone="light"
         />
 
-        <Card className="mt-8 flex flex-col gap-5">
+        <Card className="mt-8 flex flex-col gap-5 text-ink">
         <form action={saveStudentProfile} className="grid gap-4">
           <div className="grid gap-4 md:grid-cols-2">
             <label className="text-sm font-semibold text-primary">

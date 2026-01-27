@@ -9,13 +9,13 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    "bg-primary text-surface shadow-soft hover:-translate-y-0.5 hover:bg-primary/90 active:translate-y-0 active:bg-primary/80 active:shadow-inner",
+    "bg-primary text-surface shadow-soft hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-lg active:translate-y-0 active:scale-[0.98] active:bg-primary/80 active:shadow-inner",
   secondary:
-    "bg-secondary text-primary shadow-soft hover:-translate-y-0.5 hover:bg-secondary/85 active:translate-y-0 active:bg-secondary/75 active:shadow-inner",
+    "bg-secondary text-primary shadow-soft hover:-translate-y-0.5 hover:bg-secondary/85 hover:shadow-lg active:translate-y-0 active:scale-[0.98] active:bg-secondary/75 active:shadow-inner",
   ghost:
-    "bg-transparent text-primary hover:bg-primary/10 active:bg-primary/20 focus-visible:ring-primary/30",
+    "bg-transparent text-primary hover:bg-primary/10 hover:shadow-soft active:bg-primary/20 active:scale-[0.98] focus-visible:ring-primary/30",
   danger:
-    "bg-error text-surface shadow-soft hover:-translate-y-0.5 hover:bg-error/90 active:translate-y-0 active:bg-error/80 active:shadow-inner",
+    "bg-error text-surface shadow-soft hover:-translate-y-0.5 hover:bg-error/90 hover:shadow-lg active:translate-y-0 active:scale-[0.98] active:bg-error/80 active:shadow-inner",
 };
 
 export function Button({ variant = "primary", className, ...props }: ButtonProps) {
