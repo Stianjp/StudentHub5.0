@@ -58,6 +58,8 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
       .filter(Boolean) as string[],
   );
 
+  const activeConsents = consents.filter((consent) => consent.consent);
+
   return (
     <div className="flex flex-col gap-8">
       <SectionHeader
@@ -156,11 +158,11 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
 
       <Card className="flex flex-col gap-4">
         <h3 className="text-lg font-bold text-primary">Dine samtykker</h3>
-        {consents.length === 0 ? (
+        {activeConsents.length === 0 ? (
           <p className="text-sm text-ink/70">Du har ikke gitt samtykke til noen bedrifter ennå.</p>
         ) : (
           <ul className="grid gap-3">
-            {consents.map((consent) => (
+            {activeConsents.map((consent) => (
               <li key={consent.id} className="rounded-xl border border-primary/10 bg-primary/5 p-4">
                 <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                   <div>
@@ -172,23 +174,13 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
                   </Badge>
                 </div>
                 <p className="mt-2 text-xs text-ink/80">Scope: {consent.scope}</p>
-                {consent.consent ? (
-                  <form action={withdrawConsent} className="mt-3">
-                    <input type="hidden" name="eventId" value={consent.event?.id ?? eventId} />
-                    <input type="hidden" name="companyId" value={consent.company?.id ?? ""} />
-                    <Button variant="ghost" type="submit">
-                      Fjern samtykke
-                    </Button>
-                  </form>
-                ) : (
-                  <form action={giveConsentToCompany} className="mt-3">
-                    <input type="hidden" name="eventId" value={consent.event?.id ?? eventId} />
-                    <input type="hidden" name="companyId" value={consent.company?.id ?? ""} />
-                    <Button variant="secondary" type="submit">
-                      Gi samtykke igjen
-                    </Button>
-                  </form>
-                )}
+                <form action={withdrawConsent} className="mt-3">
+                  <input type="hidden" name="eventId" value={consent.event?.id ?? eventId} />
+                  <input type="hidden" name="companyId" value={consent.company?.id ?? ""} />
+                  <Button variant="ghost" type="submit">
+                    Fjern samtykke
+                  </Button>
+                </form>
               </li>
             ))}
           </ul>
