@@ -37,16 +37,20 @@ table tbody tr:active {
   }
 
   .portal-nav-link:hover {
-    @apply bg-secondary/15 text-secondary ring-2 ring-secondary/40 ring-offset-2 ring-offset-primary;
+    background-color: rgba(254, 154, 112, 0.15);
+    color: #FE9A70;
     border-color: #FE9A70;
+    box-shadow: 0 0 0 2px rgba(254, 154, 112, 0.4), 0 0 0 4px #140249;
   }
 
   .portal-nav-link:focus-visible {
-    @apply ring-2 ring-secondary/60 ring-offset-2 ring-offset-primary;
+    box-shadow: 0 0 0 2px rgba(254, 154, 112, 0.6), 0 0 0 4px #140249;
   }
 
   .portal-nav-link--active {
-    @apply bg-secondary/20 text-secondary ring-2 ring-secondary/50 ring-offset-2 ring-offset-primary;
+    background-color: rgba(254, 154, 112, 0.2);
+    color: #FE9A70;
     border-color: #FE9A70;
+    box-shadow: 0 0 0 2px rgba(254, 154, 112, 0.5), 0 0 0 4px #140249;
   }
 }
