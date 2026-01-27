@@ -24,7 +24,7 @@ export function SignInClient({
   const initialRole = allowedRole ?? (paramRole === "admin" ? "company" : paramRole ?? "company");
   const next = params.get("next");
   const reason = params.get("reason");
-  const defaultMode = allowedRole === "company" && !params.get("mode") ? "register" : "login";
+  const defaultMode = (params.get("mode") as Mode | null) ?? "login";
 
   const [role, setRole] = useState<Role>(allowedRole ?? initialRole);
   const [mode, setMode] = useState<Mode>(defaultMode);

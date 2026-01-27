@@ -30,3 +30,21 @@ table tbody tr:hover {
 table tbody tr:active {
   background-color: rgba(254, 154, 112, 0.2);
 }
+
+@layer components {
+  .portal-nav-link {
+    @apply rounded-full border border-surface/30 bg-transparent px-4 py-2 text-sm font-semibold text-surface/90 transition;
+  }
+
+  .portal-nav-link:hover {
+    @apply border-secondary bg-secondary/15 text-secondary ring-2 ring-secondary/40 ring-offset-2 ring-offset-primary;
+  }
+
+  .portal-nav-link:focus-visible {
+    @apply ring-2 ring-secondary/60 ring-offset-2 ring-offset-primary;
+  }
+
+  .portal-nav-link--active {
+    @apply border-secondary bg-secondary/20 text-secondary ring-2 ring-secondary/50 ring-offset-2 ring-offset-primary;
+  }
+}

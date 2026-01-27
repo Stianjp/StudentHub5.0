@@ -77,12 +77,7 @@ export function PortalShell({
                   <Link
                     key={item.href}
                     href={item.href}
-                    className={cn(
-                      "rounded-full border px-4 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-surface",
-                      isActive
-                        ? "border-primary bg-primary text-surface shadow-soft"
-                        : "border-primary/15 bg-surface text-primary hover:border-secondary hover:bg-secondary/15 hover:text-secondary",
-                    )}
+                    className={cn("portal-nav-link", isActive && "portal-nav-link--active")}
                   >
                     {item.label}
                   </Link>
