@@ -23,7 +23,8 @@ function getFormValue(formData: FormData, name: string) {
 
   for (const [key, value] of formData.entries()) {
     if (key === name) continue;
-    if (key.endsWith(`_${name}`) || key.endsWith(name)) {
+    const normalized = key.replace(/^\d+_/, "");
+    if (normalized === name || normalized.endsWith(name)) {
       return value;
     }
   }
@@ -75,7 +76,10 @@ export async function inviteCompany(formData: FormData) {
     });
 
     if (!parsed.success) {
-      throw new Error(parsed.error.issues.map((issue) => issue.message).join(", "));
+      const message = parsed.error.issues
+        .map((issue) => `${issue.path.join(".") || "field"}: ${issue.message}`)
+        .join(", ");
+      throw new Error(message);
     }
 
     await inviteCompanyToEvent({
