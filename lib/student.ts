@@ -1,5 +1,6 @@
 import type { TableRow } from "@/lib/types/database";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 
 type Student = TableRow<"students">;
 type Consent = TableRow<"consents">;
@@ -61,7 +62,13 @@ export async function getOrCreateStudentForUser(userId: string, email?: string |
 }
 
 export async function listStudentConsents(studentId: string) {
-  const supabase = await createServerSupabaseClient();
+  let supabase = await createServerSupabaseClient();
+  try {
+    supabase = createAdminSupabaseClient();
+  } catch {
+    // Use session-based client if service role is missing.
+  }
+
   const { data, error } = await supabase
     .from("consents")
     .select("*, company:companies(id, name), event:events(id, name)")
