@@ -25,6 +25,7 @@ export const studentProfileSchema = z.object({
   preferredLocations: commaSeparated,
   willingToRelocate: z.coerce.boolean().default(false),
   likedCompanyIds: commaSeparated,
+  about: z.string().max(600).optional().or(z.literal("")),
 });
 
 export const consentSchema = z.object({

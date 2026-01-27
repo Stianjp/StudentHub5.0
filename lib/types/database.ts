@@ -103,6 +103,7 @@ export type Database = {
           full_name: string | null;
           email: string | null;
           phone: string | null;
+          about: string | null;
           study_program: string | null;
           study_level: string | null;
           graduation_year: number | null;
@@ -121,6 +122,7 @@ export type Database = {
           full_name?: string | null;
           email?: string | null;
           phone?: string | null;
+          about?: string | null;
           study_program?: string | null;
           study_level?: string | null;
           graduation_year?: number | null;
@@ -139,6 +141,7 @@ export type Database = {
           full_name?: string | null;
           email?: string | null;
           phone?: string | null;
+          about?: string | null;
           study_program?: string | null;
           study_level?: string | null;
           graduation_year?: number | null;

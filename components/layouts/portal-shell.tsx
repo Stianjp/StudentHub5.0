@@ -13,18 +13,20 @@ export function PortalShell({
   title,
   nav,
   roleKey,
+  backgroundClass = "bg-mist",
   children,
 }: {
   roleLabel: string;
   title: string;
   nav: NavItem[];
   roleKey: "student" | "company" | "admin";
+  backgroundClass?: string;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
 
   return (
-    <div className="min-h-screen bg-mist">
+    <div className={cn("min-h-screen", backgroundClass)}>
       <header className="border-b border-primary/10">
         <div className="bg-primary text-surface">
           <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-6 py-6 md:flex-row md:items-center md:justify-between">

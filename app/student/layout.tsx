@@ -21,7 +21,13 @@ export default async function StudentLayout({ children }: { children: React.Reac
   const title = student?.full_name ?? "Studentportal";
 
   return (
-    <PortalShell roleLabel="Student" roleKey="student" title={title} nav={nav}>
+    <PortalShell
+      roleLabel="Student"
+      roleKey="student"
+      title={title}
+      nav={nav}
+      backgroundClass="bg-primary"
+    >
       {children}
     </PortalShell>
   );

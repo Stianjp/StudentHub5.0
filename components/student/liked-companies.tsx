@@ -43,10 +43,10 @@ export function LikedCompanies({
               key={company.id}
               type="button"
               onClick={() => toggle(company.id)}
-              className={`flex items-center justify-between rounded-xl border px-3 py-2 text-left text-sm transition ${
+              className={`flex items-center justify-between rounded-xl border px-3 py-2 text-left text-sm transition-all ${
                 active
-                  ? "border-primary bg-primary text-surface shadow-soft"
-                  : "border-primary/15 bg-surface text-primary hover:border-primary/40"
+                  ? "border-secondary/70 bg-secondary/10 text-primary shadow-soft ring-2 ring-secondary/60"
+                  : "border-surface/60 bg-surface text-primary hover:border-secondary/40 hover:shadow-soft"
               }`}
             >
               <span className="font-semibold">{company.name}</span>

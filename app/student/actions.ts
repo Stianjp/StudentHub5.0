@@ -32,6 +32,7 @@ export async function saveStudentProfile(formData: FormData) {
     preferredLocations: formData.get("preferredLocations"),
     willingToRelocate: formData.get("willingToRelocate"),
     likedCompanyIds: formData.get("likedCompanyIds"),
+    about: formData.get("about"),
   });
 
   if (!parsed.success) {
@@ -55,6 +56,7 @@ export async function saveStudentProfile(formData: FormData) {
       preferred_locations: parsed.data.preferredLocations,
       willing_to_relocate: parsed.data.willingToRelocate,
       liked_company_ids: parsed.data.likedCompanyIds,
+      about: parsed.data.about || null,
       updated_at: now,
     })
     .eq("id", student.id);

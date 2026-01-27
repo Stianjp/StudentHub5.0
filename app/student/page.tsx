@@ -29,13 +29,15 @@ export default async function StudentProfilePage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <SectionHeader
-        eyebrow="Profil"
-        title="Din studentprofil"
-        description="Mobil-først profil som brukes i matching og eventflyt."
-      />
+      <div className="rounded-3xl border border-surface/10 bg-surface/5 p-6 md:p-10">
+        <SectionHeader
+          eyebrow="Profil"
+          title="Din studentprofil"
+          description="Mobil-først profil som brukes i matching og eventflyt."
+          tone="light"
+        />
 
-      <Card className="flex flex-col gap-5">
+        <Card className="mt-8 flex flex-col gap-5">
         <form action={saveStudentProfile} className="grid gap-4">
           <div className="grid gap-4 md:grid-cols-2">
             <label className="text-sm font-semibold text-primary">
@@ -115,14 +117,23 @@ export default async function StudentProfilePage() {
 
           <label className="text-sm font-semibold text-primary">
             Kort om deg (MVP-felt)
-            <Textarea name="about" rows={3} placeholder="Dette feltet lagres ikke ennå. TODO." />
+            <Textarea
+              name="about"
+              rows={4}
+              defaultValue={student.about ?? ""}
+              placeholder="Eksempel: 3. års student i informatikk med erfaring fra frontend-prosjekter, liker å jobbe i team og er åpen for sommerjobb i Oslo."
+            />
+            <p className="mt-2 text-xs text-ink/70">
+              Tips: Skriv kort om hva du studerer, hvilke teknologier/områder du kan, og hva du ser etter (sommerjobb, deltid, internship).
+            </p>
           </label>
 
           <Button className="mt-2 w-full" type="submit">
             Lagre profil
           </Button>
         </form>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 }
