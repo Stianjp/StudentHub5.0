@@ -9,7 +9,7 @@ type CookieOptions = {
   maxAge?: number;
   expires?: Date;
   domain?: string;
-  sameSite?: "lax" | "strict" | "none";
+  sameSite?: "lax" | "strict" | "none" | boolean;
   secure?: boolean;
 };
 
@@ -29,7 +29,7 @@ function buildCookieString(name: string, value: string, options: CookieOptions) 
   if (options.domain) {
     parts.push(`Domain=${options.domain}`);
   }
-  if (options.sameSite) {
+  if (typeof options.sameSite === "string") {
     parts.push(`SameSite=${options.sameSite}`);
   }
   if (options.secure) {
