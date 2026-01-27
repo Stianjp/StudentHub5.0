@@ -37,8 +37,15 @@ export default async function CompanyOnboardingInfoPage() {
             <Input name="name" defaultValue={company.name} required />
           </label>
           <label className="text-sm font-semibold text-primary">
-            Organisasjonsnummer (valgfritt)
-            <Input name="orgNumber" defaultValue={company.org_number ?? ""} />
+            Organisasjonsnummer (9 siffer)
+            <Input
+              name="orgNumber"
+              defaultValue={company.org_number ?? ""}
+              required
+              placeholder="987654321"
+              inputMode="numeric"
+              pattern="[0-9]{9}"
+            />
           </label>
           <label className="text-sm font-semibold text-primary">
             Bransje

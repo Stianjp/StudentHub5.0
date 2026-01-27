@@ -328,6 +328,8 @@ export type Database = {
           scope: string;
           consented_at: string;
           created_at: string;
+          updated_at: string | null;
+          updated_by: string | null;
         };
         Insert: {
           id?: string;
@@ -338,6 +340,8 @@ export type Database = {
           scope?: string;
           consented_at?: string;
           created_at?: string;
+          updated_at?: string | null;
+          updated_by?: string | null;
         };
         Update: {
           id?: string;
@@ -348,6 +352,8 @@ export type Database = {
           scope?: string;
           consented_at?: string;
           created_at?: string;
+          updated_at?: string | null;
+          updated_by?: string | null;
         };
         Relationships: [];
       };

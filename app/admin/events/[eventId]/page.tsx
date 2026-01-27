@@ -17,11 +17,15 @@ const packageLabel: Record<string, string> = {
 
 type PageProps = {
   params: Promise<{ eventId: string }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export default async function AdminEventDetailPage({ params }: PageProps) {
+export default async function AdminEventDetailPage({ params, searchParams }: PageProps) {
   await requireRole("admin");
   const { eventId } = await params;
+  const paramsData = (await (searchParams ?? Promise.resolve({}))) as Record<string, string | string[] | undefined>;
+  const saved = paramsData.saved === "1";
+  const error = paramsData.error === "1";
 
   const [eventData, companies] = await Promise.all([
     getEventWithRegistrations(eventId),
@@ -53,6 +57,17 @@ export default async function AdminEventDetailPage({ params }: PageProps) {
         }
       />
 
+      {saved ? (
+        <Card className="border border-success/30 bg-success/10 text-sm text-success">
+          Oppdatering lagret.
+        </Card>
+      ) : null}
+      {error ? (
+        <Card className="border border-error/30 bg-error/10 text-sm text-error">
+          Kunne ikke lagre. Sjekk feltene og prøv igjen.
+        </Card>
+      ) : null}
+
       <Card className="flex flex-col gap-4">
         <h3 className="text-lg font-bold text-primary">Registrer bedrift til event</h3>
         {availableCompanies.length === 0 ? (
@@ -60,6 +75,7 @@ export default async function AdminEventDetailPage({ params }: PageProps) {
         ) : (
           <form action={registerCompany} className="grid gap-3 md:grid-cols-3">
             <input name="eventId" type="hidden" value={eventId} readOnly />
+            <input type="hidden" name="returnTo" value={`/admin/events/${eventId}`} />
             <label className="text-sm font-semibold text-primary">
               Bedrift
               <Select name="companyId" required defaultValue={availableCompanies[0]?.id}>
@@ -85,6 +101,7 @@ export default async function AdminEventDetailPage({ params }: PageProps) {
         <h3 className="text-lg font-bold text-primary">Bulk-registrering</h3>
         <form action={registerCompaniesBulk} className="grid gap-4">
           <input name="eventId" type="hidden" value={eventId} readOnly />
+          <input type="hidden" name="returnTo" value={`/admin/events/${eventId}`} />
           <label className="text-sm font-semibold text-primary">
             Standtype (valgfritt)
             <Input name="standType" placeholder="Standard, Premium" />

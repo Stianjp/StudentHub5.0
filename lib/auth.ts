@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import type { TableRow } from "@/lib/types/database";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { defaultPathForRole, roleFromHost, type AppRole } from "@/lib/host";
 
 type Profile = TableRow<"profiles">;
 
@@ -9,6 +11,11 @@ const roleRedirect: Record<Profile["role"], string> = {
   student: "/student",
   admin: "/admin",
 };
+
+async function resolveHostRole() {
+  const host = (await headers()).get("host");
+  return roleFromHost(host);
+}
 
 export async function getUser() {
   const supabase = await createServerSupabaseClient();
@@ -52,9 +59,13 @@ export async function getProfile() {
 export async function ensureProfile(role: Profile["role"]) {
   const user = await getUser();
   if (!user) {
-    const nextPath = roleRedirect[role] ?? "/";
-    redirect(`/auth/sign-in?role=${role}&next=${encodeURIComponent(nextPath)}`);
+    const hostRole = await resolveHostRole();
+    const nextPath = defaultPathForRole(hostRole ?? role);
+    const roleParam = hostRole ?? role;
+    redirect(`/auth/sign-in?role=${roleParam}&next=${encodeURIComponent(nextPath)}`);
   }
+
+  const hostRole = await resolveHostRole();
 
   const supabase = await createServerSupabaseClient();
   const now = new Date().toISOString();
@@ -70,20 +81,26 @@ export async function ensureProfile(role: Profile["role"]) {
   }
 
   if (existing) {
-    if (existing.role !== role && existing.role !== "admin") {
+    if (hostRole && existing.role !== hostRole) {
+      const nextPath = defaultPathForRole(hostRole);
+      redirect(`/auth/sign-in?role=${hostRole}&next=${encodeURIComponent(nextPath)}`);
+    }
+    if (!hostRole && existing.role !== role && existing.role !== "admin") {
       const nextPath = roleRedirect[role] ?? "/";
       redirect(`/auth/sign-in?role=${role}&next=${encodeURIComponent(nextPath)}`);
     }
     return existing;
   }
 
-  if (role === "admin") {
+  const effectiveRole: AppRole = hostRole ?? role;
+
+  if (effectiveRole === "admin") {
     redirect("/auth/sign-in?role=admin&reason=admin-required&next=%2Fadmin");
   }
 
   const { data: created, error: insertError } = await supabase
     .from("profiles")
-    .insert({ id: user.id, role, created_at: now, updated_at: now })
+    .insert({ id: user.id, role: effectiveRole, created_at: now, updated_at: now })
     .select("*")
     .single();
 
@@ -96,9 +113,13 @@ export async function ensureProfile(role: Profile["role"]) {
 
 export async function requireRole(role: Profile["role"]) {
   const profile = await ensureProfile(role);
-  if (profile.role === role || profile.role === "admin") {
-    return profile;
+  const hostRole = await resolveHostRole();
+  if (hostRole) {
+    if (profile.role === hostRole) return profile;
+    const nextPath = defaultPathForRole(hostRole);
+    redirect(`/auth/sign-in?role=${hostRole}&next=${encodeURIComponent(nextPath)}`);
   }
 
+  if (profile.role === role || profile.role === "admin") return profile;
   redirect(`/auth/sign-in?role=${role}`);
 }

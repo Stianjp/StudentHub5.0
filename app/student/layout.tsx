@@ -26,7 +26,8 @@ export default async function StudentLayout({ children }: { children: React.Reac
       roleKey="student"
       title={title}
       nav={nav}
-      backgroundClass="bg-primary"
+      backgroundClass="bg-primary text-surface"
+      mainClass="bg-primary"
     >
       {children}
     </PortalShell>

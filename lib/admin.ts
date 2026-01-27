@@ -1,5 +1,6 @@
 import type { TableRow } from "@/lib/types/database";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { sendTransactionalEmail } from "@/lib/resend";
 
 type Event = TableRow<"events">;
@@ -13,7 +14,12 @@ type EventWithStats = Event & {
 };
 
 export async function listEventsWithStats(): Promise<EventWithStats[]> {
-  const supabase = await createServerSupabaseClient();
+  let supabase = await createServerSupabaseClient();
+  try {
+    supabase = createAdminSupabaseClient();
+  } catch {
+    // fallback
+  }
   const { data: events, error: eventsError } = await supabase
     .from("events")
     .select("*")
@@ -53,14 +59,24 @@ export async function listEventsWithStats(): Promise<EventWithStats[]> {
 }
 
 export async function listCompanies() {
-  const supabase = await createServerSupabaseClient();
+  let supabase = await createServerSupabaseClient();
+  try {
+    supabase = createAdminSupabaseClient();
+  } catch {
+    // fallback
+  }
   const { data, error } = await supabase.from("companies").select("*").order("name");
   if (error) throw error;
   return (data ?? []) as Company[];
 }
 
 export async function listEventCompanies(eventId: string) {
-  const supabase = await createServerSupabaseClient();
+  let supabase = await createServerSupabaseClient();
+  try {
+    supabase = createAdminSupabaseClient();
+  } catch {
+    // fallback
+  }
   const { data, error } = await supabase
     .from("event_companies")
     .select("*, company:companies(*)")
@@ -72,14 +88,24 @@ export async function listEventCompanies(eventId: string) {
 }
 
 export async function getCompanyWithDetails(companyId: string) {
-  const supabase = await createServerSupabaseClient();
+  let supabase = await createServerSupabaseClient();
+  try {
+    supabase = createAdminSupabaseClient();
+  } catch {
+    // fallback
+  }
   const { data, error } = await supabase.from("companies").select("*").eq("id", companyId).single();
   if (error) throw error;
   return data as Company;
 }
 
 export async function listCompanyLeads(companyId: string) {
-  const supabase = await createServerSupabaseClient();
+  let supabase = await createServerSupabaseClient();
+  try {
+    supabase = createAdminSupabaseClient();
+  } catch {
+    // fallback
+  }
   const { data, error } = await supabase
     .from("consents")
     .select("*, student:students(*), event:events(id, name)")
@@ -92,7 +118,12 @@ export async function listCompanyLeads(companyId: string) {
 }
 
 export async function listCompanyRegistrations(companyId: string) {
-  const supabase = await createServerSupabaseClient();
+  let supabase = await createServerSupabaseClient();
+  try {
+    supabase = createAdminSupabaseClient();
+  } catch {
+    // fallback
+  }
   const { data, error } = await supabase
     .from("event_companies")
     .select("*, event:events(*)")
@@ -104,7 +135,12 @@ export async function listCompanyRegistrations(companyId: string) {
 }
 
 export async function getEventWithRegistrations(eventId: string) {
-  const supabase = await createServerSupabaseClient();
+  let supabase = await createServerSupabaseClient();
+  try {
+    supabase = createAdminSupabaseClient();
+  } catch {
+    // fallback
+  }
   const [{ data: event, error: eventError }, { data: registrations, error: regError }] = await Promise.all([
     supabase.from("events").select("*").eq("id", eventId).single(),
     supabase.from("event_companies").select("*, company:companies(*)").eq("event_id", eventId),
@@ -129,7 +165,12 @@ export async function upsertEvent(input: {
   ends_at: string;
   is_active: boolean;
 }) {
-  const supabase = await createServerSupabaseClient();
+  let supabase = await createServerSupabaseClient();
+  try {
+    supabase = createAdminSupabaseClient();
+  } catch {
+    // fallback
+  }
   const now = new Date().toISOString();
 
   const payload = {
@@ -165,7 +206,12 @@ export async function inviteCompanyToEvent(input: {
   companyId: string;
   email: string;
 }) {
-  const supabase = await createServerSupabaseClient();
+  let supabase = await createServerSupabaseClient();
+  try {
+    supabase = createAdminSupabaseClient();
+  } catch {
+    // fallback
+  }
   const now = new Date().toISOString();
 
   const { data: eventCompany, error: upsertError } = await supabase
@@ -214,7 +260,7 @@ export async function setPackageForCompany(input: {
   accessFrom?: string | null;
   accessUntil?: string | null;
 }) {
-  const supabase = await createServerSupabaseClient();
+  const supabase = createAdminSupabaseClient();
   const now = new Date().toISOString();
 
   const { data, error } = await supabase
@@ -242,7 +288,7 @@ export async function registerCompanyForEvent(input: {
   companyId: string;
   standType?: string | null;
 }) {
-  const supabase = await createServerSupabaseClient();
+  const supabase = createAdminSupabaseClient();
   const now = new Date().toISOString();
 
   const { data, error } = await supabase

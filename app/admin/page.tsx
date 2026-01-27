@@ -4,10 +4,19 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { Stat } from "@/components/ui/stat";
 import { listEventsWithStats } from "@/lib/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { cn } from "@/lib/utils";
+import { inviteAdmin } from "@/app/admin/admins/actions";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
 export default async function AdminOverviewPage() {
-  const supabase = await createServerSupabaseClient();
+  let supabase = await createServerSupabaseClient();
+  try {
+    supabase = createAdminSupabaseClient();
+  } catch {
+    // fall back to session-based client
+  }
 
   const [events, companiesCount, studentsCount, visitsCount, leadsCount] = await Promise.all([
     listEventsWithStats(),
@@ -70,6 +79,18 @@ export default async function AdminOverviewPage() {
           <li>Bruk seed.sql for demo-data, men knytt user_id til ekte brukere i dev.</li>
           <li>Pakker styres via event_companies.package (Standard/Sølv/Gull/Platinum).</li>
         </ul>
+      </Card>
+
+      <Card className="flex flex-col gap-4">
+        <h3 className="text-lg font-bold text-primary">Inviter ny admin</h3>
+        <form action={inviteAdmin} className="flex flex-col gap-3 md:flex-row md:items-end">
+          <label className="text-sm font-semibold text-primary md:flex-1">
+            E-post
+            <Input name="email" type="email" placeholder="admin@oslostudenthub.no" required />
+          </label>
+          <Button variant="secondary" type="submit">Send invitasjon</Button>
+        </form>
+        <p className="text-xs text-ink/70">Kun eksisterende admin kan invitere nye admin-brukere.</p>
       </Card>
     </div>
   );

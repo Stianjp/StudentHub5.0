@@ -8,25 +8,37 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { createClient } from "@/lib/supabase/client";
+import Image from "next/image";
 
 type Role = "student" | "company" | "admin";
-type Mode = "login" | "register";
+type Mode = "login" | "register" | "reset";
 
-export function SignInClient() {
+export function SignInClient({
+  allowedRole,
+}: {
+  allowedRole?: Role | null;
+}) {
   const router = useRouter();
   const params = useSearchParams();
-  const initialRole = (params.get("role") as Role | null) ?? "company";
+  const paramRole = params.get("role") as Role | null;
+  const initialRole = allowedRole ?? (paramRole === "admin" ? "company" : paramRole ?? "company");
   const next = params.get("next");
   const reason = params.get("reason");
 
-  const [role, setRole] = useState<Role>(initialRole);
+  const [role, setRole] = useState<Role>(allowedRole ?? initialRole);
   const [mode, setMode] = useState<Mode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "sent" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
+  const allowRegister = allowedRole !== "admin";
+  const errorId = "auth-error";
+
 
   const title = useMemo(() => {
+    if (mode === "reset") {
+      return "Gjenopprett passord";
+    }
     if (mode === "register") {
       if (role === "student") return "Registrer student";
       if (role === "admin") return "Registrer admin";
@@ -44,11 +56,28 @@ export function SignInClient() {
 
     const formData = new FormData(event.currentTarget);
     const emailValue = String(formData.get("email") ?? "").trim();
-    const roleValue = String(formData.get("role") ?? role);
+    const roleValue = (allowedRole ?? String(formData.get("role") ?? role)) as Role;
 
     if (!emailValue) {
       setStatus("error");
       setError("E-post er påkrevd.");
+      return;
+    }
+
+    const supabase = createClient();
+    const nextPath = typeof next === "string" ? next : `/${roleValue}`;
+
+    if (mode === "reset") {
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(emailValue, {
+        redirectTo: `${window.location.origin}/auth/reset`,
+      });
+      if (resetError) {
+        setStatus("error");
+        setError("Kunne ikke sende e-post. Sjekk adressen og prøv igjen.");
+        return;
+      }
+      setStatus("sent");
+      setError("Vi har sendt en lenke for å sette nytt passord.");
       return;
     }
 
@@ -57,9 +86,6 @@ export function SignInClient() {
       setError("Passord må være minst 8 tegn.");
       return;
     }
-
-    const supabase = createClient();
-    const nextPath = typeof next === "string" ? next : `/${roleValue}`;
 
     if (mode === "register") {
       if (roleValue === "admin") {
@@ -108,8 +134,18 @@ export function SignInClient() {
 
     if (signInError) {
       setStatus("error");
-      setError(signInError.message);
+      setError("Feil e-post eller passord. Prøv igjen.");
       return;
+    }
+
+    if (allowedRole) {
+      const { data: profile } = await supabase.from("profiles").select("role").eq("id", (await supabase.auth.getUser()).data.user?.id ?? "").maybeSingle();
+      if (profile?.role && profile.role !== allowedRole) {
+        await supabase.auth.signOut();
+        setStatus("error");
+        setError("Denne kontoen har ikke tilgang til dette domenet.");
+        return;
+      }
     }
 
     router.replace(nextPath);
@@ -118,17 +154,22 @@ export function SignInClient() {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-6 py-16">
       <Card className="flex flex-col gap-6">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-primary/60">OSH StudentHub</p>
+        <div className="flex flex-col items-center gap-3 text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
+            <Image src="/brand/Logo_OSH.svg" alt="Oslo Student Hub" width={40} height={40} />
+          </div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-primary/60">Oslo Student Hub</p>
           <h1 className="mt-2 text-2xl font-bold text-primary">{title}</h1>
           <p className="mt-1 text-sm text-ink/80">
-            {mode === "register"
+            {mode === "reset"
+              ? "Få tilsendt lenke for å sette nytt passord."
+              : mode === "register"
               ? "Opprett konto med e-post og passord."
               : "Logg inn med e-post og passord."}
           </p>
         </div>
         <form className="flex flex-col gap-4" onSubmit={onSubmit}>
-          <div className="grid grid-cols-2 gap-2">
+          <div className={`grid gap-2 ${allowRegister ? "grid-cols-2" : "grid-cols-1"}`}>
             <button
               type="button"
               onClick={() => setMode("login")}
@@ -138,24 +179,27 @@ export function SignInClient() {
             >
               Logg inn
             </button>
-            <button
-              type="button"
-              onClick={() => setMode("register")}
-              className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
-                mode === "register" ? "bg-primary text-surface" : "bg-primary/10 text-primary"
-              }`}
-            >
-              Registrer deg
-            </button>
+            {allowRegister ? (
+              <button
+                type="button"
+                onClick={() => setMode("register")}
+                className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
+                  mode === "register" ? "bg-primary text-surface" : "bg-primary/10 text-primary"
+                }`}
+              >
+                Registrer deg
+              </button>
+            ) : null}
           </div>
-          <label className="flex flex-col gap-2 text-sm font-semibold text-primary">
-            Rolle
-            <Select name="role" value={role} onChange={(e) => setRole(e.target.value as Role)}>
-              <option value="company">Bedrift</option>
-              <option value="student">Student</option>
-              <option value="admin">Admin</option>
-            </Select>
-          </label>
+          {allowedRole ? null : (
+            <label className="flex flex-col gap-2 text-sm font-semibold text-primary">
+              Rolle
+              <Select name="role" value={role} onChange={(e) => setRole(e.target.value as Role)}>
+                <option value="company">Bedrift</option>
+                <option value="student">Student</option>
+              </Select>
+            </label>
+          )}
           <label className="flex flex-col gap-2 text-sm font-semibold text-primary">
             E-post
             <Input
@@ -165,34 +209,66 @@ export function SignInClient() {
               placeholder="navn@bedrift.no"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              aria-invalid={status === "error"}
+              aria-describedby={status === "error" ? errorId : undefined}
             />
           </label>
-          <label className="flex flex-col gap-2 text-sm font-semibold text-primary">
-            Passord
-            <Input
-              name="password"
-              required
-              type="password"
-              placeholder="Minst 8 tegn"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </label>
-          <Button disabled={status === "loading" || email.length < 3} type="submit">
-            {status === "loading"
-              ? "Jobber…"
-              : mode === "register"
-                ? "Registrer"
-                : "Logg inn"}
-          </Button>
+          {mode !== "reset" ? (
+            <label className="flex flex-col gap-2 text-sm font-semibold text-primary">
+              Passord
+              <Input
+                name="password"
+                required
+                type="password"
+                placeholder="Minst 8 tegn"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                aria-invalid={status === "error"}
+                aria-describedby={status === "error" ? errorId : undefined}
+              />
+            </label>
+          ) : null}
+          <div className="flex flex-col gap-2">
+            <Button disabled={status === "loading" || email.length < 3} type="submit">
+              {status === "loading"
+                ? "Jobber…"
+                : mode === "register"
+                  ? "Registrer"
+                  : mode === "reset"
+                    ? "Send lenke"
+                    : "Logg inn"}
+            </Button>
+            {mode === "login" ? (
+              <button
+                type="button"
+                className="text-xs font-semibold text-primary/70 hover:text-primary"
+                onClick={() => setMode("reset")}
+              >
+                Glemt passord?
+              </button>
+            ) : null}
+            {mode === "reset" ? (
+              <button
+                type="button"
+                className="text-xs font-semibold text-primary/70 hover:text-primary"
+                onClick={() => setMode("login")}
+              >
+                Tilbake til innlogging
+              </button>
+            ) : null}
+          </div>
         </form>
         {status === "sent" ? (
-          <div className="rounded-xl bg-success/15 px-4 py-3 text-sm font-medium text-success">
+          <div className="rounded-xl bg-success/15 px-4 py-3 text-sm font-medium text-success" aria-live="polite">
             {error ?? "Ferdig."}
           </div>
         ) : null}
         {status === "error" ? (
-          <div className="rounded-xl bg-error/15 px-4 py-3 text-sm font-medium text-error">
+          <div
+            id={errorId}
+            className="rounded-xl bg-error/15 px-4 py-3 text-sm font-medium text-error"
+            aria-live="assertive"
+          >
             {error}
           </div>
         ) : null}

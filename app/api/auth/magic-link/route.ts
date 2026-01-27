@@ -19,6 +19,9 @@ export async function POST(request: Request) {
   }
 
   const { email, role, next } = parsed.data;
+  if (role === "admin") {
+    return NextResponse.json({ error: "Admin-tilgang opprettes kun av OSH." }, { status: 403 });
+  }
   const url = new URL(request.url);
   const nextPath =
     typeof next === "string" && next.startsWith("/") ? next : roleNextPath[role];

@@ -5,6 +5,8 @@ const nav = [
   { href: "/admin", label: "Oversikt" },
   { href: "/admin/events", label: "Events" },
   { href: "/admin/companies", label: "Bedrifter" },
+  { href: "/admin/students", label: "Studenter" },
+  { href: "/admin/leads", label: "Leads" },
 ];
 
 export const dynamic = "force-dynamic";

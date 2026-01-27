@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card } from "@/components/ui/card";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 
 export function CallbackClient() {
@@ -56,8 +57,11 @@ export function CallbackClient() {
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-6 py-16">
       <Card className="text-center">
-        <p className="text-sm font-semibold uppercase tracking-wide text-primary/60">Innlogging</p>
-        <h1 className="mt-2 text-2xl font-bold text-primary">Magic link</h1>
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
+          <Image src="/brand/Logo_OSH.svg" alt="Oslo Student Hub" width={40} height={40} />
+        </div>
+        <p className="mt-3 text-sm font-semibold uppercase tracking-wide text-primary/60">Oslo Student Hub</p>
+        <h1 className="mt-2 text-2xl font-bold text-primary">Innlogging</h1>
         <p className="mt-3 text-sm text-ink/80">{message}</p>
       </Card>
     </main>

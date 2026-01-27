@@ -46,8 +46,8 @@ export function LikedCompanies({
               onClick={() => toggle(company.id)}
               className={`flex items-center justify-between rounded-xl border px-3 py-2 text-left text-sm transition-all ${
                 active
-                  ? "border-secondary bg-secondary/15 text-primary shadow-soft ring-2 ring-secondary ring-offset-2 ring-offset-primary"
-                  : "border-surface/60 bg-surface text-primary hover:border-secondary/40 hover:shadow-soft"
+                  ? "border-secondary bg-secondary/20 text-surface shadow-[0_0_0_3px_rgba(254,154,112,0.35)] ring-2 ring-secondary ring-offset-2 ring-offset-primary"
+                  : "border-surface/20 bg-primary/20 text-surface hover:border-secondary/60 hover:bg-primary/30 hover:shadow-soft"
               }`}
             >
               <span className="flex items-center gap-2 font-semibold">
@@ -64,9 +64,9 @@ export function LikedCompanies({
         })}
       </div>
       {selected.length > 0 ? (
-        <p className="text-xs text-ink/70">Valgt: {selected.length} bedrifter</p>
+        <p className="text-xs text-surface/70">Valgt: {selected.length} bedrifter</p>
       ) : (
-        <p className="text-xs text-ink/70">Ingen favoritter valgt ennå.</p>
+        <p className="text-xs text-surface/70">Ingen favoritter valgt ennå.</p>
       )}
     </div>
   );

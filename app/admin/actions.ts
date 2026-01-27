@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth";
 import {
   inviteCompanySchema,
@@ -51,72 +52,105 @@ export async function saveEvent(formData: FormData) {
 
 export async function inviteCompany(formData: FormData) {
   await requireRole("admin");
-  const parsed = inviteCompanySchema.safeParse({
-    eventId: formData.get("eventId"),
-    companyId: formData.get("companyId"),
-    email: formData.get("email"),
-  });
+  const returnTo = formData.get("returnTo");
+  try {
+    const parsed = inviteCompanySchema.safeParse({
+      eventId: formData.get("eventId"),
+      companyId: formData.get("companyId"),
+      email: formData.get("email"),
+    });
 
-  if (!parsed.success) {
-    throw new Error(parsed.error.issues.map((issue) => issue.message).join(", "));
+    if (!parsed.success) {
+      throw new Error(parsed.error.issues.map((issue) => issue.message).join(", "));
+    }
+
+    await inviteCompanyToEvent({
+      eventId: parsed.data.eventId,
+      companyId: parsed.data.companyId,
+      email: parsed.data.email,
+    });
+
+    revalidatePath("/admin/companies");
+    revalidatePath("/admin/events");
+    if (typeof returnTo === "string" && returnTo.startsWith("/")) {
+      redirect(`${returnTo}?saved=1`);
+    }
+  } catch (error) {
+    if (typeof returnTo === "string" && returnTo.startsWith("/")) {
+      redirect(`${returnTo}?error=1`);
+    }
+    throw error;
   }
-
-  await inviteCompanyToEvent({
-    eventId: parsed.data.eventId,
-    companyId: parsed.data.companyId,
-    email: parsed.data.email,
-  });
-
-  revalidatePath("/admin/companies");
-  revalidatePath("/admin/events");
 }
 
 export async function setPackage(formData: FormData) {
   await requireRole("admin");
-  const parsed = setPackageSchema.safeParse({
-    eventId: formData.get("eventId"),
-    companyId: formData.get("companyId"),
-    package: formData.get("package"),
-    accessFrom: formData.get("accessFrom"),
-    accessUntil: formData.get("accessUntil"),
-  });
+  const returnTo = formData.get("returnTo");
+  try {
+    const parsed = setPackageSchema.safeParse({
+      eventId: formData.get("eventId"),
+      companyId: formData.get("companyId"),
+      package: formData.get("package"),
+      accessFrom: formData.get("accessFrom"),
+      accessUntil: formData.get("accessUntil"),
+    });
 
-  if (!parsed.success) {
-    throw new Error(parsed.error.issues.map((issue) => issue.message).join(", "));
+    if (!parsed.success) {
+      throw new Error(parsed.error.issues.map((issue) => issue.message).join(", "));
+    }
+
+    await setPackageForCompany({
+      eventId: parsed.data.eventId,
+      companyId: parsed.data.companyId,
+      package: parsed.data.package,
+      accessFrom: parsed.data.accessFrom || null,
+      accessUntil: parsed.data.accessUntil || null,
+    });
+
+    revalidatePath("/admin/companies");
+    revalidatePath("/company/roi");
+    if (typeof returnTo === "string" && returnTo.startsWith("/")) {
+      redirect(`${returnTo}?saved=1`);
+    }
+  } catch (error) {
+    if (typeof returnTo === "string" && returnTo.startsWith("/")) {
+      redirect(`${returnTo}?error=1`);
+    }
+    throw error;
   }
-
-  await setPackageForCompany({
-    eventId: parsed.data.eventId,
-    companyId: parsed.data.companyId,
-    package: parsed.data.package,
-    accessFrom: parsed.data.accessFrom || null,
-    accessUntil: parsed.data.accessUntil || null,
-  });
-
-  revalidatePath("/admin/companies");
-  revalidatePath("/company/roi");
 }
 
 export async function registerCompany(formData: FormData) {
   await requireRole("admin");
-  const parsed = registerCompanySchema.safeParse({
-    eventId: formData.get("eventId"),
-    companyId: formData.get("companyId"),
-    standType: formData.get("standType"),
-  });
+  const returnTo = formData.get("returnTo");
+  try {
+    const parsed = registerCompanySchema.safeParse({
+      eventId: formData.get("eventId"),
+      companyId: formData.get("companyId"),
+      standType: formData.get("standType"),
+    });
 
-  if (!parsed.success) {
-    throw new Error("Ugyldig event eller bedrift. Velg på nytt.");
+    if (!parsed.success) {
+      throw new Error("Ugyldig event eller bedrift. Velg på nytt.");
+    }
+
+    await registerCompanyForEvent({
+      eventId: parsed.data.eventId,
+      companyId: parsed.data.companyId,
+      standType: parsed.data.standType || "Standard",
+    });
+
+    revalidatePath("/admin/companies");
+    revalidatePath("/company/events");
+    if (typeof returnTo === "string" && returnTo.startsWith("/")) {
+      redirect(`${returnTo}?saved=1`);
+    }
+  } catch (error) {
+    if (typeof returnTo === "string" && returnTo.startsWith("/")) {
+      redirect(`${returnTo}?error=1`);
+    }
+    throw error;
   }
-
-  await registerCompanyForEvent({
-    eventId: parsed.data.eventId,
-    companyId: parsed.data.companyId,
-    standType: parsed.data.standType || "Standard",
-  });
-
-  revalidatePath("/admin/companies");
-  revalidatePath("/company/events");
 }
 
 export async function registerCompaniesBulk(formData: FormData) {
@@ -124,21 +158,32 @@ export async function registerCompaniesBulk(formData: FormData) {
   const eventId = formData.get("eventId")?.toString() ?? "";
   const standType = formData.get("standType")?.toString() ?? "Standard";
   const companyIds = formData.getAll("companyIds").map((value) => String(value));
+  const returnTo = formData.get("returnTo");
 
-  if (!eventId || companyIds.length === 0) {
-    throw new Error("Velg event og minst én bedrift.");
+  try {
+    if (!eventId || companyIds.length === 0) {
+      throw new Error("Velg event og minst én bedrift.");
+    }
+
+    if (!isUuid(eventId) || companyIds.some((id) => !isUuid(id))) {
+      throw new Error("Ugyldig event eller bedrift. Velg på nytt.");
+    }
+
+    await Promise.all(
+      companyIds.map((companyId) =>
+        registerCompanyForEvent({ eventId, companyId, standType }),
+      ),
+    );
+
+    revalidatePath(`/admin/events/${eventId}`);
+    revalidatePath("/admin/companies");
+    if (typeof returnTo === "string" && returnTo.startsWith("/")) {
+      redirect(`${returnTo}?saved=1`);
+    }
+  } catch (error) {
+    if (typeof returnTo === "string" && returnTo.startsWith("/")) {
+      redirect(`${returnTo}?error=1`);
+    }
+    throw error;
   }
-
-  if (!isUuid(eventId) || companyIds.some((id) => !isUuid(id))) {
-    throw new Error("Ugyldig event eller bedrift. Velg på nytt.");
-  }
-
-  await Promise.all(
-    companyIds.map((companyId) =>
-      registerCompanyForEvent({ eventId, companyId, standType }),
-    ),
-  );
-
-  revalidatePath(`/admin/events/${eventId}`);
-  revalidatePath("/admin/companies");
 }

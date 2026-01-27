@@ -6,9 +6,8 @@ import { Input } from "@/components/ui/input";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Select } from "@/components/ui/select";
 import { inviteCompany, registerCompany, setPackage } from "@/app/admin/actions";
-import { listCompanies, listEventCompanies } from "@/lib/admin";
+import { listCompanies } from "@/lib/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { cn } from "@/lib/utils";
 
 type CompaniesPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -37,22 +36,25 @@ function packageLabel(pkg?: string | null) {
 
 export default async function AdminCompaniesPage({ searchParams }: CompaniesPageProps) {
   const params = await searchParams;
+  const saved = params.saved === "1";
+  const error = params.error === "1";
   const supabase = await createServerSupabaseClient();
 
-  const [{ data: events, error: eventsError }, companies] = await Promise.all([
-    supabase.from("events").select("*").order("starts_at", { ascending: false }),
-    listCompanies(),
-  ]);
+  const [{ data: events, error: eventsError }, companies, { data: eventCompanies, error: eventCompaniesError }] =
+    await Promise.all([
+      supabase.from("events").select("*").order("starts_at", { ascending: false }),
+      listCompanies(),
+      supabase.from("event_companies").select("*").order("created_at", { ascending: false }),
+    ]);
 
   if (eventsError) throw eventsError;
+  if (eventCompaniesError) throw eventCompaniesError;
   if (!events || events.length === 0) {
     return (
       <Card>
         <SectionHeader title="Bedrifter" description="Opprett et event først." />
         <Link
-          className={cn(
-            "mt-4 inline-flex items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-surface",
-          )}
+          className="mt-4 inline-flex items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-surface"
           href="/admin/events"
         >
           Gå til events
@@ -61,16 +63,27 @@ export default async function AdminCompaniesPage({ searchParams }: CompaniesPage
     );
   }
 
-  const requestedEventId = typeof params.eventId === "string" ? params.eventId : events[0].id;
-  const currentEvent = events.find((event) => event.id === requestedEventId) ?? events[0];
-
   const query = typeof params.q === "string" ? params.q.toLowerCase() : "";
+  const sort = typeof params.sort === "string" ? params.sort : "name";
+  const dir = params.dir === "asc" ? "asc" : "desc";
+  const page = Math.max(1, Number(params.page ?? "1"));
+  const pageSize = 20;
+
   const filteredCompanies = companies.filter((company) =>
     query.length === 0 ? true : company.name.toLowerCase().includes(query),
   );
 
-  const eventCompanies = await listEventCompanies(currentEvent.id);
-  const eventCompanyMap = new Map(eventCompanies.map((row) => [row.company_id, row]));
+  const sortedCompanies = [...filteredCompanies].sort((a, b) => {
+    const aValue = sort === "industry" ? a.industry ?? "" : a.name;
+    const bValue = sort === "industry" ? b.industry ?? "" : b.name;
+    return dir === "asc" ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+  });
+  const totalPages = Math.max(1, Math.ceil(sortedCompanies.length / pageSize));
+  const pagedCompanies = sortedCompanies.slice((page - 1) * pageSize, page * pageSize);
+
+  const eventCompanyMap = new Map(
+    (eventCompanies ?? []).map((row) => [`${row.company_id}:${row.event_id}`, row]),
+  );
 
   return (
     <div className="flex flex-col gap-8">
@@ -78,25 +91,19 @@ export default async function AdminCompaniesPage({ searchParams }: CompaniesPage
         eyebrow="Bedrifter"
         title="Invitasjoner og pakker"
         description="Sett pakker per bedrift per event. Connect Hub 2026-pakker styrer ROI-tilgang."
-        actions={
-          <div className="flex flex-wrap gap-2">
-            {events.map((event) => (
-              <Link
-                key={event.id}
-                className={cn(
-                  "rounded-xl px-3 py-2 text-xs font-semibold transition",
-                  event.id === currentEvent.id
-                    ? "bg-primary text-surface"
-                    : "bg-primary/5 text-primary hover:bg-primary/10",
-                )}
-                href={`/admin/companies?eventId=${event.id}`}
-              >
-                {event.name}
-              </Link>
-            ))}
-          </div>
-        }
+        actions={<Link className="text-sm font-semibold text-primary/70 hover:text-primary" href="/admin/events">Administrer events</Link>}
       />
+
+      {saved ? (
+        <Card className="border border-success/30 bg-success/10 text-sm text-success">
+          Oppdatering lagret.
+        </Card>
+      ) : null}
+      {error ? (
+        <Card className="border border-error/30 bg-error/10 text-sm text-error">
+          Kunne ikke lagre. Sjekk feltene og prøv igjen.
+        </Card>
+      ) : null}
 
       <Card className="flex flex-col gap-4">
         <h3 className="text-lg font-bold text-primary">Inviter bedrift (e-post)</h3>
@@ -104,7 +111,17 @@ export default async function AdminCompaniesPage({ searchParams }: CompaniesPage
           <p className="text-sm text-ink/70">Ingen bedrifter å invitere. Fjern filter eller opprett en bedrift.</p>
         ) : (
           <form action={inviteCompany} className="grid gap-3 md:grid-cols-3">
-            <input name="eventId" type="hidden" value={currentEvent.id} readOnly />
+            <input type="hidden" name="returnTo" value="/admin/companies" />
+            <label className="text-sm font-semibold text-primary">
+              Event
+              <Select name="eventId" required defaultValue={events[0]?.id}>
+                {events.map((event) => (
+                  <option key={event.id} value={event.id}>
+                    {event.name}
+                  </option>
+                ))}
+              </Select>
+            </label>
             <label className="text-sm font-semibold text-primary">
               Bedrift
               <Select name="companyId" required defaultValue={filteredCompanies[0]?.id}>
@@ -132,9 +149,10 @@ export default async function AdminCompaniesPage({ searchParams }: CompaniesPage
           <p className="text-sm text-ink/70">Ingen bedrifter å registrere. Fjern filter eller opprett en bedrift.</p>
         ) : (
           <form action={registerCompany} className="grid gap-3 md:grid-cols-3">
+            <input type="hidden" name="returnTo" value="/admin/companies" />
             <label className="text-sm font-semibold text-primary">
               Event
-              <Select name="eventId" required defaultValue={currentEvent.id}>
+              <Select name="eventId" required defaultValue={events[0]?.id}>
                 {events.map((event) => (
                   <option key={event.id} value={event.id}>
                     {event.name}
@@ -166,20 +184,65 @@ export default async function AdminCompaniesPage({ searchParams }: CompaniesPage
       <section className="grid gap-4">
         <Card className="flex flex-col gap-3">
           <h3 className="text-lg font-bold text-primary">Søk i bedrifter</h3>
-          <form className="flex flex-col gap-3 md:flex-row md:items-end" method="get">
-            <input type="hidden" name="eventId" value={currentEvent.id} />
-            <label className="text-sm font-semibold text-primary md:flex-1">
+          <form className="grid gap-3 md:grid-cols-4" method="get">
+            <label className="text-sm font-semibold text-primary md:col-span-2">
               Søk
               <Input name="q" defaultValue={query} placeholder="Søk på bedriftsnavn" />
             </label>
-            <Button variant="secondary" type="submit">
+            <label className="text-sm font-semibold text-primary">
+              Sortering
+              <Select name="sort" defaultValue={sort}>
+                <option value="name">Navn</option>
+                <option value="industry">Bransje</option>
+              </Select>
+            </label>
+            <label className="text-sm font-semibold text-primary">
+              Rekkefølge
+              <Select name="dir" defaultValue={dir}>
+                <option value="asc">A–Å</option>
+                <option value="desc">Å–A</option>
+              </Select>
+            </label>
+            <Button variant="secondary" type="submit" className="md:col-span-4">
               Filtrer
             </Button>
           </form>
         </Card>
 
-        {filteredCompanies.map((company) => {
-          const registration = eventCompanyMap.get(company.id);
+        <Card className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-primary/10 text-sm">
+            <thead>
+              <tr className="text-left text-xs font-semibold uppercase tracking-wide text-primary/60">
+                <th className="px-4 py-3">Bedrift</th>
+                <th className="px-4 py-3">Org.nr</th>
+                <th className="px-4 py-3">Bransje</th>
+                <th className="px-4 py-3">Lokasjon</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-primary/5">
+              {pagedCompanies.map((company) => (
+                <tr key={`row-${company.id}`}>
+                  <td className="px-4 py-3 font-semibold text-primary">
+                    <Link href={`/admin/companies/${company.id}`} className="hover:underline">
+                      {company.name}
+                    </Link>
+                  </td>
+                  <td className="px-4 py-3 text-ink/80">{company.org_number ?? "—"}</td>
+                  <td className="px-4 py-3 text-ink/80">{company.industry ?? "—"}</td>
+                  <td className="px-4 py-3 text-ink/80">{company.location ?? "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Card>
+
+        {pagedCompanies.map((company) => {
+          const companyRegistrations = (eventCompanies ?? []).filter((row) => row.company_id === company.id);
+          const defaultEventId = companyRegistrations[0]?.event_id ?? events[0]?.id;
+          const registration = defaultEventId
+            ? eventCompanyMap.get(`${company.id}:${defaultEventId}`)
+            : undefined;
+          const defaultAccessFrom = registration?.access_from ?? new Date().toISOString();
           return (
             <Card key={company.id} className="flex flex-col gap-3">
               <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
@@ -187,7 +250,9 @@ export default async function AdminCompaniesPage({ searchParams }: CompaniesPage
                   <Link href={`/admin/companies/${company.id}`} className="text-lg font-bold text-primary hover:underline">
                     {company.name}
                   </Link>
-                  <p className="text-xs text-ink/70">{company.industry ?? "Bransje ikke satt"}</p>
+                  <p className="text-xs text-ink/70">
+                    {company.industry ?? "Bransje ikke satt"} · Org.nr: {company.org_number ?? "—"}
+                  </p>
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant={registration?.package === "platinum" ? "success" : "default"}>
@@ -195,9 +260,19 @@ export default async function AdminCompaniesPage({ searchParams }: CompaniesPage
                   </Badge>
                 </div>
               </div>
-              <form action={setPackage} className="grid gap-3 md:grid-cols-4">
-                <input name="eventId" type="hidden" value={currentEvent.id} readOnly />
+              <form action={setPackage} className="grid gap-3 md:grid-cols-5">
+                <input type="hidden" name="returnTo" value="/admin/companies" />
                 <input name="companyId" type="hidden" value={company.id} readOnly />
+                <label className="text-sm font-semibold text-primary">
+                  Event
+                  <Select name="eventId" defaultValue={defaultEventId}>
+                    {events.map((event) => (
+                      <option key={event.id} value={event.id}>
+                        {event.name}
+                      </option>
+                    ))}
+                  </Select>
+                </label>
                 <label className="text-sm font-semibold text-primary">
                   Pakke
                   <Select name="package" defaultValue={registration?.package ?? "standard"}>
@@ -209,7 +284,7 @@ export default async function AdminCompaniesPage({ searchParams }: CompaniesPage
                 </label>
                 <label className="text-sm font-semibold text-primary">
                   Tilgang fra
-                  <Input name="accessFrom" type="datetime-local" defaultValue={toLocalInput(registration?.access_from ?? null)} />
+                  <Input name="accessFrom" type="datetime-local" defaultValue={toLocalInput(defaultAccessFrom)} />
                 </label>
                 <label className="text-sm font-semibold text-primary">
                   Tilgang til
@@ -219,6 +294,22 @@ export default async function AdminCompaniesPage({ searchParams }: CompaniesPage
                   Lagre
                 </Button>
               </form>
+              {companyRegistrations.length > 0 ? (
+                <div className="flex flex-wrap gap-2 text-xs text-ink/70">
+                  {companyRegistrations.map((reg) => {
+                    const eventName = events.find((event) => event.id === reg.event_id)?.name ?? "Event";
+                    const from = reg.access_from ? new Date(reg.access_from).toLocaleDateString("nb-NO") : "—";
+                    const until = reg.access_until ? new Date(reg.access_until).toLocaleDateString("nb-NO") : "—";
+                    return (
+                      <span key={reg.id} className="rounded-full bg-primary/5 px-3 py-1">
+                        {eventName} – {packageLabel(reg.package)} – {from}–{until}
+                      </span>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-xs text-ink/70">Ingen event-tilknytninger ennå.</p>
+              )}
               {registration?.invited_email ? (
                 <p className="text-xs text-ink/70">Invitert: {registration.invited_email}</p>
               ) : null}
@@ -226,6 +317,28 @@ export default async function AdminCompaniesPage({ searchParams }: CompaniesPage
           );
         })}
       </section>
+
+      <div className="flex items-center justify-between text-sm text-ink/70">
+        <span>Side {page} av {totalPages}</span>
+        <div className="flex gap-2">
+          {page > 1 ? (
+            <Link
+              className="rounded-full border border-primary/20 px-3 py-1"
+              href={`?q=${encodeURIComponent(query)}&sort=${sort}&dir=${dir}&page=${page - 1}`}
+            >
+              Forrige
+            </Link>
+          ) : null}
+          {page < totalPages ? (
+            <Link
+              className="rounded-full border border-primary/20 px-3 py-1"
+              href={`?q=${encodeURIComponent(query)}&sort=${sort}&dir=${dir}&page=${page + 1}`}
+            >
+              Neste
+            </Link>
+          ) : null}
+        </div>
+      </div>
     </div>
   );
 }

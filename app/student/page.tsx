@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { SectionHeader } from "@/components/ui/section-header";
@@ -36,7 +35,7 @@ export default async function StudentProfilePage({ searchParams }: PageProps) {
 
   return (
     <div className="flex flex-col gap-8 text-surface">
-      <div className="rounded-3xl border border-surface/10 bg-surface/5 p-6 md:p-10">
+      <div className="rounded-3xl border border-surface/10 bg-primary/60 p-6 md:p-10">
         <SectionHeader
           eyebrow="Profil"
           title="Din studentprofil"
@@ -44,104 +43,107 @@ export default async function StudentProfilePage({ searchParams }: PageProps) {
           tone="light"
         />
 
-        <Card className="mt-8 flex flex-col gap-5 text-ink">
-        {showSaved ? (
-          <div className="rounded-xl border border-success/30 bg-success/10 px-4 py-3 text-sm text-success">
-            Profilen er lagret.
-          </div>
-        ) : null}
-        <form action={saveStudentProfile} className="grid gap-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <label className="text-sm font-semibold text-primary">
-              Navn
-              <Input name="fullName" required defaultValue={student.full_name ?? ""} />
+        <Card className="mt-8 flex flex-col gap-5 bg-primary/20 text-surface ring-1 ring-white/10">
+          {showSaved ? (
+            <div
+              className="rounded-xl border border-success/40 bg-success/20 px-4 py-3 text-sm text-surface"
+              aria-live="polite"
+            >
+              Profilen er lagret.
+            </div>
+          ) : null}
+          <form action={saveStudentProfile} className="grid gap-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              <label className="text-sm font-semibold text-surface">
+                Navn
+                <Input name="fullName" required defaultValue={student.full_name ?? ""} />
+              </label>
+              <label className="text-sm font-semibold text-surface">
+                E-post
+                <Input name="email" type="email" required defaultValue={student.email ?? user.email ?? ""} />
+              </label>
+            </div>
+
+            <label className="text-sm font-semibold text-surface">
+              Telefon (valgfritt)
+              <Input name="phone" defaultValue={student.phone ?? ""} />
             </label>
-            <label className="text-sm font-semibold text-primary">
-              E-post
-              <Input name="email" type="email" required defaultValue={student.email ?? user.email ?? ""} />
+
+            <div className="grid gap-4 md:grid-cols-3">
+              <label className="text-sm font-semibold text-surface md:col-span-2">
+                Studie / program
+                <Input name="studyProgram" required defaultValue={student.study_program ?? ""} />
+              </label>
+              <label className="text-sm font-semibold text-surface">
+                Nivå
+                <Input name="studyLevel" required defaultValue={student.study_level ?? ""} placeholder="Bachelor, Master" />
+              </label>
+            </div>
+
+            <label className="text-sm font-semibold text-surface">
+              Ferdigår
+              <Input name="graduationYear" type="number" required defaultValue={student.graduation_year ?? 2027} />
             </label>
-          </div>
 
-          <label className="text-sm font-semibold text-primary">
-            Telefon (valgfritt)
-            <Input name="phone" defaultValue={student.phone ?? ""} />
-          </label>
+            <div className="grid gap-4 md:grid-cols-2">
+              <label className="text-sm font-semibold text-surface">
+                Jobbønske (tags)
+                <Input name="jobTypes" defaultValue={student.job_types.join(", ")} placeholder="Sommerjobb, Internship" />
+              </label>
+              <label className="text-sm font-semibold text-surface">
+                Interesser (tags)
+                <Input name="interests" defaultValue={student.interests.join(", ")} placeholder="Frontend, Analyse" />
+              </label>
+            </div>
 
-          <div className="grid gap-4 md:grid-cols-3">
-            <label className="text-sm font-semibold text-primary md:col-span-2">
-              Studie / program
-              <Input name="studyProgram" required defaultValue={student.study_program ?? ""} />
+            <div className="grid gap-4 md:grid-cols-2">
+              <label className="text-sm font-semibold text-surface">
+                Verdier hos arbeidsgiver (tags)
+                <Input name="values" defaultValue={student.values.join(", ")} placeholder="Læring, Autonomi" />
+              </label>
+              <label className="text-sm font-semibold text-surface">
+                Foretrukne lokasjoner (tags)
+                <Input name="preferredLocations" defaultValue={student.preferred_locations.join(", ")} placeholder="Oslo, Bergen" />
+              </label>
+            </div>
+
+            <label className="flex items-center gap-2 text-sm font-semibold text-surface">
+              <input
+                className="h-4 w-4 rounded border-primary/20 text-primary focus:ring-primary"
+                type="checkbox"
+                name="willingToRelocate"
+                defaultChecked={student.willing_to_relocate}
+              />
+              Jeg er villig til å flytte
             </label>
-            <label className="text-sm font-semibold text-primary">
-              Nivå
-              <Input name="studyLevel" required defaultValue={student.study_level ?? ""} placeholder="Bachelor, Master" />
+
+            <label className="text-sm font-semibold text-surface">
+              Bedrifter jeg liker
+              <LikedCompanies
+                companies={(companies ?? []).map((company) => ({
+                  id: company.id,
+                  name: company.name,
+                  industry: company.industry,
+                }))}
+                initialSelected={student.liked_company_ids ?? []}
+              />
             </label>
-          </div>
 
-          <label className="text-sm font-semibold text-primary">
-            Ferdigår
-            <Input name="graduationYear" type="number" required defaultValue={student.graduation_year ?? 2027} />
-          </label>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <label className="text-sm font-semibold text-primary">
-              Jobbønske (tags)
-              <Input name="jobTypes" defaultValue={student.job_types.join(", ")} placeholder="Sommerjobb, Internship" />
+            <label className="text-sm font-semibold text-surface">
+              Kort om deg (MVP-felt)
+              <Textarea
+                name="about"
+                rows={4}
+                defaultValue={student.about ?? ""}
+                placeholder="Eksempel: 3. års student i informatikk med erfaring fra frontend-prosjekter, liker å jobbe i team og er åpen for sommerjobb i Oslo."
+              />
+              <p className="mt-2 text-xs text-surface/70">
+                Tips: Skriv kort om hva du studerer, hvilke teknologier/områder du kan, og hva du ser etter (sommerjobb, deltid, internship).
+              </p>
             </label>
-            <label className="text-sm font-semibold text-primary">
-              Interesser (tags)
-              <Input name="interests" defaultValue={student.interests.join(", ")} placeholder="Frontend, Analyse" />
-            </label>
-          </div>
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <label className="text-sm font-semibold text-primary">
-              Verdier hos arbeidsgiver (tags)
-              <Input name="values" defaultValue={student.values.join(", ")} placeholder="Læring, Autonomi" />
-            </label>
-            <label className="text-sm font-semibold text-primary">
-              Foretrukne lokasjoner (tags)
-              <Input name="preferredLocations" defaultValue={student.preferred_locations.join(", ")} placeholder="Oslo, Bergen" />
-            </label>
-          </div>
-
-          <label className="flex items-center gap-2 text-sm font-semibold text-primary">
-            <input
-              className="h-4 w-4 rounded border-primary/20 text-primary focus:ring-primary"
-              type="checkbox"
-              name="willingToRelocate"
-              defaultChecked={student.willing_to_relocate}
-            />
-            Jeg er villig til å flytte
-          </label>
-
-          <label className="text-sm font-semibold text-primary">
-            Bedrifter jeg liker
-            <LikedCompanies
-              companies={(companies ?? []).map((company) => ({
-                id: company.id,
-                name: company.name,
-                industry: company.industry,
-              }))}
-              initialSelected={student.liked_company_ids ?? []}
-            />
-          </label>
-
-          <label className="text-sm font-semibold text-primary">
-            Kort om deg (MVP-felt)
-            <Textarea
-              name="about"
-              rows={4}
-              defaultValue={student.about ?? ""}
-              placeholder="Eksempel: 3. års student i informatikk med erfaring fra frontend-prosjekter, liker å jobbe i team og er åpen for sommerjobb i Oslo."
-            />
-            <p className="mt-2 text-xs text-ink/70">
-              Tips: Skriv kort om hva du studerer, hvilke teknologier/områder du kan, og hva du ser etter (sommerjobb, deltid, internship).
-            </p>
-          </label>
-
-          <SaveProfileButton />
-        </form>
+            <SaveProfileButton />
+          </form>
         </Card>
       </div>
     </div>

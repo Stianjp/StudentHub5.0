@@ -14,6 +14,7 @@ export function PortalShell({
   nav,
   roleKey,
   backgroundClass = "bg-mist",
+  mainClass = "",
   children,
 }: {
   roleLabel: string;
@@ -21,6 +22,7 @@ export function PortalShell({
   nav: NavItem[];
   roleKey: "student" | "company" | "admin";
   backgroundClass?: string;
+  mainClass?: string;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
@@ -74,7 +76,7 @@ export function PortalShell({
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      "rounded-full border px-4 py-2 text-sm font-semibold transition",
+                      "rounded-full border px-4 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-mist",
                       isActive
                         ? "border-primary bg-primary text-surface shadow-soft"
                         : "border-primary/15 bg-surface text-primary hover:border-primary/40 hover:bg-mist",
@@ -88,7 +90,7 @@ export function PortalShell({
           </div>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-6xl px-6 py-10">{children}</main>
+      <main className={cn("mx-auto w-full max-w-6xl px-6 py-10", mainClass)}>{children}</main>
     </div>
   );
 }

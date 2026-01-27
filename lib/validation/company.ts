@@ -14,7 +14,9 @@ const commaSeparated = z
 
 export const companyInfoSchema = z.object({
   name: z.string().min(2, "Firmanavn er påkrevd"),
-  orgNumber: z.string().optional().or(z.literal("")),
+  orgNumber: z
+    .string()
+    .regex(/^\d{9}$/, "Organisasjonsnummer må være 9 siffer"),
   industry: z.string().optional().or(z.literal("")),
   size: z.string().optional().or(z.literal("")),
   location: z.string().optional().or(z.literal("")),

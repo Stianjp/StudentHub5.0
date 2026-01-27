@@ -50,6 +50,8 @@ export async function giveConsentToCompany(formData: FormData) {
         scope: "contact",
         consented_at: now,
         created_at: now,
+        updated_at: now,
+        updated_by: user.id,
       },
       { onConflict: "event_id,company_id,student_id" },
     );
@@ -88,6 +90,8 @@ export async function withdrawConsent(formData: FormData) {
         scope: "contact",
         consented_at: now,
         created_at: now,
+        updated_at: now,
+        updated_by: user.id,
       },
       { onConflict: "event_id,company_id,student_id" },
     );
@@ -132,6 +136,8 @@ export async function giveConsentToAll(formData: FormData) {
     scope: "contact",
     consented_at: now,
     created_at: now,
+    updated_at: now,
+    updated_by: user.id,
   }));
 
   const adminSupabase = createAdminSupabaseClient();
