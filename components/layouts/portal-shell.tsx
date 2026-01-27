@@ -37,7 +37,7 @@ export function PortalShell({
             <div className="flex items-center gap-4">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-surface/10 ring-1 ring-white/15">
                 <Image
-                  src="/brand/Logo_OSH.svg"
+                  src="/brand/logo.svg"
                   alt="Oslo Student Hub"
                   width={36}
                   height={36}
@@ -55,13 +55,13 @@ export function PortalShell({
               <span className="rounded-full bg-secondary px-3 py-1 text-xs font-bold uppercase tracking-wide text-primary">
                 {roleLabel}
               </span>
-              <LogoutButton role={roleKey} />
-              <Link
-                href="/"
-                className="rounded-full bg-surface/10 px-4 py-2 text-xs font-semibold text-surface transition hover:bg-surface/20"
-              >
-                Hjem
-              </Link>
+                <LogoutButton role={roleKey} />
+                <Link
+                  href="/"
+                  className="rounded-full bg-surface/10 px-4 py-2 text-xs font-semibold text-surface transition hover:bg-secondary/15 hover:text-secondary hover:ring-2 hover:ring-secondary/40 hover:ring-offset-2 hover:ring-offset-primary"
+                >
+                  Hjem
+                </Link>
             </div>
           </div>
         </div>
@@ -78,10 +78,10 @@ export function PortalShell({
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      "rounded-full border px-4 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-mist",
+                      "rounded-full border px-4 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-surface",
                       isActive
                         ? "border-primary bg-primary text-surface shadow-soft"
-                        : "border-primary/15 bg-surface text-primary hover:border-primary/40 hover:bg-mist",
+                        : "border-primary/15 bg-surface text-primary hover:border-secondary hover:bg-secondary/15 hover:text-secondary",
                     )}
                   >
                     {item.label}

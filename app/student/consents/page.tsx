@@ -125,7 +125,7 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
           {filteredCompanies.length === 0 ? (
             <p className="text-sm text-surface/70">Ingen bedrifter i denne bransjen.</p>
           ) : (
-          <ul className="grid gap-4 text-sm text-surface/80">
+          <ul className="grid gap-6 text-sm text-surface/80">
             {filteredCompanies.map((company) => (
               <li
                 key={company.id}
@@ -170,7 +170,7 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
           {activeConsents.length === 0 ? (
             <p className="text-sm text-surface/70">Du har ikke gitt samtykke til noen bedrifter ennå.</p>
           ) : (
-            <ul className="grid gap-4">
+            <ul className="grid gap-6">
               {activeConsents.map((consent) => (
                 <li key={consent.id} className="rounded-xl border border-secondary/60 bg-secondary/15 p-4 shadow-soft">
                   <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
