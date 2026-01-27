@@ -2,7 +2,6 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 
 export function LogoutButton({ role }: { role: "student" | "company" | "admin" }) {
@@ -19,14 +18,13 @@ export function LogoutButton({ role }: { role: "student" | "company" | "admin" }
   };
 
   return (
-    <Button
+    <button
       type="button"
-      variant="ghost"
       className="portal-top-link"
       onClick={handleLogout}
       disabled={isPending}
     >
       Logg ut
-    </Button>
+    </button>
   );
 }

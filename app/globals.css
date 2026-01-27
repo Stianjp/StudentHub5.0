@@ -69,10 +69,10 @@ table tbody tr:active {
   }
 
   .portal-top-link:hover {
-    color: #FE9A70;
-    border-color: #FE9A70;
+    color: #FE9A70 !important;
+    border-color: #FE9A70 !important;
     box-shadow: 0 0 0 2px rgba(254, 154, 112, 0.6), 0 0 0 4px #140249;
-    background-color: rgba(254, 154, 112, 0.1);
+    background-color: rgba(254, 154, 112, 0.1) !important;
   }
 
   .portal-top-link:focus-visible {
