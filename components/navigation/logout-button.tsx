@@ -10,10 +10,15 @@ export function LogoutButton({ role }: { role: "student" | "company" | "admin" }
 
   const handleLogout = () => {
     startTransition(async () => {
-      const supabase = createClient();
-      await supabase.auth.signOut();
-      router.push(`/auth/sign-in?role=${role}`);
-      router.refresh();
+      try {
+        const supabase = createClient();
+        await supabase.auth.signOut();
+      } catch {
+        // Always redirect to sign-in even if signOut fails.
+      } finally {
+        router.replace(`/auth/sign-in?role=${role}`);
+        router.refresh();
+      }
     });
   };
 

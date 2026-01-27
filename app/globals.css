@@ -66,6 +66,13 @@ table tbody tr:active {
     border: 1px solid rgba(255, 255, 255, 0.35);
     background: transparent;
     transition: all 150ms ease;
+    cursor: pointer;
+    pointer-events: auto;
+  }
+
+  .portal-top-link:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 
   .portal-top-link:hover {
