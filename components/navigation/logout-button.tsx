@@ -12,7 +12,8 @@ export function LogoutButton({ role }: { role: "student" | "company" | "admin" }
     startTransition(async () => {
       try {
         const supabase = createClient();
-        await supabase.auth.signOut();
+        // Local sign-out avoids refresh token network calls.
+        await supabase.auth.signOut({ scope: "local" });
       } catch {
         // Always redirect to sign-in even if signOut fails.
       } finally {
