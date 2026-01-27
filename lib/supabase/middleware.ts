@@ -27,6 +27,16 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  await supabase.auth.getUser();
+  try {
+    await supabase.auth.getUser();
+  } catch (error) {
+    const message = (error as { message?: string }).message?.toLowerCase() ?? "";
+    const code = (error as { code?: string }).code;
+    if (code === "refresh_token_not_found" || message.includes("refresh token not found")) {
+      await supabase.auth.signOut();
+      return response;
+    }
+    throw error;
+  }
   return response;
 }
