@@ -149,22 +149,21 @@ export async function registerCompany(formData: FormData) {
     const standType = String(getFormValue(formData, "standType") ?? "").trim();
     const packageTier = String(getFormValue(formData, "package") ?? "standard").trim();
 
-    const parsed = registerCompanySchema.safeParse({
-      eventId,
-      companyId,
-      standType,
-      package: packageTier,
-    });
-
-    if (!parsed.success) {
-      throw new Error(parsed.error.issues.map((issue) => issue.message).join(", "));
+    if (!isUuid(eventId)) {
+      throw new Error(`eventId: Invalid UUID (${eventId || "tom"})`);
+    }
+    if (!isUuid(companyId)) {
+      throw new Error(`companyId: Invalid UUID (${companyId || "tom"})`);
+    }
+    if (!["standard", "silver", "gold", "platinum"].includes(packageTier)) {
+      throw new Error(`package: Ugyldig verdi (${packageTier || "tom"})`);
     }
 
     await registerCompanyForEvent({
-      eventId: parsed.data.eventId,
-      companyId: parsed.data.companyId,
-      standType: parsed.data.standType || "Standard",
-      package: parsed.data.package ?? "standard",
+      eventId,
+      companyId,
+      standType: standType || "Standard",
+      package: packageTier as "standard" | "silver" | "gold" | "platinum",
     });
 
     revalidatePath("/admin/companies");
