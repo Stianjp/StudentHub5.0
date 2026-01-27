@@ -24,7 +24,8 @@ export async function getUser() {
   if (error) {
     const isMissingSession =
       (error as { name?: string; message?: string }).name === "AuthSessionMissingError" ||
-      (error as { message?: string }).message?.includes("Auth session missing");
+      (error as { message?: string }).message?.includes("Auth session missing") ||
+      (error as { message?: string }).message?.toLowerCase().includes("refresh token not found");
 
     if (isMissingSession) {
       return null;
