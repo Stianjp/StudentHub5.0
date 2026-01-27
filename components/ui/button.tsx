@@ -9,13 +9,13 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 
 const variantStyles: Record<ButtonVariant, string> = {
   primary:
-    "bg-primary text-surface shadow-soft hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-lg active:translate-y-0 active:scale-[0.98] active:bg-primary/80 active:shadow-inner",
+    "bg-primary text-surface shadow-soft hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-lg hover:ring-2 hover:ring-secondary/30 active:translate-y-0 active:scale-[0.98] active:bg-primary/80 active:shadow-inner active:ring-2 active:ring-secondary/60",
   secondary:
-    "bg-secondary text-primary shadow-soft hover:-translate-y-0.5 hover:bg-secondary/85 hover:shadow-lg active:translate-y-0 active:scale-[0.98] active:bg-secondary/75 active:shadow-inner",
+    "bg-secondary text-primary shadow-soft hover:-translate-y-0.5 hover:bg-secondary/85 hover:shadow-lg hover:ring-2 hover:ring-secondary/30 active:translate-y-0 active:scale-[0.98] active:bg-secondary/75 active:shadow-inner active:ring-2 active:ring-secondary/60",
   ghost:
-    "bg-transparent text-primary hover:bg-primary/10 hover:shadow-soft active:bg-primary/20 active:scale-[0.98] focus-visible:ring-primary/30",
+    "bg-transparent text-primary hover:bg-secondary/15 hover:text-primary hover:shadow-soft hover:ring-2 hover:ring-secondary/30 active:bg-secondary/25 active:scale-[0.98] active:ring-2 active:ring-secondary/60 focus-visible:ring-secondary/60",
   danger:
-    "bg-error text-surface shadow-soft hover:-translate-y-0.5 hover:bg-error/90 hover:shadow-lg active:translate-y-0 active:scale-[0.98] active:bg-error/80 active:shadow-inner",
+    "bg-error text-surface shadow-soft hover:-translate-y-0.5 hover:bg-error/90 hover:shadow-lg hover:ring-2 hover:ring-secondary/30 active:translate-y-0 active:scale-[0.98] active:bg-error/80 active:shadow-inner active:ring-2 active:ring-secondary/60",
 };
 
 export function Button({ variant = "primary", className, ...props }: ButtonProps) {

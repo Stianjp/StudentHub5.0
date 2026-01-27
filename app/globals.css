@@ -22,3 +22,11 @@ a:focus-visible {
   outline-offset: 2px;
   border-radius: 9999px;
 }
+
+table tbody tr:hover {
+  background-color: rgba(254, 154, 112, 0.12);
+}
+
+table tbody tr:active {
+  background-color: rgba(254, 154, 112, 0.2);
+}
