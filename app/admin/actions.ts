@@ -17,6 +17,20 @@ import {
 } from "@/lib/admin";
 import { isUuid } from "@/lib/utils";
 
+function getFormValue(formData: FormData, name: string) {
+  const direct = formData.get(name);
+  if (direct !== null) return direct;
+
+  for (const [key, value] of formData.entries()) {
+    if (key === name) continue;
+    if (key.endsWith(`_${name}`) || key.endsWith(name)) {
+      return value;
+    }
+  }
+
+  return null;
+}
+
 export async function saveEvent(formData: FormData) {
   await requireRole("admin");
 
@@ -55,9 +69,9 @@ export async function inviteCompany(formData: FormData) {
   const returnTo = formData.get("returnTo");
   try {
     const parsed = inviteCompanySchema.safeParse({
-      eventId: formData.get("eventId"),
-      companyId: formData.get("companyId"),
-      email: formData.get("email"),
+      eventId: getFormValue(formData, "eventId"),
+      companyId: getFormValue(formData, "companyId"),
+      email: getFormValue(formData, "email"),
     });
 
     if (!parsed.success) {
@@ -89,11 +103,11 @@ export async function setPackage(formData: FormData) {
   const returnTo = formData.get("returnTo");
   try {
     const parsed = setPackageSchema.safeParse({
-      eventId: formData.get("eventId"),
-      companyId: formData.get("companyId"),
-      package: formData.get("package"),
-      accessFrom: formData.get("accessFrom"),
-      accessUntil: formData.get("accessUntil"),
+      eventId: getFormValue(formData, "eventId"),
+      companyId: getFormValue(formData, "companyId"),
+      package: getFormValue(formData, "package"),
+      accessFrom: getFormValue(formData, "accessFrom"),
+      accessUntil: getFormValue(formData, "accessUntil"),
     });
 
     if (!parsed.success) {
@@ -127,10 +141,10 @@ export async function registerCompany(formData: FormData) {
   const returnTo = formData.get("returnTo");
   try {
     const parsed = registerCompanySchema.safeParse({
-      eventId: formData.get("eventId"),
-      companyId: formData.get("companyId"),
-      standType: formData.get("standType"),
-      package: formData.get("package"),
+      eventId: getFormValue(formData, "eventId"),
+      companyId: getFormValue(formData, "companyId"),
+      standType: getFormValue(formData, "standType"),
+      package: getFormValue(formData, "package"),
     });
 
     if (!parsed.success) {
@@ -160,9 +174,9 @@ export async function registerCompany(formData: FormData) {
 
 export async function registerCompaniesBulk(formData: FormData) {
   await requireRole("admin");
-  const eventId = formData.get("eventId")?.toString() ?? "";
-  const standType = formData.get("standType")?.toString() ?? "Standard";
-  const packageTier = formData.get("package")?.toString() ?? "standard";
+  const eventId = String(getFormValue(formData, "eventId") ?? "");
+  const standType = String(getFormValue(formData, "standType") ?? "Standard");
+  const packageTier = String(getFormValue(formData, "package") ?? "standard");
   const companyIds = formData.getAll("companyIds").map((value) => String(value));
   const returnTo = formData.get("returnTo");
 
