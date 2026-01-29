@@ -321,7 +321,7 @@ export type Database = {
       consents: {
         Row: {
           id: string;
-          event_id: string;
+          event_id: string | null;
           company_id: string;
           student_id: string;
           consent: boolean;
@@ -330,10 +330,13 @@ export type Database = {
           created_at: string;
           updated_at: string | null;
           updated_by: string | null;
+          source: "stand" | "student_portal";
+          consent_text_version: string | null;
+          revoked_at: string | null;
         };
         Insert: {
           id?: string;
-          event_id: string;
+          event_id?: string | null;
           company_id: string;
           student_id: string;
           consent: boolean;
@@ -342,10 +345,13 @@ export type Database = {
           created_at?: string;
           updated_at?: string | null;
           updated_by?: string | null;
+          source?: "stand" | "student_portal";
+          consent_text_version?: string | null;
+          revoked_at?: string | null;
         };
         Update: {
           id?: string;
-          event_id?: string;
+          event_id?: string | null;
           company_id?: string;
           student_id?: string;
           consent?: boolean;
@@ -354,6 +360,51 @@ export type Database = {
           created_at?: string;
           updated_at?: string | null;
           updated_by?: string | null;
+          source?: "stand" | "student_portal";
+          consent_text_version?: string | null;
+          revoked_at?: string | null;
+        };
+        Relationships: [];
+      };
+      leads: {
+        Row: {
+          id: string;
+          student_id: string;
+          company_id: string;
+          event_id: string | null;
+          interests: string[];
+          job_types: string[];
+          study_level: string | null;
+          study_year: number | null;
+          field_of_study: string | null;
+          source: "stand" | "student_portal";
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          student_id: string;
+          company_id: string;
+          event_id?: string | null;
+          interests?: string[];
+          job_types?: string[];
+          study_level?: string | null;
+          study_year?: number | null;
+          field_of_study?: string | null;
+          source?: "stand" | "student_portal";
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          student_id?: string;
+          company_id?: string;
+          event_id?: string | null;
+          interests?: string[];
+          job_types?: string[];
+          study_level?: string | null;
+          study_year?: number | null;
+          field_of_study?: string | null;
+          source?: "stand" | "student_portal";
+          created_at?: string;
         };
         Relationships: [];
       };

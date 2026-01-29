@@ -26,6 +26,7 @@ export default async function CompanyDashboardPage() {
     getCompanyLeads(company.id),
     listActiveEvents(),
   ]);
+  const consentedLeads = leads.filter((lead) => lead.consent?.consent).length;
 
   const onboarding = getCompanyOnboardingStatus(company);
 
@@ -44,7 +45,7 @@ export default async function CompanyDashboardPage() {
 
       <section className="grid gap-4 md:grid-cols-3">
         <Stat label="Event-deltakelser" value={registrations.length} hint="Registrerte events" />
-        <Stat label="Leads med samtykke" value={leads.length} hint="Kun consent=true" />
+        <Stat label="Leads med samtykke" value={consentedLeads} hint="Kun consent=true" />
         <Stat label="Aktive events" value={events.length} hint="Tilgjengelige nå" />
       </section>
 

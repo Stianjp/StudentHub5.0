@@ -68,15 +68,15 @@ export async function upsertStudentConsent(formData: FormData) {
   const eventId = String(formData.get("eventId") ?? "").trim();
   const consent = String(formData.get("consent") ?? "true") === "true";
 
-  if (!studentId || !companyId || !eventId) {
-    throw new Error("Student, bedrift og event må være valgt.");
+  if (!studentId || !companyId) {
+    throw new Error("Student og bedrift må være valgt.");
   }
 
   const supabase = createAdminSupabaseClient();
   const now = new Date().toISOString();
 
   const payload = {
-    event_id: eventId,
+    event_id: eventId || null,
     company_id: companyId,
     student_id: studentId,
     consent,
@@ -89,7 +89,7 @@ export async function upsertStudentConsent(formData: FormData) {
 
   const { error } = await supabase
     .from("consents")
-    .upsert(payload, { onConflict: "event_id,company_id,student_id" });
+    .upsert(payload, { onConflict: "student_id,company_id" });
 
   if (error?.code === "PGRST204" || error?.message?.includes("updated_at")) {
     const fallback = { ...payload };
@@ -97,7 +97,7 @@ export async function upsertStudentConsent(formData: FormData) {
     delete (fallback as { updated_by?: string }).updated_by;
     const { error: fallbackError } = await supabase
       .from("consents")
-      .upsert(fallback, { onConflict: "event_id,company_id,student_id" });
+      .upsert(fallback, { onConflict: "student_id,company_id" });
     if (fallbackError) throw fallbackError;
   } else if (error) {
     throw error;

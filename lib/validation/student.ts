@@ -29,7 +29,7 @@ export const studentProfileSchema = z.object({
 });
 
 export const consentSchema = z.object({
-  eventId: z.string().uuid(),
+  eventId: z.string().uuid().optional().nullable(),
   companyId: z.string().uuid(),
   consent: z.coerce.boolean(),
   scope: z.string().min(3).default("contact"),

@@ -106,15 +106,31 @@ export async function listCompanyLeads(companyId: string) {
   } catch {
     // fallback
   }
-  const { data, error } = await supabase
-    .from("consents")
+  const { data: leads, error } = await supabase
+    .from("leads")
     .select("*, student:students(*), event:events(id, name)")
     .eq("company_id", companyId)
-    .eq("consent", true)
-    .order("consented_at", { ascending: false });
+    .order("created_at", { ascending: false });
 
   if (error) throw error;
-  return data ?? [];
+  const leadRows = leads ?? [];
+  if (leadRows.length === 0) return [];
+
+  const studentIds = leadRows.map((row) => row.student_id);
+  const { data: consents } = await supabase
+    .from("consents")
+    .select("*")
+    .eq("company_id", companyId)
+    .in("student_id", studentIds);
+
+  const consentMap = new Map((consents ?? []).map((row) => [row.student_id, row]));
+
+  return leadRows.map((lead) => ({
+    lead,
+    consent: consentMap.get(lead.student_id) ?? null,
+    student: lead.student ?? null,
+    event: lead.event ?? null,
+  }));
 }
 
 export async function listCompanyRegistrations(companyId: string) {

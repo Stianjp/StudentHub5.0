@@ -23,16 +23,22 @@ export async function GET() {
   const company = await getOrCreateCompanyForUser(user.id, user.email);
   const leads = await getCompanyLeads(company.id);
 
-  const rows = leads.map(({ consent, student }) => ({
-    consented_at: consent.consented_at,
-    student_id: consent.student_id,
+  const rows = leads.map(({ lead, consent, student, event }) => ({
+    lead_id: lead.id,
+    student_id: lead.student_id,
     full_name: student?.full_name ?? "",
-    email: student?.email ?? "",
-    phone: student?.phone ?? "",
-    study_program: student?.study_program ?? "",
-    study_level: student?.study_level ?? "",
-    job_types: student?.job_types.join(" | ") ?? "",
-    values: student?.values.join(" | ") ?? "",
+    email: consent?.consent ? student?.email ?? "" : "",
+    phone: consent?.consent ? student?.phone ?? "" : "",
+    study_program: lead.field_of_study ?? student?.study_program ?? "",
+    study_level: lead.study_level ?? student?.study_level ?? "",
+    study_year: lead.study_year ?? student?.graduation_year ?? "",
+    interests: lead.interests?.join(" | ") ?? "",
+    job_types: lead.job_types?.join(" | ") ?? "",
+    consent_given: consent?.consent ? "true" : "false",
+    consent_updated_at: consent?.updated_at ?? "",
+    source: lead.source,
+    event_name: event?.name ?? "",
+    created_at: lead.created_at,
   }));
 
   const csv = toCsv(rows);

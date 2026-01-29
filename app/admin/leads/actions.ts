@@ -6,20 +6,20 @@ import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 
 export async function upsertConsent(formData: FormData) {
   const profile = await requireRole("admin");
-  const eventId = String(formData.get("eventId") ?? "");
+  const eventId = String(formData.get("eventId") ?? "").trim();
   const companyId = String(formData.get("companyId") ?? "");
   const studentId = String(formData.get("studentId") ?? "");
   const consent = String(formData.get("consent") ?? "true") === "true";
 
-  if (!eventId || !companyId || !studentId) {
-    throw new Error("Event, bedrift og student må være valgt.");
+  if (!companyId || !studentId) {
+    throw new Error("Bedrift og student må være valgt.");
   }
 
   const supabase = createAdminSupabaseClient();
   const now = new Date().toISOString();
 
   const payload = {
-    event_id: eventId,
+    event_id: eventId || null,
     company_id: companyId,
     student_id: studentId,
     consent,
@@ -32,7 +32,7 @@ export async function upsertConsent(formData: FormData) {
 
   const { error } = await supabase
     .from("consents")
-    .upsert(payload, { onConflict: "event_id,company_id,student_id" });
+    .upsert(payload, { onConflict: "student_id,company_id" });
 
   if (error?.code === "PGRST204" || error?.message?.includes("updated_at")) {
     const fallback = { ...payload };
@@ -40,7 +40,7 @@ export async function upsertConsent(formData: FormData) {
     delete (fallback as { updated_by?: string }).updated_by;
     const { error: fallbackError } = await supabase
       .from("consents")
-      .upsert(fallback, { onConflict: "event_id,company_id,student_id" });
+      .upsert(fallback, { onConflict: "student_id,company_id" });
     if (fallbackError) throw fallbackError;
   } else if (error) {
     throw error;

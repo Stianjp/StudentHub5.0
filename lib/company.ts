@@ -1,6 +1,7 @@
 import { startOfHour } from "date-fns";
 import type { TableRow } from "@/lib/types/database";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { computeMatch } from "@/lib/matching";
 
 type Company = TableRow<"companies">;
@@ -10,6 +11,7 @@ type Student = TableRow<"students">;
 type StudentPublic = TableRow<"student_public_profiles">;
 type Consent = TableRow<"consents">;
 type StandVisit = TableRow<"stand_visits">;
+type Lead = TableRow<"leads">;
 
 type EventRegistration = EventCompany & { event: Event };
 
@@ -67,34 +69,45 @@ export async function getCompanyRegistrations(companyId: string) {
 }
 
 export async function getCompanyLeads(companyId: string) {
-  const supabase = await createServerSupabaseClient();
+  let supabase = await createServerSupabaseClient();
+  try {
+    supabase = createAdminSupabaseClient();
+  } catch {
+    // fallback
+  }
 
+  const { data: leads, error: leadError } = await supabase
+    .from("leads")
+    .select("*, student:students(*), event:events(id, name)")
+    .eq("company_id", companyId)
+    .order("created_at", { ascending: false });
+
+  if (leadError) throw leadError;
+
+  const leadRows = (leads ?? []) as Array<
+    Lead & { student: Student | null; event?: { id: string; name: string } | null }
+  >;
+
+  if (leadRows.length === 0) return [];
+
+  const studentIds = leadRows.map((row) => row.student_id);
   const { data: consents, error: consentError } = await supabase
     .from("consents")
     .select("*")
     .eq("company_id", companyId)
-    .eq("consent", true)
-    .order("consented_at", { ascending: false });
+    .in("student_id", studentIds);
 
   if (consentError) throw consentError;
-  const consentRows = (consents ?? []) as Consent[];
-  if (consentRows.length === 0) {
-    return [] as Array<{ consent: Consent; student: Student | null }>;
-  }
 
-  const studentIds = consentRows.map((row) => row.student_id);
-  const { data: students, error: studentError } = await supabase
-    .from("students")
-    .select("*")
-    .in("id", studentIds);
+  const consentMap = new Map(
+    (consents ?? []).map((row) => [row.student_id, row as Consent]),
+  );
 
-  if (studentError) throw studentError;
-
-  const studentMap = new Map((students ?? []).map((student) => [student.id, student as Student]));
-
-  return consentRows.map((consent) => ({
-    consent,
-    student: studentMap.get(consent.student_id) ?? null,
+  return leadRows.map((lead) => ({
+    lead,
+    consent: consentMap.get(lead.student_id) ?? null,
+    student: lead.student ?? null,
+    event: lead.event ?? null,
   }));
 }
 

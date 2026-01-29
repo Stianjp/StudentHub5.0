@@ -19,14 +19,13 @@ export default async function AdminLeadsPage({ searchParams }: PageProps) {
 
   const supabase = createAdminSupabaseClient();
 
-  const [{ data: consents }, { data: students }, { data: companies }, { data: events }] = await Promise.all([
+  const [{ data: consents }, { data: students }, { data: companies }] = await Promise.all([
     supabase
       .from("consents")
       .select("id, consent, consented_at, updated_at, student:students(id, full_name, email), company:companies(id, name), event:events(id, name)")
       .order("consented_at", { ascending: false }),
     supabase.from("students").select("id, full_name, email").order("full_name"),
     supabase.from("companies").select("id, name").order("name"),
-    supabase.from("events").select("id, name").order("starts_at", { ascending: false }),
   ]);
 
   const typedConsents = (consents ?? []) as unknown as Array<{
@@ -60,7 +59,7 @@ export default async function AdminLeadsPage({ searchParams }: PageProps) {
 
       <Card className="flex flex-col gap-4">
         <h3 className="text-lg font-bold text-primary">Legg til samtykke</h3>
-        <form action={upsertConsent} className="grid gap-3 md:grid-cols-4">
+        <form action={upsertConsent} className="grid gap-3 md:grid-cols-3">
           <label className="text-sm font-semibold text-primary">
             Student
             <Select name="studentId" required>
@@ -82,23 +81,13 @@ export default async function AdminLeadsPage({ searchParams }: PageProps) {
             </Select>
           </label>
           <label className="text-sm font-semibold text-primary">
-            Event
-            <Select name="eventId" required>
-              {(events ?? []).map((event) => (
-                <option key={event.id} value={event.id}>
-                  {event.name}
-                </option>
-              ))}
-            </Select>
-          </label>
-          <label className="text-sm font-semibold text-primary">
             Samtykke
             <Select name="consent" defaultValue="true">
               <option value="true">Gi samtykke</option>
               <option value="false">Fjern samtykke</option>
             </Select>
           </label>
-          <Button className="md:col-span-4" type="submit">
+          <Button className="md:col-span-3" type="submit">
             Lagre samtykke
           </Button>
         </form>

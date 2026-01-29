@@ -102,7 +102,14 @@ values
   ('3f1d6b8e-7a43-4f0a-9a8c-3b6b3d6c7f1e', '22222222-2222-2222-2222-222222222222', '66666666-0000-0000-0000-000000000001', true, 'contact'),
   ('3f1d6b8e-7a43-4f0a-9a8c-3b6b3d6c7f1e', '22222222-2222-2222-2222-222222222222', '66666666-0000-0000-0000-000000000002', true, 'contact'),
   ('3f1d6b8e-7a43-4f0a-9a8c-3b6b3d6c7f1e', '33333333-3333-3333-3333-333333333333', '66666666-0000-0000-0000-000000000004', true, 'contact')
-on conflict (event_id, company_id, student_id) do nothing;
+on conflict (student_id, company_id) do nothing;
+
+-- Leads
+insert into public.leads (event_id, company_id, student_id, interests, job_types, study_level, study_year, field_of_study, source)
+values
+  ('3f1d6b8e-7a43-4f0a-9a8c-3b6b3d6c7f1e', '22222222-2222-2222-2222-222222222222', '66666666-0000-0000-0000-000000000001', array['Frontend'], array['Sommerjobb'], 'Bachelor', 2027, 'Informatikk', 'stand'),
+  (null, '33333333-3333-3333-3333-333333333333', '66666666-0000-0000-0000-000000000004', array['Strategi'], array['Fulltid'], 'Master', 2026, 'Industriell økonomi', 'student_portal')
+on conflict do nothing;
 
 -- Survey responses
 insert into public.survey_responses (event_id, company_id, student_id, answers)

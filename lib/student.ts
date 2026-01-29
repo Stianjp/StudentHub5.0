@@ -11,7 +11,7 @@ export type StudentConsent = Consent & {
 };
 
 type ConsentInput = {
-  eventId: string;
+  eventId?: string | null;
   companyId: string;
   studentId: string;
   consent: boolean;
@@ -49,8 +49,40 @@ export async function getOrCreateStudentForUser(userId: string, email?: string |
     .from("students")
     .insert({
       user_id: userId,
-      email: email ?? null,
+      email: email ? email.toLowerCase() : null,
       full_name: deriveStudentName(email),
+      created_at: now,
+      updated_at: now,
+    })
+    .select("*")
+    .single();
+
+  if (insertError) throw insertError;
+  return created as Student;
+}
+
+export async function getOrCreateStudentByEmail(email: string) {
+  const admin = createAdminSupabaseClient();
+  const normalized = email.toLowerCase();
+
+  const { data: existing, error: readError } = await admin
+    .from("students")
+    .select("*")
+    .eq("email", normalized)
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  if (readError) throw readError;
+  if (existing && existing.length > 0) {
+    return existing[0] as Student;
+  }
+
+  const now = new Date().toISOString();
+  const { data: created, error: insertError } = await admin
+    .from("students")
+    .insert({
+      email: normalized,
+      full_name: deriveStudentName(normalized),
       created_at: now,
       updated_at: now,
     })
@@ -87,7 +119,7 @@ export async function submitConsent(input: ConsentInput) {
     .from("consents")
     .upsert(
       {
-        event_id: input.eventId,
+        event_id: input.eventId ?? null,
         company_id: input.companyId,
         student_id: input.studentId,
         consent: input.consent,
@@ -95,7 +127,7 @@ export async function submitConsent(input: ConsentInput) {
         consented_at: now,
         created_at: now,
       },
-      { onConflict: "event_id,company_id,student_id" },
+      { onConflict: "student_id,company_id" },
     )
     .select("*")
     .single();

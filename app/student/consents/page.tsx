@@ -28,19 +28,15 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
   const student = await getOrCreateStudentForUser(profile.id, user.email);
   const consents = await listStudentConsents(student.id);
 
-  const [{ data: events, error: eventsError }, { data: companies, error: companiesError }] =
-    await Promise.all([
-      supabase.from("events").select("*").eq("is_active", true).order("starts_at", { ascending: true }),
-      supabase.from("companies").select("id, name, industry").order("name"),
-    ]);
+  const { data: companies, error: companiesError } = await supabase
+    .from("companies")
+    .select("id, name, industry")
+    .order("name");
 
-  if (eventsError) throw eventsError;
   if (companiesError) throw companiesError;
 
-  const eventId = events?.[0]?.id ?? "";
   const selectedIndustry =
     typeof params.industry === "string" ? params.industry : INDUSTRY_ALL;
-  const hasEvent = Boolean(eventId);
 
   const industries = Array.from(
     new Set((companies ?? []).map((company) => company.industry).filter(Boolean)),
@@ -71,43 +67,35 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
         />
 
         <Card className="mt-8 flex flex-col gap-4 bg-primary/20 text-surface ring-1 ring-white/10">
-          {eventId ? (
-            <form className="grid gap-3 md:grid-cols-2" method="get">
-              <label className="text-sm font-semibold text-surface">
-                Bransjefilter
-                <Select name="industry" defaultValue={selectedIndustry}>
-                  <option value={INDUSTRY_ALL}>Alle bransjer</option>
-                  {industries.map((industry) => (
-                    <option key={industry} value={industry}>
-                      {industry}
-                    </option>
-                  ))}
-                </Select>
-              </label>
-              <div className="md:col-span-2">
-                <Button variant="secondary" type="submit">
-                  Oppdater filter
-                </Button>
-              </div>
-            </form>
-          ) : (
-            <p className="text-sm text-surface/70">
-              Ingen aktive events er opprettet enda. Opprett et event for å aktivere samtykker.
-            </p>
-          )}
+          <form className="grid gap-3 md:grid-cols-2" method="get">
+            <label className="text-sm font-semibold text-surface">
+              Bransjefilter
+              <Select name="industry" defaultValue={selectedIndustry}>
+                <option value={INDUSTRY_ALL}>Alle bransjer</option>
+                {industries.map((industry) => (
+                  <option key={industry} value={industry}>
+                    {industry}
+                  </option>
+                ))}
+              </Select>
+            </label>
+            <div className="md:col-span-2">
+              <Button variant="secondary" type="submit">
+                Oppdater filter
+              </Button>
+            </div>
+          </form>
 
           <div className="flex flex-wrap gap-3">
             <form action={giveConsentToAll}>
-              <input type="hidden" name="eventId" value={eventId} />
-              <Button type="submit" disabled={!hasEvent}>
+              <Button type="submit">
                 Gi samtykke til alle bedrifter
               </Button>
             </form>
             {selectedIndustry !== INDUSTRY_ALL ? (
               <form action={giveConsentToAll}>
-                <input type="hidden" name="eventId" value={eventId} />
                 <input type="hidden" name="industry" value={selectedIndustry} />
-                <Button variant="secondary" type="submit" disabled={!hasEvent}>
+                <Button variant="secondary" type="submit">
                   Gi samtykke til alle {selectedIndustry}-bedrifter
                 </Button>
               </form>
@@ -143,18 +131,16 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
                   <div className="flex items-center gap-2">
                     <Badge className="bg-secondary/30 text-secondary">Samtykke gitt</Badge>
                     <form action={withdrawConsent}>
-                      <input type="hidden" name="eventId" value={eventId} />
                       <input type="hidden" name="companyId" value={company.id} />
-                      <Button variant="ghost" type="submit" disabled={!hasEvent}>
+                      <Button variant="ghost" type="submit">
                         Fjern samtykke
                       </Button>
                     </form>
                   </div>
                 ) : (
                     <form action={giveConsentToCompany}>
-                      <input type="hidden" name="eventId" value={eventId} />
                       <input type="hidden" name="companyId" value={company.id} />
-                      <Button variant="secondary" type="submit" disabled={!hasEvent}>
+                      <Button variant="secondary" type="submit">
                         Gi samtykke
                       </Button>
                     </form>
@@ -182,9 +168,10 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
                       {new Date(consent.consented_at).toLocaleString("nb-NO")}
                     </Badge>
                   </div>
-                  <p className="mt-2 text-xs text-surface/80">Scope: {consent.scope}</p>
+                  <p className="mt-2 text-xs text-surface/80">
+                    Jeg samtykker til at {consent.company?.name ?? "bedriften"} kan kontakte meg om relevante muligheter basert på interessene mine.
+                  </p>
                   <form action={withdrawConsent} className="mt-3">
-                    <input type="hidden" name="eventId" value={consent.event?.id ?? eventId} />
                     <input type="hidden" name="companyId" value={consent.company?.id ?? ""} />
                     <Button variant="ghost" type="submit">
                       Fjern samtykke

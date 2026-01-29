@@ -23,8 +23,8 @@ export default async function CompanyLeadsPage() {
     <div className="flex flex-col gap-8">
       <SectionHeader
         eyebrow="Leads"
-        title="Samtykkede studenter"
-        description="Kontaktinfo vises kun når consent=true."
+        title="Leads fra stand og studentportal"
+        description="Du ser alle leads. Kontaktinfo vises kun når samtykke er gitt."
         actions={
           <Link
             className={cn(
@@ -39,7 +39,7 @@ export default async function CompanyLeadsPage() {
 
       <Card className="flex flex-col gap-4">
         {leads.length === 0 ? (
-          <p className="text-sm text-ink/70">Ingen leads med samtykke enda.</p>
+          <p className="text-sm text-ink/70">Ingen leads enda.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-primary/10 text-sm">
@@ -47,29 +47,55 @@ export default async function CompanyLeadsPage() {
                 <tr className="text-left text-xs font-semibold uppercase tracking-wide text-primary/60">
                   <th className="px-3 py-2">Navn</th>
                   <th className="px-3 py-2">Studie</th>
-                  <th className="px-3 py-2">Jobbtype</th>
+                  <th className="px-3 py-2">Interesser</th>
                   <th className="px-3 py-2">Kontakt</th>
                   <th className="px-3 py-2">Samtykke</th>
+                  <th className="px-3 py-2">Kilde</th>
+                  <th className="px-3 py-2">Event</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-primary/5">
-                {leads.map(({ consent, student }) => (
-                  <tr key={consent.id} className="align-top">
+                {leads.map(({ lead, consent, student, event }) => (
+                  <tr key={lead.id} className="align-top">
                     <td className="px-3 py-3 font-semibold text-primary">
                       {student?.full_name ?? "Ukjent student"}
                     </td>
                     <td className="px-3 py-3 text-ink/80">
-                      {student?.study_program ?? "—"}
-                      <div className="text-xs text-ink/60">{student?.study_level ?? ""}</div>
+                      {lead.field_of_study ?? student?.study_program ?? "—"}
+                      <div className="text-xs text-ink/60">
+                        {lead.study_level ?? student?.study_level ?? ""}
+                      </div>
                     </td>
-                    <td className="px-3 py-3 text-ink/80">{student?.job_types.join(", ") ?? "—"}</td>
                     <td className="px-3 py-3 text-ink/80">
-                      <div>{student?.email ?? "—"}</div>
-                      <div className="text-xs text-ink/60">{student?.phone ?? ""}</div>
+                      {lead.interests?.length ? lead.interests.join(", ") : "—"}
+                      <div className="text-xs text-ink/60">{lead.job_types?.join(", ") ?? ""}</div>
+                    </td>
+                    <td className="px-3 py-3 text-ink/80">
+                      {consent?.consent ? (
+                        <>
+                          <div>{student?.email ?? "—"}</div>
+                          <div className="text-xs text-ink/60">{student?.phone ?? ""}</div>
+                        </>
+                      ) : (
+                        <div className="text-xs text-ink/60">Skjult (ingen samtykke)</div>
+                      )}
                     </td>
                     <td className="px-3 py-3">
-                      <Badge variant="success">{new Date(consent.consented_at).toLocaleString("nb-NO")}</Badge>
+                      {consent?.consent ? (
+                        <Badge variant="success">Samtykke</Badge>
+                      ) : (
+                        <Badge variant="warning">Ingen</Badge>
+                      )}
+                      <div className="text-xs text-ink/60">
+                        {consent?.updated_at
+                          ? new Date(consent.updated_at).toLocaleString("nb-NO")
+                          : "—"}
+                      </div>
                     </td>
+                    <td className="px-3 py-3 text-ink/80">
+                      {lead.source === "stand" ? "Stand" : "Studentportal"}
+                    </td>
+                    <td className="px-3 py-3 text-ink/80">{event?.name ?? "—"}</td>
                   </tr>
                 ))}
               </tbody>

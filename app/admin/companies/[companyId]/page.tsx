@@ -38,7 +38,8 @@ export default async function AdminCompanyDetailPage({ params }: PageProps) {
   }>;
 
   const typedLeads = leads as Array<{
-    id: string;
+    lead: { id: string; source: string; field_of_study?: string | null; study_level?: string | null };
+    consent?: { consent?: boolean; updated_at?: string | null } | null;
     student?: { full_name?: string; study_program?: string; email?: string; phone?: string };
     event?: { name?: string };
   }>;
@@ -102,9 +103,9 @@ export default async function AdminCompanyDetailPage({ params }: PageProps) {
       </Card>
 
       <Card className="flex flex-col gap-4">
-        <h3 className="text-lg font-bold text-primary">Studenter med samtykke</h3>
+        <h3 className="text-lg font-bold text-primary">Leads</h3>
         {leads.length === 0 ? (
-          <p className="text-sm text-ink/70">Ingen samtykker enda.</p>
+          <p className="text-sm text-ink/70">Ingen leads enda.</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-primary/10 text-sm">
@@ -114,22 +115,43 @@ export default async function AdminCompanyDetailPage({ params }: PageProps) {
                   <th className="px-3 py-2">Studie</th>
                   <th className="px-3 py-2">Kontakt</th>
                   <th className="px-3 py-2">Event</th>
+                  <th className="px-3 py-2">Samtykke</th>
+                  <th className="px-3 py-2">Kilde</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-primary/5">
                 {typedLeads.map((lead) => (
-                  <tr key={lead.id} className="align-top">
+                  <tr key={lead.lead.id} className="align-top">
                     <td className="px-3 py-3 font-semibold text-primary">
                       {lead.student?.full_name ?? "Ukjent"}
                     </td>
                     <td className="px-3 py-3 text-ink/80">
-                      {lead.student?.study_program ?? "—"}
+                      {lead.lead.field_of_study ?? lead.student?.study_program ?? "—"}
+                      <div className="text-xs text-ink/60">
+                        {lead.lead.study_level ?? ""}
+                      </div>
                     </td>
                     <td className="px-3 py-3 text-ink/80">
-                      <div>{lead.student?.email ?? "—"}</div>
-                      <div className="text-xs text-ink/60">{lead.student?.phone ?? ""}</div>
+                      {lead.consent?.consent ? (
+                        <>
+                          <div>{lead.student?.email ?? "—"}</div>
+                          <div className="text-xs text-ink/60">{lead.student?.phone ?? ""}</div>
+                        </>
+                      ) : (
+                        <div className="text-xs text-ink/60">Skjult (ingen samtykke)</div>
+                      )}
                     </td>
                     <td className="px-3 py-3 text-ink/80">{lead.event?.name ?? "—"}</td>
+                    <td className="px-3 py-3">
+                      {lead.consent?.consent ? (
+                        <Badge variant="success">Samtykke</Badge>
+                      ) : (
+                        <Badge variant="warning">Ingen</Badge>
+                      )}
+                    </td>
+                    <td className="px-3 py-3 text-ink/80">
+                      {lead.lead.source === "stand" ? "Stand" : "Studentportal"}
+                    </td>
                   </tr>
                 ))}
               </tbody>

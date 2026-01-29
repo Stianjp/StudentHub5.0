@@ -6,9 +6,10 @@ import { consentSchema, kioskSurveySchema } from "@/lib/validation/student";
 import {
   getOrCreateStudentForUser,
   recordStandVisit,
-  submitConsent,
   submitKioskSurvey,
 } from "@/lib/student";
+import { createLead, upsertConsentForStudent } from "@/lib/lead";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export async function submitStandFlow(formData: FormData) {
@@ -38,6 +39,10 @@ export async function submitStandFlow(formData: FormData) {
     throw new Error(parsed.error.issues.map((issue) => issue.message).join(", "));
   }
 
+  if (!parsed.data.eventId) {
+    throw new Error("Event mangler.");
+  }
+
   await recordStandVisit({
     eventId: parsed.data.eventId,
     companyId: parsed.data.companyId,
@@ -46,14 +51,35 @@ export async function submitStandFlow(formData: FormData) {
     metadata: { flow: "stand" },
   });
 
-  if (parsed.data.consent) {
-    await submitConsent({
-      eventId: parsed.data.eventId,
-      companyId: parsed.data.companyId,
-      studentId: student.id,
-      consent: true,
-      scope: parsed.data.scope,
+  await upsertConsentForStudent({
+    studentId: student.id,
+    companyId: parsed.data.companyId,
+    eventId: parsed.data.eventId ?? null,
+    consentGiven: parsed.data.consent,
+    source: "stand",
+  });
+
+  await createLead({
+    student,
+    companyId: parsed.data.companyId,
+    eventId: parsed.data.eventId ?? null,
+    interests: Object.values(parsed.data.answers ?? {}).filter(Boolean) as string[],
+    jobTypes: student.job_types ?? [],
+    studyLevel: student.study_level,
+    studyYear: student.graduation_year,
+    fieldOfStudy: student.study_program,
+    consentGiven: parsed.data.consent,
+    source: "stand",
+  });
+
+  if (parsed.data.answers && Object.keys(parsed.data.answers).length > 0) {
+    const supabase = await createServerSupabaseClient();
+    await supabase.from("survey_responses").insert({
+      event_id: parsed.data.eventId,
+      company_id: parsed.data.companyId,
+      student_id: student.id,
       answers: parsed.data.answers,
+      created_at: new Date().toISOString(),
     });
   }
 
