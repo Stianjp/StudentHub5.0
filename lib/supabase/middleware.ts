@@ -33,7 +33,18 @@ export async function updateSession(request: NextRequest) {
     const message = (error as { message?: string }).message?.toLowerCase() ?? "";
     const code = (error as { code?: string }).code;
     if (code === "refresh_token_not_found" || message.includes("refresh token not found")) {
-      await supabase.auth.signOut();
+      // Clear stale auth cookies without calling the auth API.
+      request.cookies.getAll().forEach((cookie) => {
+        if (cookie.name.startsWith("sb-")) {
+          response.cookies.set({
+            name: cookie.name,
+            value: "",
+            ...cookie,
+            maxAge: 0,
+            domain,
+          });
+        }
+      });
       return response;
     }
     throw error;
