@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 function parseTags(input: FormDataEntryValue | null) {
   if (!input) return [];
@@ -144,6 +145,10 @@ export async function updateStudentConsent(formData: FormData) {
 
 export async function deleteStudent(formData: FormData) {
   await requireRole("admin");
+  const sessionClient = await createServerSupabaseClient();
+  const {
+    data: { user: currentUser },
+  } = await sessionClient.auth.getUser();
   const studentId = String(formData.get("studentId") ?? "").trim();
   if (!studentId) throw new Error("Ugyldig student.");
 
@@ -156,6 +161,9 @@ export async function deleteStudent(formData: FormData) {
     .maybeSingle();
 
   if (!student) throw new Error("Student finnes ikke.");
+  if (currentUser?.id && student.user_id === currentUser.id) {
+    throw new Error("Du kan ikke slette brukeren du er logget inn som.");
+  }
 
   // Clean up related rows first.
   await supabase.from("consents").delete().eq("student_id", studentId);
@@ -172,8 +180,11 @@ export async function deleteStudent(formData: FormData) {
   if (student.user_id) {
     try {
       await supabase.auth.admin.deleteUser(student.user_id);
-    } catch {
-      // Ignore auth deletion errors; data is already removed.
+    } catch (error) {
+      const code = (error as { code?: string }).code;
+      if (code !== "user_not_found") {
+        throw error;
+      }
     }
   }
 
