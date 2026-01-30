@@ -78,15 +78,13 @@ export async function getCompanyLeads(companyId: string) {
 
   const { data: leads, error: leadError } = await supabase
     .from("leads")
-    .select("*, student:students(*), event:events(id, name)")
+    .select("*")
     .eq("company_id", companyId)
     .order("created_at", { ascending: false });
 
   if (leadError) throw leadError;
 
-  const leadRows = (leads ?? []) as Array<
-    Lead & { student: Student | null; event?: { id: string; name: string } | null }
-  >;
+  const leadRows = (leads ?? []) as Lead[];
 
   if (leadRows.length === 0) return [];
 
@@ -103,11 +101,24 @@ export async function getCompanyLeads(companyId: string) {
     (consents ?? []).map((row) => [row.student_id, row as Consent]),
   );
 
+  const { data: students } = await supabase
+    .from("students")
+    .select("*")
+    .in("id", studentIds);
+
+  const { data: events } = await supabase
+    .from("events")
+    .select("id, name")
+    .in("id", leadRows.map((lead) => lead.event_id).filter(Boolean) as string[]);
+
+  const studentMap = new Map((students ?? []).map((row) => [row.id, row as Student]));
+  const eventMap = new Map((events ?? []).map((row) => [row.id, row]));
+
   return leadRows.map((lead) => ({
     lead,
     consent: consentMap.get(lead.student_id) ?? null,
-    student: lead.student ?? null,
-    event: lead.event ?? null,
+    student: studentMap.get(lead.student_id) ?? null,
+    event: lead.event_id ? eventMap.get(lead.event_id) ?? null : null,
   }));
 }
 
