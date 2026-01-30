@@ -39,7 +39,6 @@ export async function updateSession(request: NextRequest) {
           response.cookies.set({
             name: cookie.name,
             value: "",
-            ...cookie,
             maxAge: 0,
             domain,
           });
