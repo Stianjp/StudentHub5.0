@@ -12,6 +12,19 @@ const commaSeparated = z
       : [],
   );
 
+const stringArray = z.preprocess((value) => {
+  if (Array.isArray(value)) {
+    return value.map((v) => String(v).trim()).filter(Boolean);
+  }
+  if (typeof value === "string") {
+    return value
+      .split(",")
+      .map((v) => v.trim())
+      .filter(Boolean);
+  }
+  return [];
+}, z.array(z.string()));
+
 export const companyInfoSchema = z.object({
   name: z.string().min(2, "Firmanavn er påkrevd"),
   orgNumber: z
@@ -35,11 +48,11 @@ export const companyInfoSchema = z.object({
 });
 
 export const companyRecruitmentSchema = z.object({
-  recruitmentRoles: commaSeparated,
-  recruitmentFields: commaSeparated,
-  recruitmentLevels: commaSeparated,
-  recruitmentJobTypes: commaSeparated,
-  recruitmentTiming: commaSeparated,
+  recruitmentRoles: stringArray,
+  recruitmentFields: stringArray,
+  recruitmentLevels: stringArray,
+  recruitmentJobTypes: stringArray,
+  recruitmentTiming: stringArray,
 });
 
 export const companyBrandingSchema = z.object({

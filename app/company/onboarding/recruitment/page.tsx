@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { SectionHeader } from "@/components/ui/section-header";
 import { requireRole } from "@/lib/auth";
 import { getOrCreateCompanyForUser } from "@/lib/company";
@@ -27,41 +26,117 @@ export default async function CompanyOnboardingRecruitmentPage() {
     );
   }
 
+  const fieldOptions = [
+    "BYGGINGENIØRER",
+    "DATAINGENIØR/IT",
+    "ELEKTROINGENIØRER",
+    "ENERGI & MILJØ INGENIØR",
+    "BIOTEKNOLOGI- OG KJEMIINGENIØR",
+    "MASKINIGENIØRER",
+    "ØKONOMI OG ADMINISTRASJON",
+    "LEDELSE",
+    "HUMAN RESOURCES",
+  ];
+
+  const jobTypeOptions = [
+    "Fast jobb",
+    "Deltidsjobb",
+    "Sommerjobb",
+    "Graduate-stilling",
+    "Bacheloroppgave",
+    "Masteroppgave",
+  ];
+
+  const levelOptions = ["Bachelor", "Master"];
+
   return (
     <div className="flex flex-col gap-8">
       <SectionHeader
         eyebrow="Bedriftsregistrering"
         title="Steg 2: Rekrutteringsbehov"
-        description="Hvilke roller og studieretninger er dere ute etter? Komma-separer tags."
+        description="Kryss av for hvilke studentgrupper og jobbkategorier dere ønsker."
       />
 
       <OnboardingSteps current="recruitment" />
 
       <Card className="flex flex-col gap-4">
-        <form action={saveCompanyRecruitment} className="grid gap-4">
+        <form action={saveCompanyRecruitment} className="grid gap-5">
           <input type="hidden" name="next" value="/company/onboarding/branding" />
-          <label className="text-sm font-semibold text-primary">
-            Roller
-            <Input name="recruitmentRoles" defaultValue={company.recruitment_roles.join(", ")} placeholder="Frontendutvikler, Analytiker" />
-          </label>
-          <label className="text-sm font-semibold text-primary">
-            Studieretninger / fagfelt
-            <Input name="recruitmentFields" defaultValue={company.recruitment_fields.join(", ")} placeholder="Informatikk, Økonomi" />
-          </label>
-          <div className="grid gap-4 md:grid-cols-2">
-            <label className="text-sm font-semibold text-primary">
-              Nivå
-              <Input name="recruitmentLevels" defaultValue={company.recruitment_levels.join(", ")} placeholder="Bachelor, Master" />
+          <fieldset className="grid gap-2">
+            <legend className="text-sm font-semibold text-primary">
+              Vi er interessert i studenter innenfor…
+            </legend>
+            <div className="grid gap-2 md:grid-cols-2">
+              {fieldOptions.map((option) => (
+                <label
+                  key={option}
+                  className="flex items-center gap-2 rounded-xl border border-primary/10 bg-surface px-3 py-2 text-sm"
+                >
+                  <input
+                    type="checkbox"
+                    name="recruitmentFields"
+                    value={option}
+                    defaultChecked={company.recruitment_fields.includes(option)}
+                    className="h-4 w-4 rounded border-primary/30 text-primary focus:ring-primary"
+                  />
+                  <span className="font-semibold text-primary">{option}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          <fieldset className="grid gap-2">
+            <legend className="text-sm font-semibold text-primary">Ønsket nivå</legend>
+            <div className="flex flex-wrap gap-2">
+              {levelOptions.map((option) => (
+                <label
+                  key={option}
+                  className="flex items-center gap-2 rounded-full border border-primary/20 bg-surface px-3 py-2 text-sm"
+                >
+                  <input
+                    type="checkbox"
+                    name="recruitmentLevels"
+                    value={option}
+                    defaultChecked={company.recruitment_levels.includes(option)}
+                    className="h-4 w-4 rounded border-primary/30 text-primary focus:ring-primary"
+                  />
+                  {option}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          <fieldset className="grid gap-2">
+            <legend className="text-sm font-semibold text-primary">Jobbtyper dere rekrutterer til</legend>
+            <div className="grid gap-2 md:grid-cols-2">
+              {jobTypeOptions.map((option) => (
+                <label
+                  key={option}
+                  className="flex items-center gap-2 rounded-xl border border-primary/10 bg-surface px-3 py-2 text-sm"
+                >
+                  <input
+                    type="checkbox"
+                    name="recruitmentJobTypes"
+                    value={option}
+                    defaultChecked={company.recruitment_job_types.includes(option)}
+                    className="h-4 w-4 rounded border-primary/30 text-primary focus:ring-primary"
+                  />
+                  {option}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          <fieldset className="grid gap-2">
+            <legend className="text-sm font-semibold text-primary">
+              Andre nøkkelord (valgfritt)
+            </legend>
+            <label className="text-sm text-ink/70">
+              Hvis dere ønsker å legge til egne nøkkelord kan dere gjøre det senere i admin.
             </label>
-            <label className="text-sm font-semibold text-primary">
-              Jobbtyper
-              <Input name="recruitmentJobTypes" defaultValue={company.recruitment_job_types.join(", ")} placeholder="Sommerjobb, Internship" />
-            </label>
-          </div>
-          <label className="text-sm font-semibold text-primary">
-            Tidspunkt
-            <Input name="recruitmentTiming" defaultValue={company.recruitment_timing.join(", ")} placeholder="Sommer 2026" />
-          </label>
+            <input type="hidden" name="recruitmentRoles" value="" />
+            <input type="hidden" name="recruitmentTiming" value="" />
+          </fieldset>
 
           <div className="flex flex-col gap-2 text-sm text-ink/70">
             <p>Tips: Feltene brukes i matching og for å generere en topp-liste i dashboardet.</p>

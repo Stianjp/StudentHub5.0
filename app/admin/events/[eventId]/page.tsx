@@ -100,10 +100,35 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
               Standtype (valgfritt)
               <Input name="standType" placeholder="Standard, Premium" />
             </label>
-            <label className="text-sm font-semibold text-primary md:col-span-3">
-              Kategorier (kommaseparert)
-              <Input name="categoryTags" placeholder="DATAINGENIØR, ENERGI & MILJØ INGENIØR" />
-            </label>
+            <div className="md:col-span-3">
+              <p className="text-sm font-semibold text-primary">Kategorier (velg en eller flere)</p>
+              <div className="mt-2 grid gap-2 md:grid-cols-3">
+                {[
+                  "BYGGINGENIØRER",
+                  "DATAINGENIØR/IT",
+                  "ELEKTROINGENIØRER",
+                  "ENERGI & MILJØ INGENIØR",
+                  "BIOTEKNOLOGI- OG KJEMIINGENIØR",
+                  "MASKINIGENIØRER",
+                  "ØKONOMI OG ADMINISTRASJON",
+                  "LEDELSE",
+                  "HUMAN RESOURCES",
+                ].map((category) => (
+                  <label
+                    key={category}
+                    className="flex items-center gap-2 rounded-xl border border-primary/10 bg-surface px-3 py-2 text-sm"
+                  >
+                    <input
+                      type="checkbox"
+                      name="categoryTags"
+                      value={category}
+                      className="h-4 w-4 rounded border-primary/30 text-primary focus:ring-primary"
+                    />
+                    <span className="font-semibold text-primary">{category}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
             <Button variant="secondary" className="md:col-span-3" type="submit">
               Registrer til event
             </Button>
@@ -129,10 +154,35 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
               <option value="platinum">Platinum</option>
             </Select>
           </label>
-          <label className="text-sm font-semibold text-primary">
-            Kategorier (kommaseparert)
-            <Input name="categoryTags" placeholder="DATAINGENIØR, BYGGINGENIØRER" />
-          </label>
+          <div>
+            <p className="text-sm font-semibold text-primary">Kategorier (velg en eller flere)</p>
+            <div className="mt-2 grid gap-2 md:grid-cols-3">
+              {[
+                "BYGGINGENIØRER",
+                "DATAINGENIØR/IT",
+                "ELEKTROINGENIØRER",
+                "ENERGI & MILJØ INGENIØR",
+                "BIOTEKNOLOGI- OG KJEMIINGENIØR",
+                "MASKINIGENIØRER",
+                "ØKONOMI OG ADMINISTRASJON",
+                "LEDELSE",
+                "HUMAN RESOURCES",
+              ].map((category) => (
+                <label
+                  key={category}
+                  className="flex items-center gap-2 rounded-xl border border-primary/10 bg-surface px-3 py-2 text-sm"
+                >
+                  <input
+                    type="checkbox"
+                    name="categoryTags"
+                    value={category}
+                    className="h-4 w-4 rounded border-primary/30 text-primary focus:ring-primary"
+                  />
+                  <span className="font-semibold text-primary">{category}</span>
+                </label>
+              ))}
+            </div>
+          </div>
           {availableCompanies.length === 0 ? (
             <p className="text-sm text-ink/70">Alle bedrifter er allerede registrert.</p>
           ) : (

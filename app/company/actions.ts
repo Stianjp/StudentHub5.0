@@ -72,11 +72,11 @@ export async function saveCompanyInfo(formData: FormData) {
 
 export async function saveCompanyRecruitment(formData: FormData) {
   const parsed = companyRecruitmentSchema.safeParse({
-    recruitmentRoles: formData.get("recruitmentRoles"),
-    recruitmentFields: formData.get("recruitmentFields"),
-    recruitmentLevels: formData.get("recruitmentLevels"),
-    recruitmentJobTypes: formData.get("recruitmentJobTypes"),
-    recruitmentTiming: formData.get("recruitmentTiming"),
+    recruitmentRoles: formData.getAll("recruitmentRoles"),
+    recruitmentFields: formData.getAll("recruitmentFields"),
+    recruitmentLevels: formData.getAll("recruitmentLevels"),
+    recruitmentJobTypes: formData.getAll("recruitmentJobTypes"),
+    recruitmentTiming: formData.getAll("recruitmentTiming"),
   });
 
   if (!parsed.success) {

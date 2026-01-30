@@ -38,8 +38,11 @@ function getFormValue(formData: FormData, name: string) {
   return null;
 }
 
-function parseTags(value: FormDataEntryValue | null) {
+function parseTags(value: FormDataEntryValue | FormDataEntryValue[] | null) {
   if (!value) return [];
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item).trim()).filter(Boolean);
+  }
   return String(value)
     .split(",")
     .map((item) => item.trim())
@@ -263,7 +266,7 @@ export async function registerCompany(formData: FormData) {
     const companyId = String(getFormValue(formData, "companyId") ?? "").trim();
     const standType = String(getFormValue(formData, "standType") ?? "").trim();
     const packageTier = String(getFormValue(formData, "package") ?? "standard").trim();
-    const categoryTags = parseTags(getFormValue(formData, "categoryTags"));
+    const categoryTags = parseTags(formData.getAll("categoryTags"));
 
     if (!isUuid(eventId)) {
       throw new Error(`eventId: Invalid UUID (${eventId || "tom"})`);
@@ -302,7 +305,7 @@ export async function registerCompaniesBulk(formData: FormData) {
   const eventId = String(getFormValue(formData, "eventId") ?? "");
   const standType = String(getFormValue(formData, "standType") ?? "Standard");
   const packageTier = String(getFormValue(formData, "package") ?? "standard");
-  const categoryTags = parseTags(getFormValue(formData, "categoryTags"));
+  const categoryTags = parseTags(formData.getAll("categoryTags"));
   const companyIds = formData.getAll("companyIds").map((value) => String(value));
   const returnTo = formData.get("returnTo");
 

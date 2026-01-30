@@ -286,10 +286,35 @@ export default async function AdminCompaniesPage({ searchParams }: CompaniesPage
               Standtype (valgfritt)
               <Input name="standType" placeholder="Standard, Premium" />
             </label>
-            <label className="text-sm font-semibold text-primary md:col-span-2">
-              Kategorier (kommaseparert)
-              <Input name="categoryTags" placeholder="DATAINGENIØR, ELEKTROINGENIØRER" />
-            </label>
+            <div className="md:col-span-4">
+              <p className="text-sm font-semibold text-primary">Kategorier (velg en eller flere)</p>
+              <div className="mt-2 grid gap-2 md:grid-cols-3">
+                {[
+                  "BYGGINGENIØRER",
+                  "DATAINGENIØR/IT",
+                  "ELEKTROINGENIØRER",
+                  "ENERGI & MILJØ INGENIØR",
+                  "BIOTEKNOLOGI- OG KJEMIINGENIØR",
+                  "MASKINIGENIØRER",
+                  "ØKONOMI OG ADMINISTRASJON",
+                  "LEDELSE",
+                  "HUMAN RESOURCES",
+                ].map((category) => (
+                  <label
+                    key={category}
+                    className="flex items-center gap-2 rounded-xl border border-primary/10 bg-surface px-3 py-2 text-sm"
+                  >
+                    <input
+                      type="checkbox"
+                      name="categoryTags"
+                      value={category}
+                      className="h-4 w-4 rounded border-primary/30 text-primary focus:ring-primary"
+                    />
+                    <span className="font-semibold text-primary">{category}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
             <Button className="md:col-span-4" variant="secondary" type="submit">
               Registrer til event
             </Button>
