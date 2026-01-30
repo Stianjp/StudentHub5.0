@@ -38,6 +38,14 @@ function getFormValue(formData: FormData, name: string) {
   return null;
 }
 
+function parseTags(value: FormDataEntryValue | null) {
+  if (!value) return [];
+  return String(value)
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
 export async function saveEvent(formData: FormData) {
   await requireRole("admin");
 
@@ -255,6 +263,7 @@ export async function registerCompany(formData: FormData) {
     const companyId = String(getFormValue(formData, "companyId") ?? "").trim();
     const standType = String(getFormValue(formData, "standType") ?? "").trim();
     const packageTier = String(getFormValue(formData, "package") ?? "standard").trim();
+    const categoryTags = parseTags(getFormValue(formData, "categoryTags"));
 
     if (!isUuid(eventId)) {
       throw new Error(`eventId: Invalid UUID (${eventId || "tom"})`);
@@ -271,6 +280,7 @@ export async function registerCompany(formData: FormData) {
       companyId,
       standType: standType || "Standard",
       package: packageTier as "standard" | "silver" | "gold" | "platinum",
+      categoryTags,
     });
 
     revalidatePath("/admin/companies");
@@ -292,6 +302,7 @@ export async function registerCompaniesBulk(formData: FormData) {
   const eventId = String(getFormValue(formData, "eventId") ?? "");
   const standType = String(getFormValue(formData, "standType") ?? "Standard");
   const packageTier = String(getFormValue(formData, "package") ?? "standard");
+  const categoryTags = parseTags(getFormValue(formData, "categoryTags"));
   const companyIds = formData.getAll("companyIds").map((value) => String(value));
   const returnTo = formData.get("returnTo");
 
@@ -306,7 +317,13 @@ export async function registerCompaniesBulk(formData: FormData) {
 
     await Promise.all(
       companyIds.map((companyId) =>
-        registerCompanyForEvent({ eventId, companyId, standType, package: packageTier as "standard" | "silver" | "gold" | "platinum" }),
+        registerCompanyForEvent({
+          eventId,
+          companyId,
+          standType,
+          package: packageTier as "standard" | "silver" | "gold" | "platinum",
+          categoryTags,
+        }),
       ),
     );
 

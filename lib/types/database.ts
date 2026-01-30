@@ -320,6 +320,7 @@ export type Database = {
           stand_type: string | null;
           goals: string[];
           kpis: string[];
+          category_tags: string[];
           package: "standard" | "silver" | "gold" | "platinum";
           access_from: string | null;
           access_until: string | null;
@@ -336,6 +337,7 @@ export type Database = {
           stand_type?: string | null;
           goals?: string[];
           kpis?: string[];
+          category_tags?: string[];
           package?: "standard" | "silver" | "gold" | "platinum";
           access_from?: string | null;
           access_until?: string | null;
@@ -352,6 +354,7 @@ export type Database = {
           stand_type?: string | null;
           goals?: string[];
           kpis?: string[];
+          category_tags?: string[];
           package?: "standard" | "silver" | "gold" | "platinum";
           access_from?: string | null;
           access_until?: string | null;

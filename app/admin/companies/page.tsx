@@ -286,6 +286,10 @@ export default async function AdminCompaniesPage({ searchParams }: CompaniesPage
               Standtype (valgfritt)
               <Input name="standType" placeholder="Standard, Premium" />
             </label>
+            <label className="text-sm font-semibold text-primary md:col-span-2">
+              Kategorier (kommaseparert)
+              <Input name="categoryTags" placeholder="DATAINGENIØR, ELEKTROINGENIØRER" />
+            </label>
             <Button className="md:col-span-4" variant="secondary" type="submit">
               Registrer til event
             </Button>

@@ -12,6 +12,7 @@ const HOST_TARGETS: HostTarget[] = [
   { match: "student.", basePath: "/student" },
   { match: "connecthub.", basePath: "/event" },
   { match: "studentconnect.", basePath: "/event" },
+  { match: "event.", basePath: "/event" },
 ];
 
 function resolveBasePath(request: NextRequest) {

@@ -12,7 +12,7 @@ export default function EventLayout({ children }: { children: React.ReactNode })
             <h1 className="text-2xl font-bold">Event og kiosk</h1>
           </div>
           <nav className="flex flex-wrap items-center gap-2 text-sm font-semibold">
-            <Link className="rounded-xl bg-surface/10 px-3 py-2 hover:bg-surface/20" href="/event">
+            <Link className="rounded-xl bg-surface/10 px-3 py-2 hover:bg-surface/20" href="/event/events">
               Events
             </Link>
           </nav>

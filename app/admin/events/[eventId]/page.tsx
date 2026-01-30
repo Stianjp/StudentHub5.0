@@ -100,6 +100,10 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
               Standtype (valgfritt)
               <Input name="standType" placeholder="Standard, Premium" />
             </label>
+            <label className="text-sm font-semibold text-primary md:col-span-3">
+              Kategorier (kommaseparert)
+              <Input name="categoryTags" placeholder="DATAINGENIØR, ENERGI & MILJØ INGENIØR" />
+            </label>
             <Button variant="secondary" className="md:col-span-3" type="submit">
               Registrer til event
             </Button>
@@ -124,6 +128,10 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
               <option value="gold">Gull</option>
               <option value="platinum">Platinum</option>
             </Select>
+          </label>
+          <label className="text-sm font-semibold text-primary">
+            Kategorier (kommaseparert)
+            <Input name="categoryTags" placeholder="DATAINGENIØR, BYGGINGENIØRER" />
           </label>
           {availableCompanies.length === 0 ? (
             <p className="text-sm text-ink/70">Alle bedrifter er allerede registrert.</p>
