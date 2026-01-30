@@ -21,6 +21,9 @@ export async function GET() {
   }
 
   const company = await getOrCreateCompanyForUser(user.id, user.email);
+  if (!company) {
+    return NextResponse.json({ error: "Tilgang til bedrift er ikke godkjent ennå." }, { status: 403 });
+  }
   const leads = await getCompanyLeads(company.id);
 
   const rows = leads.map(({ lead, consent, student, event }) => ({
