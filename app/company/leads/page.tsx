@@ -17,6 +17,13 @@ export default async function CompanyLeadsPage() {
   if (!user) throw new Error("User not found");
 
   const company = await getOrCreateCompanyForUser(profile.id, user.email);
+  if (!company) {
+    return (
+      <Card className="border border-warning/30 bg-warning/10 text-sm text-ink/90">
+        Bedriftskontoen din er ikke godkjent ennå. En admin må godkjenne tilgang før du kan se leads.
+      </Card>
+    );
+  }
   const leads = await getCompanyLeads(company.id);
 
   return (
