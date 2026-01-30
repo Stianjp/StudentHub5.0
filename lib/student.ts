@@ -32,6 +32,7 @@ function deriveStudentName(email: string | null | undefined) {
 
 export async function getOrCreateStudentForUser(userId: string, email?: string | null) {
   const supabase = await createServerSupabaseClient();
+  const normalizedEmail = email ? email.toLowerCase() : null;
 
   const { data: existingRows, error: readError } = await supabase
     .from("students")
@@ -44,20 +45,58 @@ export async function getOrCreateStudentForUser(userId: string, email?: string |
   const existing = existingRows?.[0] ?? null;
   if (existing) return existing as Student;
 
+  if (normalizedEmail) {
+    try {
+      const admin = createAdminSupabaseClient();
+      const { data: byEmail, error: emailError } = await admin
+        .from("students")
+        .select("*")
+        .eq("email", normalizedEmail)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      if (emailError) throw emailError;
+      const matched = byEmail?.[0] ?? null;
+      if (matched) {
+        if (!matched.user_id) {
+          await admin
+            .from("students")
+            .update({ user_id: userId, updated_at: new Date().toISOString() })
+            .eq("id", matched.id);
+        }
+        return matched as Student;
+      }
+    } catch {
+      // Fallback to insert below if service role not available.
+    }
+  }
+
   const now = new Date().toISOString();
   const { data: created, error: insertError } = await supabase
     .from("students")
     .insert({
       user_id: userId,
-      email: email ? email.toLowerCase() : null,
-      full_name: deriveStudentName(email),
+      email: normalizedEmail,
+      full_name: deriveStudentName(normalizedEmail),
       created_at: now,
       updated_at: now,
     })
     .select("*")
     .single();
 
-  if (insertError) throw insertError;
+  if (insertError) {
+    const code = (insertError as { code?: string }).code;
+    if (code === "23505" && normalizedEmail) {
+      const admin = createAdminSupabaseClient();
+      const { data: fallback } = await admin
+        .from("students")
+        .select("*")
+        .eq("email", normalizedEmail)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      if (fallback?.[0]) return fallback[0] as Student;
+    }
+    throw insertError;
+  }
   return created as Student;
 }
 
