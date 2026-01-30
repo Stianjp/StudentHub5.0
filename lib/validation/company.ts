@@ -68,6 +68,12 @@ export const companyEventSignupSchema = z.object({
   kpis: commaSeparated,
 });
 
+export const companyEventGoalsSchema = z.object({
+  eventId: z.string().uuid("Ugyldig event"),
+  goals: stringArray,
+  kpis: stringArray,
+});
+
 export const magicLinkSchema = z.object({
   email: z.string().email("Ugyldig e-post"),
   role: z.enum(["student", "company", "admin"]),

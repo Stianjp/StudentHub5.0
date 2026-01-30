@@ -6,6 +6,7 @@ import { requireRole } from "@/lib/auth";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import {
   companyBrandingSchema,
+  companyEventGoalsSchema,
   companyEventSignupSchema,
   companyInfoSchema,
   companyRecruitmentSchema,
@@ -193,4 +194,32 @@ export async function signupForEvent(formData: FormData) {
 
   revalidatePath("/company/events");
   revalidatePath("/company");
+}
+
+export async function updateCompanyEventGoals(formData: FormData) {
+  const parsed = companyEventGoalsSchema.safeParse({
+    eventId: formData.get("eventId"),
+    goals: formData.getAll("goals"),
+    kpis: formData.getAll("kpis"),
+  });
+
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues.map((issue) => issue.message).join(", "));
+  }
+
+  const { supabase, company } = await getCompanyContext();
+
+  const { error } = await supabase
+    .from("event_companies")
+    .update({
+      goals: parsed.data.goals,
+      kpis: parsed.data.kpis,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("event_id", parsed.data.eventId)
+    .eq("company_id", company.id);
+
+  if (error) throw error;
+  revalidatePath("/company/events");
+  revalidatePath("/company/roi");
 }

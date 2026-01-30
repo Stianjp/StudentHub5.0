@@ -7,6 +7,7 @@ import { requireRole } from "@/lib/auth";
 import { getCompanyRegistrations, getOrCreateCompanyForUser } from "@/lib/company";
 import { listActiveEvents } from "@/lib/events";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { updateCompanyEventGoals } from "@/app/company/actions";
 
 function packageVariant(pkg: string) {
   if (pkg === "platinum") return "success" as const;
@@ -48,6 +49,22 @@ export default async function CompanyEventsPage() {
 
   const registeredEventIds = new Set(registrations.map((reg) => reg.event_id));
   const openEvents = events.filter((event) => !registeredEventIds.has(event.id));
+
+  const goalOptions = [
+    "Bygge employer branding",
+    "Samle leads",
+    "Promotere graduate-program",
+    "Rekruttere til sommerjobb",
+    "Få innsikt i studieretninger",
+    "Booke intervjuer",
+  ];
+  const kpiOptions = [
+    "Antall standbesøk",
+    "Antall leads",
+    "Konvertering (besøk → lead)",
+    "Topp studieretninger",
+    "Besøk per tidspunkt",
+  ];
 
   return (
     <div className="flex flex-col gap-8">
@@ -102,6 +119,53 @@ export default async function CompanyEventsPage() {
                     <p>{registration.kpis.join(", ") || "Ikke satt"}</p>
                   </div>
                 </div>
+
+                <form action={updateCompanyEventGoals} className="mt-4 grid gap-3">
+                  <input type="hidden" name="eventId" value={registration.event_id} />
+                  <fieldset className="grid gap-2">
+                    <legend className="text-sm font-semibold text-primary">Sett mål</legend>
+                    <div className="grid gap-2 md:grid-cols-2">
+                      {goalOptions.map((option) => (
+                        <label
+                          key={option}
+                          className="flex items-center gap-2 rounded-xl border border-primary/10 bg-surface px-3 py-2 text-sm"
+                        >
+                          <input
+                            type="checkbox"
+                            name="goals"
+                            value={option}
+                            defaultChecked={registration.goals.includes(option)}
+                            className="h-4 w-4 rounded border-primary/30 text-primary focus:ring-primary"
+                          />
+                          {option}
+                        </label>
+                      ))}
+                    </div>
+                  </fieldset>
+                  <fieldset className="grid gap-2">
+                    <legend className="text-sm font-semibold text-primary">Velg KPI-er</legend>
+                    <div className="grid gap-2 md:grid-cols-2">
+                      {kpiOptions.map((option) => (
+                        <label
+                          key={option}
+                          className="flex items-center gap-2 rounded-xl border border-primary/10 bg-surface px-3 py-2 text-sm"
+                        >
+                          <input
+                            type="checkbox"
+                            name="kpis"
+                            value={option}
+                            defaultChecked={registration.kpis.includes(option)}
+                            className="h-4 w-4 rounded border-primary/30 text-primary focus:ring-primary"
+                          />
+                          {option}
+                        </label>
+                      ))}
+                    </div>
+                  </fieldset>
+                  <Button type="submit" variant="secondary">
+                    Lagre mål og KPI
+                  </Button>
+                </form>
               </div>
             ))}
           </div>
