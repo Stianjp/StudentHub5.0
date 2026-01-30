@@ -33,7 +33,8 @@ export default async function CompanyEventsPage() {
   if (!user) throw new Error("User not found");
 
   const company = await getOrCreateCompanyForUser(profile.id, user.email);
-  if (!company) {
+  const companyId = company?.id;
+  if (!company || !companyId) {
     return (
       <Card className="border border-warning/30 bg-warning/10 text-sm text-ink/90">
         Bedriftskontoen din er ikke godkjent ennå. En admin må godkjenne tilgang før du kan se events.
@@ -41,7 +42,7 @@ export default async function CompanyEventsPage() {
     );
   }
   const [registrations, events] = await Promise.all([
-    getCompanyRegistrations(company.id),
+    getCompanyRegistrations(companyId),
     listActiveEvents(),
   ]);
 

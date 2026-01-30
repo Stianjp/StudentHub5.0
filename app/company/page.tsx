@@ -21,7 +21,8 @@ export default async function CompanyDashboardPage() {
   }
 
   const company = await getOrCreateCompanyForUser(profile.id, user.email);
-  if (!company) {
+  const companyId = company?.id;
+  if (!company || !companyId) {
     return (
       <Card className="border border-warning/30 bg-warning/10 text-sm text-ink/90">
         Bedriftskontoen din er ikke godkjent ennå. En admin må godkjenne tilgang før du kan se dashboardet.
@@ -29,8 +30,8 @@ export default async function CompanyDashboardPage() {
     );
   }
   const [registrations, leads, events] = await Promise.all([
-    getCompanyRegistrations(company.id),
-    getCompanyLeads(company.id),
+    getCompanyRegistrations(companyId),
+    getCompanyLeads(companyId),
     listActiveEvents(),
   ]);
   const consentedLeads = leads.filter((lead) => lead.consent?.consent).length;

@@ -29,7 +29,15 @@ export default async function CompanyRoiPage({ searchParams }: RoiPageProps) {
   if (!user) throw new Error("User not found");
 
   const company = await getOrCreateCompanyForUser(profile.id, user.email);
-  const registrations = await getCompanyRegistrations(company.id);
+  const companyId = company?.id;
+  if (!company || !companyId) {
+    return (
+      <Card className="border border-warning/30 bg-warning/10 text-sm text-ink/90">
+        Bedriftskontoen din er ikke godkjent ennå. En admin må godkjenne tilgang før du kan se ROI.
+      </Card>
+    );
+  }
+  const registrations = await getCompanyRegistrations(companyId);
 
   if (registrations.length === 0) {
     return (
@@ -51,7 +59,7 @@ export default async function CompanyRoiPage({ searchParams }: RoiPageProps) {
   const requestedEventId = typeof params.eventId === "string" ? params.eventId : registrations[0].event_id;
   const currentRegistration = registrations.find((reg) => reg.event_id === requestedEventId) ?? registrations[0];
 
-  const platinum = await hasPlatinumAccess(profile.id, currentRegistration.event_id, company.id);
+  const platinum = await hasPlatinumAccess(profile.id, currentRegistration.event_id, companyId);
 
   return (
     <div className="flex flex-col gap-8">
@@ -106,7 +114,7 @@ export default async function CompanyRoiPage({ searchParams }: RoiPageProps) {
         ) : null}
       </Card>
 
-      {platinum ? <RoiContent eventId={currentRegistration.event_id} companyId={company.id} /> : null}
+      {platinum ? <RoiContent eventId={currentRegistration.event_id} companyId={companyId} /> : null}
     </div>
   );
 }
