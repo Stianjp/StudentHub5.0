@@ -16,9 +16,9 @@ export async function GET() {
   const student = await getOrCreateStudentForUser(user.id, user.email ?? "");
   const admin = createAdminSupabaseClient();
 
-  const { data, error } = await admin
+  const { data: consents, error } = await admin
     .from("consents")
-    .select("company:companies(id, name), consent, updated_at")
+    .select("company_id, consent, updated_at")
     .eq("student_id", student.id)
     .order("updated_at", { ascending: false });
 
@@ -26,10 +26,18 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
+  const companyIds = Array.from(new Set((consents ?? []).map((row) => row.company_id)));
+  const { data: companies } = await admin
+    .from("companies")
+    .select("id, name")
+    .in("id", companyIds);
+
+  const companyMap = new Map((companies ?? []).map((company) => [company.id, company.name ?? ""]));
+
   return NextResponse.json(
-    (data ?? []).map((row) => ({
-      companyId: row.company?.id ?? "",
-      companyName: row.company?.name ?? "",
+    (consents ?? []).map((row) => ({
+      companyId: row.company_id,
+      companyName: companyMap.get(row.company_id) ?? "",
       consentGiven: row.consent,
       updatedAt: row.updated_at ?? null,
     })),
