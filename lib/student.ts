@@ -134,7 +134,7 @@ export async function submitConsent(input: ConsentInput) {
 
   if (consentError) throw consentError;
 
-  if (input.answers && Object.keys(input.answers).length > 0) {
+  if (input.eventId && input.answers && Object.keys(input.answers).length > 0) {
     const { error: surveyError } = await supabase.from("survey_responses").insert({
       event_id: input.eventId,
       company_id: input.companyId,
