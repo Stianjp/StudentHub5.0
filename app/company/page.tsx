@@ -21,6 +21,13 @@ export default async function CompanyDashboardPage() {
   }
 
   const company = await getOrCreateCompanyForUser(profile.id, user.email);
+  if (!company) {
+    return (
+      <Card className="border border-warning/30 bg-warning/10 text-sm text-ink/90">
+        Bedriftskontoen din er ikke godkjent ennå. En admin må godkjenne tilgang før du kan se dashboardet.
+      </Card>
+    );
+  }
   const [registrations, leads, events] = await Promise.all([
     getCompanyRegistrations(company.id),
     getCompanyLeads(company.id),
