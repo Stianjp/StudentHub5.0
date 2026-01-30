@@ -25,6 +25,9 @@ async function getCompanyContext() {
   }
 
   const company = await getOrCreateCompanyForUser(profile.id, user.email);
+  if (!company) {
+    throw new Error("Bedriftskontoen er ikke godkjent ennå.");
+  }
   return { supabase, user, company };
 }
 
