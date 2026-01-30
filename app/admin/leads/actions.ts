@@ -27,7 +27,6 @@ export async function upsertConsent(formData: FormData) {
     consented_at: now,
     created_at: now,
     updated_at: now,
-    updated_by: profile.id,
   };
 
   const { error } = await supabase
@@ -37,7 +36,6 @@ export async function upsertConsent(formData: FormData) {
   if (error?.code === "PGRST204" || error?.message?.includes("updated_at")) {
     const fallback = { ...payload };
     delete (fallback as { updated_at?: string }).updated_at;
-    delete (fallback as { updated_by?: string }).updated_by;
     const { error: fallbackError } = await supabase
       .from("consents")
       .upsert(fallback, { onConflict: "student_id,company_id" });
@@ -64,7 +62,6 @@ export async function updateConsent(formData: FormData) {
     .update({
       consent,
       updated_at: now,
-      updated_by: profile.id,
     })
     .eq("id", consentId);
 

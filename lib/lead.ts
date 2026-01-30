@@ -48,7 +48,6 @@ export async function upsertConsentForStudent(input: {
     scope: "contact",
     consented_at: now,
     updated_at: now,
-    updated_by: input.studentId,
     source: input.source,
     consent_text_version: input.consentTextVersion ?? "v1",
     revoked_at: input.consentGiven ? null : now,
