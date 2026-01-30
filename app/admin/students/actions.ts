@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 
@@ -139,4 +140,44 @@ export async function updateStudentConsent(formData: FormData) {
 
   revalidatePath("/admin/leads");
   revalidatePath(`/admin/students/${studentId}`);
+}
+
+export async function deleteStudent(formData: FormData) {
+  await requireRole("admin");
+  const studentId = String(formData.get("studentId") ?? "").trim();
+  if (!studentId) throw new Error("Ugyldig student.");
+
+  const supabase = createAdminSupabaseClient();
+
+  const { data: student } = await supabase
+    .from("students")
+    .select("id, user_id")
+    .eq("id", studentId)
+    .maybeSingle();
+
+  if (!student) throw new Error("Student finnes ikke.");
+
+  // Clean up related rows first.
+  await supabase.from("consents").delete().eq("student_id", studentId);
+  await supabase.from("leads").delete().eq("student_id", studentId);
+  await supabase.from("stand_visits").delete().eq("student_id", studentId);
+  await supabase.from("survey_responses").delete().eq("student_id", studentId);
+  await supabase.from("student_company_favorites").delete().eq("student_id", studentId);
+  await supabase.from("match_scores").delete().eq("student_id", studentId);
+  await supabase.from("student_public_profiles").delete().eq("student_id", studentId);
+
+  const { error: deleteError } = await supabase.from("students").delete().eq("id", studentId);
+  if (deleteError) throw deleteError;
+
+  if (student.user_id) {
+    try {
+      await supabase.auth.admin.deleteUser(student.user_id);
+    } catch {
+      // Ignore auth deletion errors; data is already removed.
+    }
+  }
+
+  revalidatePath("/admin/students");
+  revalidatePath("/admin/leads");
+  redirect("/admin/students?saved=1");
 }

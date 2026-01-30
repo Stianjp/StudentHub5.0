@@ -33,3 +33,25 @@ export const registerCompanySchema = z.object({
   standType: z.string().optional().or(z.literal("")),
   package: z.enum(["standard", "silver", "gold", "platinum"]).optional(),
 });
+
+export const createCompanySchema = z.object({
+  name: z.string().min(2, "Navn er påkrevd."),
+  orgNumber: z
+    .string()
+    .regex(/^\d{9}$/, "Org.nr må være 9 siffer.")
+    .optional()
+    .or(z.literal("")),
+  industry: z.string().optional().or(z.literal("")),
+  location: z.string().optional().or(z.literal("")),
+});
+
+export const companyDomainSchema = z.object({
+  companyId: z.string().uuid(),
+  domain: z.string().min(3, "Domene er påkrevd."),
+});
+
+export const approveCompanyAccessSchema = z.object({
+  requestId: z.string().uuid(),
+  companyId: z.string().uuid(),
+  userId: z.string().uuid(),
+});

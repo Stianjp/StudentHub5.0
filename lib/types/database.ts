@@ -96,6 +96,81 @@ export type Database = {
         };
         Relationships: [];
       };
+      company_domains: {
+        Row: {
+          id: string;
+          company_id: string;
+          domain: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          company_id: string;
+          domain: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          company_id?: string;
+          domain?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      company_users: {
+        Row: {
+          id: string;
+          company_id: string;
+          user_id: string;
+          role: string;
+          approved_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          company_id: string;
+          user_id: string;
+          role?: string;
+          approved_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          company_id?: string;
+          user_id?: string;
+          role?: string;
+          approved_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      company_user_requests: {
+        Row: {
+          id: string;
+          user_id: string;
+          email: string;
+          domain: string;
+          company_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          email: string;
+          domain: string;
+          company_id?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          email?: string;
+          domain?: string;
+          company_id?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       students: {
         Row: {
           id: string;

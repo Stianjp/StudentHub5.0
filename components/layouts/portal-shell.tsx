@@ -27,6 +27,7 @@ export function PortalShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const currentPath = typeof window !== "undefined" ? window.location.pathname : pathname;
 
   return (
     <div className={cn("min-h-screen", backgroundClass)}>
@@ -71,8 +72,8 @@ export function PortalShell({
               {nav.map((item) => {
                 const isRoot = ["/company", "/student", "/admin"].includes(item.href);
                 const isActive = isRoot
-                  ? pathname === item.href
-                  : pathname === item.href || pathname.startsWith(`${item.href}/`);
+                  ? currentPath === item.href
+                  : currentPath === item.href || currentPath.startsWith(`${item.href}/`);
                 return (
                   <Link
                     key={item.href}

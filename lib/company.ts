@@ -5,6 +5,8 @@ import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { computeMatch } from "@/lib/matching";
 
 type Company = TableRow<"companies">;
+type CompanyUser = TableRow<"company_users">;
+type CompanyDomain = TableRow<"company_domains">;
 type EventCompany = TableRow<"event_companies">;
 type Event = TableRow<"events">;
 type Student = TableRow<"students">;
@@ -27,33 +29,96 @@ function deriveCompanyName(email: string | null | undefined) {
 }
 
 export async function getOrCreateCompanyForUser(userId: string, email?: string | null) {
-  const supabase = await createServerSupabaseClient();
+  let supabase = await createServerSupabaseClient();
+  try {
+    supabase = createAdminSupabaseClient();
+  } catch {
+    // fallback
+  }
 
-  const { data: existingRows, error: readError } = await supabase
-    .from("companies")
-    .select("*")
+  const { data: membership } = await supabase
+    .from("company_users")
+    .select("company_id, approved_at")
     .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(1);
+    .maybeSingle();
 
-  if (readError) throw readError;
-  const existing = existingRows?.[0] ?? null;
-  if (existing) return existing;
+  if (membership?.company_id && membership.approved_at) {
+    const { data: company } = await supabase
+      .from("companies")
+      .select("*")
+      .eq("id", membership.company_id)
+      .maybeSingle();
+    if (company) return company as Company;
+  }
 
-  const now = new Date().toISOString();
-  const { data: created, error: insertError } = await supabase
-    .from("companies")
-    .insert({
-      user_id: userId,
-      name: deriveCompanyName(email),
-      created_at: now,
-      updated_at: now,
-    })
+  const normalizedEmail = email?.toLowerCase() ?? "";
+  const domain = normalizedEmail.split("@")[1] ?? "";
+  if (!domain) return null;
+
+  const { data: domainRow } = await supabase
+    .from("company_domains")
     .select("*")
-    .single();
+    .eq("domain", domain)
+    .maybeSingle();
 
-  if (insertError) throw insertError;
-  return created;
+  if (!domainRow) {
+    return null;
+  }
+
+  // Create access request if none exists.
+  const { data: existingRequest } = await supabase
+    .from("company_user_requests")
+    .select("id")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (!existingRequest) {
+    await supabase.from("company_user_requests").insert({
+      user_id: userId,
+      email: normalizedEmail,
+      domain,
+      company_id: domainRow.company_id,
+    });
+  }
+
+  return null;
+}
+
+export async function getCompanyAccessStatus(userId: string) {
+  let supabase = await createServerSupabaseClient();
+  try {
+    supabase = createAdminSupabaseClient();
+  } catch {
+    // fallback
+  }
+
+  const { data: membership } = await supabase
+    .from("company_users")
+    .select("company_id, approved_at")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (membership?.company_id && membership.approved_at) {
+    return { status: "approved" as const };
+  }
+
+  const { data: request } = await supabase
+    .from("company_user_requests")
+    .select("company_id, domain, email, created_at")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (request) {
+    return {
+      status: "pending" as const,
+      domain: request.domain,
+      email: request.email,
+      companyId: request.company_id,
+      createdAt: request.created_at,
+    };
+  }
+
+  return { status: "missing" as const };
 }
 
 export async function getCompanyRegistrations(companyId: string) {

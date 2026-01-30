@@ -112,7 +112,12 @@ export function SignInClient({
 
       if (signUpError) {
         setStatus("error");
-        setError("Kunne ikke opprette konto. Sjekk e-post og prøv igjen.");
+        const message = signUpError.message.toLowerCase();
+        if (message.includes("row level security") || message.includes("policy")) {
+          setError("Registrering mottatt. Bekreft e-posten din før du kan logge inn.");
+        } else {
+          setError("Kunne ikke opprette konto. Sjekk e-post og prøv igjen.");
+        }
         return;
       }
 

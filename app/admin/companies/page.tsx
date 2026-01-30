@@ -5,8 +5,8 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Select } from "@/components/ui/select";
-import { inviteCompany, registerCompany, setPackage } from "@/app/admin/actions";
-import { listCompanies } from "@/lib/admin";
+import { addCompanyDomainAction, approveCompanyAccessAction, createCompanyAction, inviteCompany, registerCompany, setPackage } from "@/app/admin/actions";
+import { listCompanies, listCompanyAccessRequests, listCompanyDomains } from "@/lib/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 type CompaniesPageProps = {
@@ -41,11 +41,19 @@ export default async function AdminCompaniesPage({ searchParams }: CompaniesPage
   const error = Boolean(errorMessage) && errorMessage !== "1";
   const supabase = await createServerSupabaseClient();
 
-  const [{ data: events, error: eventsError }, companies, { data: eventCompanies, error: eventCompaniesError }] =
+  const [
+    { data: events, error: eventsError },
+    companies,
+    { data: eventCompanies, error: eventCompaniesError },
+    companyDomains,
+    accessRequests,
+  ] =
     await Promise.all([
       supabase.from("events").select("*").order("starts_at", { ascending: false }),
       listCompanies(),
       supabase.from("event_companies").select("*").order("created_at", { ascending: false }),
+      listCompanyDomains(),
+      listCompanyAccessRequests(),
     ]);
 
   if (eventsError) throw eventsError;
@@ -105,6 +113,100 @@ export default async function AdminCompaniesPage({ searchParams }: CompaniesPage
           {errorMessage ? decodeURIComponent(errorMessage) : "Kunne ikke lagre. Sjekk feltene og prøv igjen."}
         </Card>
       ) : null}
+
+      <Card className="flex flex-col gap-4">
+        <h3 className="text-lg font-bold text-primary">Opprett bedrift</h3>
+        <form action={createCompanyAction} className="grid gap-3 md:grid-cols-4">
+          <input type="hidden" name="returnTo" value="/admin/companies" />
+          <label className="text-sm font-semibold text-primary md:col-span-2">
+            Bedriftsnavn
+            <Input name="name" required placeholder="F.eks. Equinor" />
+          </label>
+          <label className="text-sm font-semibold text-primary">
+            Org.nr
+            <Input name="orgNumber" required placeholder="9 siffer" />
+          </label>
+          <label className="text-sm font-semibold text-primary">
+            Bransje
+            <Input name="industry" placeholder="Teknologi" />
+          </label>
+          <label className="text-sm font-semibold text-primary md:col-span-2">
+            Lokasjon
+            <Input name="location" placeholder="Oslo" />
+          </label>
+          <Button className="md:col-span-4" type="submit">
+            Opprett bedrift
+          </Button>
+        </form>
+      </Card>
+
+      <Card className="flex flex-col gap-4">
+        <h3 className="text-lg font-bold text-primary">Domener for bedrifts-tilgang</h3>
+        {companies.length === 0 ? (
+          <p className="text-sm text-ink/70">Opprett en bedrift før du legger til domene.</p>
+        ) : (
+          <form action={addCompanyDomainAction} className="grid gap-3 md:grid-cols-3">
+            <input type="hidden" name="returnTo" value="/admin/companies" />
+            <label className="text-sm font-semibold text-primary">
+              Bedrift
+              <Select name="companyId" required defaultValue={companies[0]?.id}>
+                {companies.map((company) => (
+                  <option key={company.id} value={company.id}>
+                    {company.name}
+                  </option>
+                ))}
+              </Select>
+            </label>
+            <label className="text-sm font-semibold text-primary md:col-span-2">
+              Domene
+              <Input name="domain" required placeholder="equinor.com" />
+            </label>
+            <Button className="md:col-span-3" variant="secondary" type="submit">
+              Legg til domene
+            </Button>
+          </form>
+        )}
+        {companyDomains.length === 0 ? (
+          <p className="text-xs text-ink/60">Ingen domener registrert ennå.</p>
+        ) : (
+          <div className="flex flex-wrap gap-2 text-xs text-ink/70">
+            {companyDomains.map((domain) => (
+              <span key={domain.id} className="rounded-full bg-primary/5 px-3 py-1">
+                {domain.domain} · {domain.company?.name ?? "Bedrift"}
+              </span>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      <Card className="flex flex-col gap-4">
+        <h3 className="text-lg font-bold text-primary">Tilgangsforespørsler</h3>
+        {accessRequests.length === 0 ? (
+          <p className="text-sm text-ink/70">Ingen forespørsler akkurat nå.</p>
+        ) : (
+          <div className="grid gap-3">
+            {accessRequests.map((request) => (
+              <div key={request.id} className="rounded-xl border border-primary/10 bg-primary/5 p-4">
+                <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <p className="font-semibold text-primary">{request.email}</p>
+                    <p className="text-xs text-ink/70">
+                      {request.domain} · {request.company?.name ?? "Ukjent bedrift"}
+                    </p>
+                  </div>
+                  <form action={approveCompanyAccessAction} className="flex items-center gap-2">
+                    <input type="hidden" name="returnTo" value="/admin/companies" />
+                    <input type="hidden" name="requestId" value={request.id} />
+                    <input type="hidden" name="companyId" value={request.company_id ?? ""} />
+                    <input type="hidden" name="userId" value={request.user_id} />
+                    <Button type="submit">Godkjenn</Button>
+                  </form>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
 
       <Card className="flex flex-col gap-4">
         <h3 className="text-lg font-bold text-primary">Inviter bedrift (e-post)</h3>

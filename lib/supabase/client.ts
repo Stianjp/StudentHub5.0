@@ -60,6 +60,11 @@ export function createClient() {
   const domain = resolveCookieDomain(window.location.hostname, cookieDomain);
 
   return createBrowserClient<Database>(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: true,
+      detectSessionInUrl: true,
+    },
     cookies: {
       getAll() {
         const cookies = parseCookies();

@@ -6,6 +6,8 @@ import { sendTransactionalEmail } from "@/lib/resend";
 type Event = TableRow<"events">;
 type Company = TableRow<"companies">;
 type EventCompany = TableRow<"event_companies">;
+type CompanyDomain = TableRow<"company_domains">;
+type CompanyUserRequest = TableRow<"company_user_requests">;
 
 type EventWithStats = Event & {
   companyCount: number;
@@ -68,6 +70,100 @@ export async function listCompanies() {
   const { data, error } = await supabase.from("companies").select("*").order("name");
   if (error) throw error;
   return (data ?? []) as Company[];
+}
+
+export async function createCompany(input: {
+  name: string;
+  orgNumber?: string | null;
+  industry?: string | null;
+  location?: string | null;
+}) {
+  let supabase = await createServerSupabaseClient();
+  try {
+    supabase = createAdminSupabaseClient();
+  } catch {
+    // fallback
+  }
+  const now = new Date().toISOString();
+  const { data, error } = await supabase
+    .from("companies")
+    .insert({
+      name: input.name,
+      org_number: input.orgNumber ?? null,
+      industry: input.industry ?? null,
+      location: input.location ?? null,
+      created_at: now,
+      updated_at: now,
+    })
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return data as Company;
+}
+
+export async function listCompanyDomains() {
+  let supabase = await createServerSupabaseClient();
+  try {
+    supabase = createAdminSupabaseClient();
+  } catch {
+    // fallback
+  }
+  const { data, error } = await supabase
+    .from("company_domains")
+    .select("*, company:companies(id, name)")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as unknown as Array<CompanyDomain & { company?: Company | null }>;
+}
+
+export async function addCompanyDomain(input: { companyId: string; domain: string }) {
+  let supabase = await createServerSupabaseClient();
+  try {
+    supabase = createAdminSupabaseClient();
+  } catch {
+    // fallback
+  }
+  const { error } = await supabase.from("company_domains").insert({
+    company_id: input.companyId,
+    domain: input.domain,
+  });
+  if (error) throw error;
+}
+
+export async function listCompanyAccessRequests() {
+  let supabase = await createServerSupabaseClient();
+  try {
+    supabase = createAdminSupabaseClient();
+  } catch {
+    // fallback
+  }
+  const { data, error } = await supabase
+    .from("company_user_requests")
+    .select("*, company:companies(id, name)")
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as unknown as Array<CompanyUserRequest & { company?: Company | null }>;
+}
+
+export async function approveCompanyAccess(input: { requestId: string; companyId: string; userId: string }) {
+  const supabase = createAdminSupabaseClient();
+  const now = new Date().toISOString();
+  const { error: insertError } = await supabase.from("company_users").upsert(
+    {
+      company_id: input.companyId,
+      user_id: input.userId,
+      approved_at: now,
+    },
+    { onConflict: "company_id,user_id" },
+  );
+  if (insertError) throw insertError;
+
+  const { error: deleteError } = await supabase
+    .from("company_user_requests")
+    .delete()
+    .eq("id", input.requestId);
+  if (deleteError) throw deleteError;
 }
 
 export async function listEventCompanies(eventId: string) {

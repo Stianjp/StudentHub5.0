@@ -128,7 +128,19 @@ export async function getOrCreateStudentByEmail(email: string) {
     .select("*")
     .single();
 
-  if (insertError) throw insertError;
+  if (insertError) {
+    const code = (insertError as { code?: string }).code;
+    if (code === "23505") {
+      const { data: fallback } = await admin
+        .from("students")
+        .select("*")
+        .eq("email", normalized)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      if (fallback?.[0]) return fallback[0] as Student;
+    }
+    throw insertError;
+  }
   return created as Student;
 }
 

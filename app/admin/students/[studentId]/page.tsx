@@ -7,7 +7,7 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { Badge } from "@/components/ui/badge";
 import { requireRole } from "@/lib/auth";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
-import { updateStudentConsent, updateStudentProfile, upsertStudentConsent } from "@/app/admin/students/actions";
+import { deleteStudent, updateStudentConsent, updateStudentProfile, upsertStudentConsent } from "@/app/admin/students/actions";
 
 type PageProps = {
   params: Promise<{ studentId: string }>;
@@ -166,6 +166,19 @@ export default async function AdminStudentDetailPage({ params }: PageProps) {
             ))}
           </div>
         )}
+      </Card>
+
+      <Card className="flex flex-col gap-3 border border-error/30 bg-error/10">
+        <h3 className="text-lg font-bold text-error">Slett student</h3>
+        <p className="text-sm text-error/90">
+          Dette sletter studenten fra databasen og fjerner tilknyttede samtykker og leads.
+        </p>
+        <form action={deleteStudent}>
+          <input type="hidden" name="studentId" value={studentId} />
+          <Button type="submit" variant="danger">
+            Slett student permanent
+          </Button>
+        </form>
       </Card>
     </div>
   );

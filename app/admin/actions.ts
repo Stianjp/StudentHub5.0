@@ -8,8 +8,14 @@ import {
   eventSchema,
   registerCompanySchema,
   setPackageSchema,
+  createCompanySchema,
+  companyDomainSchema,
+  approveCompanyAccessSchema,
 } from "@/lib/validation/admin";
 import {
+  addCompanyDomain,
+  approveCompanyAccess,
+  createCompany,
   inviteCompanyToEvent,
   registerCompanyForEvent,
   setPackageForCompany,
@@ -90,6 +96,107 @@ export async function inviteCompany(formData: FormData) {
 
     revalidatePath("/admin/companies");
     revalidatePath("/admin/events");
+    if (typeof returnTo === "string" && returnTo.startsWith("/")) {
+      redirect(`${returnTo}?saved=1`);
+    }
+  } catch (error) {
+    if (typeof returnTo === "string" && returnTo.startsWith("/")) {
+      const message = error instanceof Error ? error.message : "Ukjent feil";
+      redirect(`${returnTo}?error=${encodeURIComponent(message)}`);
+    }
+    throw error;
+  }
+}
+
+export async function createCompanyAction(formData: FormData) {
+  await requireRole("admin");
+  const returnTo = formData.get("returnTo");
+  try {
+    const parsed = createCompanySchema.safeParse({
+      name: getFormValue(formData, "name"),
+      orgNumber: getFormValue(formData, "orgNumber"),
+      industry: getFormValue(formData, "industry"),
+      location: getFormValue(formData, "location"),
+    });
+
+    if (!parsed.success) {
+      throw new Error(parsed.error.issues.map((issue) => issue.message).join(", "));
+    }
+
+    await createCompany({
+      name: parsed.data.name,
+      orgNumber: parsed.data.orgNumber || null,
+      industry: parsed.data.industry || null,
+      location: parsed.data.location || null,
+    });
+
+    revalidatePath("/admin/companies");
+    if (typeof returnTo === "string" && returnTo.startsWith("/")) {
+      redirect(`${returnTo}?saved=1`);
+    }
+  } catch (error) {
+    if (typeof returnTo === "string" && returnTo.startsWith("/")) {
+      const message = error instanceof Error ? error.message : "Ukjent feil";
+      redirect(`${returnTo}?error=${encodeURIComponent(message)}`);
+    }
+    throw error;
+  }
+}
+
+export async function addCompanyDomainAction(formData: FormData) {
+  await requireRole("admin");
+  const returnTo = formData.get("returnTo");
+  try {
+    const parsed = companyDomainSchema.safeParse({
+      companyId: getFormValue(formData, "companyId"),
+      domain: getFormValue(formData, "domain"),
+    });
+
+    if (!parsed.success) {
+      throw new Error(parsed.error.issues.map((issue) => issue.message).join(", "));
+    }
+
+    const normalized = String(parsed.data.domain)
+      .trim()
+      .toLowerCase()
+      .replace(/^@/, "");
+
+    if (!normalized || normalized.includes(" ")) {
+      throw new Error("Ugyldig domene.");
+    }
+
+    await addCompanyDomain({ companyId: parsed.data.companyId, domain: normalized });
+
+    revalidatePath("/admin/companies");
+    if (typeof returnTo === "string" && returnTo.startsWith("/")) {
+      redirect(`${returnTo}?saved=1`);
+    }
+  } catch (error) {
+    if (typeof returnTo === "string" && returnTo.startsWith("/")) {
+      const message = error instanceof Error ? error.message : "Ukjent feil";
+      redirect(`${returnTo}?error=${encodeURIComponent(message)}`);
+    }
+    throw error;
+  }
+}
+
+export async function approveCompanyAccessAction(formData: FormData) {
+  await requireRole("admin");
+  const returnTo = formData.get("returnTo");
+  try {
+    const parsed = approveCompanyAccessSchema.safeParse({
+      requestId: getFormValue(formData, "requestId"),
+      companyId: getFormValue(formData, "companyId"),
+      userId: getFormValue(formData, "userId"),
+    });
+
+    if (!parsed.success) {
+      throw new Error(parsed.error.issues.map((issue) => issue.message).join(", "));
+    }
+
+    await approveCompanyAccess(parsed.data);
+
+    revalidatePath("/admin/companies");
     if (typeof returnTo === "string" && returnTo.startsWith("/")) {
       redirect(`${returnTo}?saved=1`);
     }
