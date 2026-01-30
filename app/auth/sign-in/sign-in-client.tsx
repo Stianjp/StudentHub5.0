@@ -30,6 +30,7 @@ export function SignInClient({
   const [mode, setMode] = useState<Mode>(defaultMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [orgNumber, setOrgNumber] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "sent" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
   const allowRegister = allowedRole !== "admin";
@@ -100,6 +101,15 @@ export function SignInClient({
         return;
       }
 
+      if (roleValue === "company") {
+        const normalizedOrg = orgNumber.replace(/\s+/g, "");
+        if (!/^\d{9}$/.test(normalizedOrg)) {
+          setStatus("error");
+          setError("Organisasjonsnummer må være 9 siffer.");
+          return;
+        }
+      }
+
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: emailValue,
         password,
@@ -119,6 +129,25 @@ export function SignInClient({
           setError("Kunne ikke opprette konto. Sjekk e-post og prøv igjen.");
         }
         return;
+      }
+
+      if (roleValue === "company" && data.user?.id) {
+        const requestResponse = await fetch("/api/company/request-access", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            userId: data.user.id,
+            email: emailValue,
+            orgNumber: orgNumber.replace(/\s+/g, ""),
+          }),
+        });
+
+        if (!requestResponse.ok) {
+          const payload = await requestResponse.json().catch(() => null);
+          setStatus("error");
+          setError(payload?.error ?? "Kunne ikke sende forespørsel. Kontakt OSH-admin.");
+          return;
+        }
       }
 
       setStatus("sent");
@@ -230,6 +259,22 @@ export function SignInClient({
                 placeholder="Minst 8 tegn"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                aria-invalid={status === "error"}
+                aria-describedby={status === "error" ? errorId : undefined}
+              />
+            </label>
+          ) : null}
+          {mode === "register" && role === "company" ? (
+            <label className="flex flex-col gap-2 text-sm font-semibold text-primary">
+              Organisasjonsnummer
+              <Input
+                name="orgNumber"
+                required
+                inputMode="numeric"
+                pattern="[0-9]{9}"
+                placeholder="9 siffer"
+                value={orgNumber}
+                onChange={(e) => setOrgNumber(e.target.value)}
                 aria-invalid={status === "error"}
                 aria-describedby={status === "error" ? errorId : undefined}
               />

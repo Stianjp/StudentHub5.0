@@ -193,6 +193,9 @@ export default async function AdminCompaniesPage({ searchParams }: CompaniesPage
                     <p className="text-xs text-ink/70">
                       {request.domain} · {request.company?.name ?? "Ukjent bedrift"}
                     </p>
+                    {request.org_number ? (
+                      <p className="text-xs text-ink/70">Org.nr: {request.org_number}</p>
+                    ) : null}
                   </div>
                   <form action={approveCompanyAccessAction} className="flex items-center gap-2">
                     <input type="hidden" name="returnTo" value="/admin/companies" />

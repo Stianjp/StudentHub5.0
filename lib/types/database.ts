@@ -151,6 +151,7 @@ export type Database = {
           email: string;
           domain: string;
           company_id: string | null;
+          org_number: string | null;
           created_at: string;
         };
         Insert: {
@@ -159,6 +160,7 @@ export type Database = {
           email: string;
           domain: string;
           company_id?: string | null;
+          org_number?: string | null;
           created_at?: string;
         };
         Update: {
@@ -167,6 +169,7 @@ export type Database = {
           email?: string;
           domain?: string;
           company_id?: string | null;
+          org_number?: string | null;
           created_at?: string;
         };
         Relationships: [];

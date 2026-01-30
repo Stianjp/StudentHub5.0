@@ -50,37 +50,6 @@ export async function getOrCreateCompanyForUser(userId: string, email?: string |
       .maybeSingle();
     if (company) return company as Company;
   }
-
-  const normalizedEmail = email?.toLowerCase() ?? "";
-  const domain = normalizedEmail.split("@")[1] ?? "";
-  if (!domain) return null;
-
-  const { data: domainRow } = await supabase
-    .from("company_domains")
-    .select("*")
-    .eq("domain", domain)
-    .maybeSingle();
-
-  if (!domainRow) {
-    return null;
-  }
-
-  // Create access request if none exists.
-  const { data: existingRequest } = await supabase
-    .from("company_user_requests")
-    .select("id")
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (!existingRequest) {
-    await supabase.from("company_user_requests").insert({
-      user_id: userId,
-      email: normalizedEmail,
-      domain,
-      company_id: domainRow.company_id,
-    });
-  }
-
   return null;
 }
 
