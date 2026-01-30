@@ -10,7 +10,6 @@ import {
 } from "@/lib/student";
 import { createLead, upsertConsentForStudent } from "@/lib/lead";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export async function submitStandFlow(formData: FormData) {
   const profile = await requireRole("student");
