@@ -73,10 +73,10 @@ export default async function CompanyRoiPage({ searchParams }: RoiPageProps) {
               <Link
                 key={reg.id}
                 className={cn(
-                  "rounded-xl px-3 py-2 text-xs font-semibold transition",
+                  "rounded-xl border px-3 py-2 text-xs font-semibold transition",
                   reg.event_id === currentRegistration.event_id
-                    ? "bg-primary text-surface"
-                    : "bg-primary/5 text-primary hover:bg-primary/10",
+                    ? "border-secondary text-secondary"
+                    : "border-transparent bg-primary/5 text-primary hover:border-secondary/60 hover:text-secondary",
                 )}
                 href={`/company/roi?eventId=${reg.event_id}`}
               >
