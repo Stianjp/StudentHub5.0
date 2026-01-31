@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { STUDY_CATEGORIES } from "./study-categories";
 
 type CompanyOption = { id: string; name: string };
 
@@ -45,8 +46,22 @@ export function KioskForm({ eventId, companies, action }: KioskFormProps) {
         </label>
 
         <label className="text-sm font-semibold text-primary">
-          Studie / program
-          <Input name="studyProgram" required placeholder="Informatikk" />
+          Studieretning
+          <select
+            name="studyProgram"
+            className="mt-1 w-full rounded-xl border border-primary/10 bg-surface px-3 py-2 text-sm"
+            defaultValue=""
+            required
+          >
+            <option value="" disabled>
+              Velg studieretning
+            </option>
+            {STUDY_CATEGORIES.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
+          </select>
         </label>
         <label className="text-sm font-semibold text-primary">
           Nivå

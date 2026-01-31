@@ -199,13 +199,41 @@ export async function approveCompanyAccessAction(formData: FormData) {
       requestId: getFormValue(formData, "requestId"),
       companyId: getFormValue(formData, "companyId"),
       userId: getFormValue(formData, "userId"),
+      domain: getFormValue(formData, "domain"),
+      orgNumber: getFormValue(formData, "orgNumber"),
+      email: getFormValue(formData, "email"),
     });
 
     if (!parsed.success) {
       throw new Error(parsed.error.issues.map((issue) => issue.message).join(", "));
     }
 
-    await approveCompanyAccess(parsed.data);
+    const normalizedDomain = parsed.data.domain.trim().toLowerCase().replace(/^@/, "");
+    let companyId = parsed.data.companyId;
+
+    if (companyId === "new") {
+      const nameSource = normalizedDomain.split(".")[0] || parsed.data.email || "Ny bedrift";
+      const cleaned = nameSource.replace(/[^a-zA-Z0-9]+/g, " ").trim();
+      const derivedName = cleaned
+        ? cleaned
+            .split(" ")
+            .map((part) => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+            .join(" ")
+        : "Ny bedrift";
+
+      const company = await createCompany({
+        name: derivedName,
+        orgNumber: parsed.data.orgNumber || null,
+      });
+      await addCompanyDomain({ companyId: company.id, domain: normalizedDomain });
+      companyId = company.id;
+    }
+
+    await approveCompanyAccess({
+      requestId: parsed.data.requestId,
+      companyId,
+      userId: parsed.data.userId,
+    });
 
     revalidatePath("/admin/companies");
     if (typeof returnTo === "string" && returnTo.startsWith("/")) {

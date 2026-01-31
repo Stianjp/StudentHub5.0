@@ -37,10 +37,16 @@ export default async function CompanyLayout({ children }: { children: React.Reac
               <p><span className="font-semibold">E-post:</span> {accessStatus.email}</p>
               <p><span className="font-semibold">Domene:</span> {accessStatus.domain}</p>
               <p><span className="font-semibold">Opprettet:</span> {new Date(accessStatus.createdAt ?? "").toLocaleString("nb-NO")}</p>
+              {!accessStatus.companyId ? (
+                <p className="mt-2 text-surface/80">
+                  Vi fant ingen eksisterende bedrift på domenet ditt. En admin vil knytte deg til riktig bedrift
+                  eller opprette en ny.
+                </p>
+              ) : null}
             </div>
           ) : (
             <p className="text-sm text-surface/70">
-              Vi finner ingen bedrift som matcher domenet ditt. Kontakt OSH-teamet.
+              Ingen forespørsel er registrert. Registrer bedriften din eller kontakt OSH-teamet om du trenger hjelp.
             </p>
           )}
         </div>

@@ -4,6 +4,7 @@ import { useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { STUDY_CATEGORIES } from "./study-categories";
 
 type CompanyOption = {
   id: string;
@@ -25,18 +26,6 @@ const INTEREST_OPTIONS = [
   "Graduate-stilling",
   "Bacheloroppgave",
   "Masteroppgave",
-];
-
-const CATEGORY_GROUPS = [
-  "BYGGINGENIØRER",
-  "DATAINGENIØR/IT",
-  "ELEKTROINGENIØRER",
-  "ENERGI & MILJØ INGENIØR",
-  "BIOTEKNOLOGI- OG KJEMIINGENIØR",
-  "MASKINIGENIØRER",
-  "ØKONOMI OG ADMINISTRASJON",
-  "LEDELSE",
-  "HUMAN RESOURCES",
 ];
 
 function normalizeTag(value: string) {
@@ -221,7 +210,7 @@ export function RegistrationForm({ eventId, companies, mode, lockedCompany }: Re
               <Button type="button" variant="secondary" onClick={selectAllCompanies}>
                 Velg alle bedrifter
               </Button>
-              {CATEGORY_GROUPS.map((category) => (
+              {STUDY_CATEGORIES.map((category) => (
                 <Button
                   key={category}
                   type="button"
@@ -296,7 +285,21 @@ export function RegistrationForm({ eventId, companies, mode, lockedCompany }: Re
 
         <label className="text-sm font-semibold text-primary">
           Hva studerer du?
-          <Input name="fieldOfStudy" required placeholder="F.eks. Informatikk" />
+          <select
+            name="fieldOfStudy"
+            className="mt-2 w-full rounded-full border border-primary/20 bg-surface px-5 py-3 text-sm font-semibold text-primary shadow-sm outline-none"
+            defaultValue=""
+            required
+          >
+            <option value="" disabled>
+              Velg studieretning
+            </option>
+            {STUDY_CATEGORIES.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
+            ))}
+          </select>
         </label>
 
         <fieldset className="grid gap-2">

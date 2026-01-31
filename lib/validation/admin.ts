@@ -52,6 +52,9 @@ export const companyDomainSchema = z.object({
 
 export const approveCompanyAccessSchema = z.object({
   requestId: z.string().uuid(),
-  companyId: z.string().uuid(),
+  companyId: z.union([z.string().uuid(), z.literal("new")]),
   userId: z.string().uuid(),
+  domain: z.string().min(3),
+  orgNumber: z.string().regex(/^\d{9}$/).optional().or(z.literal("")),
+  email: z.string().email().optional().or(z.literal("")),
 });

@@ -191,16 +191,29 @@ export default async function AdminCompaniesPage({ searchParams }: CompaniesPage
                   <div>
                     <p className="font-semibold text-primary">{request.email}</p>
                     <p className="text-xs text-ink/70">
-                      {request.domain} · {request.company?.name ?? "Ukjent bedrift"}
+                      {request.domain} · {request.company?.name ?? "Ny bedrift"}
                     </p>
                     {request.org_number ? (
                       <p className="text-xs text-ink/70">Org.nr: {request.org_number}</p>
                     ) : null}
                   </div>
-                  <form action={approveCompanyAccessAction} className="flex items-center gap-2">
+                  <form action={approveCompanyAccessAction} className="flex flex-col gap-2 md:flex-row md:items-center">
                     <input type="hidden" name="returnTo" value="/admin/companies" />
                     <input type="hidden" name="requestId" value={request.id} />
-                    <input type="hidden" name="companyId" value={request.company_id ?? ""} />
+                    <input type="hidden" name="domain" value={request.domain ?? ""} />
+                    <input type="hidden" name="orgNumber" value={request.org_number ?? ""} />
+                    <input type="hidden" name="email" value={request.email ?? ""} />
+                    <label className="text-xs font-semibold text-primary">
+                      Bedrift
+                      <Select name="companyId" required defaultValue={request.company_id ?? "new"}>
+                        <option value="new">Opprett ny bedrift</option>
+                        {companies.map((company) => (
+                          <option key={company.id} value={company.id}>
+                            {company.name}
+                          </option>
+                        ))}
+                      </Select>
+                    </label>
                     <input type="hidden" name="userId" value={request.user_id} />
                     <Button type="submit">Godkjenn</Button>
                   </form>

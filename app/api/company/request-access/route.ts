@@ -38,42 +38,36 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  const { data: company, error: companyError } = await supabase
-    .from("companies")
-    .select("id, org_number")
-    .eq("org_number", orgNumber)
-    .maybeSingle();
-
-  if (companyError) {
-    return NextResponse.json({ error: "Kunne ikke slå opp bedrift." }, { status: 500 });
-  }
-
-  if (!company) {
-    return NextResponse.json(
-      { error: "Bedriften er ikke registrert ennå. Kontakt OSH-admin." },
-      { status: 404 },
-    );
-  }
-
-  const { data: domainRow } = await supabase
+  let companyId: string | null = null;
+  const { data: domainMatch } = await supabase
     .from("company_domains")
-    .select("domain")
-    .eq("company_id", company.id)
+    .select("company_id")
     .eq("domain", domain)
     .maybeSingle();
 
-  if (!domainRow) {
-    return NextResponse.json(
-      { error: "E-postdomenet matcher ikke registrert bedriftsdomene." },
-      { status: 400 },
-    );
+  if (domainMatch?.company_id) {
+    companyId = domainMatch.company_id;
+  } else {
+    const { data: company, error: companyError } = await supabase
+      .from("companies")
+      .select("id")
+      .eq("org_number", orgNumber)
+      .maybeSingle();
+
+    if (companyError) {
+      return NextResponse.json({ error: "Kunne ikke slå opp bedrift." }, { status: 500 });
+    }
+
+    if (company?.id) {
+      companyId = company.id;
+    }
   }
 
   const { error: insertError } = await supabase.from("company_user_requests").insert({
     user_id: userId,
     email: normalizedEmail,
     domain,
-    company_id: company.id,
+    company_id: companyId,
     org_number: orgNumber,
   });
 
