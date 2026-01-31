@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { createClient } from "@/lib/supabase/client";
+import { getBaseUrlForRole, getDefaultNextPath } from "@/lib/auth-urls";
 import Image from "next/image";
 
 type Role = "student" | "company" | "admin";
@@ -67,12 +68,9 @@ export function SignInClient({
     }
 
     const supabase = createClient();
-    const nextPath =
-      typeof next === "string"
-        ? next
-        : roleValue === "company"
-          ? "/company/onboarding"
-          : `/${roleValue}`;
+    const nextPath = typeof next === "string" ? next : getDefaultNextPath(roleValue);
+    const baseUrl = getBaseUrlForRole(roleValue, window.location.origin);
+    const redirectBase = baseUrl || window.location.origin;
 
     if (mode === "reset") {
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(emailValue, {
@@ -114,9 +112,7 @@ export function SignInClient({
         email: emailValue,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?role=${roleValue}&next=${encodeURIComponent(
-            nextPath,
-          )}`,
+          emailRedirectTo: `${redirectBase}/auth/callback?role=${roleValue}&mode=verify`,
         },
       });
 

@@ -11,10 +11,11 @@ export function CallbackClient() {
   const params = useSearchParams();
   const code = params.get("code");
   const role = params.get("role") ?? "company";
+  const mode = params.get("mode");
   const studentPortalUrl = process.env.NEXT_PUBLIC_STUDENT_PORTAL_URL ?? "/student";
   const defaultNext = role === "student" ? studentPortalUrl : "/company";
   const nextPath = params.get("next") ?? defaultNext;
-  const shouldAutoRedirect = params.get("next") !== null;
+  const shouldAutoRedirect = params.get("next") !== null && mode !== "verify";
   const [message, setMessage] = useState(() => "Fullfører innlogging…");
   const [successLink, setSuccessLink] = useState<string | null>(null);
 

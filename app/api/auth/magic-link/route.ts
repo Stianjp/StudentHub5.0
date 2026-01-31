@@ -1,12 +1,7 @@
 import { NextResponse } from "next/server";
 import { magicLinkSchema } from "@/lib/validation/company";
 import { createRouteSupabaseClient } from "@/lib/supabase/route";
-
-const roleNextPath: Record<"student" | "company" | "admin", string> = {
-  student: "/student",
-  company: "/company",
-  admin: "/admin",
-};
+import { getBaseUrlForRole, getDefaultNextPath } from "@/lib/auth-urls";
 
 export async function POST(request: Request) {
   const supabase = createRouteSupabaseClient();
@@ -24,8 +19,9 @@ export async function POST(request: Request) {
   }
   const url = new URL(request.url);
   const nextPath =
-    typeof next === "string" && next.startsWith("/") ? next : roleNextPath[role];
-  const redirectTo = `${url.origin}/auth/callback?role=${role}&next=${encodeURIComponent(nextPath)}`;
+    typeof next === "string" && next.startsWith("/") ? next : getDefaultNextPath(role);
+  const baseUrl = getBaseUrlForRole(role, url.origin);
+  const redirectTo = `${baseUrl}/auth/callback?role=${role}&next=${encodeURIComponent(nextPath)}`;
 
   const { error } = await supabase.auth.signInWithOtp({
     email,
