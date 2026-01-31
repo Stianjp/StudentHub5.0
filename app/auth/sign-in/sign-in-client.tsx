@@ -124,7 +124,7 @@ export function SignInClient({
         setStatus("error");
         const message = signUpError.message.toLowerCase();
         if (message.includes("row level security") || message.includes("policy")) {
-          setError("Registrering mottatt. Bekreft e-posten din før du kan logge inn.");
+          setError("Registrering mottatt. Bekreft e-posten din før du kan logge inn. Sjekk søppelpost.");
         } else {
           setError("Kunne ikke opprette konto. Sjekk e-post og prøv igjen.");
         }
@@ -151,7 +151,7 @@ export function SignInClient({
       }
 
       setStatus("sent");
-      setError("Registrering OK. Bekreft e-posten din før du kan logge inn.");
+      setError("Registrering OK. Bekreft e-posten din før du kan logge inn. Sjekk søppelpost.");
       return;
     }
 
@@ -290,6 +290,11 @@ export function SignInClient({
                     ? "Send lenke"
                     : "Logg inn"}
             </Button>
+            {mode === "register" ? (
+              <p className="text-xs text-ink/70">
+                Du får en bekreftelses-epost. Sjekk også søppelpost om du ikke ser den.
+              </p>
+            ) : null}
             {mode === "login" ? (
               <button
                 type="button"

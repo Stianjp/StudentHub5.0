@@ -10,8 +10,17 @@ export function CallbackClient() {
   const router = useRouter();
   const params = useSearchParams();
   const code = params.get("code");
-  const nextPath = params.get("next") ?? "/company";
+  const role = params.get("role") ?? "company";
+  const studentPortalUrl = process.env.NEXT_PUBLIC_STUDENT_PORTAL_URL ?? "/student";
+  const defaultNext = role === "student" ? studentPortalUrl : "/company";
+  const nextPath = params.get("next") ?? defaultNext;
+  const shouldAutoRedirect = params.get("next") !== null;
   const [message, setMessage] = useState(() => "Fullfører innlogging…");
+  const [successLink, setSuccessLink] = useState<string | null>(null);
+
+  function isExternal(url: string) {
+    return /^https?:\/\//i.test(url);
+  }
 
   useEffect(() => {
     const supabase = createClient();
@@ -32,7 +41,16 @@ export function CallbackClient() {
           setMessage(error.message);
           return;
         }
-        router.replace(nextPath);
+        if (shouldAutoRedirect) {
+          if (isExternal(nextPath)) {
+            window.location.assign(nextPath);
+          } else {
+            router.replace(nextPath);
+          }
+          return;
+        }
+        setMessage("Din konto er nå verifisert. Du kan logge inn her:");
+        setSuccessLink(nextPath);
         return;
       }
 
@@ -42,7 +60,16 @@ export function CallbackClient() {
           setMessage(error.message);
           return;
         }
-        router.replace(nextPath);
+        if (shouldAutoRedirect) {
+          if (isExternal(nextPath)) {
+            window.location.assign(nextPath);
+          } else {
+            router.replace(nextPath);
+          }
+          return;
+        }
+        setMessage("Din konto er nå verifisert. Du kan logge inn her:");
+        setSuccessLink(nextPath);
         return;
       }
 
@@ -63,6 +90,14 @@ export function CallbackClient() {
         <p className="mt-3 text-sm font-semibold uppercase tracking-wide text-primary/60">Oslo Student Hub</p>
         <h1 className="mt-2 text-2xl font-bold text-primary">Innlogging</h1>
         <p className="mt-3 text-sm text-ink/80">{message}</p>
+        {successLink ? (
+          <a
+            href={successLink}
+            className="mt-4 inline-flex items-center justify-center rounded-full bg-primary px-4 py-2 text-xs font-semibold text-surface"
+          >
+            Gå til innlogging
+          </a>
+        ) : null}
       </Card>
     </main>
   );
