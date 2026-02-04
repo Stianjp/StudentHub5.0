@@ -13,7 +13,9 @@ export function getCompanyOnboardingStatus(company: Company) {
   const recruitmentCompleted =
     company.recruitment_fields.length > 0 &&
     company.recruitment_job_types.length > 0 &&
-    company.recruitment_levels.length > 0;
+    company.recruitment_levels.length > 0 &&
+    (company.recruitment_levels.includes("Bachelor") ? company.recruitment_years_bachelor.length > 0 : true) &&
+    (company.recruitment_levels.includes("Master") ? company.recruitment_years_master.length > 0 : true);
   const brandingCompleted =
     company.branding_values.length > 0 || Boolean(company.branding_evp || company.branding_message);
 

@@ -46,6 +46,8 @@ export type Database = {
           recruitment_roles: string[];
           recruitment_fields: string[];
           recruitment_levels: string[];
+          recruitment_years_bachelor: number[];
+          recruitment_years_master: number[];
           recruitment_job_types: string[];
           recruitment_timing: string[];
           branding_values: string[];
@@ -66,6 +68,8 @@ export type Database = {
           recruitment_roles?: string[];
           recruitment_fields?: string[];
           recruitment_levels?: string[];
+          recruitment_years_bachelor?: number[];
+          recruitment_years_master?: number[];
           recruitment_job_types?: string[];
           recruitment_timing?: string[];
           branding_values?: string[];
@@ -86,6 +90,8 @@ export type Database = {
           recruitment_roles?: string[];
           recruitment_fields?: string[];
           recruitment_levels?: string[];
+          recruitment_years_bachelor?: number[];
+          recruitment_years_master?: number[];
           recruitment_job_types?: string[];
           recruitment_timing?: string[];
           branding_values?: string[];

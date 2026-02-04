@@ -148,6 +148,32 @@ async function RoiContent({ eventId, companyId }: { eventId: string; companyId: 
         </Card>
 
         <Card className="flex flex-col gap-3">
+          <h3 className="text-lg font-bold text-primary">Målgruppe (bedriften)</h3>
+          <div className="grid gap-2 text-sm text-ink/80">
+            <div>
+              <p className="font-semibold text-primary">Nivå</p>
+              <p>{metrics.targetLevels.length > 0 ? metrics.targetLevels.join(", ") : "Ikke satt"}</p>
+            </div>
+            <div>
+              <p className="font-semibold text-primary">Bachelor-år</p>
+              <p>
+                {metrics.targetYearsBachelor.length > 0
+                  ? metrics.targetYearsBachelor.sort((a, b) => a - b).map((y) => `${y}. år`).join(", ")
+                  : "Ikke satt"}
+              </p>
+            </div>
+            <div>
+              <p className="font-semibold text-primary">Master-år</p>
+              <p>
+                {metrics.targetYearsMaster.length > 0
+                  ? metrics.targetYearsMaster.sort((a, b) => a - b).map((y) => `${y}. år`).join(", ")
+                  : "Ikke satt"}
+              </p>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="flex flex-col gap-3">
           <h3 className="text-lg font-bold text-primary">Besøk per tidspunkt</h3>
           {metrics.visitsByHour.length === 0 ? (
             <p className="text-sm text-ink/70">Ingen besøk registrert.</p>
@@ -163,6 +189,63 @@ async function RoiContent({ eventId, companyId }: { eventId: string; companyId: 
               ))}
             </ul>
           )}
+        </Card>
+
+        <Card className="flex flex-col gap-3">
+          <h3 className="text-lg font-bold text-primary">Leads per nivå/år</h3>
+          <div className="grid gap-3 text-sm text-ink/80">
+            <div>
+              <p className="font-semibold text-primary">Nivå</p>
+              {metrics.leadsByLevel.length === 0 ? (
+                <p>Ingen data.</p>
+              ) : (
+                <ul className="grid gap-2">
+                  {metrics.leadsByLevel.map((item) => (
+                    <li key={item.level} className="flex items-center justify-between rounded-xl bg-primary/5 px-3 py-2">
+                      <span className="font-semibold text-primary">{item.level}</span>
+                      <span className="text-xs font-semibold text-primary/70">{item.count}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <div>
+              <p className="font-semibold text-primary">Bachelor-år</p>
+              {metrics.leadsByYearBachelor.length === 0 ? (
+                <p>Ingen data.</p>
+              ) : (
+                <ul className="grid gap-2">
+                  {metrics.leadsByYearBachelor.map((item) => (
+                    <li
+                      key={`bachelor-${item.year}`}
+                      className="flex items-center justify-between rounded-xl bg-primary/5 px-3 py-2"
+                    >
+                      <span className="font-semibold text-primary">{item.year}. år</span>
+                      <span className="text-xs font-semibold text-primary/70">{item.count}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+            <div>
+              <p className="font-semibold text-primary">Master-år</p>
+              {metrics.leadsByYearMaster.length === 0 ? (
+                <p>Ingen data.</p>
+              ) : (
+                <ul className="grid gap-2">
+                  {metrics.leadsByYearMaster.map((item) => (
+                    <li
+                      key={`master-${item.year}`}
+                      className="flex items-center justify-between rounded-xl bg-primary/5 px-3 py-2"
+                    >
+                      <span className="font-semibold text-primary">{item.year}. år</span>
+                      <span className="text-xs font-semibold text-primary/70">{item.count}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
         </Card>
       </div>
 

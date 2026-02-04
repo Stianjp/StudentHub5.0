@@ -48,6 +48,8 @@ export default async function CompanyOnboardingRecruitmentPage() {
   ];
 
   const levelOptions = ["Bachelor", "Master"];
+  const bachelorYears = [1, 2, 3];
+  const masterYears = [1, 2, 3, 4, 5];
 
   return (
     <div className="flex flex-col gap-8">
@@ -101,6 +103,48 @@ export default async function CompanyOnboardingRecruitmentPage() {
                     className="h-4 w-4 rounded border-primary/30 text-primary focus:ring-primary"
                   />
                   {option}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          <fieldset className="grid gap-2">
+            <legend className="text-sm font-semibold text-primary">Årstrinn bachelor</legend>
+            <div className="flex flex-wrap gap-2">
+              {bachelorYears.map((year) => (
+                <label
+                  key={`bachelor-${year}`}
+                  className="flex items-center gap-2 rounded-full border border-primary/20 bg-surface px-3 py-2 text-sm"
+                >
+                  <input
+                    type="checkbox"
+                    name="recruitmentYearsBachelor"
+                    value={year}
+                    defaultChecked={company.recruitment_years_bachelor.includes(year)}
+                    className="h-4 w-4 rounded border-primary/30 text-primary focus:ring-primary"
+                  />
+                  {year}. år
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
+          <fieldset className="grid gap-2">
+            <legend className="text-sm font-semibold text-primary">Årstrinn master</legend>
+            <div className="flex flex-wrap gap-2">
+              {masterYears.map((year) => (
+                <label
+                  key={`master-${year}`}
+                  className="flex items-center gap-2 rounded-full border border-primary/20 bg-surface px-3 py-2 text-sm"
+                >
+                  <input
+                    type="checkbox"
+                    name="recruitmentYearsMaster"
+                    value={year}
+                    defaultChecked={company.recruitment_years_master.includes(year)}
+                    className="h-4 w-4 rounded border-primary/30 text-primary focus:ring-primary"
+                  />
+                  {year}. år
                 </label>
               ))}
             </div>

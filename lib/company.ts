@@ -230,26 +230,47 @@ export async function hasPlatinumAccess(userId: string, eventId: string, company
 export async function getRoiMetrics(companyId: string, eventId: string) {
   const supabase = await createServerSupabaseClient();
 
-  const [{ data: visits, error: visitsError }, { data: consents, error: consentsError }] =
-    await Promise.all([
-      supabase
-        .from("stand_visits")
-        .select("*")
-        .eq("company_id", companyId)
-        .eq("event_id", eventId),
-      supabase
-        .from("consents")
-        .select("*")
-        .eq("company_id", companyId)
-        .eq("event_id", eventId)
-        .eq("consent", true),
-    ]);
+  const [
+    { data: visits, error: visitsError },
+    { data: consents, error: consentsError },
+    { data: leads, error: leadsError },
+    { data: company, error: companyError },
+  ] = await Promise.all([
+    supabase
+      .from("stand_visits")
+      .select("*")
+      .eq("company_id", companyId)
+      .eq("event_id", eventId),
+    supabase
+      .from("consents")
+      .select("*")
+      .eq("company_id", companyId)
+      .eq("event_id", eventId)
+      .eq("consent", true),
+    supabase
+      .from("leads")
+      .select("study_level, study_year, field_of_study")
+      .eq("company_id", companyId)
+      .eq("event_id", eventId),
+    supabase
+      .from("companies")
+      .select("recruitment_levels, recruitment_years_bachelor, recruitment_years_master")
+      .eq("id", companyId)
+      .single(),
+  ]);
 
   if (visitsError) throw visitsError;
   if (consentsError) throw consentsError;
+  if (leadsError) throw leadsError;
+  if (companyError) throw companyError;
 
   const visitRows = (visits ?? []) as StandVisit[];
   const consentRows = (consents ?? []) as Consent[];
+  const leadRows = (leads ?? []) as Array<{
+    study_level: string | null;
+    study_year: number | null;
+    field_of_study: string | null;
+  }>;
 
   const visitsCount = visitRows.length;
   const leadsCount = consentRows.length;
@@ -262,7 +283,12 @@ export async function getRoiMetrics(companyId: string, eventId: string) {
   });
 
   const studyCounts = new Map<string, number>();
-  if (consentRows.length > 0) {
+  if (leadRows.length > 0) {
+    leadRows.forEach((lead) => {
+      const program = lead.field_of_study ?? "Ukjent";
+      studyCounts.set(program, (studyCounts.get(program) ?? 0) + 1);
+    });
+  } else if (consentRows.length > 0) {
     const studentIds = consentRows.map((row) => row.student_id);
     const { data: students, error: studentsError } = await supabase
       .from("students")
@@ -277,10 +303,41 @@ export async function getRoiMetrics(companyId: string, eventId: string) {
     });
   }
 
+  const levelCounts = new Map<string, number>();
+  const yearCountsBachelor = new Map<number, number>();
+  const yearCountsMaster = new Map<number, number>();
+  leadRows.forEach((lead) => {
+    const level = lead.study_level?.toLowerCase();
+    const year = lead.study_year ?? null;
+    if (level) {
+      const label = level.includes("master") ? "Master" : level.includes("bachelor") ? "Bachelor" : lead.study_level;
+      levelCounts.set(label ?? "Ukjent", (levelCounts.get(label ?? "Ukjent") ?? 0) + 1);
+    }
+    if (year && Number.isFinite(year) && year >= 1 && year <= 5) {
+      if (level?.includes("master") || year >= 4) {
+        yearCountsMaster.set(year, (yearCountsMaster.get(year) ?? 0) + 1);
+      } else {
+        yearCountsBachelor.set(year, (yearCountsBachelor.get(year) ?? 0) + 1);
+      }
+    }
+  });
+
   return {
     visitsCount,
     leadsCount,
     conversion,
+    targetLevels: company.recruitment_levels ?? [],
+    targetYearsBachelor: company.recruitment_years_bachelor ?? [],
+    targetYearsMaster: company.recruitment_years_master ?? [],
+    leadsByLevel: Array.from(levelCounts.entries())
+      .map(([level, count]) => ({ level, count }))
+      .sort((a, b) => b.count - a.count),
+    leadsByYearBachelor: Array.from(yearCountsBachelor.entries())
+      .map(([year, count]) => ({ year, count }))
+      .sort((a, b) => a.year - b.year),
+    leadsByYearMaster: Array.from(yearCountsMaster.entries())
+      .map(([year, count]) => ({ year, count }))
+      .sort((a, b) => a.year - b.year),
     visitsByHour: Array.from(hourly.entries())
       .map(([hour, count]) => ({ hour, count }))
       .sort((a, b) => a.hour.localeCompare(b.hour)),

@@ -25,6 +25,21 @@ const stringArray = z.preprocess((value) => {
   return [];
 }, z.array(z.string()));
 
+const numberArray = z.preprocess((value) => {
+  if (Array.isArray(value)) {
+    return value
+      .map((v) => Number(v))
+      .filter((v) => Number.isFinite(v));
+  }
+  if (typeof value === "string") {
+    return value
+      .split(",")
+      .map((v) => Number(v.trim()))
+      .filter((v) => Number.isFinite(v));
+  }
+  return [];
+}, z.array(z.number().int()));
+
 export const companyInfoSchema = z.object({
   name: z.string().min(2, "Firmanavn er påkrevd"),
   orgNumber: z
@@ -51,6 +66,8 @@ export const companyRecruitmentSchema = z.object({
   recruitmentRoles: stringArray,
   recruitmentFields: stringArray,
   recruitmentLevels: stringArray,
+  recruitmentYearsBachelor: numberArray,
+  recruitmentYearsMaster: numberArray,
   recruitmentJobTypes: stringArray,
   recruitmentTiming: stringArray,
 });

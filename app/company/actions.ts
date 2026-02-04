@@ -76,6 +76,8 @@ export async function saveCompanyRecruitment(formData: FormData) {
     recruitmentRoles: formData.getAll("recruitmentRoles"),
     recruitmentFields: formData.getAll("recruitmentFields"),
     recruitmentLevels: formData.getAll("recruitmentLevels"),
+    recruitmentYearsBachelor: formData.getAll("recruitmentYearsBachelor"),
+    recruitmentYearsMaster: formData.getAll("recruitmentYearsMaster"),
     recruitmentJobTypes: formData.getAll("recruitmentJobTypes"),
     recruitmentTiming: formData.getAll("recruitmentTiming"),
   });
@@ -93,6 +95,8 @@ export async function saveCompanyRecruitment(formData: FormData) {
       recruitment_roles: parsed.data.recruitmentRoles,
       recruitment_fields: parsed.data.recruitmentFields,
       recruitment_levels: parsed.data.recruitmentLevels,
+      recruitment_years_bachelor: parsed.data.recruitmentYearsBachelor,
+      recruitment_years_master: parsed.data.recruitmentYearsMaster,
       recruitment_job_types: parsed.data.recruitmentJobTypes,
       recruitment_timing: parsed.data.recruitmentTiming,
       updated_at: now,
