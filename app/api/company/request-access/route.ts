@@ -19,7 +19,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { userId, email, orgNumber } = parsed.data;
+    const { email, orgNumber } = parsed.data;
     const normalizedEmail = email.toLowerCase().trim();
     const domain = normalizedEmail.split("@")[1] ?? "";
 
@@ -28,6 +28,18 @@ export async function POST(request: Request) {
     }
 
     const supabase = createAdminSupabaseClient();
+
+    const { data: userLookup, error: userLookupError } = await supabase.auth.admin.getUserByEmail(normalizedEmail);
+    if (userLookupError) {
+      return NextResponse.json({ error: userLookupError.message }, { status: 500 });
+    }
+    const userId = userLookup?.user?.id;
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Fant ikke bruker i Auth ennå. Bekreft e-posten og prøv igjen." },
+        { status: 404 },
+      );
+    }
 
     const { data: existingRequest } = await supabase
       .from("company_user_requests")
