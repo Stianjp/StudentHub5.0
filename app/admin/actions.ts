@@ -112,7 +112,12 @@ export async function inviteCompany(formData: FormData) {
     }
   } catch (error) {
     if (typeof returnTo === "string" && returnTo.startsWith("/")) {
-      const message = error instanceof Error ? error.message : "Ukjent feil";
+      const message =
+        error instanceof Error
+          ? error.message
+          : typeof error === "string"
+            ? error
+            : JSON.stringify(error);
       redirect(`${returnTo}?error=${encodeURIComponent(message)}`);
     }
     throw error;
@@ -147,7 +152,12 @@ export async function createCompanyAction(formData: FormData) {
     }
   } catch (error) {
     if (typeof returnTo === "string" && returnTo.startsWith("/")) {
-      const message = error instanceof Error ? error.message : "Ukjent feil";
+      const message =
+        error instanceof Error
+          ? error.message
+          : typeof error === "string"
+            ? error
+            : JSON.stringify(error);
       redirect(`${returnTo}?error=${encodeURIComponent(message)}`);
     }
     throw error;
