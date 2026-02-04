@@ -29,11 +29,15 @@ export async function POST(request: Request) {
 
     const supabase = createAdminSupabaseClient();
 
-    const { data: userLookup, error: userLookupError } = await supabase.auth.admin.getUserByEmail(normalizedEmail);
-    if (userLookupError) {
-      return NextResponse.json({ error: userLookupError.message }, { status: 500 });
+    const { data: users, error: usersError } = await supabase.auth.admin.listUsers({
+      page: 1,
+      perPage: 200,
+    });
+    if (usersError) {
+      return NextResponse.json({ error: usersError.message }, { status: 500 });
     }
-    const userId = userLookup?.user?.id;
+    const userId =
+      users?.users.find((user) => user.email?.toLowerCase() === normalizedEmail)?.id ?? null;
     if (!userId) {
       return NextResponse.json(
         { error: "Fant ikke bruker i Auth ennå. Bekreft e-posten og prøv igjen." },
