@@ -46,6 +46,7 @@ export const companyInfoSchema = z.object({
     .string()
     .regex(/^\d{9}$/, "Organisasjonsnummer må være 9 siffer"),
   industry: z.string().optional().or(z.literal("")),
+  industryCategories: stringArray.optional(),
   size: z.string().optional().or(z.literal("")),
   location: z.string().optional().or(z.literal("")),
   website: z.preprocess(

@@ -8,6 +8,7 @@ import { getOrCreateCompanyForUser } from "@/lib/company";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { saveCompanyInfo } from "@/app/company/actions";
 import { OnboardingSteps } from "@/components/company/onboarding-steps";
+import { STUDY_CATEGORIES } from "@/components/event/study-categories";
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -68,8 +69,27 @@ export default async function CompanyOnboardingInfoPage({ searchParams }: PagePr
             />
           </label>
           <label className="text-sm font-semibold text-primary">
-            Bransje
-            <Input name="industry" defaultValue={company.industry ?? ""} placeholder="F.eks. Teknologi" />
+            Bransje (velg en eller flere)
+            <p className="mt-1 text-xs font-normal text-ink/70">
+              Bransje brukes for matching mot studenter og for filtrering på event-sidene.
+            </p>
+            <div className="mt-2 grid gap-2 md:grid-cols-2">
+              {STUDY_CATEGORIES.map((category) => (
+                <label
+                  key={category}
+                  className="flex items-center gap-2 rounded-xl border border-primary/10 bg-surface px-3 py-2 text-sm"
+                >
+                  <input
+                    type="checkbox"
+                    name="industryCategories"
+                    value={category}
+                    defaultChecked={company.recruitment_fields.includes(category)}
+                    className="h-4 w-4 rounded border-primary/30 text-primary focus:ring-primary"
+                  />
+                  <span className="font-semibold text-primary">{category}</span>
+                </label>
+              ))}
+            </div>
           </label>
           <div className="grid gap-4 md:grid-cols-2">
             <label className="text-sm font-semibold text-primary">

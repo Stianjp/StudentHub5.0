@@ -404,6 +404,16 @@ export async function registerCompanyForEvent(input: {
 }) {
   const supabase = createAdminSupabaseClient();
   const now = new Date().toISOString();
+  let categoryTags = input.categoryTags ?? [];
+
+  if (categoryTags.length === 0) {
+    const { data: company } = await supabase
+      .from("companies")
+      .select("recruitment_fields")
+      .eq("id", input.companyId)
+      .single();
+    categoryTags = company?.recruitment_fields ?? [];
+  }
 
   const { data, error } = await supabase
     .from("event_companies")
@@ -413,7 +423,7 @@ export async function registerCompanyForEvent(input: {
         company_id: input.companyId,
         stand_type: input.standType ?? "Standard",
         package: input.package ?? "standard",
-        category_tags: input.categoryTags ?? [],
+        category_tags: categoryTags,
         registered_at: now,
         updated_at: now,
       },
@@ -423,5 +433,17 @@ export async function registerCompanyForEvent(input: {
     .single();
 
   if (error) throw error;
+
+  if (categoryTags.length > 0) {
+    const { error: updateCompanyError } = await supabase
+      .from("companies")
+      .update({
+        recruitment_fields: categoryTags,
+        updated_at: now,
+      })
+      .eq("id", input.companyId);
+    if (updateCompanyError) throw updateCompanyError;
+  }
+
   return data;
 }

@@ -134,6 +134,10 @@ export default async function AdminCompaniesPage({ searchParams }: CompaniesPage
             Lokasjon
             <Input name="location" placeholder="Oslo" />
           </label>
+          <label className="text-sm font-semibold text-primary md:col-span-2">
+            Domene (valgfritt)
+            <Input name="domain" placeholder="bedrift.no" />
+          </label>
           <Button className="md:col-span-4" type="submit">
             Opprett bedrift
           </Button>
@@ -298,12 +302,10 @@ export default async function AdminCompaniesPage({ searchParams }: CompaniesPage
                 <option value="platinum">Platinum</option>
               </Select>
             </label>
-            <label className="text-sm font-semibold text-primary">
-              Standtype (valgfritt)
-              <Input name="standType" placeholder="Standard, Premium" />
-            </label>
             <div className="md:col-span-4">
-              <p className="text-sm font-semibold text-primary">Kategorier (velg en eller flere)</p>
+              <p className="text-sm font-semibold text-primary">
+                Velg bedriftens kategori (oppdateres på bedriften og kan endres av bedriften selv)
+              </p>
               <div className="mt-2 grid gap-2 md:grid-cols-3">
                 {[
                   "BYGGINGENIØRER",

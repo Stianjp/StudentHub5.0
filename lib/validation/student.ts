@@ -12,6 +12,19 @@ const commaSeparated = z
       : [],
   );
 
+const stringArray = z.preprocess((value) => {
+  if (Array.isArray(value)) {
+    return value.map((v) => String(v).trim()).filter(Boolean);
+  }
+  if (typeof value === "string") {
+    return value
+      .split(",")
+      .map((v) => v.trim())
+      .filter(Boolean);
+  }
+  return [];
+}, z.array(z.string()));
+
 export const studentProfileSchema = z.object({
   fullName: z.string().min(2, "Navn er påkrevd"),
   email: z.string().email("Ugyldig e-post"),
@@ -20,7 +33,7 @@ export const studentProfileSchema = z.object({
   studyLevel: z.string().min(2, "Nivå er påkrevd"),
   graduationYear: z.coerce.number().int().min(2020).max(2100),
   jobTypes: commaSeparated,
-  interests: commaSeparated,
+  interests: stringArray,
   values: commaSeparated,
   preferredLocations: commaSeparated,
   willingToRelocate: z.coerce.boolean().default(false),

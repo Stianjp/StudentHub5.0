@@ -2,7 +2,6 @@ import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { requireRole } from "@/lib/auth";
 import { getEventWithRegistrations, listCompanies } from "@/lib/admin";
@@ -96,12 +95,10 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
                 <option value="platinum">Platinum</option>
               </Select>
             </label>
-            <label className="text-sm font-semibold text-primary">
-              Standtype (valgfritt)
-              <Input name="standType" placeholder="Standard, Premium" />
-            </label>
             <div className="md:col-span-3">
-              <p className="text-sm font-semibold text-primary">Kategorier (velg en eller flere)</p>
+              <p className="text-sm font-semibold text-primary">
+                Velg bedriftens kategori (oppdateres på bedriften og kan endres av bedriften selv)
+              </p>
               <div className="mt-2 grid gap-2 md:grid-cols-3">
                 {[
                   "BYGGINGENIØRER",
@@ -142,10 +139,6 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
           <input name="eventId" type="hidden" value={eventId} readOnly />
           <input type="hidden" name="returnTo" value={`/admin/events/${eventId}`} />
           <label className="text-sm font-semibold text-primary">
-            Standtype (valgfritt)
-            <Input name="standType" placeholder="Standard, Premium" />
-          </label>
-          <label className="text-sm font-semibold text-primary">
             Pakke
             <Select name="package" defaultValue="standard">
               <option value="standard">Standard</option>
@@ -155,7 +148,9 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
             </Select>
           </label>
           <div>
-            <p className="text-sm font-semibold text-primary">Kategorier (velg en eller flere)</p>
+            <p className="text-sm font-semibold text-primary">
+              Velg bedriftens kategori (oppdateres på bedriften og kan endres av bedriften selv)
+            </p>
             <div className="mt-2 grid gap-2 md:grid-cols-3">
               {[
                 "BYGGINGENIØRER",

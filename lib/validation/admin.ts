@@ -43,6 +43,7 @@ export const createCompanySchema = z.object({
     .or(z.literal("")),
   industry: z.string().optional().or(z.literal("")),
   location: z.string().optional().or(z.literal("")),
+  domain: z.string().optional().or(z.literal("")),
 });
 
 export const companyDomainSchema = z.object({

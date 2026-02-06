@@ -8,6 +8,7 @@ import { getOrCreateStudentForUser } from "@/lib/student";
 import { saveStudentProfile } from "@/app/student/actions";
 import { LikedCompanies } from "@/components/student/liked-companies";
 import { SaveProfileButton } from "@/components/student/save-profile-button";
+import { STUDY_CATEGORIES } from "@/components/event/study-categories";
 
 type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -90,10 +91,26 @@ export default async function StudentProfilePage({ searchParams }: PageProps) {
                 Jobbønske (tags)
                 <Input name="jobTypes" defaultValue={student.job_types.join(", ")} placeholder="Sommerjobb, Internship" />
               </label>
-              <label className="text-sm font-semibold text-surface">
-                Interesser (tags)
-                <Input name="interests" defaultValue={student.interests.join(", ")} placeholder="Frontend, Analyse" />
-              </label>
+              <div className="text-sm font-semibold text-surface">
+                Interesser (velg en eller flere)
+                <div className="mt-2 grid gap-2 md:grid-cols-2">
+                  {STUDY_CATEGORIES.map((category) => (
+                    <label
+                      key={category}
+                      className="flex items-center gap-2 rounded-xl border border-primary/10 bg-surface px-3 py-2 text-sm text-primary"
+                    >
+                      <input
+                        type="checkbox"
+                        name="interests"
+                        value={category}
+                        defaultChecked={student.interests.includes(category)}
+                        className="h-4 w-4 rounded border-primary/30 text-primary focus:ring-primary"
+                      />
+                      <span className="font-semibold text-primary">{category}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">

@@ -38,6 +38,10 @@ function getFormValue(formData: FormData, name: string) {
   return null;
 }
 
+function normalizeDomain(value: string) {
+  return value.trim().toLowerCase().replace(/^@/, "");
+}
+
 function parseTags(value: FormDataEntryValue | FormDataEntryValue[] | null) {
   if (!value) return [];
   if (Array.isArray(value)) {
@@ -133,18 +137,27 @@ export async function createCompanyAction(formData: FormData) {
       orgNumber: getFormValue(formData, "orgNumber"),
       industry: getFormValue(formData, "industry"),
       location: getFormValue(formData, "location"),
+      domain: getFormValue(formData, "domain"),
     });
 
     if (!parsed.success) {
       throw new Error(parsed.error.issues.map((issue) => issue.message).join(", "));
     }
 
-    await createCompany({
+    const company = await createCompany({
       name: parsed.data.name,
       orgNumber: parsed.data.orgNumber || null,
       industry: parsed.data.industry || null,
       location: parsed.data.location || null,
     });
+
+    const normalizedDomain = normalizeDomain(parsed.data.domain || "");
+    if (normalizedDomain) {
+      if (normalizedDomain.includes(" ")) {
+        throw new Error("Ugyldig domene.");
+      }
+      await addCompanyDomain({ companyId: company.id, domain: normalizedDomain });
+    }
 
     revalidatePath("/admin/companies");
     if (typeof returnTo === "string" && returnTo.startsWith("/")) {

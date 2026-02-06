@@ -37,6 +37,7 @@ export async function saveCompanyInfo(formData: FormData) {
     name: formData.get("name"),
     orgNumber: formData.get("orgNumber"),
     industry: formData.get("industry"),
+    industryCategories: formData.getAll("industryCategories"),
     size: formData.get("size"),
     location: formData.get("location"),
     website: formData.get("website"),
@@ -50,12 +51,16 @@ export async function saveCompanyInfo(formData: FormData) {
   const { supabase, company } = await getCompanyContext();
   const now = new Date().toISOString();
 
+  const selectedCategories = parsed.data.industryCategories ?? [];
+  const primaryIndustry = selectedCategories[0] ?? parsed.data.industry ?? null;
+
   const { error } = await supabase
     .from("companies")
     .update({
       name: parsed.data.name,
       org_number: parsed.data.orgNumber || null,
-      industry: parsed.data.industry || null,
+      industry: primaryIndustry || null,
+      recruitment_fields: selectedCategories,
       size: parsed.data.size || null,
       location: parsed.data.location || null,
       website: parsed.data.website ? parsed.data.website : null,

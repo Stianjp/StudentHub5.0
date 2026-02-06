@@ -29,7 +29,7 @@ export async function saveStudentProfile(formData: FormData) {
     studyLevel: formData.get("studyLevel"),
     graduationYear: formData.get("graduationYear"),
     jobTypes: formData.get("jobTypes"),
-    interests: formData.get("interests"),
+    interests: formData.getAll("interests"),
     values: formData.get("values"),
     preferredLocations: formData.get("preferredLocations"),
     willingToRelocate: formData.get("willingToRelocate"),
