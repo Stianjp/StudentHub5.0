@@ -1,0 +1,64 @@
+import { NextResponse } from "next/server";
+import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+
+type Body = {
+  eventId: string;
+  query: string;
+  mode?: "ticket" | "text";
+};
+
+export async function POST(request: Request) {
+  const body = (await request.json().catch(() => null)) as Body | null;
+  const eventId = body?.eventId?.trim();
+  const query = body?.query?.trim();
+
+  if (!eventId || !query) {
+    return NextResponse.json({ error: "Event og søk er påkrevd." }, { status: 400 });
+  }
+
+  const supabase = createAdminSupabaseClient();
+
+  if (body?.mode === "ticket") {
+    const { data, error } = await supabase
+      .from("event_tickets")
+      .select("*, student:students(id, full_name, email, phone, study_program, study_level, study_year)")
+      .eq("event_id", eventId)
+      .eq("ticket_number", query)
+      .limit(20);
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ results: data ?? [] });
+  }
+
+  const { data: students, error: studentError } = await supabase
+    .from("students")
+    .select("id, full_name, email, phone, study_program, study_level, study_year")
+    .or(`full_name.ilike.%${query}%,email.ilike.%${query}%,phone.ilike.%${query}%`)
+    .limit(50);
+
+  if (studentError) return NextResponse.json({ error: studentError.message }, { status: 500 });
+
+  const studentIds = (students ?? []).map((student) => student.id);
+  if (studentIds.length === 0) {
+    return NextResponse.json({ results: [] });
+  }
+
+  const { data: tickets, error: ticketError } = await supabase
+    .from("event_tickets")
+    .select("*")
+    .eq("event_id", eventId)
+    .in("student_id", studentIds)
+    .limit(100);
+
+  if (ticketError) return NextResponse.json({ error: ticketError.message }, { status: 500 });
+
+  const ticketRows = tickets ?? [];
+  const studentMap = new Map((students ?? []).map((student) => [student.id, student]));
+
+  const results = ticketRows.map((ticket) => ({
+    ...ticket,
+    student: studentMap.get(ticket.student_id ?? "") ?? null,
+  }));
+
+  return NextResponse.json({ results });
+}

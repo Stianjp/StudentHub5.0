@@ -10,6 +10,7 @@ import {
 } from "@/lib/student";
 import { createLead, upsertConsentForStudent } from "@/lib/lead";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { sendTransactionalEmail } from "@/lib/resend";
 
 export async function submitStandFlow(formData: FormData) {
   const profile = await requireRole("student");
@@ -84,6 +85,68 @@ export async function submitStandFlow(formData: FormData) {
 
   revalidatePath(`/event/${parsed.data.eventId}/company/${parsed.data.companyId}`);
   revalidatePath("/student/consents");
+}
+
+function generateTicketNumber() {
+  return `T-${Math.random().toString(36).slice(2, 6).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
+}
+
+export async function registerStudentForEvent(formData: FormData) {
+  const profile = await requireRole("student");
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("User not found");
+
+  const eventId = String(formData.get("eventId") ?? "").trim();
+  if (!eventId) throw new Error("Event mangler.");
+
+  const student = await getOrCreateStudentForUser(profile.id, user.email);
+
+  const ticketNumber = generateTicketNumber();
+  const now = new Date().toISOString();
+  const { error: ticketError, data: ticket } = await supabase
+    .from("event_tickets")
+    .insert({
+      event_id: eventId,
+      student_id: student.id,
+      ticket_number: ticketNumber,
+      status: "active",
+      created_at: now,
+      updated_at: now,
+    })
+    .select("*")
+    .single();
+
+  if (ticketError) throw ticketError;
+
+  const { data: event } = await supabase.from("events").select("id, name").eq("id", eventId).single();
+
+  if (user.email) {
+    const ticketPayload = encodeURIComponent(JSON.stringify({ t: ticketNumber, e: eventId }));
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${ticketPayload}`;
+    await sendTransactionalEmail({
+      to: user.email,
+      subject: `Billett til ${event?.name ?? "OSH event"}`,
+      type: "event_confirmation",
+      html: `<p>Hei,</p>
+<p>Du er påmeldt ${event?.name ?? "eventet"}.</p>
+<p>Billettnummer: <strong>${ticketNumber}</strong></p>
+<p>Vis denne QR-koden i check-in:</p>
+<p><img src="${qrUrl}" alt="QR-kode" /></p>`,
+      payload: {
+        eventId,
+        ticketNumber,
+        ticketId: ticket.id,
+      },
+      supabase,
+    });
+  }
+
+  revalidatePath("/student");
+  revalidatePath(`/event/events/${eventId}`);
 }
 
 export async function submitKiosk(formData: FormData) {

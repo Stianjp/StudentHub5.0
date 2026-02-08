@@ -8,6 +8,8 @@ import { getOrCreateStudentForUser } from "@/lib/student";
 import { saveStudentProfile } from "@/app/student/actions";
 import { SaveProfileButton } from "@/components/student/save-profile-button";
 import { STUDY_CATEGORIES } from "@/components/event/study-categories";
+import { listActiveEvents } from "@/lib/events";
+import { registerStudentForEvent } from "@/app/event/actions";
 
 type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -25,6 +27,12 @@ export default async function StudentProfilePage({ searchParams }: PageProps) {
   if (!user) throw new Error("User not found");
 
   const student = await getOrCreateStudentForUser(profile.id, user.email);
+  const events = await listActiveEvents();
+  const { data: tickets } = await supabase
+    .from("event_tickets")
+    .select("id, event_id")
+    .eq("student_id", student.id ?? "");
+  const registeredEventIds = new Set((tickets ?? []).map((ticket) => ticket.event_id));
 
 
   return (
@@ -227,6 +235,36 @@ export default async function StudentProfilePage({ searchParams }: PageProps) {
 
             <SaveProfileButton />
           </form>
+        </Card>
+
+        <Card className="mt-6 flex flex-col gap-4 bg-primary/20 text-surface ring-1 ring-white/10">
+          <h3 className="text-lg font-bold text-surface">Meld deg på events</h3>
+          {events.length === 0 ? (
+            <p className="text-sm text-surface/70">Ingen aktive events tilgjengelig.</p>
+          ) : (
+            <ul className="grid gap-3 text-sm text-surface/80">
+              {events.map((event) => (
+                <li key={event.id} className="flex flex-col gap-2 rounded-xl border border-white/10 bg-primary/30 p-4">
+                  <div>
+                    <p className="font-semibold text-surface">{event.name}</p>
+                    <p className="text-xs text-surface/70">
+                      {new Date(event.starts_at).toLocaleString("nb-NO")} – {new Date(event.ends_at).toLocaleString("nb-NO")}
+                    </p>
+                  </div>
+                  <form action={registerStudentForEvent}>
+                    <input type="hidden" name="eventId" value={event.id} />
+                    <button
+                      type="submit"
+                      className="inline-flex items-center justify-center rounded-xl bg-secondary px-4 py-2 text-xs font-semibold text-primary transition hover:bg-secondary/90 disabled:cursor-not-allowed disabled:opacity-60"
+                      disabled={registeredEventIds.has(event.id)}
+                    >
+                      {registeredEventIds.has(event.id) ? "Allerede påmeldt" : "Meld deg på"}
+                    </button>
+                  </form>
+                </li>
+              ))}
+            </ul>
+          )}
         </Card>
       </div>
     </div>

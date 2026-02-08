@@ -405,6 +405,39 @@ export type Database = {
         };
         Relationships: [];
       };
+      event_tickets: {
+        Row: {
+          id: string;
+          event_id: string;
+          student_id: string | null;
+          ticket_number: string;
+          status: string;
+          checked_in_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          event_id: string;
+          student_id?: string | null;
+          ticket_number: string;
+          status?: string;
+          checked_in_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          event_id?: string;
+          student_id?: string | null;
+          ticket_number?: string;
+          status?: string;
+          checked_in_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       stand_visits: {
         Row: {
           id: string;
