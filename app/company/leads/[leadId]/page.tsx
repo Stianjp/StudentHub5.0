@@ -34,7 +34,7 @@ export default async function CompanyLeadPage({ params }: LeadPageProps) {
   const admin = createAdminSupabaseClient();
   const { data: leadRow, error: leadError } = await admin
     .from("leads")
-    .select("*, student:students(*), event:events(id, name)")
+    .select("*")
     .eq("id", leadId)
     .eq("company_id", companyId)
     .maybeSingle();
@@ -55,7 +55,15 @@ export default async function CompanyLeadPage({ params }: LeadPageProps) {
     .eq("student_id", leadRow.student_id)
     .maybeSingle();
 
-  const student = leadRow.student;
+  const [{ data: student }, { data: event }] = await Promise.all([
+    leadRow.student_id
+      ? admin.from("students").select("*").eq("id", leadRow.student_id).maybeSingle()
+      : Promise.resolve({ data: null }),
+    leadRow.event_id
+      ? admin.from("events").select("id, name").eq("id", leadRow.event_id).maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+
   const level = leadRow.study_level ?? student?.study_level ?? "";
   const year = leadRow.study_year ? `${leadRow.study_year}. år` : "";
 
@@ -64,7 +72,7 @@ export default async function CompanyLeadPage({ params }: LeadPageProps) {
       <SectionHeader
         eyebrow="Lead"
         title={student?.full_name ?? "Ukjent student"}
-        description={leadRow.event?.name ? `Event: ${leadRow.event.name}` : "Uten event"}
+        description={event?.name ? `Event: ${event.name}` : "Uten event"}
         actions={
           <Link
             className="text-sm font-semibold text-primary/70 hover:text-primary"
