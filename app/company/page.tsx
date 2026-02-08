@@ -52,8 +52,8 @@ export default async function CompanyDashboardPage() {
       />
 
       <section className="grid gap-4 md:grid-cols-3">
-        <Stat label="Event-deltakelser" value={registrations.length} hint="Registrerte events" />
-        <Stat label="Leads med samtykke" value={consentedLeads} hint="Kun consent=true" />
+        <Stat label="Event-deltakelser" value={registrations.length} hint="Registrerte events" href="/company/events" />
+        <Stat label="Leads med samtykke" value={consentedLeads} hint="Kun consent=true" href="/company/leads" />
         <Stat label="Aktive events" value={events.length} hint="Tilgjengelige nå" />
       </section>
 

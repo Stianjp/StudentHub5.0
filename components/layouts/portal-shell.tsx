@@ -27,7 +27,17 @@ export function PortalShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const currentPath = typeof window !== "undefined" ? window.location.pathname : pathname;
+  const rolePrefix = `/${roleKey}`;
+  const basePrefix = pathname?.startsWith(rolePrefix) ? rolePrefix : "";
+  const currentPath = pathname ?? "/";
+
+  function normalizeHref(href: string) {
+    if (!basePrefix && href.startsWith(rolePrefix)) {
+      const stripped = href.replace(rolePrefix, "");
+      return stripped.length === 0 ? "/" : stripped;
+    }
+    return href;
+  }
 
   return (
     <div className={cn("min-h-screen", backgroundClass)}>
@@ -70,14 +80,15 @@ export function PortalShell({
             </p>
             <nav className="flex flex-wrap items-center gap-2">
               {nav.map((item) => {
-                const isRoot = ["/company", "/student", "/admin"].includes(item.href);
+                const itemHref = normalizeHref(item.href);
+                const isRoot = ["/", rolePrefix].includes(itemHref);
                 const isActive = isRoot
-                  ? currentPath === item.href
-                  : currentPath === item.href || currentPath.startsWith(`${item.href}/`);
+                  ? currentPath === itemHref
+                  : currentPath === itemHref || currentPath.startsWith(`${itemHref}/`);
                 return (
                   <Link
                     key={item.href}
-                    href={item.href}
+                    href={itemHref}
                     className={cn("portal-nav-link", isActive && "portal-nav-link--active")}
                   >
                     {item.label}

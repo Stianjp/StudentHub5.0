@@ -26,15 +26,18 @@ export async function GET() {
   }
   const leads = await getCompanyLeads(company.id);
 
-  const rows = leads.map(({ lead, consent, student, event }) => ({
-    lead_id: lead.id,
-    student_id: lead.student_id,
+  const rows = leads.map(({ lead, consent, student, event }) => {
+    const level = lead.study_level ?? student?.study_level ?? "";
+    const year = lead.study_year ?? student?.graduation_year ?? "";
+    const yearLabel = typeof year === "number" && year > 0 ? `${year}. år` : year ? String(year) : "";
+    const studyYearText = [yearLabel, level].filter(Boolean).join(" ").trim();
+
+    return {
     full_name: student?.full_name ?? "",
     email: consent?.consent ? student?.email ?? "" : "",
     phone: consent?.consent ? student?.phone ?? "" : "",
     study_program: lead.field_of_study ?? student?.study_program ?? "",
-    study_level: lead.study_level ?? student?.study_level ?? "",
-    study_year: lead.study_year ?? student?.graduation_year ?? "",
+    study_year_text: studyYearText,
     interests: lead.interests?.join(" | ") ?? "",
     job_types: lead.job_types?.join(" | ") ?? "",
     consent_given: consent?.consent ? "true" : "false",
@@ -42,7 +45,8 @@ export async function GET() {
     source: lead.source,
     event_name: event?.name ?? "",
     created_at: lead.created_at,
-  }));
+    };
+  });
 
   const csv = toCsv(rows);
   const filename = `leads-${company.id}.csv`;

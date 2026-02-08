@@ -72,6 +72,7 @@ export default async function CompanyLeadsPage() {
                     <tr className="text-left text-xs font-semibold uppercase tracking-wide text-primary/60">
                       <th className="px-3 py-2">Navn</th>
                       <th className="px-3 py-2">Studie</th>
+                      <th className="px-3 py-2">År</th>
                       <th className="px-3 py-2">Interesser</th>
                       <th className="px-3 py-2">Kontakt</th>
                       <th className="px-3 py-2">Samtykke</th>
@@ -79,16 +80,27 @@ export default async function CompanyLeadsPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-primary/5">
-                    {rows.map(({ lead, consent, student }) => (
-                      <tr key={lead.id} className="align-top">
-                        <td className="px-3 py-3 font-semibold text-primary">
-                          {student?.full_name ?? "Ukjent student"}
-                        </td>
+                    {rows.map(({ lead, consent, student }) => {
+                      const level = lead.study_level ?? student?.study_level ?? "";
+                      const year = lead.study_year;
+                      const yearLabel = year ? `${year}. år` : "";
+                      const studyYearText = year ? `${yearLabel} ${level ? level.toLowerCase() : ""}`.trim() : "";
+
+                      return (
+                        <tr key={lead.id} className="align-top">
+                          <td className="px-3 py-3 font-semibold text-primary">
+                            <Link className="hover:text-secondary" href={`/company/leads/${lead.id}`}>
+                              {student?.full_name ?? "Ukjent student"}
+                            </Link>
+                          </td>
                         <td className="px-3 py-3 text-ink/80">
                           {lead.field_of_study ?? student?.study_program ?? "—"}
                           <div className="text-xs text-ink/60">
                             {lead.study_level ?? student?.study_level ?? ""}
                           </div>
+                        </td>
+                        <td className="px-3 py-3 text-ink/80">
+                          {studyYearText || "—"}
                         </td>
                         <td className="px-3 py-3 text-ink/80">
                           {lead.interests?.length ? lead.interests.join(", ") : "—"}
@@ -120,7 +132,8 @@ export default async function CompanyLeadsPage() {
                           {lead.source === "stand" ? "Stand" : "Studentportal"}
                         </td>
                       </tr>
-                    ))}
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
