@@ -31,7 +31,7 @@ export const studentProfileSchema = z.object({
   phone: z.string().optional().or(z.literal("")),
   studyProgram: z.string().min(2, "Studie/program er påkrevd"),
   studyLevel: z.string().min(2, "Nivå er påkrevd"),
-  graduationYear: z.coerce.number().int().min(2020).max(2100),
+  studyYear: z.coerce.number().int().min(1).max(5),
   jobTypes: commaSeparated,
   interests: stringArray,
   values: commaSeparated,
@@ -39,6 +39,9 @@ export const studentProfileSchema = z.object({
   willingToRelocate: z.coerce.boolean().default(false),
   likedCompanyIds: commaSeparated,
   about: z.string().max(600).optional().or(z.literal("")),
+  workStyle: z.string().optional().or(z.literal("")),
+  socialProfile: z.string().optional().or(z.literal("")),
+  teamSize: z.string().optional().or(z.literal("")),
 });
 
 export const consentSchema = z.object({

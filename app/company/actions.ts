@@ -121,6 +121,8 @@ export async function saveCompanyBranding(formData: FormData) {
     brandingValues: formData.get("brandingValues"),
     brandingEvp: formData.get("brandingEvp"),
     brandingMessage: formData.get("brandingMessage"),
+    workStyle: formData.get("workStyle"),
+    socialProfile: formData.get("socialProfile"),
   });
 
   if (!parsed.success) {
@@ -136,6 +138,8 @@ export async function saveCompanyBranding(formData: FormData) {
       branding_values: parsed.data.brandingValues,
       branding_evp: parsed.data.brandingEvp || null,
       branding_message: parsed.data.brandingMessage || null,
+      work_style: parsed.data.workStyle || null,
+      social_profile: parsed.data.socialProfile || null,
       updated_at: now,
     })
     .eq("id", company.id);

@@ -77,6 +77,8 @@ export const companyBrandingSchema = z.object({
   brandingValues: commaSeparated,
   brandingEvp: z.string().optional().or(z.literal("")),
   brandingMessage: z.string().optional().or(z.literal("")),
+  workStyle: z.string().optional().or(z.literal("")),
+  socialProfile: z.string().optional().or(z.literal("")),
 });
 
 export const companyEventSignupSchema = z.object({

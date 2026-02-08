@@ -23,7 +23,7 @@ export default async function AdminStudentDetailPage({ params }: PageProps) {
     await Promise.all([
       supabase
         .from("students")
-        .select("id, full_name, email, study_program, study_level, graduation_year, interests")
+        .select("id, full_name, email, study_program, study_level, study_year, graduation_year, interests, work_style, social_profile, team_size")
         .eq("id", studentId)
         .single(),
       supabase
@@ -73,7 +73,7 @@ export default async function AdminStudentDetailPage({ params }: PageProps) {
           </label>
           <label className="text-sm font-semibold text-primary">
             Ferdigår
-            <Input name="graduationYear" type="number" defaultValue={student?.graduation_year ?? ""} />
+            <Input name="graduationYear" type="number" defaultValue={student?.study_year ?? student?.graduation_year ?? ""} />
           </label>
           <label className="text-sm font-semibold text-primary">
             Studie / program

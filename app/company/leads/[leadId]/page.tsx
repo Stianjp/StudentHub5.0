@@ -75,7 +75,7 @@ export default async function CompanyLeadPage({ params }: LeadPageProps) {
         description={event?.name ? `Event: ${event.name}` : "Uten event"}
         actions={
           <Link
-            className="text-sm font-semibold text-primary/70 hover:text-primary"
+            className="inline-flex items-center justify-center rounded-xl border border-primary/20 bg-primary/5 px-4 py-2 text-xs font-semibold text-primary transition hover:border-secondary hover:bg-secondary/10 hover:text-secondary"
             href="/company/leads"
           >
             Tilbake til leads
@@ -105,6 +105,30 @@ export default async function CompanyLeadPage({ params }: LeadPageProps) {
           <div>
             <p className="font-semibold text-primary">Jobbønsker</p>
             <p>{leadRow.job_types?.length ? leadRow.job_types.join(", ") : "—"}</p>
+          </div>
+        </div>
+
+        <div className="grid gap-3">
+          <p className="text-sm font-semibold text-primary">Arbeidspreferanser</p>
+          <div className="flex flex-wrap gap-2 text-xs font-semibold text-primary">
+            {student?.work_style ? (
+              <span className="rounded-full border border-primary/20 bg-primary/5 px-3 py-1">
+                {student.work_style}
+              </span>
+            ) : null}
+            {student?.social_profile ? (
+              <span className="rounded-full border border-primary/20 bg-primary/5 px-3 py-1">
+                {student.social_profile}
+              </span>
+            ) : null}
+            {student?.team_size ? (
+              <span className="rounded-full border border-primary/20 bg-primary/5 px-3 py-1">
+                {student.team_size}
+              </span>
+            ) : null}
+            {!student?.work_style && !student?.social_profile && !student?.team_size ? (
+              <span className="text-ink/60">Ingen preferanser registrert.</span>
+            ) : null}
           </div>
         </div>
 

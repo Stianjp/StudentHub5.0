@@ -25,7 +25,7 @@ export async function updateStudentProfile(formData: FormData) {
   const studyLevel = String(formData.get("studyLevel") ?? "").trim();
   const graduationYearRaw = String(formData.get("graduationYear") ?? "").trim();
   const interests = parseTags(formData.get("interests"));
-  const graduationYear = graduationYearRaw ? Number(graduationYearRaw) : null;
+  const studyYear = graduationYearRaw ? Number(graduationYearRaw) : null;
 
   const supabase = createAdminSupabaseClient();
   const now = new Date().toISOString();
@@ -37,7 +37,7 @@ export async function updateStudentProfile(formData: FormData) {
       email: email || null,
       study_program: studyProgram || null,
       study_level: studyLevel || null,
-      graduation_year: Number.isNaN(graduationYear) ? null : graduationYear,
+      study_year: Number.isNaN(studyYear) ? null : studyYear,
       interests,
       updated_at: now,
     })
@@ -52,7 +52,7 @@ export async function updateStudentProfile(formData: FormData) {
         student_id: studentId,
         study_program: studyProgram || null,
         study_level: studyLevel || null,
-        graduation_year: Number.isNaN(graduationYear) ? null : graduationYear,
+        study_year: Number.isNaN(studyYear) ? null : studyYear,
         interests,
         updated_at: now,
       },

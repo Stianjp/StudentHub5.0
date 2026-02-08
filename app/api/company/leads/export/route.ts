@@ -28,7 +28,7 @@ export async function GET() {
 
   const rows = leads.map(({ lead, consent, student, event }) => {
     const level = lead.study_level ?? student?.study_level ?? "";
-    const year = lead.study_year ?? student?.graduation_year ?? "";
+    const year = lead.study_year ?? student?.study_year ?? student?.graduation_year ?? "";
     const yearLabel = typeof year === "number" && year > 0 ? `${year}. år` : year ? String(year) : "";
     const studyYearText = [yearLabel, level].filter(Boolean).join(" ").trim();
 

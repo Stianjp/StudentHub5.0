@@ -65,7 +65,7 @@ export async function submitStandFlow(formData: FormData) {
     interests: Object.values(parsed.data.answers ?? {}).filter(Boolean) as string[],
     jobTypes: student.job_types ?? [],
     studyLevel: student.study_level,
-    studyYear: student.graduation_year,
+    studyYear: student.study_year ?? student.graduation_year,
     fieldOfStudy: student.study_program,
     consentGiven: parsed.data.consent,
     source: "stand",

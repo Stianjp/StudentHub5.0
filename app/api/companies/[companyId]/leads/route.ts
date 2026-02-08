@@ -56,7 +56,7 @@ export async function POST(request: Request, { params }: RouteParams) {
     interests: parsed.data.interests,
     jobTypes: parsed.data.jobTypes,
     studyLevel: parsed.data.studyLevel || student.study_level,
-    studyYear: parsed.data.studyYear ? Number(parsed.data.studyYear) : student.graduation_year,
+    studyYear: parsed.data.studyYear ? Number(parsed.data.studyYear) : student.study_year ?? student.graduation_year,
     fieldOfStudy: parsed.data.fieldOfStudy || student.study_program,
     consentGiven: parsed.data.consentToBeContacted,
     source: parsed.data.source,
@@ -108,7 +108,7 @@ export async function GET(request: Request, { params }: RouteParams) {
 
   const { data: leads, error } = await admin
     .from("leads")
-    .select("*, student:students(id, full_name, email, phone, study_program, study_level, graduation_year)")
+    .select("*, student:students(id, full_name, email, phone, study_program, study_level, study_year, graduation_year)")
     .eq("company_id", companyId)
     .order("created_at", { ascending: false });
   if (error) {

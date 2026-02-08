@@ -29,7 +29,7 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
     // fall back
   }
 
-  let baseQuery = supabase.from("students").select("id, full_name, email, study_program, study_level, graduation_year", { count: "exact" });
+  let baseQuery = supabase.from("students").select("id, full_name, email, study_program, study_level, study_year, graduation_year", { count: "exact" });
 
   if (query) {
     baseQuery = baseQuery.or(`full_name.ilike.%${query}%,email.ilike.%${query}%,study_program.ilike.%${query}%`);
@@ -100,7 +100,7 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
                 <td className="px-4 py-3 text-ink/80">{student.email ?? "—"}</td>
                 <td className="px-4 py-3 text-ink/80">{student.study_program ?? "—"}</td>
                 <td className="px-4 py-3 text-ink/80">{student.study_level ?? "—"}</td>
-                <td className="px-4 py-3 text-ink/80">{student.graduation_year ?? "—"}</td>
+                <td className="px-4 py-3 text-ink/80">{student.study_year ?? student.graduation_year ?? "—"}</td>
               </tr>
             ))}
           </tbody>
