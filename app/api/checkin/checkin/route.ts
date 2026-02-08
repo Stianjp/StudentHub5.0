@@ -25,10 +25,20 @@ export async function POST(request: Request) {
     .update({ checked_in_at: now, status: "checked_in", updated_at: now })
     .eq("id", ticketId)
     .eq("event_id", eventId)
-    .select("*, student:students(id, full_name, email, phone, study_program, study_level, study_year)")
+    .select("*")
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  let student: { full_name: string | null; email: string | null; phone: string | null; study_program: string | null; study_level: string | null; study_year: number | null } | null = null;
+  if (ticket?.student_id) {
+    const { data: studentRow } = await supabase
+      .from("students")
+      .select("full_name, email, phone, study_program, study_level, study_year")
+      .eq("id", ticket.student_id)
+      .maybeSingle();
+    student = studentRow ?? null;
+  }
 
   if (printerUrl) {
     await fetch(printerUrl, {
@@ -36,12 +46,12 @@ export async function POST(request: Request) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         ticketNumber: ticket.ticket_number,
-        fullName: ticket.student?.full_name ?? "",
-        studyProgram: ticket.student?.study_program ?? "",
-        studyLevel: ticket.student?.study_level ?? "",
-        studyYear: ticket.student?.study_year ?? "",
-        email: ticket.student?.email ?? "",
-        phone: ticket.student?.phone ?? "",
+        fullName: student?.full_name ?? "",
+        studyProgram: student?.study_program ?? "",
+        studyLevel: student?.study_level ?? "",
+        studyYear: student?.study_year ?? "",
+        email: student?.email ?? "",
+        phone: student?.phone ?? "",
       }),
     }).catch(() => null);
   }
