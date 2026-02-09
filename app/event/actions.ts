@@ -231,6 +231,7 @@ export async function registerAttendeeForEvent(formData: FormData) {
   const fullName = String(formData.get("fullName") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
   const phone = String(formData.get("phone") ?? "").trim();
+  const companyIds = formData.getAll("companyIds").map((value) => String(value)).filter(Boolean);
 
   if (!eventId || !fullName || !email || !phone) {
     throw new Error("Navn, e-post og telefon er påkrevd.");
@@ -239,9 +240,17 @@ export async function registerAttendeeForEvent(formData: FormData) {
   await ensureCapacity(supabase, eventId);
   const ticket = await createTicketNumber(supabase, eventId);
   const now = new Date().toISOString();
+
+  const { data: matchedStudent } = await supabase
+    .from("students")
+    .select("id, email, full_name, phone, study_program, study_level, study_year, graduation_year, interests, job_types")
+    .eq("email", email)
+    .maybeSingle();
+
   const { error: attachError } = await supabase
     .from("event_tickets")
     .update({
+      student_id: matchedStudent?.id ?? null,
       attendee_name: fullName,
       attendee_email: email,
       attendee_phone: phone || null,
@@ -250,6 +259,43 @@ export async function registerAttendeeForEvent(formData: FormData) {
     .eq("id", ticket.id);
 
   if (attachError) throw attachError;
+
+  if (matchedStudent) {
+    await supabase
+      .from("students")
+      .update({
+        full_name: matchedStudent.full_name ?? fullName,
+        phone: matchedStudent.phone ?? phone,
+        updated_at: now,
+      })
+      .eq("id", matchedStudent.id);
+
+    if (companyIds.length > 0) {
+      await Promise.all(
+        companyIds.map(async (companyId) => {
+          await upsertConsentForStudent({
+            studentId: matchedStudent.id,
+            companyId,
+            eventId,
+            consentGiven: true,
+            source: "ticket",
+          });
+          await createLead({
+            student: matchedStudent,
+            companyId,
+            eventId,
+            interests: matchedStudent.interests ?? [],
+            jobTypes: matchedStudent.job_types ?? [],
+            studyLevel: matchedStudent.study_level,
+            studyYear: matchedStudent.study_year ?? matchedStudent.graduation_year,
+            fieldOfStudy: matchedStudent.study_program,
+            consentGiven: true,
+            source: "ticket",
+          });
+        }),
+      );
+    }
+  }
 
   const { data: event } = await supabase.from("events").select("id, name").eq("id", eventId).single();
   const ticketPayload = encodeURIComponent(JSON.stringify({ t: ticket.ticket_number, e: eventId }));
