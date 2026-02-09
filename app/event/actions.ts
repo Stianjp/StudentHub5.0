@@ -274,6 +274,13 @@ export async function registerAttendeeForEvent(formData: FormData) {
   if (attachError) throw attachError;
 
   if (matchedStudent) {
+    const { data: fullStudent } = await supabase
+      .from("students")
+      .select("*")
+      .eq("id", matchedStudent.id)
+      .single();
+    const leadStudent = fullStudent ?? matchedStudent;
+
     await supabase
       .from("students")
       .update({
@@ -294,14 +301,14 @@ export async function registerAttendeeForEvent(formData: FormData) {
             source: "ticket",
           });
           await createLead({
-            student: matchedStudent,
+            student: leadStudent,
             companyId,
             eventId,
-            interests: matchedStudent.interests ?? [],
-            jobTypes: matchedStudent.job_types ?? [],
-            studyLevel: matchedStudent.study_level,
-            studyYear: matchedStudent.study_year ?? matchedStudent.graduation_year,
-            fieldOfStudy: matchedStudent.study_program,
+            interests: leadStudent.interests ?? [],
+            jobTypes: leadStudent.job_types ?? [],
+            studyLevel: leadStudent.study_level,
+            studyYear: leadStudent.study_year ?? leadStudent.graduation_year,
+            fieldOfStudy: leadStudent.study_program,
             consentGiven: true,
             source: "ticket",
           });
