@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Stat } from "@/components/ui/stat";
-import { listEventsWithStats } from "@/lib/admin";
+import { listCompanyAccessRequests, listEventsWithStats } from "@/lib/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { cn } from "@/lib/utils";
@@ -18,12 +18,13 @@ export default async function AdminOverviewPage() {
     // fall back to session-based client
   }
 
-  const [events, companiesCount, studentsCount, visitsCount, leadsCount] = await Promise.all([
+  const [events, companiesCount, studentsCount, visitsCount, leadsCount, accessRequests] = await Promise.all([
     listEventsWithStats(),
     supabase.from("companies").select("id", { count: "exact", head: true }),
     supabase.from("students").select("id", { count: "exact", head: true }),
     supabase.from("stand_visits").select("id", { count: "exact", head: true }),
     supabase.from("consents").select("id", { count: "exact", head: true }).eq("consent", true),
+    listCompanyAccessRequests(),
   ]);
 
   return (
@@ -40,6 +41,22 @@ export default async function AdminOverviewPage() {
         <Stat label="Standbesøk" value={visitsCount.count ?? 0} />
         <Stat label="Leads" value={leadsCount.count ?? 0} hint="Consent=true" />
       </div>
+      <Card className="flex flex-col gap-2 text-sm text-ink/80">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-primary/60">Tilgangsforespørsler</p>
+            <p className="text-lg font-bold text-primary">{accessRequests.length}</p>
+          </div>
+          <Link className="button-link text-xs" href="/admin/companies#tilgangsforesporsler">
+            Se forespørsler
+          </Link>
+        </div>
+        {accessRequests.length === 0 ? (
+          <p className="text-xs text-ink/70">Ingen nye forespørsler akkurat nå.</p>
+        ) : (
+          <p className="text-xs text-ink/70">Du har {accessRequests.length} forespørsel(er) som venter.</p>
+        )}
+      </Card>
 
       <Card className="flex flex-col gap-4">
         <div className="flex items-center justify-between">

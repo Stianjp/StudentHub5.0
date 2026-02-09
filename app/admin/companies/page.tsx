@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Select } from "@/components/ui/select";
-import { addCompanyDomainAction, approveCompanyAccessAction, createCompanyAction, inviteCompany, registerCompany, setPackage } from "@/app/admin/actions";
+import { addCompanyDomainAction, approveCompanyAccessAction, createCompanyAction, registerCompany, setPackage } from "@/app/admin/actions";
 import { listCompanies, listCompanyAccessRequests, listCompanyDomains } from "@/lib/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -98,9 +98,9 @@ export default async function AdminCompaniesPage({ searchParams }: CompaniesPage
     <div className="flex flex-col gap-8">
       <SectionHeader
         eyebrow="Bedrifter"
-        title="Invitasjoner og pakker"
-        description="Sett pakker per bedrift per event. Connect Hub 2026-pakker styrer ROI-tilgang."
-        actions={<Link className="text-sm font-semibold text-primary/70 hover:text-primary" href="/admin/events">Administrer events</Link>}
+        title="Bedriftadministrasjon"
+        description="Registrer bedrifter, gi tilgang og koble dem til events."
+        actions={<Link className="button-link text-xs" href="/admin/events">Administrer events</Link>}
       />
 
       {saved ? (
@@ -114,7 +114,7 @@ export default async function AdminCompaniesPage({ searchParams }: CompaniesPage
         </Card>
       ) : null}
 
-      <Card className="flex flex-col gap-4">
+      <Card id="registrer-bedrift" className="flex flex-col gap-4">
         <h3 className="text-lg font-bold text-primary">Opprett bedrift</h3>
         <form action={createCompanyAction} className="grid gap-3 md:grid-cols-4">
           <input type="hidden" name="returnTo" value="/admin/companies" />
@@ -144,7 +144,7 @@ export default async function AdminCompaniesPage({ searchParams }: CompaniesPage
         </form>
       </Card>
 
-      <Card className="flex flex-col gap-4">
+      <Card id="tilgangsforesporsler" className="flex flex-col gap-4">
         <h3 className="text-lg font-bold text-primary">Domener for bedrifts-tilgang</h3>
         {companies.length === 0 ? (
           <p className="text-sm text-ink/70">Opprett en bedrift før du legger til domene.</p>
@@ -228,45 +228,7 @@ export default async function AdminCompaniesPage({ searchParams }: CompaniesPage
         )}
       </Card>
 
-      <Card className="flex flex-col gap-4">
-        <h3 className="text-lg font-bold text-primary">Inviter bedrift (e-post)</h3>
-        {filteredCompanies.length === 0 ? (
-          <p className="text-sm text-ink/70">Ingen bedrifter å invitere. Fjern filter eller opprett en bedrift.</p>
-        ) : (
-          <form action={inviteCompany} className="grid gap-3 md:grid-cols-3">
-            <input type="hidden" name="returnTo" value="/admin/companies" />
-            <label className="text-sm font-semibold text-primary">
-              Event
-              <Select name="eventId" required defaultValue={events[0]?.id}>
-                {events.map((event) => (
-                  <option key={event.id} value={event.id}>
-                    {event.name}
-                  </option>
-                ))}
-              </Select>
-            </label>
-            <label className="text-sm font-semibold text-primary">
-              Bedrift
-              <Select name="companyId" required defaultValue={filteredCompanies[0]?.id}>
-                {filteredCompanies.map((company) => (
-                  <option key={company.id} value={company.id}>
-                    {company.name}
-                  </option>
-                ))}
-              </Select>
-            </label>
-            <label className="text-sm font-semibold text-primary md:col-span-2">
-              Kontakt e-post
-              <Input name="email" required placeholder="kontakt@bedrift.no" />
-            </label>
-            <Button className="md:col-span-3" type="submit">
-              Send invitasjon
-            </Button>
-          </form>
-        )}
-      </Card>
-
-      <Card className="flex flex-col gap-4">
+      <Card id="registrer-bedrift-event" className="flex flex-col gap-4">
         <h3 className="text-lg font-bold text-primary">Registrer bedrift til event</h3>
         {filteredCompanies.length === 0 ? (
           <p className="text-sm text-ink/70">Ingen bedrifter å registrere. Fjern filter eller opprett en bedrift.</p>
@@ -340,7 +302,47 @@ export default async function AdminCompaniesPage({ searchParams }: CompaniesPage
         )}
       </Card>
 
-      <section className="grid gap-4">
+      <section id="oversikt-bedrifter-event" className="grid gap-4">
+        <Card className="overflow-x-auto">
+          <h3 className="px-4 py-4 text-lg font-bold text-primary">Oversikt over bedrifter til event</h3>
+          <table className="min-w-full divide-y divide-primary/10 text-sm">
+            <thead>
+              <tr className="text-left text-xs font-semibold uppercase tracking-wide text-primary/60">
+                <th className="px-4 py-3">Bedrift</th>
+                <th className="px-4 py-3">Event</th>
+                <th className="px-4 py-3">Pakke</th>
+                <th className="px-4 py-3">Handling</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-primary/5">
+              {(eventCompanies ?? []).map((row) => {
+                const company = companies.find((c) => c.id === row.company_id);
+                const event = events.find((e) => e.id === row.event_id);
+                return (
+                  <tr key={row.id}>
+                    <td className="px-4 py-3 font-semibold text-primary">{company?.name ?? "Bedrift"}</td>
+                    <td className="px-4 py-3 text-ink/80">{event?.name ?? "Event"}</td>
+                    <td className="px-4 py-3 text-ink/80">{packageLabel(row.package)}</td>
+                    <td className="px-4 py-3">
+                      <Link className="text-xs font-semibold text-primary/70 hover:text-primary" href={`/admin/events/${row.event_id}`}>
+                        Rediger
+                      </Link>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          {eventCompanies.length === 0 ? (
+            <p className="px-4 py-4 text-sm text-ink/70">Ingen bedrifter registrert på events enda.</p>
+          ) : null}
+        </Card>
+
+        <Card id="oversikt-bedrifter" className="flex flex-col gap-3">
+          <h3 className="text-lg font-bold text-primary">Oversikt bedrifter</h3>
+          <p className="text-sm text-ink/70">Søk, sorter og administrer alle bedrifter.</p>
+        </Card>
+
         <Card className="flex flex-col gap-3">
           <h3 className="text-lg font-bold text-primary">Søk i bedrifter</h3>
           <form className="grid gap-3 md:grid-cols-4" method="get">

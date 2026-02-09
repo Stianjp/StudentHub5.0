@@ -116,4 +116,48 @@ button:active:not(:disabled) {
   .portal-top-link:focus-visible {
     box-shadow: 0 0 0 2px rgba(254, 154, 112, 0.7), 0 0 0 4px #140249;
   }
+
+  .portal-nav-group {
+    position: relative;
+  }
+
+  .portal-nav-dropdown {
+    position: absolute;
+    left: 0;
+    top: calc(100% + 0.5rem);
+    min-width: 220px;
+    border-radius: 16px;
+    border: 1px solid rgba(254, 154, 112, 0.3);
+    background: rgba(20, 2, 73, 0.95);
+    box-shadow: 0 16px 40px rgba(5, 0, 25, 0.4);
+    padding: 0.5rem;
+    display: none;
+    z-index: 30;
+  }
+
+  .portal-nav-group:hover .portal-nav-dropdown,
+  .portal-nav-group:focus-within .portal-nav-dropdown {
+    display: grid;
+    gap: 0.35rem;
+  }
+
+  .portal-nav-dropdown-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 12px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #FFFFFF;
+    border: 1px solid transparent;
+    transition: all 150ms ease;
+  }
+
+  .portal-nav-dropdown-link:hover {
+    color: #FE9A70;
+    border-color: rgba(254, 154, 112, 0.5);
+    background: rgba(254, 154, 112, 0.12);
+    box-shadow: 0 0 0 2px rgba(254, 154, 112, 0.3);
+  }
 }

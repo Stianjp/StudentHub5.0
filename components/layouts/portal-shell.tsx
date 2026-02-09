@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { LogoutButton } from "@/components/navigation/logout-button";
 import { SessionGuard } from "@/components/supabase/session-guard";
 
-type NavItem = { href: string; label: string };
+type NavItem = { href: string; label: string; children?: { href: string; label: string }[] };
 
 export function PortalShell({
   roleLabel,
@@ -85,6 +85,25 @@ export function PortalShell({
                 const isActive = isRoot
                   ? currentPath === itemHref
                   : currentPath === itemHref || currentPath.startsWith(`${itemHref}/`);
+                if (item.children && item.children.length > 0) {
+                  return (
+                    <div key={item.href} className="portal-nav-group">
+                      <Link
+                        href={itemHref}
+                        className={cn("portal-nav-link", isActive && "portal-nav-link--active")}
+                      >
+                        {item.label}
+                      </Link>
+                      <div className="portal-nav-dropdown">
+                        {item.children.map((child) => (
+                          <Link key={child.href} href={normalizeHref(child.href)} className="portal-nav-dropdown-link">
+                            {child.label}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                }
                 return (
                   <Link
                     key={item.href}

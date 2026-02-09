@@ -29,7 +29,7 @@ export default async function AdminEventsPage() {
         description="Events er kjernen for stand-QR, matching og ROI."
       />
 
-      <Card className="flex flex-col gap-4">
+      <Card id="registrer-event" className="flex flex-col gap-4">
         <h3 className="text-lg font-bold text-primary">Nytt event</h3>
         <form action={saveEvent} className="grid gap-3 md:grid-cols-2">
           <label className="text-sm font-semibold text-primary md:col-span-2">
@@ -66,7 +66,7 @@ export default async function AdminEventsPage() {
         </form>
       </Card>
 
-      <section className="grid gap-4">
+      <section id="oversikt-eventer" className="grid gap-4">
         {events.map((event) => (
           <Card key={event.id} className="flex flex-col gap-3">
             <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
