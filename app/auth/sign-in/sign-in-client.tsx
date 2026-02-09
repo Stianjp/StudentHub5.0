@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -36,6 +36,17 @@ export function SignInClient({
   const [error, setError] = useState<string | null>(null);
   const allowRegister = allowedRole !== "admin";
   const errorId = "auth-error";
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ error }) => {
+      const message = error?.message?.toLowerCase() ?? "";
+      const code = (error as { code?: string })?.code;
+      if (code === "refresh_token_not_found" || message.includes("refresh token")) {
+        void supabase.auth.signOut();
+      }
+    });
+  }, []);
 
 
   const title = useMemo(() => {
@@ -158,10 +169,16 @@ export function SignInClient({
 
     if (signInError) {
       setStatus("error");
-      const message = signInError.message.toLowerCase().includes("confirm") ||
-        signInError.message.toLowerCase().includes("verified")
-        ? "Bekreft e-posten din før du kan logge inn."
-        : "Feil e-post eller passord. Prøv igjen.";
+      const lower = signInError.message.toLowerCase();
+      const rateLimited =
+        signInError.status === 429 ||
+        (signInError as { code?: string })?.code === "over_email_send_rate_limit" ||
+        lower.includes("rate limit");
+      const message = rateLimited
+        ? "For mange forsøk på kort tid. Vent litt og prøv igjen."
+        : lower.includes("confirm") || lower.includes("verified")
+          ? "Bekreft e-posten din før du kan logge inn."
+          : "Feil e-post eller passord. Prøv igjen.";
       setError(message);
       return;
     }
