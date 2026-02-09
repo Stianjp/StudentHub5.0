@@ -36,6 +36,11 @@ export default async function StudentDashboardPage() {
   const student = await getOrCreateStudentForUser(profile.id, user.email);
   const completion = calcProfileCompletion(student);
 
+  let color = "#70C08E";
+  if (completion <= 30) color = "#D94848";
+  else if (completion <= 75) color = "#F4A261";
+  const showCheck = completion === 100;
+
   return (
     <div className="flex flex-col gap-8">
       <SectionHeader
@@ -47,7 +52,9 @@ export default async function StudentDashboardPage() {
       <div className="grid gap-4 md:grid-cols-2">
         <Card className="flex flex-col gap-3">
           <h3 className="text-lg font-bold text-primary">Registreringsstatus</h3>
-          <p className="text-4xl font-bold text-primary">{completion}%</p>
+          <p className="text-4xl font-bold" style={{ color }}>
+            {completion}% {showCheck ? "✓" : ""}
+          </p>
           <p className="text-sm text-ink/70">Fyll ut profilen for bedre matching.</p>
           <Link className="button-link text-xs" href="/student">
             Oppdater profil
