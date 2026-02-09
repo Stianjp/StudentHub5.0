@@ -4,7 +4,9 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getOrCreateStudentForUser } from "@/lib/student";
 
 const nav = [
+  { href: "/student/dashboard", label: "Dashboard" },
   { href: "/student", label: "Profil" },
+  { href: "/student/events", label: "Påmelding til event" },
   { href: "/student/consents", label: "Samtykker" },
 ];
 

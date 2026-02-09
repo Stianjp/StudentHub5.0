@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -28,6 +28,17 @@ type TicketRow = {
   } | null;
 };
 
+type PrintPayload = {
+  ticketNumber: string;
+  fullName: string;
+  studyProgram: string;
+  studyLevel: string;
+  studyYear: number | "";
+  email: string;
+  phone: string;
+  companyName: string;
+};
+
 export function CheckinClient({ eventId }: { eventId: string }) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<TicketRow[]>([]);
@@ -36,6 +47,11 @@ export function CheckinClient({ eventId }: { eventId: string }) {
   const [printerUrl, setPrinterUrl] = useState<string>("");
   const [filter, setFilter] = useState<"all" | "student" | "company">("all");
   const [activeQuery, setActiveQuery] = useState<string>("");
+  const [totalCount, setTotalCount] = useState<number>(0);
+  const [checkedInCount, setCheckedInCount] = useState<number>(0);
+  const [totalAllCount, setTotalAllCount] = useState<number>(0);
+  const [checkedInAllCount, setCheckedInAllCount] = useState<number>(0);
+  const [lastPrint, setLastPrint] = useState<PrintPayload | null>(null);
 
   const parsedQr = useMemo(() => {
     const trimmed = query.trim();
@@ -73,10 +89,17 @@ export function CheckinClient({ eventId }: { eventId: string }) {
     const payload = await response.json();
     setResults(payload?.results ?? []);
     setActiveQuery(query.trim());
+    const total = payload?.results?.length ?? 0;
+    const checked = (payload?.results ?? []).filter((row: TicketRow) => Boolean(row.checked_in_at)).length;
+    setTotalCount(total);
+    setCheckedInCount(checked);
     setStatus("success");
   }
 
-  async function loadParticipants(nextFilter?: "all" | "student" | "company") {
+  async function loadParticipants(
+    nextFilter?: "all" | "student" | "company",
+    updateTotals: boolean = true,
+  ) {
     setStatus("loading");
     setMessage(null);
     const response = await fetch(`/api/checkin/search`, {
@@ -97,6 +120,14 @@ export function CheckinClient({ eventId }: { eventId: string }) {
     const payload = await response.json();
     setResults(payload?.results ?? []);
     setActiveQuery("");
+    const total = payload?.results?.length ?? 0;
+    const checked = (payload?.results ?? []).filter((row: TicketRow) => Boolean(row.checked_in_at)).length;
+    setTotalCount(total);
+    setCheckedInCount(checked);
+    if (updateTotals) {
+      setTotalAllCount(total);
+      setCheckedInAllCount(checked);
+    }
     setStatus("success");
   }
 
@@ -111,16 +142,17 @@ export function CheckinClient({ eventId }: { eventId: string }) {
       await lookupTickets(nextFilter);
       return;
     }
-    await loadParticipants(nextFilter);
+    await loadParticipants(nextFilter, nextFilter === "all");
   }
 
   async function clearSearch() {
     setQuery("");
     setActiveQuery("");
-    await loadParticipants(filter);
+    await loadParticipants(filter, filter === "all");
   }
 
   async function checkinAndPrint(ticketId: string) {
+    const existing = results.find((row) => row.id === ticketId);
     setStatus("loading");
     setMessage(null);
     const response = await fetch(`/api/checkin/checkin`, {
@@ -135,7 +167,15 @@ export function CheckinClient({ eventId }: { eventId: string }) {
       return;
     }
     const payload = await response.json();
+    const printPayload = payload.print as PrintPayload | undefined;
     setResults((prev) => prev.map((row) => (row.id === ticketId ? { ...row, ...payload.ticket } : row)));
+    if (payload.ticket?.checked_in_at && !existing?.checked_in_at) {
+      setCheckedInCount((prev) => prev + 1);
+      setCheckedInAllCount((prev) => prev + 1);
+    }
+    if (printPayload) {
+      setLastPrint(printPayload);
+    }
     setStatus("success");
     setMessage("Sjekk inn OK.");
   }
@@ -186,16 +226,13 @@ export function CheckinClient({ eventId }: { eventId: string }) {
       <Card className="flex flex-col gap-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h3 className="text-lg font-bold text-primary">Påmeldte deltakere</h3>
+          <div className="text-xs font-semibold text-primary/70">
+            Sjekket inn {checkedInAllCount}/{totalAllCount}
+          </div>
           <div className="flex flex-wrap gap-2 text-sm">
-            <Button type="button" variant={filter === "all" ? "primary" : "secondary"} onClick={() => handleFilterChange("all")}>
-              Alle
-            </Button>
-            <Button type="button" variant={filter === "student" ? "primary" : "secondary"} onClick={() => handleFilterChange("student")}>
-              Studenter
-            </Button>
-            <Button type="button" variant={filter === "company" ? "primary" : "secondary"} onClick={() => handleFilterChange("company")}>
-              Bedrifter
-            </Button>
+            <Button type="button" variant={filter === "all" ? "primary" : "secondary"} onClick={() => handleFilterChange("all")}>Alle</Button>
+            <Button type="button" variant={filter === "student" ? "primary" : "secondary"} onClick={() => handleFilterChange("student")}>Studenter</Button>
+            <Button type="button" variant={filter === "company" ? "primary" : "secondary"} onClick={() => handleFilterChange("company")}>Bedrifter</Button>
           </div>
         </div>
         {results.length === 0 ? (
@@ -206,12 +243,8 @@ export function CheckinClient({ eventId }: { eventId: string }) {
               <div key={ticket.id} className="flex flex-col gap-2 rounded-xl border border-primary/10 bg-primary/5 p-3 text-sm">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <p className="font-semibold text-primary">
-                      {ticket.student?.full_name ?? ticket.attendee_name ?? "Ukjent deltaker"}
-                    </p>
-                    <p className="text-xs text-ink/60">
-                      {ticket.student?.email ?? ticket.attendee_email ?? "—"} · {ticket.student?.phone ?? ticket.attendee_phone ?? "—"}
-                    </p>
+                    <p className="font-semibold text-primary">{ticket.student?.full_name ?? ticket.attendee_name ?? "Ukjent deltaker"}</p>
+                    <p className="text-xs text-ink/60">{ticket.student?.email ?? ticket.attendee_email ?? "—"} · {ticket.student?.phone ?? ticket.attendee_phone ?? "—"}</p>
                     <p className="text-xs text-ink/60">
                       {ticket.company?.name ? `Bedrift: ${ticket.company.name}` : ticket.company ? "Bedrift" : ticket.student ? "Student" : "Andre"}
                     </p>
@@ -228,6 +261,18 @@ export function CheckinClient({ eventId }: { eventId: string }) {
           </div>
         )}
       </Card>
+
+      {lastPrint ? (
+        <Card className="flex flex-col gap-2 text-xs text-ink/70">
+          <p className="text-sm font-semibold text-primary">Siste print</p>
+          <p>Navn: {lastPrint.fullName || "—"}</p>
+          <p>E-post: {lastPrint.email || "—"}</p>
+          <p>Telefon: {lastPrint.phone || "—"}</p>
+          <p>Studie: {lastPrint.studyProgram || "—"} {lastPrint.studyLevel ? `· ${lastPrint.studyLevel}` : ""} {lastPrint.studyYear ? `· ${lastPrint.studyYear}. år` : ""}</p>
+          <p>Bedrift: {lastPrint.companyName || "—"}</p>
+          <p>Billett: {lastPrint.ticketNumber}</p>
+        </Card>
+      ) : null}
     </div>
   );
 }

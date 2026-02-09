@@ -1,5 +1,4 @@
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Textarea } from "@/components/ui/textarea";
 import { requireRole } from "@/lib/auth";
@@ -8,9 +7,8 @@ import { getOrCreateStudentForUser } from "@/lib/student";
 import { saveStudentProfile } from "@/app/student/actions";
 import { SaveProfileButton } from "@/components/student/save-profile-button";
 import { STUDY_CATEGORIES } from "@/components/event/study-categories";
-import { listActiveEvents, listEventCompaniesForEvents } from "@/lib/events";
-import { registerStudentForEvent } from "@/app/event/actions";
-import { CompanyInterestSelector } from "@/components/event/company-interest-selector";
+import { listActiveEvents } from "@/lib/events";
+import { Input } from "@/components/ui/input";
 
 type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -28,19 +26,11 @@ export default async function StudentProfilePage({ searchParams }: PageProps) {
   if (!user) throw new Error("User not found");
 
   const student = await getOrCreateStudentForUser(profile.id, user.email);
-  const events = await listActiveEvents();
-  const eventCompanies = events.length ? await listEventCompaniesForEvents(events.map((event) => event.id)) : [];
-  const companyMap = new Map<string, Array<{ id: string; name: string }>>();
-  eventCompanies.forEach((row) => {
-    const existing = companyMap.get(row.event_id) ?? [];
-    existing.push({ id: row.company.id, name: row.company.name });
-    companyMap.set(row.event_id, existing);
-  });
-  const { data: tickets } = await supabase
+  await listActiveEvents();
+  await supabase
     .from("event_tickets")
-    .select("id, event_id")
+    .select("id", { count: "exact", head: true })
     .eq("student_id", student.id ?? "");
-  const registeredEventIds = new Set((tickets ?? []).map((ticket) => ticket.event_id));
 
 
   return (
@@ -245,52 +235,10 @@ export default async function StudentProfilePage({ searchParams }: PageProps) {
           </form>
         </Card>
 
-        <Card className="mt-6 flex flex-col gap-4 bg-primary/20 text-surface ring-1 ring-white/10">
-          <h3 className="text-lg font-bold text-surface">Meld deg på events</h3>
-          {events.length === 0 ? (
-            <p className="text-sm text-surface/70">Ingen aktive events tilgjengelig.</p>
-          ) : (
-            <ul className="grid gap-3 text-sm text-surface/80">
-              {events.map((event) => (
-                <li key={event.id} className="flex flex-col gap-2 rounded-xl border border-white/10 bg-primary/30 p-4">
-                  <div>
-                    <p className="font-semibold text-surface">{event.name}</p>
-                    <p className="text-xs text-surface/70">
-                      {new Date(event.starts_at).toLocaleString("nb-NO")} – {new Date(event.ends_at).toLocaleString("nb-NO")}
-                    </p>
-                  </div>
-                  <form action={registerStudentForEvent}>
-                    <input type="hidden" name="eventId" value={event.id} />
-                    <label className="mt-2 block text-xs font-semibold text-surface">
-                      Telefon
-                      <Input
-                        name="phone"
-                        required
-                        placeholder="Telefonnummer"
-                        defaultValue={student.phone ?? ""}
-                        className="mt-1"
-                      />
-                    </label>
-                    <div className="mt-3">
-                      <p className="text-xs font-semibold text-surface">Hvilke bedrifter er du interessert i?</p>
-                      <p className="text-[11px] text-surface/70">Velg alle, noen eller ingen.</p>
-                      <div className="mt-2">
-                        <CompanyInterestSelector companies={companyMap.get(event.id) ?? []} />
-                      </div>
-                    </div>
-                    <button
-                      type="submit"
-                      className="mt-3 inline-flex items-center justify-center rounded-xl bg-secondary px-4 py-2 text-xs font-semibold text-primary transition hover:bg-secondary/90 disabled:cursor-not-allowed disabled:opacity-60"
-                      disabled={registeredEventIds.has(event.id)}
-                    >
-                      {registeredEventIds.has(event.id) ? "Allerede påmeldt" : "Meld deg på"}
-                    </button>
-                  </form>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
+      <Card className="mt-6 flex flex-col gap-3 bg-primary/20 text-surface ring-1 ring-white/10">
+        <h3 className="text-lg font-bold text-surface">Påmelding til event</h3>
+        <p className="text-sm text-surface/70">Gå til Påmelding‑fanen for å melde deg på.</p>
+      </Card>
       </div>
     </div>
   );

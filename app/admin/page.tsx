@@ -54,7 +54,7 @@ export default async function AdminOverviewPage() {
             <p className="text-xs font-semibold uppercase tracking-wide text-primary/60">Tilgangsforespørsler</p>
             <p className="text-lg font-bold text-primary">{accessRequests.length}</p>
           </div>
-          <Link className="button-link text-xs" href="/admin/companies#tilgangsforesporsler">
+          <Link className="button-link text-xs" href="/admin/companies/register#tilgangsforesporsler">
             Se forespørsler
           </Link>
         </div>

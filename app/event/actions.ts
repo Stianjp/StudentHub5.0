@@ -149,8 +149,13 @@ export async function registerStudentForEvent(formData: FormData) {
 
   const student = await getOrCreateStudentForUser(profile.id, user.email);
   const phone = String(formData.get("phone") ?? "").trim();
-  if (!phone && !student.phone) {
-    throw new Error("Telefonnummer er påkrevd for å bestille billett.");
+  const fullName = String(formData.get("fullName") ?? "").trim();
+  const emailInput = String(formData.get("email") ?? "").trim();
+  const missingName = !student.full_name && !fullName;
+  const missingEmail = !student.email && !emailInput && !user.email;
+  const missingPhone = !student.phone && !phone;
+  if (missingName || missingEmail || missingPhone) {
+    throw new Error("Navn, e-post og telefonnummer må være registrert for å hente billett.");
   }
   const requireCompany = String(formData.get("requireCompany") ?? "") === "1";
 
@@ -161,8 +166,8 @@ export async function registerStudentForEvent(formData: FormData) {
     .from("event_tickets")
     .update({
       student_id: student.id,
-      attendee_name: student.full_name ?? null,
-      attendee_email: student.email ?? user.email ?? null,
+      attendee_name: student.full_name ?? fullName ?? null,
+      attendee_email: student.email ?? emailInput ?? user.email ?? null,
       attendee_phone: phone || student.phone || null,
       updated_at: now,
     })
@@ -170,8 +175,12 @@ export async function registerStudentForEvent(formData: FormData) {
 
   if (attachError) throw attachError;
 
-  if (phone && phone !== student.phone) {
-    await admin.from("students").update({ phone, updated_at: now }).eq("id", student.id);
+  const studentUpdate: Record<string, string> = {};
+  if (phone && phone !== student.phone) studentUpdate.phone = phone;
+  if (fullName && fullName !== student.full_name) studentUpdate.full_name = fullName;
+  if (emailInput && emailInput !== student.email) studentUpdate.email = emailInput;
+  if (Object.keys(studentUpdate).length > 0) {
+    await admin.from("students").update({ ...studentUpdate, updated_at: now }).eq("id", student.id);
   }
 
   const { data: event } = await admin.from("events").select("id, name").eq("id", eventId).single();

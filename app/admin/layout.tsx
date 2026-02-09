@@ -7,18 +7,17 @@ const nav = [
     href: "/admin/companies",
     label: "Bedrifter",
     children: [
-      { href: "/admin/companies#registrer-bedrift", label: "Registrer en bedrift" },
-      { href: "/admin/companies#registrer-bedrift-event", label: "Registrer bedrift til event" },
-      { href: "/admin/companies#oversikt-bedrifter-event", label: "Oversikt bedrifter til event" },
-      { href: "/admin/companies#oversikt-bedrifter", label: "Oversikt bedrifter" },
+      { href: "/admin/companies/register", label: "Registrer en bedrift" },
+      { href: "/admin/companies/register-event", label: "Registrer bedrift til event" },
+      { href: "/admin/companies/overview", label: "Oversikt bedrifter" },
     ],
   },
   {
     href: "/admin/events",
     label: "Events",
     children: [
-      { href: "/admin/events#registrer-event", label: "Registrer nytt event" },
-      { href: "/admin/events#oversikt-eventer", label: "Oversikt over eventer" },
+      { href: "/admin/events/new", label: "Registrer nytt event" },
+      { href: "/admin/events/overview", label: "Oversikt over eventer" },
     ],
   },
   { href: "/admin/students", label: "Studenter" },

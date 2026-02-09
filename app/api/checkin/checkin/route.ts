@@ -62,24 +62,31 @@ export async function POST(request: Request) {
     student = studentRow ?? null;
   }
 
+  const name = student?.full_name ?? ticket.attendee_name ?? "";
+  const email = student?.email ?? ticket.attendee_email ?? "";
+  const phone = student?.phone ?? ticket.attendee_phone ?? "";
+  const companyName = ticket.company_id
+    ? (await supabase.from("companies").select("name").eq("id", ticket.company_id).maybeSingle()).data?.name ?? ""
+    : "";
+
+  const printPayload = {
+    ticketNumber: ticket.ticket_number,
+    fullName: name,
+    studyProgram: student?.study_program ?? "",
+    studyLevel: student?.study_level ?? "",
+    studyYear: student?.study_year ?? "",
+    email,
+    phone,
+    companyName,
+  };
+
   if (printerUrl) {
-    const name = student?.full_name ?? ticket.attendee_name ?? "";
-    const email = student?.email ?? ticket.attendee_email ?? "";
-    const phone = student?.phone ?? ticket.attendee_phone ?? "";
     await fetch(printerUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ticketNumber: ticket.ticket_number,
-        fullName: name,
-        studyProgram: student?.study_program ?? "",
-        studyLevel: student?.study_level ?? "",
-        studyYear: student?.study_year ?? "",
-        email,
-        phone,
-      }),
+      body: JSON.stringify(printPayload),
     }).catch(() => null);
   }
 
-  return NextResponse.json({ ok: true, ticket });
+  return NextResponse.json({ ok: true, ticket, print: printPayload });
 }
