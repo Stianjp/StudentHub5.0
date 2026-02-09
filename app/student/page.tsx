@@ -10,7 +10,6 @@ import { SaveProfileButton } from "@/components/student/save-profile-button";
 import { STUDY_CATEGORIES } from "@/components/event/study-categories";
 import { listActiveEvents, listEventCompaniesForEvents } from "@/lib/events";
 import { registerStudentForEvent } from "@/app/event/actions";
-import { Input } from "@/components/ui/input";
 import { CompanyInterestSelector } from "@/components/event/company-interest-selector";
 
 type PageProps = {
