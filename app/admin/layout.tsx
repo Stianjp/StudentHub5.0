@@ -7,6 +7,7 @@ const nav = [
   { href: "/admin/companies", label: "Bedrifter" },
   { href: "/admin/students", label: "Studenter" },
   { href: "/admin/leads", label: "Leads" },
+  { href: "/admin/tickets", label: "Billetter" },
 ];
 
 export const dynamic = "force-dynamic";

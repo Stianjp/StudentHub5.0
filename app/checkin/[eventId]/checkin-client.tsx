@@ -10,6 +10,9 @@ type TicketRow = {
   ticket_number: string;
   status: string;
   checked_in_at: string | null;
+  attendee_name?: string | null;
+  attendee_email?: string | null;
+  attendee_phone?: string | null;
   student?: {
     id: string;
     full_name: string | null;
@@ -127,9 +130,11 @@ export function CheckinClient({ eventId }: { eventId: string }) {
               <div key={ticket.id} className="flex flex-col gap-2 rounded-xl border border-primary/10 bg-primary/5 p-3 text-sm">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <p className="font-semibold text-primary">{ticket.student?.full_name ?? "Ukjent student"}</p>
+                    <p className="font-semibold text-primary">
+                      {ticket.student?.full_name ?? ticket.attendee_name ?? "Ukjent deltaker"}
+                    </p>
                     <p className="text-xs text-ink/60">
-                      {ticket.student?.email ?? "—"} · {ticket.student?.phone ?? "—"}
+                      {ticket.student?.email ?? ticket.attendee_email ?? "—"} · {ticket.student?.phone ?? ticket.attendee_phone ?? "—"}
                     </p>
                   </div>
                   <Button type="button" variant="secondary" onClick={() => checkinAndPrint(ticket.id)}>

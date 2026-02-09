@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import {
   companyBrandingSchema,
   companyEventGoalsSchema,
@@ -13,6 +14,50 @@ import {
 } from "@/lib/validation/company";
 import { getOrCreateCompanyForUser } from "@/lib/company";
 import { sendTransactionalEmail } from "@/lib/resend";
+
+function generateTicketNumber() {
+  return `T-${Math.random().toString(36).slice(2, 6).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
+}
+
+async function ensureCapacity(supabase: ReturnType<typeof createAdminSupabaseClient>, eventId: string) {
+  const { data: event, error: eventError } = await supabase
+    .from("events")
+    .select("ticket_limit")
+    .eq("id", eventId)
+    .single();
+  if (eventError) throw eventError;
+  if (!event?.ticket_limit) return;
+
+  const { count, error: countError } = await supabase
+    .from("event_tickets")
+    .select("id", { count: "exact", head: true })
+    .eq("event_id", eventId);
+  if (countError) throw countError;
+
+  if ((count ?? 0) >= event.ticket_limit) {
+    throw new Error("Det er ikke flere billetter igjen for dette eventet.");
+  }
+}
+
+async function createTicketNumber(supabase: ReturnType<typeof createAdminSupabaseClient>, eventId: string) {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const ticketNumber = generateTicketNumber();
+    const { data, error } = await supabase
+      .from("event_tickets")
+      .insert({
+        event_id: eventId,
+        ticket_number: ticketNumber,
+        status: "active",
+        updated_at: new Date().toISOString(),
+      })
+      .select("*")
+      .single();
+
+    if (!error) return data;
+    if (error.code !== "23505") throw error;
+  }
+  throw new Error("Kunne ikke generere billettnummer.");
+}
 
 async function getCompanyContext() {
   const profile = await requireRole("company");
@@ -235,4 +280,68 @@ export async function updateCompanyEventGoals(formData: FormData) {
   if (error) throw error;
   revalidatePath("/company/events");
   revalidatePath("/company/roi");
+}
+
+export async function registerCompanyAttendee(formData: FormData) {
+  const profile = await requireRole("company");
+  const supabase = await createServerSupabaseClient();
+  const admin = createAdminSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("User not found");
+
+  const company = await getOrCreateCompanyForUser(profile.id, user.email);
+  if (!company) throw new Error("Bedriftskontoen er ikke godkjent ennå.");
+
+  const eventId = String(formData.get("eventId") ?? "").trim();
+  const fullName = String(formData.get("fullName") ?? "").trim();
+  const email = String(formData.get("email") ?? "").trim();
+  const phone = String(formData.get("phone") ?? "").trim();
+
+  if (!eventId || !fullName || !email) {
+    throw new Error("Navn og e-post er påkrevd.");
+  }
+
+  await ensureCapacity(admin, eventId);
+  const ticket = await createTicketNumber(admin, eventId);
+  const now = new Date().toISOString();
+
+  const { error: attachError } = await admin
+    .from("event_tickets")
+    .update({
+      company_id: company.id,
+      attendee_name: fullName,
+      attendee_email: email,
+      attendee_phone: phone || null,
+      updated_at: now,
+    })
+    .eq("id", ticket.id);
+
+  if (attachError) throw attachError;
+
+  const { data: event } = await admin.from("events").select("id, name").eq("id", eventId).single();
+  const ticketPayload = encodeURIComponent(JSON.stringify({ t: ticket.ticket_number, e: eventId }));
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${ticketPayload}`;
+
+  await sendTransactionalEmail({
+    to: email,
+    subject: `Billett til ${event?.name ?? "OSH event"}`,
+    type: "event_confirmation",
+    html: `<p>Hei ${fullName},</p>
+<p>Du er påmeldt ${event?.name ?? "eventet"} via ${company.name}.</p>
+<p>Billettnummer: <strong>${ticket.ticket_number}</strong></p>
+<p>Vis denne QR-koden i check-in:</p>
+<p><img src="${qrUrl}" alt="QR-kode" /></p>`,
+    payload: {
+      eventId,
+      ticketNumber: ticket.ticket_number,
+      ticketId: ticket.id,
+      companyId: company.id,
+    },
+    supabase: admin,
+  });
+
+  revalidatePath("/company/events");
 }

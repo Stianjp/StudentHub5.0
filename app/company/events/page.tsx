@@ -8,7 +8,7 @@ import { requireRole } from "@/lib/auth";
 import { getCompanyRegistrations, getOrCreateCompanyForUser } from "@/lib/company";
 import { listActiveEvents } from "@/lib/events";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { updateCompanyEventGoals } from "@/app/company/actions";
+import { registerCompanyAttendee, updateCompanyEventGoals } from "@/app/company/actions";
 
 function packageVariant(pkg: string) {
   if (pkg === "platinum") return "success" as const;
@@ -167,6 +167,28 @@ export default async function CompanyEventsPage() {
                     Lagre mål og KPI
                   </Button>
                 </form>
+
+                <div className="mt-4 rounded-2xl border border-primary/10 bg-surface p-4">
+                  <p className="text-sm font-semibold text-primary">Meld på deltaker (bedrift)</p>
+                  <form action={registerCompanyAttendee} className="mt-3 grid gap-3 md:grid-cols-3">
+                    <input type="hidden" name="eventId" value={registration.event_id} />
+                    <label className="text-sm font-semibold text-primary md:col-span-1">
+                      Navn
+                      <Input name="fullName" required placeholder="Fornavn Etternavn" />
+                    </label>
+                    <label className="text-sm font-semibold text-primary md:col-span-1">
+                      E-post
+                      <Input name="email" type="email" required placeholder="navn@bedrift.no" />
+                    </label>
+                    <label className="text-sm font-semibold text-primary md:col-span-1">
+                      Telefon
+                      <Input name="phone" placeholder="Valgfritt" />
+                    </label>
+                    <Button className="md:col-span-3" type="submit">
+                      Send billett
+                    </Button>
+                  </form>
+                </div>
               </div>
             ))}
           </div>

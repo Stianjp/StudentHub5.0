@@ -322,6 +322,7 @@ export type Database = {
           starts_at: string;
           ends_at: string;
           is_active: boolean;
+          ticket_limit: number | null;
           created_at: string;
           updated_at: string;
         };
@@ -334,6 +335,7 @@ export type Database = {
           starts_at: string;
           ends_at: string;
           is_active?: boolean;
+          ticket_limit?: number | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -346,6 +348,7 @@ export type Database = {
           starts_at?: string;
           ends_at?: string;
           is_active?: boolean;
+          ticket_limit?: number | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -410,6 +413,10 @@ export type Database = {
           id: string;
           event_id: string;
           student_id: string | null;
+          company_id: string | null;
+          attendee_name: string | null;
+          attendee_email: string | null;
+          attendee_phone: string | null;
           ticket_number: string;
           status: string;
           checked_in_at: string | null;
@@ -420,6 +427,10 @@ export type Database = {
           id?: string;
           event_id: string;
           student_id?: string | null;
+          company_id?: string | null;
+          attendee_name?: string | null;
+          attendee_email?: string | null;
+          attendee_phone?: string | null;
           ticket_number: string;
           status?: string;
           checked_in_at?: string | null;
@@ -430,6 +441,10 @@ export type Database = {
           id?: string;
           event_id?: string;
           student_id?: string | null;
+          company_id?: string | null;
+          attendee_name?: string | null;
+          attendee_email?: string | null;
+          attendee_phone?: string | null;
           ticket_number?: string;
           status?: string;
           checked_in_at?: string | null;

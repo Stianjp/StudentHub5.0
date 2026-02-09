@@ -10,6 +10,7 @@ import {
 } from "@/lib/student";
 import { createLead, upsertConsentForStudent } from "@/lib/lead";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { sendTransactionalEmail } from "@/lib/resend";
 
 export async function submitStandFlow(formData: FormData) {
@@ -91,9 +92,50 @@ function generateTicketNumber() {
   return `T-${Math.random().toString(36).slice(2, 6).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
 }
 
+async function ensureCapacity(supabase: ReturnType<typeof createAdminSupabaseClient>, eventId: string) {
+  const { data: event, error: eventError } = await supabase
+    .from("events")
+    .select("ticket_limit")
+    .eq("id", eventId)
+    .single();
+  if (eventError) throw eventError;
+  if (!event?.ticket_limit) return;
+
+  const { count, error: countError } = await supabase
+    .from("event_tickets")
+    .select("id", { count: "exact", head: true })
+    .eq("event_id", eventId);
+  if (countError) throw countError;
+
+  if ((count ?? 0) >= event.ticket_limit) {
+    throw new Error("Det er ikke flere billetter igjen for dette eventet.");
+  }
+}
+
+async function createTicketNumber(supabase: ReturnType<typeof createAdminSupabaseClient>, eventId: string) {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    const ticketNumber = generateTicketNumber();
+    const { data, error } = await supabase
+      .from("event_tickets")
+      .insert({
+        event_id: eventId,
+        ticket_number: ticketNumber,
+        status: "active",
+        updated_at: new Date().toISOString(),
+      })
+      .select("*")
+      .single();
+
+    if (!error) return data;
+    if (error.code !== "23505") throw error;
+  }
+  throw new Error("Kunne ikke generere billettnummer.");
+}
+
 export async function registerStudentForEvent(formData: FormData) {
   const profile = await requireRole("student");
   const supabase = await createServerSupabaseClient();
+  const admin = createAdminSupabaseClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -105,27 +147,26 @@ export async function registerStudentForEvent(formData: FormData) {
 
   const student = await getOrCreateStudentForUser(profile.id, user.email);
 
-  const ticketNumber = generateTicketNumber();
+  await ensureCapacity(admin, eventId);
+  const ticket = await createTicketNumber(admin, eventId);
   const now = new Date().toISOString();
-  const { error: ticketError, data: ticket } = await supabase
+  const { error: attachError } = await admin
     .from("event_tickets")
-    .insert({
-      event_id: eventId,
+    .update({
       student_id: student.id,
-      ticket_number: ticketNumber,
-      status: "active",
-      created_at: now,
+      attendee_name: student.full_name ?? null,
+      attendee_email: student.email ?? user.email ?? null,
+      attendee_phone: student.phone ?? null,
       updated_at: now,
     })
-    .select("*")
-    .single();
+    .eq("id", ticket.id);
 
-  if (ticketError) throw ticketError;
+  if (attachError) throw attachError;
 
-  const { data: event } = await supabase.from("events").select("id, name").eq("id", eventId).single();
+  const { data: event } = await admin.from("events").select("id, name").eq("id", eventId).single();
 
   if (user.email) {
-    const ticketPayload = encodeURIComponent(JSON.stringify({ t: ticketNumber, e: eventId }));
+    const ticketPayload = encodeURIComponent(JSON.stringify({ t: ticket.ticket_number, e: eventId }));
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${ticketPayload}`;
     await sendTransactionalEmail({
       to: user.email,
@@ -133,19 +174,69 @@ export async function registerStudentForEvent(formData: FormData) {
       type: "event_confirmation",
       html: `<p>Hei,</p>
 <p>Du er påmeldt ${event?.name ?? "eventet"}.</p>
-<p>Billettnummer: <strong>${ticketNumber}</strong></p>
+<p>Billettnummer: <strong>${ticket.ticket_number}</strong></p>
 <p>Vis denne QR-koden i check-in:</p>
 <p><img src="${qrUrl}" alt="QR-kode" /></p>`,
       payload: {
         eventId,
-        ticketNumber,
+        ticketNumber: ticket.ticket_number,
         ticketId: ticket.id,
       },
-      supabase,
+      supabase: admin,
     });
   }
 
   revalidatePath("/student");
+  revalidatePath(`/event/events/${eventId}`);
+}
+
+export async function registerAttendeeForEvent(formData: FormData) {
+  const supabase = createAdminSupabaseClient();
+  const eventId = String(formData.get("eventId") ?? "").trim();
+  const fullName = String(formData.get("fullName") ?? "").trim();
+  const email = String(formData.get("email") ?? "").trim();
+  const phone = String(formData.get("phone") ?? "").trim();
+
+  if (!eventId || !fullName || !email) {
+    throw new Error("Navn og e-post er påkrevd.");
+  }
+
+  await ensureCapacity(supabase, eventId);
+  const ticket = await createTicketNumber(supabase, eventId);
+  const now = new Date().toISOString();
+  const { error: attachError } = await supabase
+    .from("event_tickets")
+    .update({
+      attendee_name: fullName,
+      attendee_email: email,
+      attendee_phone: phone || null,
+      updated_at: now,
+    })
+    .eq("id", ticket.id);
+
+  if (attachError) throw attachError;
+
+  const { data: event } = await supabase.from("events").select("id, name").eq("id", eventId).single();
+  const ticketPayload = encodeURIComponent(JSON.stringify({ t: ticket.ticket_number, e: eventId }));
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${ticketPayload}`;
+
+  await sendTransactionalEmail({
+    to: email,
+    subject: `Billett til ${event?.name ?? "OSH event"}`,
+    type: "event_confirmation",
+    html: `<p>Hei ${fullName},</p>
+<p>Du er påmeldt ${event?.name ?? "eventet"}.</p>
+<p>Billettnummer: <strong>${ticket.ticket_number}</strong></p>
+<p>Vis denne QR-koden i check-in:</p>
+<p><img src="${qrUrl}" alt="QR-kode" /></p>`,
+    payload: {
+      eventId,
+      ticketNumber: ticket.ticket_number,
+      ticketId: ticket.id,
+    },
+    supabase,
+  });
+
   revalidatePath(`/event/events/${eventId}`);
 }
 

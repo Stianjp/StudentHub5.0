@@ -22,6 +22,8 @@ import {
   upsertEvent,
 } from "@/lib/admin";
 import { isUuid } from "@/lib/utils";
+import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { sendTransactionalEmail } from "@/lib/resend";
 
 function getFormValue(formData: FormData, name: string) {
   const direct = formData.get(name);
@@ -383,6 +385,67 @@ export async function registerCompaniesBulk(formData: FormData) {
 
     revalidatePath(`/admin/events/${eventId}`);
     revalidatePath("/admin/companies");
+    if (typeof returnTo === "string" && returnTo.startsWith("/")) {
+      redirect(`${returnTo}?saved=1`);
+    }
+  } catch (error) {
+    if (typeof returnTo === "string" && returnTo.startsWith("/")) {
+      const message = error instanceof Error ? error.message : "Ukjent feil";
+      redirect(`${returnTo}?error=${encodeURIComponent(message)}`);
+    }
+    throw error;
+  }
+}
+
+export async function resendTicketEmail(formData: FormData) {
+  await requireRole("admin");
+  const returnTo = formData.get("returnTo");
+  const ticketId = String(getFormValue(formData, "ticketId") ?? "").trim();
+
+  try {
+    if (!ticketId) throw new Error("Ugyldig billett.");
+    const supabase = createAdminSupabaseClient();
+    const { data: ticket, error } = await supabase
+      .from("event_tickets")
+      .select("*")
+      .eq("id", ticketId)
+      .single();
+    if (error) throw error;
+
+    const [{ data: student }, { data: event }] = await Promise.all([
+      ticket.student_id
+        ? supabase.from("students").select("*").eq("id", ticket.student_id).maybeSingle()
+        : Promise.resolve({ data: null }),
+      supabase.from("events").select("id, name").eq("id", ticket.event_id).single(),
+    ]);
+
+    const email = student?.email ?? ticket.attendee_email ?? "";
+    const name = student?.full_name ?? ticket.attendee_name ?? "deltaker";
+
+    if (!email) throw new Error("Mangler e-post for billett.");
+
+    const ticketPayload = encodeURIComponent(
+      JSON.stringify({ t: ticket.ticket_number, e: ticket.event_id }),
+    );
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${ticketPayload}`;
+
+    await sendTransactionalEmail({
+      to: email,
+      subject: `Billett til ${event?.name ?? "OSH event"}`,
+      type: "event_confirmation",
+      html: `<p>Hei ${name},</p>
+<p>Her er billetten din til ${event?.name ?? "eventet"}.</p>
+<p>Billettnummer: <strong>${ticket.ticket_number}</strong></p>
+<p>Vis denne QR-koden i check-in:</p>
+<p><img src="${qrUrl}" alt="QR-kode" /></p>`,
+      payload: {
+        eventId: ticket.event_id,
+        ticketNumber: ticket.ticket_number,
+        ticketId: ticket.id,
+      },
+      supabase,
+    });
+
     if (typeof returnTo === "string" && returnTo.startsWith("/")) {
       redirect(`${returnTo}?saved=1`);
     }
