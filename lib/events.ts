@@ -45,5 +45,5 @@ export async function listEventCompaniesForEvents(eventIds: string[]) {
     .order("created_at", { ascending: false });
 
   if (error) throw error;
-  return (data ?? []) as Array<{ event_id: string; company: Company }>;
+  return (data ?? []) as unknown as Array<{ event_id: string; company: Company }>;
 }
