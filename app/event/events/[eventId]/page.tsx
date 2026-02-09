@@ -77,8 +77,8 @@ export default async function EventPage({ params, searchParams }: EventPageProps
       <section className="grid gap-4">
         <h2 className="text-lg font-bold text-primary">Hent billett</h2>
         {ticketSent ? (
-          <Card className="bg-success/10 text-sm font-semibold text-success">
-            Billett sendt til din e-post.
+          <Card className="border border-secondary/40 bg-secondary/15 text-sm font-semibold text-primary" role="status">
+            Billett sendt til din e-post. Sjekk også søppelpost.
           </Card>
         ) : null}
         <Card className="flex flex-col gap-4">
