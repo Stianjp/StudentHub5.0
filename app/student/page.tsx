@@ -75,7 +75,7 @@ export default async function StudentProfilePage({ searchParams }: PageProps) {
             </div>
 
             <label className="text-sm font-semibold text-surface">
-              Telefon (valgfritt)
+              Telefon
               <Input name="phone" defaultValue={student.phone ?? ""} />
             </label>
 

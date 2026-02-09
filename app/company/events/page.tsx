@@ -183,7 +183,7 @@ export default async function CompanyEventsPage() {
                     </label>
                     <label className="text-sm font-semibold text-primary md:col-span-1">
                       Telefon
-                      <Input name="phone" placeholder="Valgfritt" />
+                      <Input name="phone" required placeholder="Telefonnummer" />
                     </label>
                     <Button className="md:col-span-3" type="submit">
                       Send billett
