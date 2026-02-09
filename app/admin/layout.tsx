@@ -38,6 +38,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       title="OSH Admin"
       nav={nav}
       backgroundClass="bg-gradient-to-br from-primary to-secondary"
+      backgroundStyle={{ backgroundImage: "linear-gradient(135deg, #140249 0%, #FE9A70 100%)" }}
     >
       {children}
     </PortalShell>

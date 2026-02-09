@@ -15,6 +15,7 @@ export function PortalShell({
   nav,
   roleKey,
   backgroundClass = "bg-mist",
+  backgroundStyle,
   mainClass = "",
   children,
 }: {
@@ -23,6 +24,7 @@ export function PortalShell({
   nav: NavItem[];
   roleKey: "student" | "company" | "admin";
   backgroundClass?: string;
+  backgroundStyle?: React.CSSProperties;
   mainClass?: string;
   children: React.ReactNode;
 }) {
@@ -40,7 +42,7 @@ export function PortalShell({
   }
 
   return (
-    <div className={cn("min-h-screen", backgroundClass)}>
+    <div className={cn("min-h-screen", backgroundClass)} style={backgroundStyle}>
       <SessionGuard />
       <header className="border-b border-primary/10">
         <div className="bg-primary text-surface">
