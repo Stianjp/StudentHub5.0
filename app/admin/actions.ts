@@ -73,6 +73,44 @@ function parseTags(value: FormDataEntryValue | FormDataEntryValue[] | null) {
     .filter(Boolean);
 }
 
+export async function updateEventTicketLimit(formData: FormData) {
+  await requireRole("admin");
+  const returnTo = formData.get("returnTo");
+  try {
+    const eventId = String(getFormValue(formData, "eventId") ?? "").trim();
+    const limitValue = String(getFormValue(formData, "ticketLimit") ?? "").trim();
+
+    if (!isUuid(eventId)) {
+      throw new Error("Ugyldig event.");
+    }
+
+    const ticketLimit = limitValue.length === 0 ? null : Number(limitValue);
+    if (ticketLimit !== null && (!Number.isFinite(ticketLimit) || ticketLimit < 1)) {
+      throw new Error("Maks antall billetter må være minst 1.");
+    }
+
+    const supabase = createAdminSupabaseClient();
+    const { error } = await supabase
+      .from("events")
+      .update({ ticket_limit: ticketLimit, updated_at: new Date().toISOString() })
+      .eq("id", eventId);
+    if (error) throw error;
+
+    revalidatePath("/admin/tickets");
+    revalidatePath("/admin/events");
+    if (typeof returnTo === "string" && returnTo.startsWith("/")) {
+      redirect(`${returnTo}?saved=1`);
+    }
+  } catch (error) {
+    if (isNextRedirectError(error)) throw error;
+    if (typeof returnTo === "string" && returnTo.startsWith("/")) {
+      const message = getErrorMessage(error);
+      redirect(`${returnTo}?error=${encodeURIComponent(message)}`);
+    }
+    throw error;
+  }
+}
+
 export async function saveEvent(formData: FormData) {
   await requireRole("admin");
 

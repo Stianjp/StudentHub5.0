@@ -18,14 +18,21 @@ export default async function AdminOverviewPage() {
     // fall back to session-based client
   }
 
-  const [events, companiesCount, studentsCount, visitsCount, leadsCount, accessRequests] = await Promise.all([
+  const [events, companiesCount, studentsCount, visitsCount, leadsCount, accessRequests, ticketCounts] = await Promise.all([
     listEventsWithStats(),
     supabase.from("companies").select("id", { count: "exact", head: true }),
     supabase.from("students").select("id", { count: "exact", head: true }),
     supabase.from("stand_visits").select("id", { count: "exact", head: true }),
     supabase.from("consents").select("id", { count: "exact", head: true }).eq("consent", true),
     listCompanyAccessRequests(),
+    supabase.from("event_tickets").select("event_id"),
   ]);
+
+  const ticketCountMap = new Map<string, number>();
+  (ticketCounts.data ?? []).forEach((row: { event_id: string | null }) => {
+    if (!row.event_id) return;
+    ticketCountMap.set(row.event_id, (ticketCountMap.get(row.event_id) ?? 0) + 1);
+  });
 
   return (
     <div className="flex flex-col gap-8">
@@ -79,6 +86,9 @@ export default async function AdminOverviewPage() {
                   <span>{event.companyCount} bedrifter</span>
                   <span>{event.visitCount} besøk</span>
                   <span>{event.leadCount} leads</span>
+                  <span>
+                    {ticketCountMap.get(event.id) ?? 0}/{event.ticket_limit ?? "∞"} billetter
+                  </span>
                 </div>
               </li>
             ))}

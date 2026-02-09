@@ -4,7 +4,7 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
-import { deleteTicket, resendTicketEmail } from "@/app/admin/actions";
+import { deleteTicket, resendTicketEmail, updateEventTicketLimit } from "@/app/admin/actions";
 
 type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -19,7 +19,7 @@ export default async function AdminTicketsPage({ searchParams }: PageProps) {
   const saved = params.saved === "1";
 
   const supabase = createAdminSupabaseClient();
-  const { data: events } = await supabase.from("events").select("id, name").order("starts_at", { ascending: false });
+  const { data: events } = await supabase.from("events").select("id, name, ticket_limit").order("starts_at", { ascending: false });
 
   const { data: tickets } = eventId
     ? await supabase
@@ -84,6 +84,26 @@ export default async function AdminTicketsPage({ searchParams }: PageProps) {
             Vis
           </Button>
         </form>
+        {eventId ? (
+          <form action={updateEventTicketLimit} className="grid gap-3 md:grid-cols-3">
+            <input type="hidden" name="eventId" value={eventId} />
+            <input type="hidden" name="returnTo" value={`/admin/tickets?eventId=${eventId}`} />
+            <label className="text-sm font-semibold text-primary md:col-span-2">
+              Maks antall billetter (studenter)
+              <input
+                name="ticketLimit"
+                type="number"
+                min={1}
+                className="mt-1 w-full rounded-xl border border-primary/20 bg-surface px-3 py-2 text-sm"
+                placeholder="Ingen grense"
+                defaultValue={events?.find((event) => event.id === eventId)?.ticket_limit ?? ""}
+              />
+            </label>
+            <Button type="submit" variant="secondary" className="self-end">
+              Lagre grense
+            </Button>
+          </form>
+        ) : null}
       </Card>
 
       <Card className="flex flex-col gap-4">
