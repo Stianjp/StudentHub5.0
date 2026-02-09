@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth";
 import { consentSchema, kioskSurveySchema } from "@/lib/validation/student";
 import {
@@ -150,6 +151,7 @@ export async function registerStudentForEvent(formData: FormData) {
   if (!phone && !student.phone) {
     throw new Error("Telefonnummer er påkrevd for å bestille billett.");
   }
+  const requireCompany = String(formData.get("requireCompany") ?? "") === "1";
 
   await ensureCapacity(admin, eventId);
   const ticket = await createTicketNumber(admin, eventId);
@@ -195,6 +197,9 @@ export async function registerStudentForEvent(formData: FormData) {
   }
 
   const companyIds = formData.getAll("companyIds").map((value) => String(value)).filter(Boolean);
+  if (requireCompany && companyIds.length === 0) {
+    throw new Error("Velg minst én bedrift for å hente billett.");
+  }
   if (companyIds.length > 0) {
     await Promise.all(
       companyIds.map(async (companyId) => {
@@ -223,6 +228,10 @@ export async function registerStudentForEvent(formData: FormData) {
 
   revalidatePath("/student");
   revalidatePath(`/event/events/${eventId}`);
+  const returnTo = String(formData.get("returnTo") ?? "").trim();
+  if (returnTo) {
+    redirect(returnTo);
+  }
 }
 
 export async function registerAttendeeForEvent(formData: FormData) {
@@ -232,9 +241,13 @@ export async function registerAttendeeForEvent(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
   const phone = String(formData.get("phone") ?? "").trim();
   const companyIds = formData.getAll("companyIds").map((value) => String(value)).filter(Boolean);
+  const requireCompany = String(formData.get("requireCompany") ?? "") === "1";
 
   if (!eventId || !fullName || !email || !phone) {
     throw new Error("Navn, e-post og telefon er påkrevd.");
+  }
+  if (requireCompany && companyIds.length === 0) {
+    throw new Error("Velg minst én bedrift for å hente billett.");
   }
 
   await ensureCapacity(supabase, eventId);
@@ -319,6 +332,10 @@ export async function registerAttendeeForEvent(formData: FormData) {
   });
 
   revalidatePath(`/event/events/${eventId}`);
+  const returnTo = String(formData.get("returnTo") ?? "").trim();
+  if (returnTo) {
+    redirect(returnTo);
+  }
 }
 
 export async function submitKiosk(formData: FormData) {

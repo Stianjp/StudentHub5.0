@@ -10,10 +10,12 @@ import { CompanyInterestSelector } from "@/components/event/company-interest-sel
 
 type EventPageProps = {
   params: Promise<{ eventId: string }>;
+  searchParams?: { [key: string]: string | string[] | undefined };
 };
 
-export default async function EventPage({ params }: EventPageProps) {
+export default async function EventPage({ params, searchParams }: EventPageProps) {
   const { eventId } = await params;
+  const ticketSent = searchParams?.ticket === "sent";
   const supabase = await createServerSupabaseClient();
   const [
     event,
@@ -74,9 +76,16 @@ export default async function EventPage({ params }: EventPageProps) {
 
       <section className="grid gap-4">
         <h2 className="text-lg font-bold text-primary">Hent billett</h2>
+        {ticketSent ? (
+          <Card className="bg-success/10 text-sm font-semibold text-success">
+            Billett sendt til din e-post.
+          </Card>
+        ) : null}
         <Card className="flex flex-col gap-4">
           <form action={registerAttendeeForEvent} className="grid gap-3 md:grid-cols-3">
             <input type="hidden" name="eventId" value={eventId} />
+            <input type="hidden" name="returnTo" value={`/event/events/${eventId}?ticket=sent`} />
+            {companyOptions.length > 0 ? <input type="hidden" name="requireCompany" value="1" /> : null}
             <label className="text-sm font-semibold text-primary md:col-span-1">
               Navn
               <Input
@@ -109,7 +118,7 @@ export default async function EventPage({ params }: EventPageProps) {
               <p className="text-sm font-semibold text-primary">Hvilke bedrifter er du interessert i?</p>
               <p className="text-xs text-ink/60">Velg alle, noen eller ingen.</p>
               <div className="mt-2">
-                <CompanyInterestSelector companies={companyOptions} />
+                <CompanyInterestSelector companies={companyOptions} required={companyOptions.length > 0} />
               </div>
             </div>
             <button

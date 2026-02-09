@@ -7,7 +7,13 @@ type CompanyOption = {
   name: string;
 };
 
-export function CompanyInterestSelector({ companies }: { companies: CompanyOption[] }) {
+export function CompanyInterestSelector({
+  companies,
+  required,
+}: {
+  companies: CompanyOption[];
+  required?: boolean;
+}) {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const allIds = useMemo(() => companies.map((company) => company.id), [companies]);
 
@@ -33,6 +39,18 @@ export function CompanyInterestSelector({ companies }: { companies: CompanyOptio
 
   return (
     <div className="grid gap-3">
+      {required ? (
+        <input
+          type="checkbox"
+          name="companySelectionRequired"
+          className="sr-only"
+          required
+          checked={selected.size > 0}
+          onChange={() => {}}
+          aria-hidden="true"
+          tabIndex={-1}
+        />
+      ) : null}
       <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
