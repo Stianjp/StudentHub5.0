@@ -146,6 +146,10 @@ export async function registerStudentForEvent(formData: FormData) {
   if (!eventId) throw new Error("Event mangler.");
 
   const student = await getOrCreateStudentForUser(profile.id, user.email);
+  const phone = String(formData.get("phone") ?? "").trim();
+  if (!phone && !student.phone) {
+    throw new Error("Telefonnummer er påkrevd for å bestille billett.");
+  }
 
   await ensureCapacity(admin, eventId);
   const ticket = await createTicketNumber(admin, eventId);
@@ -156,12 +160,16 @@ export async function registerStudentForEvent(formData: FormData) {
       student_id: student.id,
       attendee_name: student.full_name ?? null,
       attendee_email: student.email ?? user.email ?? null,
-      attendee_phone: student.phone ?? null,
+      attendee_phone: phone || student.phone || null,
       updated_at: now,
     })
     .eq("id", ticket.id);
 
   if (attachError) throw attachError;
+
+  if (phone && phone !== student.phone) {
+    await admin.from("students").update({ phone, updated_at: now }).eq("id", student.id);
+  }
 
   const { data: event } = await admin.from("events").select("id, name").eq("id", eventId).single();
 
@@ -186,6 +194,33 @@ export async function registerStudentForEvent(formData: FormData) {
     });
   }
 
+  const companyIds = formData.getAll("companyIds").map((value) => String(value)).filter(Boolean);
+  if (companyIds.length > 0) {
+    await Promise.all(
+      companyIds.map(async (companyId) => {
+        await upsertConsentForStudent({
+          studentId: student.id,
+          companyId,
+          eventId,
+          consentGiven: true,
+          source: "ticket",
+        });
+        await createLead({
+          student,
+          companyId,
+          eventId,
+          interests: student.interests ?? [],
+          jobTypes: student.job_types ?? [],
+          studyLevel: student.study_level,
+          studyYear: student.study_year ?? student.graduation_year,
+          fieldOfStudy: student.study_program,
+          consentGiven: true,
+          source: "ticket",
+        });
+      }),
+    );
+  }
+
   revalidatePath("/student");
   revalidatePath(`/event/events/${eventId}`);
 }
@@ -197,8 +232,8 @@ export async function registerAttendeeForEvent(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim();
   const phone = String(formData.get("phone") ?? "").trim();
 
-  if (!eventId || !fullName || !email) {
-    throw new Error("Navn og e-post er påkrevd.");
+  if (!eventId || !fullName || !email || !phone) {
+    throw new Error("Navn, e-post og telefon er påkrevd.");
   }
 
   await ensureCapacity(supabase, eventId);

@@ -15,7 +15,7 @@ export type LeadInput = {
   studyYear?: number | null;
   fieldOfStudy?: string | null;
   consentGiven: boolean;
-  source: "stand" | "student_portal";
+  source: "stand" | "student_portal" | "ticket";
 };
 
 export function normalizeEmail(email: string) {
@@ -27,7 +27,7 @@ export async function upsertConsentForStudent(input: {
   companyId: string;
   eventId?: string | null;
   consentGiven: boolean;
-  source: "stand" | "student_portal";
+  source: "stand" | "student_portal" | "ticket";
   consentTextVersion?: string | null;
 }) {
   const supabase = createAdminSupabaseClient();

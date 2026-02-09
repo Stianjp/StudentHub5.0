@@ -4,7 +4,7 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
-import { resendTicketEmail } from "@/app/admin/actions";
+import { deleteTicket, resendTicketEmail } from "@/app/admin/actions";
 
 type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -131,13 +131,22 @@ export default async function AdminTicketsPage({ searchParams }: PageProps) {
                         ) : null}
                       </td>
                       <td className="px-3 py-3">
-                        <form action={resendTicketEmail}>
-                          <input type="hidden" name="ticketId" value={ticket.id} />
-                          <input type="hidden" name="returnTo" value={`/admin/tickets?eventId=${eventId}`} />
-                          <Button type="submit" variant="secondary">
-                            Send på nytt
-                          </Button>
-                        </form>
+                        <div className="flex flex-wrap gap-2">
+                          <form action={resendTicketEmail}>
+                            <input type="hidden" name="ticketId" value={ticket.id} />
+                            <input type="hidden" name="returnTo" value={`/admin/tickets?eventId=${eventId}`} />
+                            <Button type="submit" variant="secondary">
+                              Send på nytt
+                            </Button>
+                          </form>
+                          <form action={deleteTicket}>
+                            <input type="hidden" name="ticketId" value={ticket.id} />
+                            <input type="hidden" name="returnTo" value={`/admin/tickets?eventId=${eventId}`} />
+                            <Button type="submit" variant="secondary">
+                              Slett
+                            </Button>
+                          </form>
+                        </div>
                       </td>
                     </tr>
                   );

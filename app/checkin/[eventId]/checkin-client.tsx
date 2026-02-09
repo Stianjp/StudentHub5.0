@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,10 @@ type TicketRow = {
   attendee_name?: string | null;
   attendee_email?: string | null;
   attendee_phone?: string | null;
+  company?: {
+    id: string;
+    name: string | null;
+  } | null;
   student?: {
     id: string;
     full_name: string | null;
@@ -30,6 +34,7 @@ export function CheckinClient({ eventId }: { eventId: string }) {
   const [status, setStatus] = useState<"idle" | "loading" | "error" | "success">("idle");
   const [message, setMessage] = useState<string | null>(null);
   const [printerUrl, setPrinterUrl] = useState<string>("");
+  const [filter, setFilter] = useState<"all" | "student" | "company">("all");
 
   const parsedQr = useMemo(() => {
     const trimmed = query.trim();
@@ -43,10 +48,11 @@ export function CheckinClient({ eventId }: { eventId: string }) {
     return null;
   }, [query]);
 
-  async function lookupTickets() {
+  async function lookupTickets(overrideFilter?: "all" | "student" | "company") {
     if (!query.trim()) return;
     setStatus("loading");
     setMessage(null);
+    const activeFilter = overrideFilter ?? filter;
     const response = await fetch(`/api/checkin/search`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -54,6 +60,7 @@ export function CheckinClient({ eventId }: { eventId: string }) {
         eventId,
         query: parsedQr?.t ? parsedQr.t : query.trim(),
         mode: parsedQr?.t ? "ticket" : "text",
+        filter: activeFilter,
       }),
     });
     if (!response.ok) {
@@ -65,6 +72,43 @@ export function CheckinClient({ eventId }: { eventId: string }) {
     const payload = await response.json();
     setResults(payload?.results ?? []);
     setStatus("success");
+  }
+
+  async function loadParticipants(nextFilter?: "all" | "student" | "company") {
+    setStatus("loading");
+    setMessage(null);
+    const response = await fetch(`/api/checkin/search`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        eventId,
+        mode: "all",
+        filter: nextFilter ?? filter,
+      }),
+    });
+    if (!response.ok) {
+      const payload = await response.json().catch(() => ({}));
+      setStatus("error");
+      setMessage(payload?.error ?? "Kunne ikke hente deltakere.");
+      return;
+    }
+    const payload = await response.json();
+    setResults(payload?.results ?? []);
+    setStatus("success");
+  }
+
+  useEffect(() => {
+    void loadParticipants();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [eventId]);
+
+  async function handleFilterChange(nextFilter: "all" | "student" | "company") {
+    setFilter(nextFilter);
+    if (query.trim()) {
+      await lookupTickets(nextFilter);
+      return;
+    }
+    await loadParticipants(nextFilter);
   }
 
   async function checkinAndPrint(ticketId: string) {
@@ -121,9 +165,22 @@ export function CheckinClient({ eventId }: { eventId: string }) {
       </Card>
 
       <Card className="flex flex-col gap-4">
-        <h3 className="text-lg font-bold text-primary">Påmeldte deltakere</h3>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 className="text-lg font-bold text-primary">Påmeldte deltakere</h3>
+          <div className="flex flex-wrap gap-2 text-sm">
+            <Button type="button" variant={filter === "all" ? "primary" : "secondary"} onClick={() => handleFilterChange("all")}>
+              Alle
+            </Button>
+            <Button type="button" variant={filter === "student" ? "primary" : "secondary"} onClick={() => handleFilterChange("student")}>
+              Studenter
+            </Button>
+            <Button type="button" variant={filter === "company" ? "primary" : "secondary"} onClick={() => handleFilterChange("company")}>
+              Bedrifter
+            </Button>
+          </div>
+        </div>
         {results.length === 0 ? (
-          <p className="text-sm text-ink/70">Søk for å se deltakere.</p>
+          <p className="text-sm text-ink/70">Ingen deltakere funnet.</p>
         ) : (
           <div className="grid gap-2">
             {results.map((ticket) => (
@@ -135,6 +192,9 @@ export function CheckinClient({ eventId }: { eventId: string }) {
                     </p>
                     <p className="text-xs text-ink/60">
                       {ticket.student?.email ?? ticket.attendee_email ?? "—"} · {ticket.student?.phone ?? ticket.attendee_phone ?? "—"}
+                    </p>
+                    <p className="text-xs text-ink/60">
+                      {ticket.company?.name ? `Bedrift: ${ticket.company.name}` : ticket.company ? "Bedrift" : ticket.student ? "Student" : "Andre"}
                     </p>
                   </div>
                   <Button type="button" variant="secondary" onClick={() => checkinAndPrint(ticket.id)}>

@@ -129,7 +129,11 @@ export default async function CompanyLeadsPage() {
                           </div>
                         </td>
                         <td className="px-3 py-3 text-ink/80">
-                          {lead.source === "stand" ? "Stand" : "Studentportal"}
+                          {lead.source === "stand"
+                            ? "Stand"
+                            : lead.source === "ticket"
+                              ? "Påmelding"
+                              : "Studentportal"}
                         </td>
                       </tr>
                       );

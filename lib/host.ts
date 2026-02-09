@@ -6,6 +6,7 @@ export function roleFromHost(hostname: string | null): AppRole | null {
 
   if (host.startsWith("student.")) return "student";
   if (host.startsWith("bedrift.")) return "company";
+  if (host.startsWith("checkin.")) return "admin";
   if (host.startsWith("admin.")) return "admin";
   return null;
 }

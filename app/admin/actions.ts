@@ -457,3 +457,43 @@ export async function resendTicketEmail(formData: FormData) {
     throw error;
   }
 }
+
+export async function deleteTicket(formData: FormData) {
+  await requireRole("admin");
+  const returnTo = formData.get("returnTo");
+  const ticketId = String(getFormValue(formData, "ticketId") ?? "").trim();
+
+  try {
+    if (!ticketId) throw new Error("Ugyldig billett.");
+    const supabase = createAdminSupabaseClient();
+
+    const { data: ticket, error: ticketError } = await supabase
+      .from("event_tickets")
+      .select("id, event_id, student_id")
+      .eq("id", ticketId)
+      .single();
+    if (ticketError) throw ticketError;
+
+    if (ticket.student_id) {
+      await supabase
+        .from("leads")
+        .delete()
+        .eq("event_id", ticket.event_id)
+        .eq("student_id", ticket.student_id)
+        .eq("source", "ticket");
+    }
+
+    const { error: deleteError } = await supabase.from("event_tickets").delete().eq("id", ticketId);
+    if (deleteError) throw deleteError;
+
+    if (typeof returnTo === "string" && returnTo.startsWith("/")) {
+      redirect(`${returnTo}?saved=1`);
+    }
+  } catch (error) {
+    if (typeof returnTo === "string" && returnTo.startsWith("/")) {
+      const message = error instanceof Error ? error.message : "Ukjent feil";
+      redirect(`${returnTo}?error=${encodeURIComponent(message)}`);
+    }
+    throw error;
+  }
+}

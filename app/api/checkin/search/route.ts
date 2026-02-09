@@ -14,8 +14,9 @@ async function requireAdmin() {
 
 type Body = {
   eventId: string;
-  query: string;
-  mode?: "ticket" | "text";
+  query?: string;
+  mode?: "ticket" | "text" | "all";
+  filter?: "all" | "student" | "company";
 };
 
 export async function POST(request: Request) {
@@ -26,39 +27,82 @@ export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as Body | null;
   const eventId = body?.eventId?.trim();
   const query = body?.query?.trim();
+  const filter = body?.filter ?? "all";
 
-  if (!eventId || !query) {
-    return NextResponse.json({ error: "Event og søk er påkrevd." }, { status: 400 });
+  if (!eventId) {
+    return NextResponse.json({ error: "Event er påkrevd." }, { status: 400 });
   }
 
   const supabase = createAdminSupabaseClient();
 
-  if (body?.mode === "ticket") {
-    const { data, error } = await supabase
+  if (body?.mode === "all") {
+    let allQuery = supabase
       .from("event_tickets")
-      .select("*, student:students(id, full_name, email, phone, study_program, study_level, study_year)")
+      .select("*, student:students(id, full_name, email, phone, study_program, study_level, study_year), company:companies(id, name)")
+      .eq("event_id", eventId)
+      .order("created_at", { ascending: false })
+      .limit(500);
+    if (filter === "student") {
+      allQuery = allQuery.not("student_id", "is", null);
+    }
+    if (filter === "company") {
+      allQuery = allQuery.not("company_id", "is", null);
+    }
+    const { data, error } = await allQuery;
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ results: data ?? [] });
+  }
+
+  if (body?.mode === "ticket") {
+    if (!query) {
+      return NextResponse.json({ error: "Ticketnummer mangler." }, { status: 400 });
+    }
+    let ticketQuery = supabase
+      .from("event_tickets")
+      .select("*, student:students(id, full_name, email, phone, study_program, study_level, study_year), company:companies(id, name)")
       .eq("event_id", eventId)
       .eq("ticket_number", query)
       .limit(20);
+    if (filter === "student") {
+      ticketQuery = ticketQuery.not("student_id", "is", null);
+    }
+    if (filter === "company") {
+      ticketQuery = ticketQuery.not("company_id", "is", null);
+    }
+    const { data, error } = await ticketQuery;
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ results: data ?? [] });
   }
 
+  if (!query) {
+    return NextResponse.json({ error: "Søketekst mangler." }, { status: 400 });
+  }
+
+  const studentPromise =
+    filter === "company"
+      ? Promise.resolve({ data: [], error: null })
+      : supabase
+          .from("students")
+          .select("id, full_name, email, phone, study_program, study_level, study_year")
+          .or(`full_name.ilike.%${query}%,email.ilike.%${query}%,phone.ilike.%${query}%`)
+          .limit(50);
+
+  let attendeeQuery = supabase
+    .from("event_tickets")
+    .select("*, company:companies(id, name)")
+    .eq("event_id", eventId)
+    .or(`attendee_name.ilike.%${query}%,attendee_email.ilike.%${query}%,attendee_phone.ilike.%${query}%`)
+    .limit(100);
+  if (filter === "student") {
+    attendeeQuery = attendeeQuery.not("student_id", "is", null);
+  }
+  if (filter === "company") {
+    attendeeQuery = attendeeQuery.not("company_id", "is", null);
+  }
+
   const [{ data: students, error: studentError }, { data: ticketAttendees, error: attendeeError }] =
-    await Promise.all([
-      supabase
-        .from("students")
-        .select("id, full_name, email, phone, study_program, study_level, study_year")
-        .or(`full_name.ilike.%${query}%,email.ilike.%${query}%,phone.ilike.%${query}%`)
-        .limit(50),
-      supabase
-        .from("event_tickets")
-        .select("*")
-        .eq("event_id", eventId)
-        .or(`attendee_name.ilike.%${query}%,attendee_email.ilike.%${query}%,attendee_phone.ilike.%${query}%`)
-        .limit(100),
-    ]);
+    await Promise.all([studentPromise, attendeeQuery]);
 
   if (studentError) return NextResponse.json({ error: studentError.message }, { status: 500 });
   if (attendeeError) return NextResponse.json({ error: attendeeError.message }, { status: 500 });
@@ -67,7 +111,7 @@ export async function POST(request: Request) {
   const { data: ticketsByStudent, error: ticketError } = studentIds.length
     ? await supabase
         .from("event_tickets")
-        .select("*")
+        .select("*, company:companies(id, name)")
         .eq("event_id", eventId)
         .in("student_id", studentIds)
         .limit(100)
