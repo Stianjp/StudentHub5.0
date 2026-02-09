@@ -34,3 +34,16 @@ export async function getEventCompanies(eventId: string) {
   if (error) throw error;
   return (data ?? []) as unknown as Array<TableRow<"event_companies"> & { company: Company }>;
 }
+
+export async function listEventCompaniesForEvents(eventIds: string[]) {
+  if (eventIds.length === 0) return [];
+  const supabase = await createServerSupabaseClient();
+  const { data, error } = await supabase
+    .from("event_companies")
+    .select("event_id, company:companies(id, name)")
+    .in("event_id", eventIds)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+  return (data ?? []) as Array<{ event_id: string; company: Company }>;
+}

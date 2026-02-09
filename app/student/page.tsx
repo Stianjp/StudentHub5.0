@@ -8,8 +8,10 @@ import { getOrCreateStudentForUser } from "@/lib/student";
 import { saveStudentProfile } from "@/app/student/actions";
 import { SaveProfileButton } from "@/components/student/save-profile-button";
 import { STUDY_CATEGORIES } from "@/components/event/study-categories";
-import { listActiveEvents } from "@/lib/events";
+import { listActiveEvents, listEventCompaniesForEvents } from "@/lib/events";
 import { registerStudentForEvent } from "@/app/event/actions";
+import { Input } from "@/components/ui/input";
+import { CompanyInterestSelector } from "@/components/event/company-interest-selector";
 
 type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -28,6 +30,13 @@ export default async function StudentProfilePage({ searchParams }: PageProps) {
 
   const student = await getOrCreateStudentForUser(profile.id, user.email);
   const events = await listActiveEvents();
+  const eventCompanies = events.length ? await listEventCompaniesForEvents(events.map((event) => event.id)) : [];
+  const companyMap = new Map<string, Array<{ id: string; name: string }>>();
+  eventCompanies.forEach((row) => {
+    const existing = companyMap.get(row.event_id) ?? [];
+    existing.push({ id: row.company.id, name: row.company.name });
+    companyMap.set(row.event_id, existing);
+  });
   const { data: tickets } = await supabase
     .from("event_tickets")
     .select("id, event_id")
@@ -253,9 +262,26 @@ export default async function StudentProfilePage({ searchParams }: PageProps) {
                   </div>
                   <form action={registerStudentForEvent}>
                     <input type="hidden" name="eventId" value={event.id} />
+                    <label className="mt-2 block text-xs font-semibold text-surface">
+                      Telefon
+                      <Input
+                        name="phone"
+                        required
+                        placeholder="Telefonnummer"
+                        defaultValue={student.phone ?? ""}
+                        className="mt-1"
+                      />
+                    </label>
+                    <div className="mt-3">
+                      <p className="text-xs font-semibold text-surface">Hvilke bedrifter er du interessert i?</p>
+                      <p className="text-[11px] text-surface/70">Velg alle, noen eller ingen.</p>
+                      <div className="mt-2">
+                        <CompanyInterestSelector companies={companyMap.get(event.id) ?? []} />
+                      </div>
+                    </div>
                     <button
                       type="submit"
-                      className="inline-flex items-center justify-center rounded-xl bg-secondary px-4 py-2 text-xs font-semibold text-primary transition hover:bg-secondary/90 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="mt-3 inline-flex items-center justify-center rounded-xl bg-secondary px-4 py-2 text-xs font-semibold text-primary transition hover:bg-secondary/90 disabled:cursor-not-allowed disabled:opacity-60"
                       disabled={registeredEventIds.has(event.id)}
                     >
                       {registeredEventIds.has(event.id) ? "Allerede påmeldt" : "Meld deg på"}
