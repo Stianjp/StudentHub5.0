@@ -32,10 +32,7 @@ export default async function CheckinHomePage() {
                     {new Date(event.starts_at).toLocaleString("nb-NO")} – {new Date(event.ends_at).toLocaleString("nb-NO")}
                   </p>
                 </div>
-                <Link
-                  className="text-xs font-semibold text-primary/70 hover:text-primary"
-                  href={`/checkin/${event.id}`}
-                >
+                <Link className="button-link text-xs" href={`/checkin/${event.id}`}>
                   Åpne
                 </Link>
               </li>

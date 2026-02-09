@@ -35,6 +35,7 @@ export function CheckinClient({ eventId }: { eventId: string }) {
   const [message, setMessage] = useState<string | null>(null);
   const [printerUrl, setPrinterUrl] = useState<string>("");
   const [filter, setFilter] = useState<"all" | "student" | "company">("all");
+  const [activeQuery, setActiveQuery] = useState<string>("");
 
   const parsedQr = useMemo(() => {
     const trimmed = query.trim();
@@ -71,6 +72,7 @@ export function CheckinClient({ eventId }: { eventId: string }) {
     }
     const payload = await response.json();
     setResults(payload?.results ?? []);
+    setActiveQuery(query.trim());
     setStatus("success");
   }
 
@@ -94,6 +96,7 @@ export function CheckinClient({ eventId }: { eventId: string }) {
     }
     const payload = await response.json();
     setResults(payload?.results ?? []);
+    setActiveQuery("");
     setStatus("success");
   }
 
@@ -109,6 +112,12 @@ export function CheckinClient({ eventId }: { eventId: string }) {
       return;
     }
     await loadParticipants(nextFilter);
+  }
+
+  async function clearSearch() {
+    setQuery("");
+    setActiveQuery("");
+    await loadParticipants(filter);
   }
 
   async function checkinAndPrint(ticketId: string) {
@@ -156,6 +165,16 @@ export function CheckinClient({ eventId }: { eventId: string }) {
           <Button type="button" onClick={() => void lookupTickets()}>
             Søk
           </Button>
+          {activeQuery ? (
+            <button
+              type="button"
+              onClick={() => void clearSearch()}
+              className="inline-flex items-center gap-2 rounded-full border border-secondary/50 bg-secondary/15 px-3 py-1 text-xs font-semibold text-primary transition hover:border-secondary hover:text-secondary"
+            >
+              Søk: {activeQuery}
+              <span aria-hidden="true">×</span>
+            </button>
+          ) : null}
         </div>
         {message ? (
           <p className={`rounded-xl px-3 py-2 text-sm font-semibold ${status === "error" ? "bg-error/15 text-error" : "bg-success/15 text-success"}`}>

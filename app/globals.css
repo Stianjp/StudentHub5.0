@@ -46,6 +46,23 @@ button:active:not(:disabled) {
 }
 
 @layer components {
+  .button-link {
+    @apply inline-flex min-h-11 items-center justify-center rounded-full border border-transparent px-6 py-2.5 text-sm font-bold tracking-wide transition-all;
+    background-color: #FE9A70;
+    color: #140249;
+  }
+
+  .button-link:hover {
+    border-color: #FE9A70;
+    box-shadow: 0 0 0 2px rgba(254, 154, 112, 0.6), 0 0 0 5px rgba(20, 2, 73, 0.9);
+    transform: translateY(-1px);
+  }
+
+  .button-link:active {
+    transform: scale(0.98);
+    box-shadow: 0 0 0 2px rgba(254, 154, 112, 0.75), 0 0 0 5px rgba(20, 2, 73, 0.9);
+  }
+
   .portal-nav-link {
     @apply rounded-full border border-white/30 bg-transparent px-4 py-2 text-sm font-semibold text-white/90 transition;
   }

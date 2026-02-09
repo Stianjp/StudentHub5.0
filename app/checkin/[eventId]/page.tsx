@@ -29,7 +29,7 @@ export default async function CheckinEventPage({ params }: PageProps) {
         eyebrow="Check-in"
         title={event.name}
         description="Skann QR-koder eller søk etter deltakere."
-        actions={<Link className="text-sm font-semibold text-primary/70 hover:text-primary" href="/checkin">Bytt event</Link>}
+        actions={<Link className="button-link text-xs" href="/checkin">Bytt event</Link>}
       />
       <CheckinClient eventId={eventId} />
     </div>
