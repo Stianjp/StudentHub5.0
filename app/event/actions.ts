@@ -13,6 +13,7 @@ import { createLead, upsertConsentForStudent } from "@/lib/lead";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { sendTransactionalEmail } from "@/lib/resend";
+import type { TableRow } from "@/lib/types/database";
 
 export async function submitStandFlow(formData: FormData) {
   const profile = await requireRole("student");
@@ -278,8 +279,8 @@ export async function registerAttendeeForEvent(formData: FormData) {
       .from("students")
       .select("*")
       .eq("id", matchedStudent.id)
-      .single();
-    const leadStudent = fullStudent ?? matchedStudent;
+      .maybeSingle();
+    const leadStudent = (fullStudent ?? null) as TableRow<"students"> | null;
 
     await supabase
       .from("students")
@@ -290,7 +291,7 @@ export async function registerAttendeeForEvent(formData: FormData) {
       })
       .eq("id", matchedStudent.id);
 
-    if (companyIds.length > 0) {
+    if (companyIds.length > 0 && leadStudent) {
       await Promise.all(
         companyIds.map(async (companyId) => {
           await upsertConsentForStudent({
