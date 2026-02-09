@@ -495,7 +495,7 @@ export type Database = {
           created_at: string;
           updated_at: string | null;
           updated_by: string | null;
-          source: "stand" | "student_portal";
+          source: "stand" | "student_portal" | "ticket";
           consent_text_version: string | null;
           revoked_at: string | null;
         };
@@ -510,7 +510,7 @@ export type Database = {
           created_at?: string;
           updated_at?: string | null;
           updated_by?: string | null;
-          source?: "stand" | "student_portal";
+          source?: "stand" | "student_portal" | "ticket";
           consent_text_version?: string | null;
           revoked_at?: string | null;
         };
@@ -525,7 +525,7 @@ export type Database = {
           created_at?: string;
           updated_at?: string | null;
           updated_by?: string | null;
-          source?: "stand" | "student_portal";
+          source?: "stand" | "student_portal" | "ticket";
           consent_text_version?: string | null;
           revoked_at?: string | null;
         };
@@ -542,7 +542,7 @@ export type Database = {
           study_level: string | null;
           study_year: number | null;
           field_of_study: string | null;
-          source: "stand" | "student_portal";
+          source: "stand" | "student_portal" | "ticket";
           created_at: string;
         };
         Insert: {
@@ -555,7 +555,7 @@ export type Database = {
           study_level?: string | null;
           study_year?: number | null;
           field_of_study?: string | null;
-          source?: "stand" | "student_portal";
+          source?: "stand" | "student_portal" | "ticket";
           created_at?: string;
         };
         Update: {
@@ -568,7 +568,7 @@ export type Database = {
           study_level?: string | null;
           study_year?: number | null;
           field_of_study?: string | null;
-          source?: "stand" | "student_portal";
+          source?: "stand" | "student_portal" | "ticket";
           created_at?: string;
         };
         Relationships: [];
