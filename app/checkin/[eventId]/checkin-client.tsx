@@ -153,7 +153,7 @@ export function CheckinClient({ eventId }: { eventId: string }) {
           </label>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button type="button" onClick={lookupTickets}>
+          <Button type="button" onClick={() => void lookupTickets()}>
             Søk
           </Button>
         </div>
