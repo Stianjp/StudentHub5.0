@@ -25,6 +25,24 @@ import { isUuid } from "@/lib/utils";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { sendTransactionalEmail } from "@/lib/resend";
 
+function isNextRedirectError(error: unknown) {
+  const digest = (error as { digest?: string })?.digest;
+  const message = (error as { message?: string })?.message;
+  return digest === "NEXT_REDIRECT" || message === "NEXT_REDIRECT";
+}
+
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error) return error.message;
+  const message = (error as { message?: string })?.message;
+  if (typeof message === "string" && message.length > 0) return message;
+  if (typeof error === "string") return error;
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return "Ukjent feil";
+  }
+}
+
 function getFormValue(formData: FormData, name: string) {
   const direct = formData.get(name);
   if (direct !== null) return direct;
@@ -117,13 +135,9 @@ export async function inviteCompany(formData: FormData) {
       redirect(`${returnTo}?saved=1`);
     }
   } catch (error) {
+    if (isNextRedirectError(error)) throw error;
     if (typeof returnTo === "string" && returnTo.startsWith("/")) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : typeof error === "string"
-            ? error
-            : JSON.stringify(error);
+      const message = getErrorMessage(error);
       redirect(`${returnTo}?error=${encodeURIComponent(message)}`);
     }
     throw error;
@@ -166,13 +180,9 @@ export async function createCompanyAction(formData: FormData) {
       redirect(`${returnTo}?saved=1`);
     }
   } catch (error) {
+    if (isNextRedirectError(error)) throw error;
     if (typeof returnTo === "string" && returnTo.startsWith("/")) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : typeof error === "string"
-            ? error
-            : JSON.stringify(error);
+      const message = getErrorMessage(error);
       redirect(`${returnTo}?error=${encodeURIComponent(message)}`);
     }
     throw error;
@@ -208,8 +218,9 @@ export async function addCompanyDomainAction(formData: FormData) {
       redirect(`${returnTo}?saved=1`);
     }
   } catch (error) {
+    if (isNextRedirectError(error)) throw error;
     if (typeof returnTo === "string" && returnTo.startsWith("/")) {
-      const message = error instanceof Error ? error.message : "Ukjent feil";
+      const message = getErrorMessage(error);
       redirect(`${returnTo}?error=${encodeURIComponent(message)}`);
     }
     throw error;
@@ -265,8 +276,9 @@ export async function approveCompanyAccessAction(formData: FormData) {
       redirect(`${returnTo}?saved=1`);
     }
   } catch (error) {
+    if (isNextRedirectError(error)) throw error;
     if (typeof returnTo === "string" && returnTo.startsWith("/")) {
-      const message = error instanceof Error ? error.message : "Ukjent feil";
+      const message = getErrorMessage(error);
       redirect(`${returnTo}?error=${encodeURIComponent(message)}`);
     }
     throw error;
@@ -303,8 +315,9 @@ export async function setPackage(formData: FormData) {
       redirect(`${returnTo}?saved=1`);
     }
   } catch (error) {
+    if (isNextRedirectError(error)) throw error;
     if (typeof returnTo === "string" && returnTo.startsWith("/")) {
-      const message = error instanceof Error ? error.message : "Ukjent feil";
+      const message = getErrorMessage(error);
       redirect(`${returnTo}?error=${encodeURIComponent(message)}`);
     }
     throw error;
@@ -345,8 +358,9 @@ export async function registerCompany(formData: FormData) {
       redirect(`${returnTo}?saved=1`);
     }
   } catch (error) {
+    if (isNextRedirectError(error)) throw error;
     if (typeof returnTo === "string" && returnTo.startsWith("/")) {
-      const message = error instanceof Error ? error.message : "Ukjent feil";
+      const message = getErrorMessage(error);
       redirect(`${returnTo}?error=${encodeURIComponent(message)}`);
     }
     throw error;
@@ -389,8 +403,9 @@ export async function registerCompaniesBulk(formData: FormData) {
       redirect(`${returnTo}?saved=1`);
     }
   } catch (error) {
+    if (isNextRedirectError(error)) throw error;
     if (typeof returnTo === "string" && returnTo.startsWith("/")) {
-      const message = error instanceof Error ? error.message : "Ukjent feil";
+      const message = getErrorMessage(error);
       redirect(`${returnTo}?error=${encodeURIComponent(message)}`);
     }
     throw error;
@@ -450,8 +465,9 @@ export async function resendTicketEmail(formData: FormData) {
       redirect(`${returnTo}?saved=1`);
     }
   } catch (error) {
+    if (isNextRedirectError(error)) throw error;
     if (typeof returnTo === "string" && returnTo.startsWith("/")) {
-      const message = error instanceof Error ? error.message : "Ukjent feil";
+      const message = getErrorMessage(error);
       redirect(`${returnTo}?error=${encodeURIComponent(message)}`);
     }
     throw error;
@@ -490,8 +506,9 @@ export async function deleteTicket(formData: FormData) {
       redirect(`${returnTo}?saved=1`);
     }
   } catch (error) {
+    if (isNextRedirectError(error)) throw error;
     if (typeof returnTo === "string" && returnTo.startsWith("/")) {
-      const message = error instanceof Error ? error.message : "Ukjent feil";
+      const message = getErrorMessage(error);
       redirect(`${returnTo}?error=${encodeURIComponent(message)}`);
     }
     throw error;
