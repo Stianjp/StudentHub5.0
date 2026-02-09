@@ -11,6 +11,10 @@ export async function createServerSupabaseClient() {
   const domain = resolveCookieDomain(host, cookieDomain);
 
   return createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      // Middleware handles refresh; avoid refresh-token calls in Server Components.
+      autoRefreshToken: false,
+    },
     cookies: {
       get(name: string) {
         return cookieStore.get(name)?.value;
