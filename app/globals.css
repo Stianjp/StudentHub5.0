@@ -35,6 +35,10 @@ table {
   background-color: #140249;
 }
 
+.admin-scope .osh-card {
+  background-color: #140249;
+}
+
 button {
   transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease, background-color 150ms ease;
 }
