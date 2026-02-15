@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -20,7 +20,7 @@ function packageVariant(pkg: string) {
 
 function packageLabel(pkg: string) {
   if (pkg === "standard") return "Standard";
-  if (pkg === "silver") return "Solv";
+  if (pkg === "silver") return "Sølv";
   if (pkg === "gold") return "Gull";
   if (pkg === "platinum") return "Platinum";
   return pkg;
@@ -45,7 +45,7 @@ export default async function CompanyEventsPage() {
   if (!company || !companyId) {
     return (
       <Card className="border border-warning/30 bg-warning/10 text-sm text-ink/90">
-        Bedriftskontoen din er ikke godkjent enda. En admin ma godkjenne tilgang for du kan se events.
+        Bedriftskontoen din er ikke godkjent ennå. En admin må godkjenne tilgang før du kan se events.
       </Card>
     );
   }
@@ -62,15 +62,15 @@ export default async function CompanyEventsPage() {
     "Samle leads",
     "Promotere graduate-program",
     "Rekruttere til sommerjobb",
-    "Fa innsikt i studieretninger",
+    "Få innsikt i studieretninger",
     "Booke intervjuer",
   ];
   const kpiOptions = [
-    "Antall standbesok",
+    "Antall standbesøk",
     "Antall leads",
-    "Konvertering (besok -> lead)",
+    "Konvertering (besøk -> lead)",
     "Topp studieretninger",
-    "Besok per tidspunkt",
+    "Besøk per tidspunkt",
   ];
 
   return (
@@ -86,7 +86,7 @@ export default async function CompanyEventsPage() {
             )}
             href="/company"
           >
-            Meld pa nytt event
+            Meld på nytt event
           </Link>
         }
       />
@@ -94,7 +94,7 @@ export default async function CompanyEventsPage() {
       <Card className="flex flex-col gap-4">
         <h3 className="text-lg font-bold text-primary">Registrerte events</h3>
         {registrations.length === 0 ? (
-          <p className="text-sm text-ink/70">Ingen pameldinger enda.</p>
+          <p className="text-sm text-ink/70">Ingen påmeldinger enda.</p>
         ) : (
           <div className="grid gap-3">
             {registrations.map((registration) => (
@@ -128,7 +128,7 @@ export default async function CompanyEventsPage() {
                 </div>
                 <div className="mt-3 grid gap-2 text-xs text-ink/80 md:grid-cols-2">
                   <div>
-                    <p className="font-semibold text-primary">Mal</p>
+                    <p className="font-semibold text-primary">Mål</p>
                     <p>{registration.goals.join(", ") || "Ikke satt"}</p>
                   </div>
                   <div>
@@ -140,7 +140,7 @@ export default async function CompanyEventsPage() {
                 <form action={updateCompanyEventGoals} className="mt-4 grid gap-3">
                   <input type="hidden" name="eventId" value={registration.event_id} />
                   <fieldset className="grid gap-2">
-                    <legend className="text-sm font-semibold text-primary">Sett mal</legend>
+                    <legend className="text-sm font-semibold text-primary">Sett mål</legend>
                     <div className="grid gap-2 md:grid-cols-2">
                       {goalOptions.map((option) => (
                         <label
@@ -180,12 +180,12 @@ export default async function CompanyEventsPage() {
                     </div>
                   </fieldset>
                   <Button type="submit" variant="secondary">
-                    Lagre mal og KPI
+                    Lagre mål og KPI
                   </Button>
                 </form>
 
                 <div className="mt-4 rounded-2xl border border-primary/10 bg-surface p-4">
-                  <p className="text-sm font-semibold text-primary">Meld pa deltaker (bedrift)</p>
+                  <p className="text-sm font-semibold text-primary">Meld på deltaker (bedrift)</p>
                   <form action={registerCompanyAttendee} className="mt-3 grid gap-3 md:grid-cols-3">
                     <input type="hidden" name="eventId" value={registration.event_id} />
                     <label className="text-sm font-semibold text-primary md:col-span-1">
@@ -212,13 +212,13 @@ export default async function CompanyEventsPage() {
       </Card>
 
       <Card className="flex flex-col gap-4">
-        <h3 className="text-lg font-bold text-primary">Apne events</h3>
+        <h3 className="text-lg font-bold text-primary">Åpne events</h3>
         {openEvents.length === 0 ? (
-          <p className="text-sm text-ink/70">Du er allerede registrert pa alle aktive events.</p>
+          <p className="text-sm text-ink/70">Du er allerede registrert på alle aktive events.</p>
         ) : (
           <div className="grid gap-3 text-sm text-ink/80">
             <p>
-              Pamelding handteres av OSH-teamet. Ta kontakt pa e-post dersom dere onsker a delta.
+              Påmelding håndteres av OSH-teamet. Ta kontakt på e-post dersom dere ønsker å delta.
             </p>
             <ul className="grid gap-2">
               {openEvents.map((event) => (

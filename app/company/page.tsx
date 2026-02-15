@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -26,7 +26,7 @@ export default async function CompanyDashboardPage() {
   if (!company || !companyId) {
     return (
       <Card className="border border-warning/30 bg-warning/10 text-sm text-ink/90">
-        Bedriftskontoen din er ikke godkjent enda. En admin ma godkjenne tilgang for du kan se dashboardet.
+        Bedriftskontoen din er ikke godkjent ennå. En admin må godkjenne tilgang før du kan se dashboardet.
       </Card>
     );
   }
@@ -45,10 +45,10 @@ export default async function CompanyDashboardPage() {
       <SectionHeader
         eyebrow="Bedriftsdashboard"
         title={`Hei ${company.name}`}
-        description="Her far du oversikt og neste steg. Registreringen er delt opp for a gjore det enklere."
+        description="Her får du oversikt og neste steg. Registreringen er delt opp for å gjøre det enklere."
         actions={
           <Link href="/company/onboarding">
-            <Button variant="secondary">Ga til registrering</Button>
+            <Button variant="secondary">Gå til registrering</Button>
           </Link>
         }
       />
@@ -56,22 +56,22 @@ export default async function CompanyDashboardPage() {
       <section className="grid gap-4 md:grid-cols-3">
         <Stat label="Event-deltakelser" value={registrations.length} hint="Registrerte events" href="/company/events" />
         <Stat label="Leads med samtykke" value={consentedLeads} hint="Kun consent=true" href="/company/leads" />
-        <Stat label="Aktive events" value={events.length} hint="Tilgjengelige na" />
+        <Stat label="Aktive events" value={events.length} hint="Tilgjengelige nå" />
       </section>
 
       <section className="grid gap-6 lg:grid-cols-2">
         <Card className="relative overflow-hidden">
           <Image
             src="/images/event_giving_a_sheet.jpg"
-            alt="Registrering og oppfolging pa event"
+            alt="Registrering og oppfølging på event"
             fill
-            className="object-cover"
+            className="scale-105 object-cover blur-[3px]"
           />
-          <div className="absolute inset-0 bg-primary/70" />
+          <div className="absolute inset-0 bg-primary/78" />
           <div className="relative z-10 flex flex-col gap-4 text-surface">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-bold text-surface">Registreringsstatus</h3>
-              <span className="text-sm font-semibold text-surface/90">{onboarding.progress}% fullfort</span>
+              <span className="text-sm font-semibold text-surface/95">{onboarding.progress}% fullført</span>
             </div>
             <div className="h-3 w-full rounded-full bg-surface/20">
               <div className="h-3 rounded-full bg-secondary" style={{ width: `${onboarding.progress}%` }} />
@@ -80,11 +80,11 @@ export default async function CompanyDashboardPage() {
               {onboarding.sections.map((section) => (
                 <li
                   key={section.key}
-                  className="flex items-center justify-between rounded-xl bg-surface/10 px-3 py-2 backdrop-blur-sm"
+                  className="flex items-center justify-between rounded-xl bg-primary/45 px-3 py-2 backdrop-blur-md"
                 >
                   <span className="font-semibold text-surface">{section.label}</span>
                   <span className={section.completed ? "text-success" : "text-warning"}>
-                    {section.completed ? "Fullfort" : "Mangler"}
+                    {section.completed ? "Fullført" : "Mangler"}
                   </span>
                 </li>
               ))}
@@ -96,15 +96,15 @@ export default async function CompanyDashboardPage() {
         </Card>
 
         <Card className="flex flex-col gap-4">
-          <h3 className="text-lg font-bold text-primary">Hva skjer na?</h3>
+          <h3 className="text-lg font-bold text-primary">Hva skjer nå?</h3>
           <ol className="list-decimal space-y-2 pl-5 text-sm text-ink/80">
-            <li>Fullfor alle stegene i registreringen.</li>
-            <li>Be OSH-teamet registrere dere pa onsket event.</li>
-            <li>Admin setter pakke (Standard/Solv/Gull/Platinum).</li>
+            <li>Fullfør alle stegene i registreringen.</li>
+            <li>Be OSH-teamet registrere dere på ønsket event.</li>
+            <li>Admin setter pakke (Standard/Sølv/Gull/Platinum).</li>
             <li>Se leads og ROI i dashboardet.</li>
           </ol>
           <Link href="/company/events">
-            <Button variant="secondary">Se eventpameldinger</Button>
+            <Button variant="secondary">Se eventpåmeldinger</Button>
           </Link>
         </Card>
       </section>
@@ -114,7 +114,7 @@ export default async function CompanyDashboardPage() {
           <div className="relative aspect-[16/7] w-full">
             <Image
               src="/images/Event_People_talking.jpg"
-              alt="Studenter og bedrifter i samtale pa event"
+              alt="Studenter og bedrifter i samtale på event"
               fill
               priority
               className="object-cover"
@@ -123,7 +123,7 @@ export default async function CompanyDashboardPage() {
             <div className="absolute inset-x-0 bottom-0 p-6 text-surface">
               <h3 className="text-xl font-bold">Bygg relasjoner med riktige kandidater</h3>
               <p className="mt-1 text-sm text-surface/80">
-                Bruk dashboardet til a folge opp pameldinger, leads og neste aktiviteter.
+                Bruk dashboardet til å følge opp påmeldinger, leads og neste aktiviteter.
               </p>
             </div>
           </div>
@@ -145,7 +145,7 @@ export default async function CompanyDashboardPage() {
             <div className="relative aspect-[4/3] w-full">
               <Image
                 src="/images/BigStand.jpg"
-                alt="Stand-omrade under arrangement"
+                alt="Stand-område under arrangement"
                 fill
                 className="object-cover"
               />

@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { SectionHeader } from "@/components/ui/section-header";
 import { listEventsWithStats } from "@/lib/admin";
@@ -20,7 +20,7 @@ export default async function AdminEventsOverviewPage() {
       <section className="grid gap-4">
         {events.length === 0 ? (
           <Card>
-            <p className="text-sm text-ink/70">Ingen events opprettet enda.</p>
+            <p className="text-sm text-ink/70">Ingen events opprettet ennå.</p>
           </Card>
         ) : (
           events.map((event) => (
@@ -39,7 +39,7 @@ export default async function AdminEventsOverviewPage() {
                 </div>
               </div>
               <div className="text-xs font-semibold text-primary/70">
-                {event.companyCount} bedrifter - {event.visitCount} besok - {event.leadCount} leads
+                {event.companyCount} bedrifter - {event.visitCount} besøk - {event.leadCount} leads
               </div>
               <div className="text-xs text-ink/70">
                 {new Date(event.starts_at).toLocaleDateString("nb-NO")}

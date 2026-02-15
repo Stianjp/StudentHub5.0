@@ -1,4 +1,4 @@
-﻿import Link from "next/link";
+import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { registerCompaniesBulk, registerCompany, saveEvent } from "@/app/admin/a
 
 const packageLabel: Record<string, string> = {
   standard: "Standard",
-  silver: "Solv",
+  silver: "Sølv",
   gold: "Gull",
   platinum: "Platinum",
 };
@@ -63,7 +63,7 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
       <SectionHeader
         eyebrow="Event"
         title={eventData.event.name}
-        description="Oversikt over registrerte bedrifter og mulighet til a legge til flere."
+        description="Oversikt over registrerte bedrifter og mulighet til å legge til flere."
         actions={
           <Link className="text-sm font-semibold text-primary/70 transition hover:text-primary" href="/admin/events/overview">
             Tilbake
@@ -78,7 +78,7 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
       ) : null}
       {error ? (
         <Card className="border border-error/30 bg-error/10 text-sm text-error">
-          {errorMessage ? decodeURIComponent(errorMessage) : "Kunne ikke lagre. Sjekk feltene og prov igjen."}
+          {errorMessage ? decodeURIComponent(errorMessage) : "Kunne ikke lagre. Sjekk feltene og prøv igjen."}
         </Card>
       ) : null}
 
@@ -112,7 +112,7 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
             <Textarea name="description" rows={3} defaultValue={eventData.event.description ?? ""} />
           </label>
           <label className="text-sm font-semibold text-primary md:col-span-2">
-            Pameldingsside for bedrifter (URL)
+            Påmeldingsside for bedrifter (URL)
             <Input
               name="registrationFormUrl"
               type="url"
@@ -152,24 +152,24 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
               Pakke
               <Select name="package" defaultValue="standard">
                 <option value="standard">Standard</option>
-                <option value="silver">Solv</option>
+                <option value="silver">Sølv</option>
                 <option value="gold">Gull</option>
                 <option value="platinum">Platinum</option>
               </Select>
             </label>
             <div className="md:col-span-3">
               <p className="text-sm font-semibold text-primary">
-                Velg bedriftens kategori (oppdateres pa bedriften og kan endres av bedriften selv)
+                Velg bedriftens kategori (oppdateres på bedriften og kan endres av bedriften selv)
               </p>
               <div className="mt-2 grid gap-2 md:grid-cols-3">
                 {[
-                  "BYGGINGENIORER",
-                  "DATAINGENIOR/IT",
-                  "ELEKTROINGENIORER",
-                  "ENERGI & MILJO INGENIOR",
-                  "BIOTEKNOLOGI- OG KJEMIINGENIOR",
-                  "MASKININGENIORER",
-                  "OKONOMI OG ADMINISTRASJON",
+                  "BYGGINGENIØRER",
+                  "DATAINGENIØR/IT",
+                  "ELEKTROINGENIØRER",
+                  "ENERGI & MILJØ INGENIØR",
+                  "BIOTEKNOLOGI- OG KJEMIINGENIØR",
+                  "MASKININGENIØRER",
+                  "ØKONOMI OG ADMINISTRASJON",
                   "LEDELSE",
                   "HUMAN RESOURCES",
                 ].map((category) => (
@@ -204,24 +204,24 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
             Pakke
             <Select name="package" defaultValue="standard">
               <option value="standard">Standard</option>
-              <option value="silver">Solv</option>
+              <option value="silver">Sølv</option>
               <option value="gold">Gull</option>
               <option value="platinum">Platinum</option>
             </Select>
           </label>
           <div>
             <p className="text-sm font-semibold text-primary">
-              Velg bedriftens kategori (oppdateres pa bedriften og kan endres av bedriften selv)
+              Velg bedriftens kategori (oppdateres på bedriften og kan endres av bedriften selv)
             </p>
             <div className="mt-2 grid gap-2 md:grid-cols-3">
               {[
-                "BYGGINGENIORER",
-                "DATAINGENIOR/IT",
-                "ELEKTROINGENIORER",
-                "ENERGI & MILJO INGENIOR",
-                "BIOTEKNOLOGI- OG KJEMIINGENIOR",
-                "MASKININGENIORER",
-                "OKONOMI OG ADMINISTRASJON",
+                "BYGGINGENIØRER",
+                "DATAINGENIØR/IT",
+                "ELEKTROINGENIØRER",
+                "ENERGI & MILJØ INGENIØR",
+                "BIOTEKNOLOGI- OG KJEMIINGENIØR",
+                "MASKININGENIØRER",
+                "ØKONOMI OG ADMINISTRASJON",
                 "LEDELSE",
                 "HUMAN RESOURCES",
               ].map((category) => (

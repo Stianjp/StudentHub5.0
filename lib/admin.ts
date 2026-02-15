@@ -417,24 +417,45 @@ export async function registerCompanyForEvent(input: {
     categoryTags = company?.recruitment_fields ?? [];
   }
 
-  const { data, error } = await supabase
+  const basePayload = {
+    event_id: input.eventId,
+    company_id: input.companyId,
+    stand_type: input.standType ?? "Standard",
+    package: input.package ?? "standard",
+    registered_at: now,
+    updated_at: now,
+  };
+
+  const payloadWithCategories = {
+    ...basePayload,
+    category_tags: categoryTags,
+  };
+
+  let result = await supabase
     .from("event_companies")
-    .upsert(
-      {
-        event_id: input.eventId,
-        company_id: input.companyId,
-        stand_type: input.standType ?? "Standard",
-        package: input.package ?? "standard",
-        category_tags: categoryTags,
-        registered_at: now,
-        updated_at: now,
-      },
-      { onConflict: "event_id,company_id" },
-    )
+    .upsert(payloadWithCategories, { onConflict: "event_id,company_id" })
     .select("*")
     .single();
 
-  if (error) throw error;
+  if (result.error) {
+    const message = `${result.error.message ?? ""} ${result.error.details ?? ""}`.toLowerCase();
+    const missingCategoryTagsColumn =
+      message.includes("category_tags") &&
+      (message.includes("schema cache") || message.includes("column"));
+
+    if (!missingCategoryTagsColumn) {
+      throw result.error;
+    }
+
+    // Some environments are missing event_companies.category_tags.
+    result = await supabase
+      .from("event_companies")
+      .upsert(basePayload, { onConflict: "event_id,company_id" })
+      .select("*")
+      .single();
+
+    if (result.error) throw result.error;
+  }
 
   if (categoryTags.length > 0) {
     const { error: updateCompanyError } = await supabase
@@ -447,5 +468,5 @@ export async function registerCompanyForEvent(input: {
     if (updateCompanyError) throw updateCompanyError;
   }
 
-  return data;
+  return result.data;
 }
