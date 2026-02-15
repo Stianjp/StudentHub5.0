@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 
 function sourceLabel(source: string) {
   if (source === "stand") return "Stand";
-  if (source === "ticket") return "Pamelding";
+  if (source === "ticket") return "Påmelding";
   return "Studentportal";
 }
 
@@ -32,7 +32,7 @@ export default async function CompanyLeadsPage() {
   if (!company || !companyId) {
     return (
       <Card className="border border-warning/30 bg-warning/10 text-sm text-ink/90">
-        Bedriftskontoen din er ikke godkjent enna. En admin ma godkjenne tilgang for du kan se leads.
+        Bedriftskontoen din er ikke godkjent ennå. En admin må godkjenne tilgang før du kan se leads.
       </Card>
     );
   }
@@ -64,8 +64,8 @@ export default async function CompanyLeadsPage() {
         title="Leads fra stand og studentportal"
         description={
           hasAnyDetailedLeadAccess
-            ? "Full lead-visning pa events med Gull/Platinum eller ekstra Leads-tilgang. Andre events vises anonymisert."
-            : "Standard/Solv: Du ser antall leads og anonymisert innsikt (studie, ar og interesser)."
+            ? "Full lead-visning på events med Gull/Platinum eller ekstra Leads-tilgang. Andre events vises anonymisert."
+            : "Standard/Sølv: Du ser antall leads og anonymisert innsikt (studie, år og interesser)."
         }
         actions={
           hasAnyDetailedLeadAccess ? (
@@ -112,7 +112,7 @@ export default async function CompanyLeadsPage() {
                     <tr className="text-left text-xs font-semibold uppercase tracking-wide text-primary/60">
                       <th className="px-3 py-2">{hasDetailedLeadAccessForGroup ? "Navn" : "Lead"}</th>
                       <th className="px-3 py-2">Studie</th>
-                      <th className="px-3 py-2">Ar</th>
+                      <th className="px-3 py-2">År</th>
                       <th className="px-3 py-2">Interesser</th>
                       <th className="px-3 py-2">Kontakt</th>
                       <th className="px-3 py-2">Samtykke</th>
@@ -123,7 +123,7 @@ export default async function CompanyLeadsPage() {
                     {rows.map(({ lead, consent, student }, index) => {
                       const level = lead.study_level ?? student?.study_level ?? "";
                       const year = lead.study_year;
-                      const yearLabel = year ? `${year}. ar` : "";
+                      const yearLabel = year ? `${year}. år` : "";
                       const studyYearText = year ? `${yearLabel} ${level ? level.toLowerCase() : ""}`.trim() : "";
 
                       return (

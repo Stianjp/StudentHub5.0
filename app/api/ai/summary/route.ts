@@ -29,7 +29,7 @@ function includesAny(haystack: string, needles: string[]) {
 
 function buildFallbackSummary(metrics: Awaited<ReturnType<typeof getRoiMetrics>>) {
   const lines = [
-    `Standbesok: ${metrics.visitsCount}`,
+    `Standbesøk: ${metrics.visitsCount}`,
     `Leads: ${metrics.leadsCount}`,
     `Konvertering: ${metrics.conversion}%`,
   ];
@@ -39,7 +39,7 @@ function buildFallbackSummary(metrics: Awaited<ReturnType<typeof getRoiMetrics>>
     lines.push(`Topp studieretninger: ${top}`);
   }
 
-  lines.push("Anbefaling: Folg opp leads innen 48 timer og tilpass budskapet til topp studieretninger.");
+  lines.push("Anbefaling: Følg opp leads innen 48 timer og tilpass budskapet til topp studieretninger.");
   return lines.join("\n");
 }
 
@@ -108,17 +108,17 @@ function fallbackAnswerForQuestion(question: string, facts: ReturnType<typeof ag
     if (asksTalkedTo) {
       return [
         `Fra stand-samtaler fant vi ${facts.summerOrGraduateStand} studenter som oppga sommerjobb/graduate-interesse.`,
-        `Dette er basert pa ${facts.standLeads} leads fra kilde 'stand'.`,
+        `Dette er basert på ${facts.standLeads} leads fra kilde 'stand'.`,
       ].join(" ");
     }
     return [
       `Totalt fant vi ${facts.summerOrGraduateAll} studenter som oppga sommerjobb/graduate-interesse.`,
-      `Dette er basert pa ${facts.leadsTotal} leads i eventet.`,
+      `Dette er basert på ${facts.leadsTotal} leads i eventet.`,
     ].join(" ");
   }
 
   return [
-    `Jeg fant ikke en egen regel for dette sporsmalet i fallback-modus.`,
+    `Jeg fant ikke en egen regel for dette spørsmålet i fallback-modus.`,
     `Totalt leads: ${facts.leadsTotal}. Stand-leads: ${facts.standLeads}.`,
   ].join(" ");
 }
@@ -165,7 +165,7 @@ export async function POST(request: Request) {
   const question = typeof body?.question === "string" ? body.question.trim() : "";
 
   if (!eventId || !companyId) {
-    return NextResponse.json({ error: "event_id og company_id er pakrevd" }, { status: 400 });
+    return NextResponse.json({ error: "event_id og company_id er påkrevd" }, { status: 400 });
   }
 
   const supabase = await createServerSupabaseClient();
@@ -200,9 +200,9 @@ export async function POST(request: Request) {
 
   if (!question) {
     const prompt = [
-      "Du er en senior radgiver for karrieredager.",
+      "Du er en senior rådgiver for karrieredager.",
       "Oppsummer ROI-data og gi 3 konkrete anbefalinger.",
-      `Standbesok: ${metrics.visitsCount}`,
+      `Standbesøk: ${metrics.visitsCount}`,
       `Leads: ${metrics.leadsCount}`,
       `Konvertering: ${metrics.conversion}%`,
       `Topp studieretninger: ${
@@ -236,11 +236,11 @@ export async function POST(request: Request) {
   };
 
   const qaPrompt = [
-    "Du svarer pa sporsmal om en bedrifts egne eventdata.",
+    "Du svarer på spørsmål om en bedrifts egne eventdata.",
     "VIKTIG:",
     "- Bruk kun tallene i DATA_KONTEKST.",
-    "- Ikke gjett. Hvis data ikke dekker sporsmalet, skriv tydelig at data mangler.",
-    "- Svar pa norsk, kort og konkret.",
+    "- Ikke gjett. Hvis data ikke dekker spørsmålet, skriv tydelig at data mangler.",
+    "- Svar på norsk, kort og konkret.",
     "- Ta med eksakte tall i svaret.",
     "",
     `BRUKERSPORSMAL: ${question}`,
@@ -253,4 +253,3 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ summary: answer, fallback: gemini.text ? false : true, mode: "question" });
 }
-

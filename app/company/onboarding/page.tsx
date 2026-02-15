@@ -68,29 +68,34 @@ export default async function CompanyOnboardingInfoPage({ searchParams }: PagePr
               pattern="[0-9]{9}"
             />
           </label>
-          <label className="text-sm font-semibold text-primary">
-            Bransje (velg en eller flere)
+          <div className="text-sm font-semibold text-primary">
+            <p>Bransje (velg en eller flere)</p>
             <p className="mt-1 text-xs font-normal text-ink/70">
               Bransje brukes for matching mot studenter og for filtrering på event-sidene.
             </p>
             <div className="mt-2 grid gap-2 md:grid-cols-2">
-              {STUDY_CATEGORIES.map((category) => (
-                <label
-                  key={category}
-                  className="flex items-center gap-2 rounded-xl border border-primary/10 bg-surface px-3 py-2 text-sm"
-                >
-                  <input
-                    type="checkbox"
-                    name="industryCategories"
-                    value={category}
-                    defaultChecked={company.recruitment_fields.includes(category)}
-                    className="h-4 w-4 rounded border-primary/30 text-primary focus:ring-primary"
-                  />
-                  <span className="font-semibold text-primary">{category}</span>
-                </label>
-              ))}
+              {STUDY_CATEGORIES.map((category) => {
+                const inputId = `industry-category-${category.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+                return (
+                  <label
+                    key={category}
+                    htmlFor={inputId}
+                    className="flex items-center gap-2 rounded-xl border border-primary/10 bg-surface px-3 py-2 text-sm"
+                  >
+                    <input
+                      id={inputId}
+                      type="checkbox"
+                      name="industryCategories"
+                      value={category}
+                      defaultChecked={company.recruitment_fields.includes(category)}
+                      className="h-4 w-4 rounded border-primary/30 text-primary focus:ring-primary"
+                    />
+                    <span className="font-semibold text-primary">{category}</span>
+                  </label>
+                );
+              })}
             </div>
-          </label>
+          </div>
           <div className="grid gap-4 md:grid-cols-2">
             <label className="text-sm font-semibold text-primary">
               Størrelse

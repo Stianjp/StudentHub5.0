@@ -70,13 +70,13 @@ export default async function StudentEventSignupPage({ params, searchParams }: P
       <SectionHeader
         eyebrow="Student"
         title={event.name}
-        description={event.description ?? "Pamelding til event"}
+        description={event.description ?? "Påmelding til event"}
         actions={<Link className="button-link text-xs" href="/student/events">Tilbake</Link>}
       />
 
       {saved ? (
         <Card className="border border-success/30 bg-success/10 text-sm text-success">
-          Pamelding registrert.
+          Påmelding registrert.
         </Card>
       ) : null}
       {canceled ? (
@@ -121,7 +121,7 @@ export default async function StudentEventSignupPage({ params, searchParams }: P
 
       {!existingTicket ? (
         <Card className="flex flex-col gap-4">
-          <h3 className="text-lg font-bold text-primary">Meld deg pa</h3>
+          <h3 className="text-lg font-bold text-primary">Meld deg på</h3>
           <form action={registerStudentForEvent} className="grid gap-3 md:grid-cols-3">
             <input type="hidden" name="eventId" value={eventId} />
             <input type="hidden" name="returnTo" value={`/student/events/${eventId}?saved=1`} />
@@ -158,7 +158,7 @@ export default async function StudentEventSignupPage({ params, searchParams }: P
               type="submit"
               className="md:col-span-3 inline-flex items-center justify-center rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-surface transition hover:bg-primary/90"
             >
-              Meld deg pa
+              Meld deg på
             </button>
           </form>
         </Card>

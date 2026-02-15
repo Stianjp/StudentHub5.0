@@ -48,19 +48,19 @@ export function AiSummary({ eventId, companyId }: Props) {
     <Card className="flex flex-col gap-4">
       <div>
         <p className="text-xs font-semibold uppercase tracking-wide text-primary/60">AI (Gemini)</p>
-        <h3 className="text-lg font-bold text-primary">Sporsmal om egne data</h3>
+        <h3 className="text-lg font-bold text-primary">Spørsmål om egne data</h3>
         <p className="text-sm text-ink/80">
-          Still sporsmal om ROI/leads for valgt event. AI bruker kun deres egne eventdata.
+          Still spørsmål om ROI/leads for valgt event. AI bruker kun deres egne eventdata.
         </p>
       </div>
 
       <label className="text-sm font-semibold text-primary">
-        Sporsmal (valgfritt)
+        Spørsmål (valgfritt)
         <Textarea
           rows={3}
           value={question}
           onChange={(event) => setQuestion(event.target.value)}
-          placeholder="F.eks. Hvor mange vi snakket med pa stand var klare for sommerjobb eller graduate?"
+          placeholder="F.eks. Hvor mange vi snakket med på stand var klare for sommerjobb eller graduate?"
         />
       </label>
 
@@ -81,4 +81,3 @@ export function AiSummary({ eventId, companyId }: Props) {
     </Card>
   );
 }
-

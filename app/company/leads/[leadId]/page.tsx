@@ -63,7 +63,7 @@ export default async function CompanyLeadPage({ params }: LeadPageProps) {
   if (!hasDetailedLeadAccess) {
     return (
       <Card className="border border-warning/30 bg-warning/10 text-sm text-ink/90">
-        Denne pakken har ikke tilgang til lead-detaljer. Standard/Solv kan kun se antall og anonymisert innsikt pa leads.
+        Denne pakken har ikke tilgang til lead-detaljer. Standard/Sølv kan kun se antall og anonymisert innsikt på leads.
       </Card>
     );
   }

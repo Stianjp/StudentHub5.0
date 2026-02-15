@@ -12,7 +12,7 @@ import {
   companyInfoSchema,
   companyRecruitmentSchema,
 } from "@/lib/validation/company";
-import { getOrCreateCompanyForUser } from "@/lib/company";
+import { getCompanyAttendeeTicketLimit, getOrCreateCompanyForUser } from "@/lib/company";
 import { sendTransactionalEmail } from "@/lib/resend";
 
 function generateTicketNumber() {
@@ -302,6 +302,30 @@ export async function registerCompanyAttendee(formData: FormData) {
 
   if (!eventId || !fullName || !email) {
     throw new Error("Navn og e-post er påkrevd.");
+  }
+
+  const { data: registration, error: registrationError } = await admin
+    .from("event_companies")
+    .select("package")
+    .eq("event_id", eventId)
+    .eq("company_id", company.id)
+    .maybeSingle();
+
+  if (registrationError) throw registrationError;
+  if (!registration) {
+    throw new Error("Bedriften er ikke registrert på dette eventet.");
+  }
+
+  const attendeeLimit = getCompanyAttendeeTicketLimit(registration.package);
+  const { count: attendeeCount, error: attendeeCountError } = await admin
+    .from("event_tickets")
+    .select("id", { count: "exact", head: true })
+    .eq("event_id", eventId)
+    .eq("company_id", company.id);
+
+  if (attendeeCountError) throw attendeeCountError;
+  if ((attendeeCount ?? 0) >= attendeeLimit) {
+    throw new Error(`Dere har nådd maks antall kostnadsfrie billetter (${attendeeLimit}) for denne pakken.`);
   }
 
   await ensureCapacity(admin, eventId);

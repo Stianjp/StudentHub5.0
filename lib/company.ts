@@ -15,8 +15,20 @@ type Lead = TableRow<"leads">;
 
 type EventRegistration = EventCompany & { event: Event };
 
+const COMPANY_ATTENDEE_TICKET_LIMITS: Record<string, number> = {
+  standard: 2,
+  silver: 3,
+  gold: 6,
+  platinum: 8,
+};
+
 export function hasPremiumPackageAccess(packageTier: string | null | undefined) {
   return packageTier === "gold" || packageTier === "platinum";
+}
+
+export function getCompanyAttendeeTicketLimit(packageTier: string | null | undefined) {
+  if (!packageTier) return COMPANY_ATTENDEE_TICKET_LIMITS.standard;
+  return COMPANY_ATTENDEE_TICKET_LIMITS[packageTier] ?? COMPANY_ATTENDEE_TICKET_LIMITS.standard;
 }
 
 export function hasRoiAccessForRegistration(input: {
@@ -106,6 +118,29 @@ export async function getCompanyRegistrations(companyId: string) {
 
   if (error) throw error;
   return (data ?? []) as unknown as EventRegistration[];
+}
+
+export async function getCompanyAttendeeCountByEvent(companyId: string) {
+  let supabase = await createServerSupabaseClient();
+  try {
+    supabase = createAdminSupabaseClient();
+  } catch {
+    // fallback
+  }
+
+  const { data, error } = await supabase
+    .from("event_tickets")
+    .select("event_id")
+    .eq("company_id", companyId);
+
+  if (error) throw error;
+
+  const counts: Record<string, number> = {};
+  for (const row of data ?? []) {
+    counts[row.event_id] = (counts[row.event_id] ?? 0) + 1;
+  }
+
+  return counts;
 }
 
 export async function getCompanyLeads(companyId: string) {
