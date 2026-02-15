@@ -31,6 +31,17 @@ export function getCompanyAttendeeTicketLimit(packageTier: string | null | undef
   return COMPANY_ATTENDEE_TICKET_LIMITS[packageTier] ?? COMPANY_ATTENDEE_TICKET_LIMITS.standard;
 }
 
+export function getCompanyAttendeeTicketAllowance(input: {
+  package: string | null | undefined;
+  extra_attendee_tickets?: number | null;
+}) {
+  const baseLimit = getCompanyAttendeeTicketLimit(input.package);
+  const extra = Number.isFinite(input.extra_attendee_tickets)
+    ? Math.max(Number(input.extra_attendee_tickets), 0)
+    : 0;
+  return baseLimit + extra;
+}
+
 export function hasRoiAccessForRegistration(input: {
   package: string | null | undefined;
   can_view_roi?: boolean | null;

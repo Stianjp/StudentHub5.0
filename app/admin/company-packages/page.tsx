@@ -62,7 +62,7 @@ export default async function AdminCompanyPackagesPage({ searchParams }: PagePro
   let registrationsQuery = supabase
     .from("event_companies")
     .select(
-      "id, event_id, company_id, stand_type, package, can_view_roi, can_view_leads, access_from, access_until, updated_at, company:companies(id, name), event:events(id, name, starts_at)",
+      "id, event_id, company_id, stand_type, package, can_view_roi, can_view_leads, extra_attendee_tickets, access_from, access_until, updated_at, company:companies(id, name), event:events(id, name, starts_at)",
     )
     .order("created_at", { ascending: false });
 
@@ -82,6 +82,7 @@ export default async function AdminCompanyPackagesPage({ searchParams }: PagePro
     stand_type: string | null;
     can_view_roi: boolean;
     can_view_leads: boolean;
+    extra_attendee_tickets: number;
     access_from: string | null;
     access_until: string | null;
     updated_at: string;
@@ -159,6 +160,9 @@ export default async function AdminCompanyPackagesPage({ searchParams }: PagePro
                       <span className="rounded-full bg-primary/10 px-3 py-1 text-primary">
                         Leads: {hasLeadAccess ? "Ja" : "Nei"}
                       </span>
+                      <span className="rounded-full bg-primary/10 px-3 py-1 text-primary">
+                        Ekstra billetter: +{row.extra_attendee_tickets ?? 0}
+                      </span>
                     </div>
                   </div>
 
@@ -194,6 +198,17 @@ export default async function AdminCompanyPackagesPage({ searchParams }: PagePro
                         Ekstra: Skal kunne se Leads
                       </label>
                     </div>
+
+                    <label className="text-sm font-semibold text-primary">
+                      Ekstra ansattbilletter
+                      <Input
+                        name="extraAttendeeTickets"
+                        type="number"
+                        min={0}
+                        step={1}
+                        defaultValue={String(row.extra_attendee_tickets ?? 0)}
+                      />
+                    </label>
 
                     <label className="text-sm font-semibold text-primary">
                       Tilgang fra (valgfritt)

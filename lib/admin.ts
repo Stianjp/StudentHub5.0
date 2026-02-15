@@ -496,6 +496,7 @@ export async function updateEventCompanyPackageSettings(input: {
   registrationId: string;
   package: "standard" | "silver" | "gold" | "platinum";
   standType: "Standard" | "Premium";
+  extraAttendeeTickets: number;
   accessFrom?: string | null;
   accessUntil?: string | null;
   canViewRoi: boolean;
@@ -509,6 +510,7 @@ export async function updateEventCompanyPackageSettings(input: {
     .update({
       package: input.package,
       stand_type: input.standType,
+      extra_attendee_tickets: input.extraAttendeeTickets,
       access_from: input.accessFrom || null,
       access_until: input.accessUntil || null,
       can_view_roi: input.canViewRoi,

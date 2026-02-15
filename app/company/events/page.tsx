@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { requireRole } from "@/lib/auth";
 import {
   getCompanyAttendeeCountByEvent,
+  getCompanyAttendeeTicketAllowance,
   getCompanyAttendeeTicketLimit,
   getCompanyRegistrations,
   getOrCreateCompanyForUser,
@@ -104,7 +105,9 @@ export default async function CompanyEventsPage() {
         ) : (
           <div className="grid gap-3">
             {registrations.map((registration) => {
-              const attendeeLimit = getCompanyAttendeeTicketLimit(registration.package);
+              const packageLimit = getCompanyAttendeeTicketLimit(registration.package);
+              const extraAttendeeTickets = Math.max(registration.extra_attendee_tickets ?? 0, 0);
+              const attendeeLimit = getCompanyAttendeeTicketAllowance(registration);
               const attendeeCount = attendeeCountsByEvent[registration.event_id] ?? 0;
               const remainingAttendees = Math.max(attendeeLimit - attendeeCount, 0);
               const limitReached = remainingAttendees === 0;
@@ -198,10 +201,15 @@ export default async function CompanyEventsPage() {
 
                   <div className="mt-4 rounded-2xl border border-primary/10 bg-surface p-4">
                     <p className="text-sm font-semibold text-primary">Meld på deltaker (bedrift)</p>
-                    <p className={cn("mt-1 text-xs", limitReached ? "font-semibold text-warning" : "text-ink/70")}>
-                      {attendeeCount} av {attendeeLimit} ansatte meldt på. {remainingAttendees} kostnadsfrie billetter til ansatte gjenstår.
+                  <p className={cn("mt-1 text-xs", limitReached ? "font-semibold text-warning" : "text-ink/70")}>
+                    {attendeeCount} av {attendeeLimit} ansatte meldt på. {remainingAttendees} kostnadsfrie billetter til ansatte gjenstår.
+                  </p>
+                  {extraAttendeeTickets > 0 ? (
+                    <p className="mt-1 text-xs text-ink/70">
+                      Pakke inkluderer {packageLimit}, admin har lagt til +{extraAttendeeTickets} ekstra billetter.
                     </p>
-                    <form action={registerCompanyAttendee} className="mt-3 grid gap-3 md:grid-cols-3">
+                  ) : null}
+                  <form action={registerCompanyAttendee} className="mt-3 grid gap-3 md:grid-cols-3">
                       <input type="hidden" name="eventId" value={registration.event_id} />
                       <label className="text-sm font-semibold text-primary md:col-span-1">
                         Navn

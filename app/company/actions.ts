@@ -12,7 +12,10 @@ import {
   companyInfoSchema,
   companyRecruitmentSchema,
 } from "@/lib/validation/company";
-import { getCompanyAttendeeTicketLimit, getOrCreateCompanyForUser } from "@/lib/company";
+import {
+  getCompanyAttendeeTicketAllowance,
+  getOrCreateCompanyForUser,
+} from "@/lib/company";
 import { sendTransactionalEmail } from "@/lib/resend";
 
 function generateTicketNumber() {
@@ -79,13 +82,13 @@ async function getCompanyContext() {
 
 export async function saveCompanyInfo(formData: FormData) {
   const parsed = companyInfoSchema.safeParse({
-    name: formData.get("name"),
-    orgNumber: formData.get("orgNumber"),
-    industry: formData.get("industry"),
+    name: String(formData.get("name") ?? ""),
+    orgNumber: String(formData.get("orgNumber") ?? ""),
+    industry: String(formData.get("industry") ?? ""),
     industryCategories: formData.getAll("industryCategories"),
-    size: formData.get("size"),
-    location: formData.get("location"),
-    website: formData.get("website"),
+    size: String(formData.get("size") ?? ""),
+    location: String(formData.get("location") ?? ""),
+    website: String(formData.get("website") ?? ""),
   });
 
   if (!parsed.success) {
@@ -306,7 +309,7 @@ export async function registerCompanyAttendee(formData: FormData) {
 
   const { data: registration, error: registrationError } = await admin
     .from("event_companies")
-    .select("package")
+    .select("package, extra_attendee_tickets")
     .eq("event_id", eventId)
     .eq("company_id", company.id)
     .maybeSingle();
@@ -316,7 +319,7 @@ export async function registerCompanyAttendee(formData: FormData) {
     throw new Error("Bedriften er ikke registrert på dette eventet.");
   }
 
-  const attendeeLimit = getCompanyAttendeeTicketLimit(registration.package);
+  const attendeeLimit = getCompanyAttendeeTicketAllowance(registration);
   const { count: attendeeCount, error: attendeeCountError } = await admin
     .from("event_tickets")
     .select("id", { count: "exact", head: true })

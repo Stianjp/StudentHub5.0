@@ -488,10 +488,12 @@ export async function updateCompanyPackageSettings(formData: FormData) {
     const registrationId = String(getFormValue(formData, "registrationId") ?? "").trim();
     const packageTier = String(getFormValue(formData, "package") ?? "").trim();
     const standType = String(getFormValue(formData, "standType") ?? "").trim();
+    const extraAttendeeTicketsRaw = String(getFormValue(formData, "extraAttendeeTickets") ?? "0").trim();
     const accessFrom = String(getFormValue(formData, "accessFrom") ?? "").trim();
     const accessUntil = String(getFormValue(formData, "accessUntil") ?? "").trim();
     const canViewRoi = getFormValue(formData, "canViewRoi") !== null;
     const canViewLeads = getFormValue(formData, "canViewLeads") !== null;
+    const extraAttendeeTickets = Number(extraAttendeeTicketsRaw);
 
     if (!isUuid(registrationId)) {
       throw new Error("Ugyldig registrering.");
@@ -502,11 +504,15 @@ export async function updateCompanyPackageSettings(formData: FormData) {
     if (!STAND_TYPE_VALUES.includes(standType as (typeof STAND_TYPE_VALUES)[number])) {
       throw new Error("Ugyldig standtype.");
     }
+    if (!Number.isInteger(extraAttendeeTickets) || extraAttendeeTickets < 0) {
+      throw new Error("Ekstra ansattbilletter må være et heltall lik eller større enn 0.");
+    }
 
     await updateEventCompanyPackageSettings({
       registrationId,
       package: packageTier as (typeof PACKAGE_VALUES)[number],
       standType: standType as (typeof STAND_TYPE_VALUES)[number],
+      extraAttendeeTickets,
       accessFrom: accessFrom || null,
       accessUntil: accessUntil || null,
       canViewRoi,
@@ -518,6 +524,7 @@ export async function updateCompanyPackageSettings(formData: FormData) {
     revalidatePath("/admin/companies/register-event");
     revalidatePath("/company/leads");
     revalidatePath("/company/roi");
+    revalidatePath("/company/events");
     if (typeof returnTo === "string" && returnTo.startsWith("/")) {
       const separator = returnTo.includes("?") ? "&" : "?";
       redirect(`${returnTo}${separator}saved=1`);

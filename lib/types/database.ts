@@ -369,6 +369,7 @@ export type Database = {
           package: "standard" | "silver" | "gold" | "platinum";
           can_view_roi: boolean;
           can_view_leads: boolean;
+          extra_attendee_tickets: number;
           access_from: string | null;
           access_until: string | null;
           invited_email: string | null;
@@ -388,6 +389,7 @@ export type Database = {
           package?: "standard" | "silver" | "gold" | "platinum";
           can_view_roi?: boolean;
           can_view_leads?: boolean;
+          extra_attendee_tickets?: number;
           access_from?: string | null;
           access_until?: string | null;
           invited_email?: string | null;
@@ -407,6 +409,7 @@ export type Database = {
           package?: "standard" | "silver" | "gold" | "platinum";
           can_view_roi?: boolean;
           can_view_leads?: boolean;
+          extra_attendee_tickets?: number;
           access_from?: string | null;
           access_until?: string | null;
           invited_email?: string | null;
