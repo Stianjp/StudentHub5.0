@@ -28,8 +28,9 @@ export default async function StudentLayout({ children }: { children: React.Reac
       roleKey="student"
       title={title}
       nav={nav}
-      backgroundClass="bg-primary text-surface"
-      mainClass="bg-primary"
+      backgroundClass="bg-gradient-to-br from-primary to-secondary"
+      backgroundStyle={{ backgroundImage: "linear-gradient(150deg, #140249 0%, #2D0A73 52%, #FE9A70 100%)" }}
+      mainClass="bg-primary/10"
     >
       {children}
     </PortalShell>

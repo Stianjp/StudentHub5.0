@@ -94,7 +94,18 @@ function generateTicketNumber() {
   return `T-${Math.random().toString(36).slice(2, 6).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
 }
 
-async function ensureCapacity(supabase: ReturnType<typeof createAdminSupabaseClient>, eventId: string) {
+type AdminClient = ReturnType<typeof createAdminSupabaseClient>;
+type EventTicket = TableRow<"event_tickets">;
+
+function appendQueryParam(path: string, key: string, value: string) {
+  const [pathname, queryString = ""] = path.split("?");
+  const params = new URLSearchParams(queryString);
+  params.set(key, value);
+  const nextQuery = params.toString();
+  return nextQuery ? `${pathname}?${nextQuery}` : pathname;
+}
+
+async function ensureCapacity(supabase: AdminClient, eventId: string) {
   const { data: event, error: eventError } = await supabase
     .from("events")
     .select("ticket_limit")
@@ -114,23 +125,71 @@ async function ensureCapacity(supabase: ReturnType<typeof createAdminSupabaseCli
   }
 }
 
-async function createTicketNumber(supabase: ReturnType<typeof createAdminSupabaseClient>, eventId: string) {
-  for (let attempt = 0; attempt < 3; attempt += 1) {
+async function getStudentTicketForEvent(supabase: AdminClient, eventId: string, studentId: string) {
+  const { data, error } = await supabase
+    .from("event_tickets")
+    .select("*")
+    .eq("event_id", eventId)
+    .eq("student_id", studentId)
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  if (error) throw error;
+  return (data?.[0] ?? null) as EventTicket | null;
+}
+
+async function createTicket(
+  supabase: AdminClient,
+  payload: {
+    eventId: string;
+    studentId?: string | null;
+    companyId?: string | null;
+    attendeeName?: string | null;
+    attendeeEmail?: string | null;
+    attendeePhone?: string | null;
+  },
+) {
+  for (let attempt = 0; attempt < 5; attempt += 1) {
     const ticketNumber = generateTicketNumber();
+    const now = new Date().toISOString();
     const { data, error } = await supabase
       .from("event_tickets")
       .insert({
-        event_id: eventId,
+        event_id: payload.eventId,
+        student_id: payload.studentId ?? null,
+        company_id: payload.companyId ?? null,
+        attendee_name: payload.attendeeName ?? null,
+        attendee_email: payload.attendeeEmail ?? null,
+        attendee_phone: payload.attendeePhone ?? null,
         ticket_number: ticketNumber,
         status: "active",
-        updated_at: new Date().toISOString(),
+        updated_at: now,
       })
       .select("*")
       .single();
 
-    if (!error) return data;
-    if (error.code !== "23505") throw error;
+    if (!error) return data as EventTicket;
+
+    const message = `${error.message} ${error.details ?? ""}`.toLowerCase();
+    if (error.code === "23505" && message.includes("ticket_number")) {
+      continue;
+    }
+
+    if (
+      error.code === "23505" &&
+      payload.studentId &&
+      (message.includes("idx_event_tickets_unique_student_event") ||
+        (message.includes("event_id") && message.includes("student_id")))
+    ) {
+      const existingTicket = await getStudentTicketForEvent(supabase, payload.eventId, payload.studentId);
+      if (existingTicket) {
+        return existingTicket;
+      }
+    }
+
+    throw error;
   }
+
   throw new Error("Kunne ikke generere billettnummer.");
 }
 
@@ -145,36 +204,35 @@ export async function registerStudentForEvent(formData: FormData) {
   if (!user) throw new Error("User not found");
 
   const eventId = String(formData.get("eventId") ?? "").trim();
+  const returnTo = String(formData.get("returnTo") ?? "").trim();
   if (!eventId) throw new Error("Event mangler.");
 
   const student = await getOrCreateStudentForUser(profile.id, user.email);
+  const existingTicket = await getStudentTicketForEvent(admin, eventId, student.id);
+  if (existingTicket) {
+    if (returnTo) {
+      redirect(appendQueryParam(returnTo, "already", "1"));
+    }
+    return;
+  }
+
   const phone = String(formData.get("phone") ?? "").trim();
   const fullName = String(formData.get("fullName") ?? "").trim();
   const emailInput = String(formData.get("email") ?? "").trim();
+  const companyIds = formData.getAll("companyIds").map((value) => String(value)).filter(Boolean);
+  const requireCompany = String(formData.get("requireCompany") ?? "") === "1";
+  if (requireCompany && companyIds.length === 0) {
+    throw new Error("Velg minst en bedrift for å hente billett.");
+  }
+
   const missingName = !student.full_name && !fullName;
   const missingEmail = !student.email && !emailInput && !user.email;
   const missingPhone = !student.phone && !phone;
   if (missingName || missingEmail || missingPhone) {
     throw new Error("Navn, e-post og telefonnummer må være registrert for å hente billett.");
   }
-  const requireCompany = String(formData.get("requireCompany") ?? "") === "1";
 
-  await ensureCapacity(admin, eventId);
-  const ticket = await createTicketNumber(admin, eventId);
   const now = new Date().toISOString();
-  const { error: attachError } = await admin
-    .from("event_tickets")
-    .update({
-      student_id: student.id,
-      attendee_name: student.full_name ?? fullName ?? null,
-      attendee_email: student.email ?? emailInput ?? user.email ?? null,
-      attendee_phone: phone || student.phone || null,
-      updated_at: now,
-    })
-    .eq("id", ticket.id);
-
-  if (attachError) throw attachError;
-
   const studentUpdate: Record<string, string> = {};
   if (phone && phone !== student.phone) studentUpdate.phone = phone;
   if (fullName && fullName !== student.full_name) studentUpdate.full_name = fullName;
@@ -183,13 +241,26 @@ export async function registerStudentForEvent(formData: FormData) {
     await admin.from("students").update({ ...studentUpdate, updated_at: now }).eq("id", student.id);
   }
 
+  const resolvedName = fullName || student.full_name || null;
+  const resolvedEmail = emailInput || student.email || user.email || null;
+  const resolvedPhone = phone || student.phone || null;
+
+  await ensureCapacity(admin, eventId);
+  const ticket = await createTicket(admin, {
+    eventId,
+    studentId: student.id,
+    attendeeName: resolvedName,
+    attendeeEmail: resolvedEmail,
+    attendeePhone: resolvedPhone,
+  });
+
   const { data: event } = await admin.from("events").select("id, name").eq("id", eventId).single();
 
-  if (user.email) {
+  if (resolvedEmail) {
     const ticketPayload = encodeURIComponent(JSON.stringify({ t: ticket.ticket_number, e: eventId }));
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${ticketPayload}`;
     await sendTransactionalEmail({
-      to: user.email,
+      to: resolvedEmail,
       subject: `Billett til ${event?.name ?? "OSH event"}`,
       type: "event_confirmation",
       html: `<p>Hei,</p>
@@ -206,11 +277,14 @@ export async function registerStudentForEvent(formData: FormData) {
     });
   }
 
-  const companyIds = formData.getAll("companyIds").map((value) => String(value)).filter(Boolean);
-  if (requireCompany && companyIds.length === 0) {
-    throw new Error("Velg minst én bedrift for å hente billett.");
-  }
   if (companyIds.length > 0) {
+    const leadStudent = {
+      ...student,
+      full_name: resolvedName,
+      email: resolvedEmail,
+      phone: resolvedPhone,
+    };
+
     await Promise.all(
       companyIds.map(async (companyId) => {
         await upsertConsentForStudent({
@@ -221,14 +295,14 @@ export async function registerStudentForEvent(formData: FormData) {
           source: "ticket",
         });
         await createLead({
-          student,
+          student: leadStudent,
           companyId,
           eventId,
-          interests: student.interests ?? [],
-          jobTypes: student.job_types ?? [],
-          studyLevel: student.study_level,
-          studyYear: student.study_year ?? student.graduation_year,
-          fieldOfStudy: student.study_program,
+          interests: leadStudent.interests ?? [],
+          jobTypes: leadStudent.job_types ?? [],
+          studyLevel: leadStudent.study_level,
+          studyYear: leadStudent.study_year ?? leadStudent.graduation_year,
+          fieldOfStudy: leadStudent.study_program,
           consentGiven: true,
           source: "ticket",
         });
@@ -238,7 +312,6 @@ export async function registerStudentForEvent(formData: FormData) {
 
   revalidatePath("/student");
   revalidatePath(`/event/events/${eventId}`);
-  const returnTo = String(formData.get("returnTo") ?? "").trim();
   if (returnTo) {
     redirect(returnTo);
   }
@@ -250,6 +323,7 @@ export async function registerAttendeeForEvent(formData: FormData) {
   const fullName = String(formData.get("fullName") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
   const phone = String(formData.get("phone") ?? "").trim();
+  const returnTo = String(formData.get("returnTo") ?? "").trim();
   const companyIds = formData.getAll("companyIds").map((value) => String(value)).filter(Boolean);
   const requireCompany = String(formData.get("requireCompany") ?? "") === "1";
 
@@ -257,11 +331,9 @@ export async function registerAttendeeForEvent(formData: FormData) {
     throw new Error("Navn, e-post og telefon er påkrevd.");
   }
   if (requireCompany && companyIds.length === 0) {
-    throw new Error("Velg minst én bedrift for å hente billett.");
+    throw new Error("Velg minst en bedrift for å hente billett.");
   }
 
-  await ensureCapacity(supabase, eventId);
-  const ticket = await createTicketNumber(supabase, eventId);
   const now = new Date().toISOString();
 
   const { data: matchedStudent } = await supabase
@@ -270,18 +342,24 @@ export async function registerAttendeeForEvent(formData: FormData) {
     .eq("email", email)
     .maybeSingle();
 
-  const { error: attachError } = await supabase
-    .from("event_tickets")
-    .update({
-      student_id: matchedStudent?.id ?? null,
-      attendee_name: fullName,
-      attendee_email: email,
-      attendee_phone: phone || null,
-      updated_at: now,
-    })
-    .eq("id", ticket.id);
+  if (matchedStudent?.id) {
+    const existingTicket = await getStudentTicketForEvent(supabase, eventId, matchedStudent.id);
+    if (existingTicket) {
+      if (returnTo) {
+        redirect(appendQueryParam(returnTo, "ticket", "exists"));
+      }
+      throw new Error("Denne studenten har allerede billett til eventet.");
+    }
+  }
 
-  if (attachError) throw attachError;
+  await ensureCapacity(supabase, eventId);
+  const ticket = await createTicket(supabase, {
+    eventId,
+    studentId: matchedStudent?.id ?? null,
+    attendeeName: fullName,
+    attendeeEmail: email,
+    attendeePhone: phone || null,
+  });
 
   if (matchedStudent) {
     const { data: fullStudent } = await supabase
@@ -349,7 +427,6 @@ export async function registerAttendeeForEvent(formData: FormData) {
   });
 
   revalidatePath(`/event/events/${eventId}`);
-  const returnTo = String(formData.get("returnTo") ?? "").trim();
   if (returnTo) {
     redirect(returnTo);
   }

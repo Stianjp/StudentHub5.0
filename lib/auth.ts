@@ -12,9 +12,12 @@ const roleRedirect: Record<Profile["role"], string> = {
   admin: "/admin",
 };
 
-async function resolveHostRole() {
+async function resolveHostContext() {
   const host = (await headers()).get("host");
-  return roleFromHost(host);
+  return {
+    host,
+    role: roleFromHost(host),
+  };
 }
 
 export async function getUser() {
@@ -60,13 +63,14 @@ export async function getProfile() {
 export async function ensureProfile(role: Profile["role"]) {
   const user = await getUser();
   if (!user) {
-    const hostRole = await resolveHostRole();
-    const nextPath = defaultPathForRole(hostRole ?? role);
-    const roleParam = hostRole ?? role;
+    const hostContext = await resolveHostContext();
+    const nextPath = defaultPathForRole(hostContext.role ?? role, hostContext.host);
+    const roleParam = hostContext.role ?? role;
     redirect(`/auth/sign-in?role=${roleParam}&next=${encodeURIComponent(nextPath)}`);
   }
 
-  const hostRole = await resolveHostRole();
+  const hostContext = await resolveHostContext();
+  const hostRole = hostContext.role;
 
   const supabase = await createServerSupabaseClient();
   const now = new Date().toISOString();
@@ -83,7 +87,7 @@ export async function ensureProfile(role: Profile["role"]) {
 
   if (existing) {
     if (hostRole && existing.role !== hostRole && !(existing.role === "admin" && hostRole === "company")) {
-      const nextPath = defaultPathForRole(hostRole);
+      const nextPath = defaultPathForRole(hostRole, hostContext.host);
       redirect(`/auth/sign-in?role=${hostRole}&next=${encodeURIComponent(nextPath)}`);
     }
     if (!hostRole && existing.role !== role && existing.role !== "admin") {
@@ -114,10 +118,11 @@ export async function ensureProfile(role: Profile["role"]) {
 
 export async function requireRole(role: Profile["role"]) {
   const profile = await ensureProfile(role);
-  const hostRole = await resolveHostRole();
+  const hostContext = await resolveHostContext();
+  const hostRole = hostContext.role;
   if (hostRole) {
     if (profile.role === hostRole) return profile;
-    const nextPath = defaultPathForRole(hostRole);
+    const nextPath = defaultPathForRole(hostRole, hostContext.host);
     redirect(`/auth/sign-in?role=${hostRole}&next=${encodeURIComponent(nextPath)}`);
   }
 

@@ -4,7 +4,7 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { getEvent, getEventCompanies } from "@/lib/events";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getOrCreateStudentForUser } from "@/lib/student";
-import { registerAttendeeForEvent, registerStudentForEvent } from "@/app/event/actions";
+import { registerAttendeeForEvent } from "@/app/event/actions";
 import { Input } from "@/components/ui/input";
 import { CompanyInterestSelector } from "@/components/event/company-interest-selector";
 
@@ -16,6 +16,7 @@ type EventPageProps = {
 export default async function EventPage({ params, searchParams }: EventPageProps) {
   const { eventId } = await params;
   const ticketSent = searchParams?.ticket === "sent";
+  const ticketExists = searchParams?.ticket === "exists";
   const supabase = await createServerSupabaseClient();
   const [
     event,
@@ -79,6 +80,11 @@ export default async function EventPage({ params, searchParams }: EventPageProps
         {ticketSent ? (
           <Card className="border border-secondary/40 bg-secondary/15 text-sm font-semibold text-primary" role="status">
             Billett sendt til din e-post. Sjekk også søppelpost.
+          </Card>
+        ) : null}
+        {ticketExists ? (
+          <Card className="border border-info/40 bg-info/10 text-sm font-semibold text-info" role="status">
+            Du har allerede billett til dette eventet.
           </Card>
         ) : null}
         <Card className="flex flex-col gap-4">

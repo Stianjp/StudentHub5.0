@@ -34,10 +34,25 @@ export async function POST(request: Request) {
 
   const supabase = createAdminSupabaseClient();
   const now = new Date().toISOString();
+  const { data: currentTicket, error: currentTicketError } = await supabase
+    .from("event_tickets")
+    .select("*")
+    .eq("id", ticketId)
+    .eq("event_id", eventId)
+    .maybeSingle();
+
+  if (currentTicketError) return NextResponse.json({ error: currentTicketError.message }, { status: 500 });
+  if (!currentTicket) return NextResponse.json({ error: "Ticket ble ikke funnet." }, { status: 404 });
+
+  const shouldUndoCheckin = Boolean(currentTicket.checked_in_at);
 
   const { data: ticket, error } = await supabase
     .from("event_tickets")
-    .update({ checked_in_at: now, status: "checked_in", updated_at: now })
+    .update({
+      checked_in_at: shouldUndoCheckin ? null : now,
+      status: shouldUndoCheckin ? "active" : "checked_in",
+      updated_at: now,
+    })
     .eq("id", ticketId)
     .eq("event_id", eventId)
     .select("*")
@@ -80,7 +95,7 @@ export async function POST(request: Request) {
     companyName,
   };
 
-  if (printerUrl) {
+  if (printerUrl && !shouldUndoCheckin) {
     await fetch(printerUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -88,5 +103,10 @@ export async function POST(request: Request) {
     }).catch(() => null);
   }
 
-  return NextResponse.json({ ok: true, ticket, print: printPayload });
+  return NextResponse.json({
+    ok: true,
+    action: shouldUndoCheckin ? "reverted" : "checked_in",
+    ticket,
+    print: shouldUndoCheckin ? null : printPayload,
+  });
 }

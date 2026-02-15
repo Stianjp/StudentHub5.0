@@ -47,8 +47,6 @@ export function CheckinClient({ eventId }: { eventId: string }) {
   const [printerUrl, setPrinterUrl] = useState<string>("");
   const [filter, setFilter] = useState<"all" | "student" | "company">("all");
   const [activeQuery, setActiveQuery] = useState<string>("");
-  const [totalCount, setTotalCount] = useState<number>(0);
-  const [checkedInCount, setCheckedInCount] = useState<number>(0);
   const [totalAllCount, setTotalAllCount] = useState<number>(0);
   const [checkedInAllCount, setCheckedInAllCount] = useState<number>(0);
   const [lastPrint, setLastPrint] = useState<PrintPayload | null>(null);
@@ -91,8 +89,8 @@ export function CheckinClient({ eventId }: { eventId: string }) {
     setActiveQuery(query.trim());
     const total = payload?.results?.length ?? 0;
     const checked = (payload?.results ?? []).filter((row: TicketRow) => Boolean(row.checked_in_at)).length;
-    setTotalCount(total);
-    setCheckedInCount(checked);
+    setTotalAllCount(total);
+    setCheckedInAllCount(checked);
     setStatus("success");
   }
 
@@ -122,8 +120,6 @@ export function CheckinClient({ eventId }: { eventId: string }) {
     setActiveQuery("");
     const total = payload?.results?.length ?? 0;
     const checked = (payload?.results ?? []).filter((row: TicketRow) => Boolean(row.checked_in_at)).length;
-    setTotalCount(total);
-    setCheckedInCount(checked);
     if (updateTotals) {
       setTotalAllCount(total);
       setCheckedInAllCount(checked);
@@ -163,21 +159,27 @@ export function CheckinClient({ eventId }: { eventId: string }) {
     if (!response.ok) {
       const payload = await response.json().catch(() => ({}));
       setStatus("error");
-      setMessage(payload?.error ?? "Kunne ikke sjekke inn.");
+      setMessage(payload?.error ?? "Kunne ikke oppdatere innsjekk.");
       return;
     }
-    const payload = await response.json();
+    const payload = (await response.json()) as {
+      action?: "checked_in" | "reverted";
+      ticket?: TicketRow;
+      print?: PrintPayload | null;
+    };
     const printPayload = payload.print as PrintPayload | undefined;
     setResults((prev) => prev.map((row) => (row.id === ticketId ? { ...row, ...payload.ticket } : row)));
-    if (payload.ticket?.checked_in_at && !existing?.checked_in_at) {
-      setCheckedInCount((prev) => prev + 1);
+    if (payload.action === "checked_in" && payload.ticket?.checked_in_at && !existing?.checked_in_at) {
       setCheckedInAllCount((prev) => prev + 1);
+    }
+    if (payload.action === "reverted" && existing?.checked_in_at) {
+      setCheckedInAllCount((prev) => Math.max(0, prev - 1));
     }
     if (printPayload) {
       setLastPrint(printPayload);
     }
     setStatus("success");
-    setMessage("Sjekk inn OK.");
+    setMessage(payload.action === "reverted" ? "Innsjekk angret." : "Sjekk inn OK.");
   }
 
   return (
@@ -249,8 +251,12 @@ export function CheckinClient({ eventId }: { eventId: string }) {
                       {ticket.company?.name ? `Bedrift: ${ticket.company.name}` : ticket.company ? "Bedrift" : ticket.student ? "Student" : "Andre"}
                     </p>
                   </div>
-                  <Button type="button" variant="secondary" onClick={() => checkinAndPrint(ticket.id)}>
-                    {ticket.checked_in_at ? "Sjekket inn" : "Sjekk inn + print"}
+                  <Button
+                    type="button"
+                    variant={ticket.checked_in_at ? "danger" : "secondary"}
+                    onClick={() => checkinAndPrint(ticket.id)}
+                  >
+                    {ticket.checked_in_at ? "Angre innsjekk" : "Sjekk inn + print"}
                   </Button>
                 </div>
                 <div className="text-xs text-ink/60">

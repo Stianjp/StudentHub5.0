@@ -79,7 +79,8 @@ export function SignInClient({
     }
 
     const supabase = createClient();
-    const nextPath = typeof next === "string" ? next : getDefaultNextPath(roleValue);
+    const nextPath =
+      typeof next === "string" ? next : getDefaultNextPath(roleValue, window.location.hostname);
     const baseUrl = getBaseUrlForRole(roleValue, window.location.origin);
     const redirectBase = baseUrl || window.location.origin;
 

@@ -8,6 +8,15 @@ import { studentProfileSchema } from "@/lib/validation/student";
 import { getOrCreateStudentForUser } from "@/lib/student";
 import { createLead, upsertConsentForStudent } from "@/lib/lead";
 
+function parseMultiValue(formData: FormData, key: string) {
+  return formData
+    .getAll(key)
+    .map((value) => String(value).trim())
+    .flatMap((value) => value.split(","))
+    .map((value) => value.trim())
+    .filter(Boolean);
+}
+
 export async function saveStudentProfile(formData: FormData) {
   const profile = await requireRole("student");
   const supabase = await createServerSupabaseClient();
@@ -34,7 +43,7 @@ export async function saveStudentProfile(formData: FormData) {
     studyLevel,
     studyYear,
     jobTypes: formData.get("jobTypes") ?? undefined,
-    interests: formData.getAll("interests"),
+    interests: parseMultiValue(formData, "interests"),
     values: formData.get("values"),
     preferredLocations: formData.get("preferredLocations") ?? undefined,
     willingToRelocate: formData.get("willingToRelocate"),

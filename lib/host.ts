@@ -11,8 +11,13 @@ export function roleFromHost(hostname: string | null): AppRole | null {
   return null;
 }
 
-export function defaultPathForRole(role: AppRole) {
+function isCheckinHost(hostname: string | null | undefined) {
+  if (!hostname) return false;
+  return hostname.split(":")[0].toLowerCase().startsWith("checkin.");
+}
+
+export function defaultPathForRole(role: AppRole, hostname?: string | null) {
   if (role === "student") return "/student";
-  if (role === "admin") return "/admin";
+  if (role === "admin") return isCheckinHost(hostname) ? "/checkin" : "/admin";
   return "/company";
 }
