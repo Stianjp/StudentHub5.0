@@ -470,3 +470,24 @@ export async function registerCompanyForEvent(input: {
 
   return result.data;
 }
+
+export async function updateEventCompanyStandType(input: {
+  registrationId: string;
+  standType: string;
+}) {
+  const supabase = createAdminSupabaseClient();
+  const now = new Date().toISOString();
+
+  const { data, error } = await supabase
+    .from("event_companies")
+    .update({
+      stand_type: input.standType,
+      updated_at: now,
+    })
+    .eq("id", input.registrationId)
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return data;
+}

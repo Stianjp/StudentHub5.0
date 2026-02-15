@@ -7,7 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { requireRole } from "@/lib/auth";
 import { getEventWithRegistrations, listCompanies } from "@/lib/admin";
-import { registerCompaniesBulk, registerCompany, saveEvent } from "@/app/admin/actions";
+import {
+  registerCompaniesBulk,
+  registerCompany,
+  saveEvent,
+  updateRegisteredCompanyStandType,
+} from "@/app/admin/actions";
 
 const packageLabel: Record<string, string> = {
   standard: "Standard",
@@ -273,14 +278,33 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
         ) : (
           <ul className="grid gap-2 text-sm text-ink/80">
             {registrations.map((reg) => (
-              <li key={reg.id} className="flex items-center justify-between rounded-xl bg-primary/5 px-3 py-2">
-                <div>
-                  <p className="font-semibold text-primary">{reg.company?.name ?? "Bedrift"}</p>
-                  <p className="text-xs text-ink/70">Standtype: {reg.stand_type ?? "-"}</p>
+              <li key={reg.id} className="rounded-xl bg-primary/5 px-3 py-3">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <p className="font-semibold text-primary">{reg.company?.name ?? "Bedrift"}</p>
+                    <p className="text-xs text-ink/70">Nåværende standtype: {reg.stand_type ?? "-"}</p>
+                  </div>
+                  <span className="text-xs font-semibold text-primary/70">
+                    {packageLabel[reg.package] ?? reg.package}
+                  </span>
                 </div>
-                <span className="text-xs font-semibold text-primary/70">
-                  {packageLabel[reg.package] ?? reg.package}
-                </span>
+
+                <form action={updateRegisteredCompanyStandType} className="mt-3 grid gap-2 md:grid-cols-3">
+                  <input type="hidden" name="registrationId" value={reg.id} />
+                  <input type="hidden" name="returnTo" value={`/admin/events/${eventId}`} />
+                  <label className="text-xs font-semibold text-primary md:col-span-2">
+                    Endre standtype
+                    <Input
+                      name="standType"
+                      required
+                      defaultValue={reg.stand_type ?? ""}
+                      placeholder="F.eks. Standard, Premium, Corner"
+                    />
+                  </label>
+                  <Button type="submit" variant="secondary" className="self-end">
+                    Lagre standtype
+                  </Button>
+                </form>
               </li>
             ))}
           </ul>

@@ -12,6 +12,25 @@ body {
   font-family: var(--font-ubuntu), system-ui, sans-serif;
 }
 
+@layer base {
+  select {
+    color: #1A1626;
+    background-color: #FFFFFF;
+    color-scheme: light;
+  }
+
+  select:disabled {
+    color: rgba(26, 22, 38, 0.55);
+    background-color: #F4F2F8;
+  }
+
+  select option,
+  select optgroup {
+    color: #1A1626;
+    background-color: #FFFFFF;
+  }
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -135,8 +154,8 @@ button:active:not(:disabled) {
     top: calc(100% + 0.5rem);
     min-width: 220px;
     border-radius: 16px;
-    border: 1px solid rgba(254, 154, 112, 0.3);
-    background: rgba(20, 2, 73, 0.95);
+    border: 1px solid rgba(254, 154, 112, 0.55);
+    background: rgba(20, 2, 73, 0.98);
     box-shadow: 0 16px 40px rgba(5, 0, 25, 0.4);
     padding: 0.5rem;
     display: none;
@@ -157,7 +176,7 @@ button:active:not(:disabled) {
     padding: 0.5rem 0.75rem;
     font-size: 0.8rem;
     font-weight: 600;
-    color: #FFFFFF;
+    color: #EDE8F5;
     border: 1px solid transparent;
     transition: all 150ms ease;
   }

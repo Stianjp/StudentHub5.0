@@ -6,7 +6,6 @@ import { requireRole } from "@/lib/auth";
 import {
   inviteCompanySchema,
   eventSchema,
-  registerCompanySchema,
   setPackageSchema,
   createCompanySchema,
   companyDomainSchema,
@@ -19,6 +18,7 @@ import {
   inviteCompanyToEvent,
   registerCompanyForEvent,
   setPackageForCompany,
+  updateEventCompanyStandType,
   upsertEvent,
 } from "@/lib/admin";
 import { isUuid } from "@/lib/utils";
@@ -453,6 +453,39 @@ export async function registerCompaniesBulk(formData: FormData) {
 
     revalidatePath(`/admin/events/${eventId}`);
     revalidatePath("/admin/companies");
+    if (typeof returnTo === "string" && returnTo.startsWith("/")) {
+      redirect(`${returnTo}?saved=1`);
+    }
+  } catch (error) {
+    if (isNextRedirectError(error)) throw error;
+    if (typeof returnTo === "string" && returnTo.startsWith("/")) {
+      const message = getErrorMessage(error);
+      redirect(`${returnTo}?error=${encodeURIComponent(message)}`);
+    }
+    throw error;
+  }
+}
+
+export async function updateRegisteredCompanyStandType(formData: FormData) {
+  await requireRole("admin");
+  const returnTo = formData.get("returnTo");
+  try {
+    const registrationId = String(getFormValue(formData, "registrationId") ?? "").trim();
+    const standType = String(getFormValue(formData, "standType") ?? "").trim();
+
+    if (!isUuid(registrationId)) {
+      throw new Error("Ugyldig registrering.");
+    }
+    if (!standType) {
+      throw new Error("Standtype er påkrevd.");
+    }
+
+    await updateEventCompanyStandType({
+      registrationId,
+      standType,
+    });
+
+    revalidatePath("/admin/events");
     if (typeof returnTo === "string" && returnTo.startsWith("/")) {
       redirect(`${returnTo}?saved=1`);
     }
