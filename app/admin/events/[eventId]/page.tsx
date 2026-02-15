@@ -21,6 +21,8 @@ const packageLabel: Record<string, string> = {
   platinum: "Platinum",
 };
 
+const standTypeOptions = ["Standard", "Premium"] as const;
+
 type PageProps = {
   params: Promise<{ eventId: string }>;
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -294,12 +296,16 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
                   <input type="hidden" name="returnTo" value={`/admin/events/${eventId}`} />
                   <label className="text-xs font-semibold text-primary md:col-span-2">
                     Endre standtype
-                    <Input
-                      name="standType"
-                      required
-                      defaultValue={reg.stand_type ?? ""}
-                      placeholder="F.eks. Standard, Premium, Corner"
-                    />
+                    <Select name="standType" required defaultValue={reg.stand_type ?? "Standard"}>
+                      {reg.stand_type && !standTypeOptions.includes(reg.stand_type as (typeof standTypeOptions)[number]) ? (
+                        <option value={reg.stand_type}>{reg.stand_type}</option>
+                      ) : null}
+                      {standTypeOptions.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                    </Select>
                   </label>
                   <Button type="submit" variant="secondary" className="self-end">
                     Lagre standtype

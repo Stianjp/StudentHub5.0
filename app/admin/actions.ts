@@ -25,6 +25,8 @@ import { isUuid } from "@/lib/utils";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { sendTransactionalEmail } from "@/lib/resend";
 
+const STAND_TYPE_VALUES = ["Standard", "Premium"] as const;
+
 function isNextRedirectError(error: unknown) {
   const digest = (error as { digest?: string })?.digest;
   const message = (error as { message?: string })?.message;
@@ -398,10 +400,16 @@ export async function registerCompany(formData: FormData) {
       throw new Error(`package: Ugyldig verdi (${packageTier || "tom"})`);
     }
 
+    const normalizedStandType = STAND_TYPE_VALUES.includes(
+      standType as (typeof STAND_TYPE_VALUES)[number],
+    )
+      ? standType
+      : "Standard";
+
     await registerCompanyForEvent({
       eventId,
       companyId,
-      standType: standType || "Standard",
+      standType: normalizedStandType,
       package: packageTier as "standard" | "silver" | "gold" | "platinum",
       categoryTags,
     });
@@ -425,6 +433,11 @@ export async function registerCompaniesBulk(formData: FormData) {
   await requireRole("admin");
   const eventId = String(getFormValue(formData, "eventId") ?? "");
   const standType = String(getFormValue(formData, "standType") ?? "Standard");
+  const normalizedStandType = STAND_TYPE_VALUES.includes(
+    standType as (typeof STAND_TYPE_VALUES)[number],
+  )
+    ? standType
+    : "Standard";
   const packageTier = String(getFormValue(formData, "package") ?? "standard");
   const categoryTags = parseTags(formData.getAll("categoryTags"));
   const companyIds = formData.getAll("companyIds").map((value) => String(value));
@@ -444,7 +457,7 @@ export async function registerCompaniesBulk(formData: FormData) {
         registerCompanyForEvent({
           eventId,
           companyId,
-          standType,
+          standType: normalizedStandType,
           package: packageTier as "standard" | "silver" | "gold" | "platinum",
           categoryTags,
         }),
@@ -478,6 +491,10 @@ export async function updateRegisteredCompanyStandType(formData: FormData) {
     }
     if (!standType) {
       throw new Error("Standtype er påkrevd.");
+    }
+
+    if (!STAND_TYPE_VALUES.includes(standType as (typeof STAND_TYPE_VALUES)[number])) {
+      throw new Error("Ugyldig standtype. Velg Standard eller Premium.");
     }
 
     await updateEventCompanyStandType({

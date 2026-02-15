@@ -65,32 +65,34 @@ export default async function CompanyDashboardPage() {
             src="/images/event_giving_a_sheet.jpg"
             alt="Registrering og oppfølging på event"
             fill
-            className="scale-105 object-cover blur-[3px]"
+            className="scale-105 object-cover blur-[4px]"
           />
-          <div className="absolute inset-0 bg-primary/78" />
-          <div className="relative z-10 flex flex-col gap-4 text-surface">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-bold text-surface">Registreringsstatus</h3>
-              <span className="text-sm font-semibold text-surface/95">{onboarding.progress}% fullført</span>
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/95 via-primary/90 to-primary/84" />
+          <div className="relative z-10 flex flex-col gap-4 rounded-2xl border border-surface/25 bg-primary/55 p-4 text-surface shadow-soft backdrop-blur-md">
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-lg font-bold text-surface drop-shadow-[0_1px_2px_rgba(0,0,0,0.65)]">Registreringsstatus</h3>
+              <span className="rounded-full bg-secondary px-3 py-1 text-sm font-bold text-primary">{onboarding.progress}% fullført</span>
             </div>
-            <div className="h-3 w-full rounded-full bg-surface/20">
+            <div className="h-3 w-full rounded-full bg-surface/25">
               <div className="h-3 rounded-full bg-secondary" style={{ width: `${onboarding.progress}%` }} />
             </div>
-            <ul className="grid gap-2 text-sm text-surface/90">
+            <ul className="grid gap-2 text-sm text-surface/95">
               {onboarding.sections.map((section) => (
                 <li
                   key={section.key}
-                  className="flex items-center justify-between rounded-xl bg-primary/45 px-3 py-2 backdrop-blur-md"
+                  className="flex items-center justify-between rounded-xl border border-surface/20 bg-primary/78 px-3 py-2 shadow-sm backdrop-blur-sm"
                 >
                   <span className="font-semibold text-surface">{section.label}</span>
-                  <span className={section.completed ? "text-success" : "text-warning"}>
+                  <span className={section.completed ? "font-semibold text-success" : "font-semibold text-secondary"}>
                     {section.completed ? "Fullført" : "Mangler"}
                   </span>
                 </li>
               ))}
             </ul>
-            <Link href="/company/onboarding">
-              <Button variant="secondary">Fortsett registrering</Button>
+            <Link className="inline-flex" href="/company/onboarding">
+              <Button variant="secondary" className="w-full border border-secondary/60">
+                Fortsett registrering
+              </Button>
             </Link>
           </div>
         </Card>
@@ -109,9 +111,9 @@ export default async function CompanyDashboardPage() {
         </Card>
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-3">
-        <Card className="relative overflow-hidden p-0 lg:col-span-2">
-          <div className="relative aspect-[16/7] w-full">
+      <section className="grid gap-4 lg:grid-cols-3 lg:items-start">
+        <Card className="relative overflow-hidden p-0 lg:col-span-2 lg:self-start">
+          <div className="relative aspect-[16/8] w-full">
             <Image
               src="/images/Event_People_talking.jpg"
               alt="Studenter og bedrifter i samtale på event"
@@ -157,3 +159,4 @@ export default async function CompanyDashboardPage() {
     </div>
   );
 }
+

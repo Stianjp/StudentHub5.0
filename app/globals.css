@@ -58,6 +58,23 @@ table {
   background-color: #140249;
 }
 
+.student-scope .osh-card {
+  background-color: #140249;
+  border-color: rgba(237, 232, 245, 0.16);
+}
+
+.student-scope table {
+  background-color: #140249;
+}
+
+.student-scope .osh-card :is(h1, h2, h3, h4, h5, h6, p, label, legend, li, span, a, small, strong)[class*="text-primary"] {
+  color: #EDE8F5;
+}
+
+.student-scope .osh-card :is(h1, h2, h3, h4, h5, h6, p, label, legend, li, span, a, small, strong)[class*="text-ink"] {
+  color: rgba(237, 232, 245, 0.88);
+}
+
 button {
   transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease, background-color 150ms ease;
 }

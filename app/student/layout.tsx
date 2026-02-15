@@ -30,7 +30,7 @@ export default async function StudentLayout({ children }: { children: React.Reac
       nav={nav}
       backgroundClass="bg-gradient-to-br from-primary to-secondary"
       backgroundStyle={{ backgroundImage: "linear-gradient(150deg, #140249 0%, #2D0A73 52%, #FE9A70 100%)" }}
-      mainClass="bg-primary/10"
+      mainClass="student-scope bg-primary/10"
     >
       {children}
     </PortalShell>
