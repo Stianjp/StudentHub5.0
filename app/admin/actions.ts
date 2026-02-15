@@ -113,35 +113,51 @@ export async function updateEventTicketLimit(formData: FormData) {
 
 export async function saveEvent(formData: FormData) {
   await requireRole("admin");
+  const returnTo = formData.get("returnTo");
+  try {
+    const parsed = eventSchema.safeParse({
+      name: formData.get("name"),
+      slug: formData.get("slug"),
+      description: formData.get("description"),
+      location: formData.get("location"),
+      registrationFormUrl: formData.get("registrationFormUrl"),
+      startsAt: formData.get("startsAt"),
+      endsAt: formData.get("endsAt"),
+      isActive: formData.get("isActive"),
+    });
 
-  const parsed = eventSchema.safeParse({
-    name: formData.get("name"),
-    slug: formData.get("slug"),
-    description: formData.get("description"),
-    location: formData.get("location"),
-    startsAt: formData.get("startsAt"),
-    endsAt: formData.get("endsAt"),
-    isActive: formData.get("isActive"),
-  });
+    if (!parsed.success) {
+      throw new Error(parsed.error.issues.map((issue) => issue.message).join(", "));
+    }
 
-  if (!parsed.success) {
-    throw new Error(parsed.error.issues.map((issue) => issue.message).join(", "));
+    const id = formData.get("id");
+    await upsertEvent({
+      id: typeof id === "string" && id.length > 0 ? id : undefined,
+      name: parsed.data.name,
+      slug: parsed.data.slug,
+      description: parsed.data.description || null,
+      location: parsed.data.location || null,
+      registration_form_url: parsed.data.registrationFormUrl || null,
+      starts_at: parsed.data.startsAt,
+      ends_at: parsed.data.endsAt,
+      is_active: parsed.data.isActive,
+    });
+
+    revalidatePath("/admin/events");
+    revalidatePath("/admin/events/overview");
+    revalidatePath("/admin");
+    revalidatePath("/company/events");
+    if (typeof returnTo === "string" && returnTo.startsWith("/")) {
+      redirect(`${returnTo}?saved=1`);
+    }
+  } catch (error) {
+    if (isNextRedirectError(error)) throw error;
+    if (typeof returnTo === "string" && returnTo.startsWith("/")) {
+      const message = getErrorMessage(error);
+      redirect(`${returnTo}?error=${encodeURIComponent(message)}`);
+    }
+    throw error;
   }
-
-  const id = formData.get("id");
-  await upsertEvent({
-    id: typeof id === "string" && id.length > 0 ? id : undefined,
-    name: parsed.data.name,
-    slug: parsed.data.slug,
-    description: parsed.data.description || null,
-    location: parsed.data.location || null,
-    starts_at: parsed.data.startsAt,
-    ends_at: parsed.data.endsAt,
-    is_active: parsed.data.isActive,
-  });
-
-  revalidatePath("/admin/events");
-  revalidatePath("/admin");
 }
 
 export async function inviteCompany(formData: FormData) {

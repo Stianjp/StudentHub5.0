@@ -319,6 +319,7 @@ export type Database = {
           slug: string;
           description: string | null;
           location: string | null;
+          registration_form_url: string | null;
           starts_at: string;
           ends_at: string;
           is_active: boolean;
@@ -332,6 +333,7 @@ export type Database = {
           slug: string;
           description?: string | null;
           location?: string | null;
+          registration_form_url?: string | null;
           starts_at: string;
           ends_at: string;
           is_active?: boolean;
@@ -345,6 +347,7 @@ export type Database = {
           slug?: string;
           description?: string | null;
           location?: string | null;
+          registration_form_url?: string | null;
           starts_at?: string;
           ends_at?: string;
           is_active?: boolean;

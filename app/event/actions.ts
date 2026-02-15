@@ -317,6 +317,49 @@ export async function registerStudentForEvent(formData: FormData) {
   }
 }
 
+export async function cancelStudentEventTicket(formData: FormData) {
+  const profile = await requireRole("student");
+  const supabase = await createServerSupabaseClient();
+  const admin = createAdminSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("User not found");
+
+  const eventId = String(formData.get("eventId") ?? "").trim();
+  const returnTo = String(formData.get("returnTo") ?? "").trim();
+  if (!eventId) throw new Error("Event mangler.");
+
+  const student = await getOrCreateStudentForUser(profile.id, user.email);
+  const ticket = await getStudentTicketForEvent(admin, eventId, student.id);
+
+  if (!ticket) {
+    if (returnTo) {
+      redirect(appendQueryParam(returnTo, "error", "Ingen billett ble funnet."));
+    }
+    return;
+  }
+
+  if (ticket.checked_in_at) {
+    if (returnTo) {
+      redirect(appendQueryParam(returnTo, "error", "Billetten er allerede sjekket inn og kan ikke avbookes."));
+    }
+    return;
+  }
+
+  const { error } = await admin.from("event_tickets").delete().eq("id", ticket.id);
+  if (error) throw error;
+
+  revalidatePath("/student/events");
+  revalidatePath(`/student/events/${eventId}`);
+  revalidatePath(`/event/events/${eventId}`);
+
+  if (returnTo) {
+    redirect(appendQueryParam(returnTo, "canceled", "1"));
+  }
+}
+
 export async function registerAttendeeForEvent(formData: FormData) {
   const supabase = createAdminSupabaseClient();
   const eventId = String(formData.get("eventId") ?? "").trim();

@@ -1,15 +1,17 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { requireRole } from "@/lib/auth";
 import { getEventWithRegistrations, listCompanies } from "@/lib/admin";
-import { registerCompaniesBulk, registerCompany } from "@/app/admin/actions";
+import { registerCompaniesBulk, registerCompany, saveEvent } from "@/app/admin/actions";
 
 const packageLabel: Record<string, string> = {
   standard: "Standard",
-  silver: "Sølv",
+  silver: "Solv",
   gold: "Gull",
   platinum: "Platinum",
 };
@@ -18,6 +20,18 @@ type PageProps = {
   params: Promise<{ eventId: string }>;
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
+
+function toDateTimeLocal(value: string | null | undefined) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
 
 export default async function AdminEventDetailPage({ params, searchParams }: PageProps) {
   await requireRole("admin");
@@ -49,10 +63,10 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
       <SectionHeader
         eyebrow="Event"
         title={eventData.event.name}
-        description="Oversikt over registrerte bedrifter og mulighet til å legge til flere."
+        description="Oversikt over registrerte bedrifter og mulighet til a legge til flere."
         actions={
-          <Link className="text-sm font-semibold text-primary/70 transition hover:text-primary" href="/admin/events">
-            ← Tilbake
+          <Link className="text-sm font-semibold text-primary/70 transition hover:text-primary" href="/admin/events/overview">
+            Tilbake
           </Link>
         }
       />
@@ -64,9 +78,57 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
       ) : null}
       {error ? (
         <Card className="border border-error/30 bg-error/10 text-sm text-error">
-          {errorMessage ? decodeURIComponent(errorMessage) : "Kunne ikke lagre. Sjekk feltene og prøv igjen."}
+          {errorMessage ? decodeURIComponent(errorMessage) : "Kunne ikke lagre. Sjekk feltene og prov igjen."}
         </Card>
       ) : null}
+
+      <Card className="flex flex-col gap-4">
+        <h3 className="text-lg font-bold text-primary">Rediger event</h3>
+        <form action={saveEvent} className="grid gap-3 md:grid-cols-2">
+          <input type="hidden" name="id" value={eventData.event.id} />
+          <input type="hidden" name="returnTo" value={`/admin/events/${eventId}`} />
+          <label className="text-sm font-semibold text-primary md:col-span-2">
+            Navn
+            <Input name="name" required defaultValue={eventData.event.name} />
+          </label>
+          <label className="text-sm font-semibold text-primary">
+            Slug
+            <Input name="slug" required defaultValue={eventData.event.slug} />
+          </label>
+          <label className="text-sm font-semibold text-primary">
+            Lokasjon
+            <Input name="location" defaultValue={eventData.event.location ?? ""} />
+          </label>
+          <label className="text-sm font-semibold text-primary">
+            Start
+            <Input name="startsAt" type="datetime-local" required defaultValue={toDateTimeLocal(eventData.event.starts_at)} />
+          </label>
+          <label className="text-sm font-semibold text-primary">
+            Slutt
+            <Input name="endsAt" type="datetime-local" required defaultValue={toDateTimeLocal(eventData.event.ends_at)} />
+          </label>
+          <label className="text-sm font-semibold text-primary md:col-span-2">
+            Beskrivelse
+            <Textarea name="description" rows={3} defaultValue={eventData.event.description ?? ""} />
+          </label>
+          <label className="text-sm font-semibold text-primary md:col-span-2">
+            Pameldingsside for bedrifter (URL)
+            <Input
+              name="registrationFormUrl"
+              type="url"
+              placeholder="https://www.oslostudenthub.no/registreringsside-student-hub-2026"
+              defaultValue={eventData.event.registration_form_url ?? ""}
+            />
+          </label>
+          <label className="flex items-center gap-2 text-sm font-semibold text-primary md:col-span-2">
+            <input className="h-4 w-4" name="isActive" type="checkbox" defaultChecked={eventData.event.is_active} />
+            Aktivt event
+          </label>
+          <Button className="md:col-span-2" type="submit">
+            Lagre event
+          </Button>
+        </form>
+      </Card>
 
       <Card className="flex flex-col gap-4">
         <h3 className="text-lg font-bold text-primary">Registrer bedrift til event</h3>
@@ -90,24 +152,24 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
               Pakke
               <Select name="package" defaultValue="standard">
                 <option value="standard">Standard</option>
-                <option value="silver">Sølv</option>
+                <option value="silver">Solv</option>
                 <option value="gold">Gull</option>
                 <option value="platinum">Platinum</option>
               </Select>
             </label>
             <div className="md:col-span-3">
               <p className="text-sm font-semibold text-primary">
-                Velg bedriftens kategori (oppdateres på bedriften og kan endres av bedriften selv)
+                Velg bedriftens kategori (oppdateres pa bedriften og kan endres av bedriften selv)
               </p>
               <div className="mt-2 grid gap-2 md:grid-cols-3">
                 {[
-                  "BYGGINGENIØRER",
-                  "DATAINGENIØR/IT",
-                  "ELEKTROINGENIØRER",
-                  "ENERGI & MILJØ INGENIØR",
-                  "BIOTEKNOLOGI- OG KJEMIINGENIØR",
-                  "MASKINIGENIØRER",
-                  "ØKONOMI OG ADMINISTRASJON",
+                  "BYGGINGENIORER",
+                  "DATAINGENIOR/IT",
+                  "ELEKTROINGENIORER",
+                  "ENERGI & MILJO INGENIOR",
+                  "BIOTEKNOLOGI- OG KJEMIINGENIOR",
+                  "MASKININGENIORER",
+                  "OKONOMI OG ADMINISTRASJON",
                   "LEDELSE",
                   "HUMAN RESOURCES",
                 ].map((category) => (
@@ -142,24 +204,24 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
             Pakke
             <Select name="package" defaultValue="standard">
               <option value="standard">Standard</option>
-              <option value="silver">Sølv</option>
+              <option value="silver">Solv</option>
               <option value="gold">Gull</option>
               <option value="platinum">Platinum</option>
             </Select>
           </label>
           <div>
             <p className="text-sm font-semibold text-primary">
-              Velg bedriftens kategori (oppdateres på bedriften og kan endres av bedriften selv)
+              Velg bedriftens kategori (oppdateres pa bedriften og kan endres av bedriften selv)
             </p>
             <div className="mt-2 grid gap-2 md:grid-cols-3">
               {[
-                "BYGGINGENIØRER",
-                "DATAINGENIØR/IT",
-                "ELEKTROINGENIØRER",
-                "ENERGI & MILJØ INGENIØR",
-                "BIOTEKNOLOGI- OG KJEMIINGENIØR",
-                "MASKINIGENIØRER",
-                "ØKONOMI OG ADMINISTRASJON",
+                "BYGGINGENIORER",
+                "DATAINGENIOR/IT",
+                "ELEKTROINGENIORER",
+                "ENERGI & MILJO INGENIOR",
+                "BIOTEKNOLOGI- OG KJEMIINGENIOR",
+                "MASKININGENIORER",
+                "OKONOMI OG ADMINISTRASJON",
                 "LEDELSE",
                 "HUMAN RESOURCES",
               ].map((category) => (
@@ -214,7 +276,7 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
               <li key={reg.id} className="flex items-center justify-between rounded-xl bg-primary/5 px-3 py-2">
                 <div>
                   <p className="font-semibold text-primary">{reg.company?.name ?? "Bedrift"}</p>
-                  <p className="text-xs text-ink/70">Standtype: {reg.stand_type ?? "—"}</p>
+                  <p className="text-xs text-ink/70">Standtype: {reg.stand_type ?? "-"}</p>
                 </div>
                 <span className="text-xs font-semibold text-primary/70">
                   {packageLabel[reg.package] ?? reg.package}

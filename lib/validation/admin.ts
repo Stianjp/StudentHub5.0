@@ -8,6 +8,7 @@ export const eventSchema = z.object({
     .regex(/^[a-z0-9-]+$/, "Slug kan kun inneholde små bokstaver, tall og bindestrek"),
   description: z.string().optional().or(z.literal("")),
   location: z.string().optional().or(z.literal("")),
+  registrationFormUrl: z.string().url("Ugyldig URL").optional().or(z.literal("")),
   startsAt: z.string().min(10),
   endsAt: z.string().min(10),
   isActive: z.coerce.boolean().default(true),

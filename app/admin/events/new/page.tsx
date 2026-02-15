@@ -38,6 +38,7 @@ export default async function AdminNewEventPage({ searchParams }: PageProps) {
       <Card className="flex flex-col gap-4">
         <h3 className="text-lg font-bold text-primary">Nytt event</h3>
         <form action={saveEvent} className="grid gap-3 md:grid-cols-2">
+          <input type="hidden" name="returnTo" value="/admin/events/new" />
           <label className="text-sm font-semibold text-primary md:col-span-2">
             Navn
             <Input name="name" required placeholder="Karrieredag Oslo 2026" />
@@ -61,6 +62,14 @@ export default async function AdminNewEventPage({ searchParams }: PageProps) {
           <label className="text-sm font-semibold text-primary md:col-span-2">
             Beskrivelse
             <Textarea name="description" rows={3} placeholder="Kort tekst om eventet" />
+          </label>
+          <label className="text-sm font-semibold text-primary md:col-span-2">
+            Påmeldingsside for bedrifter (URL)
+            <Input
+              name="registrationFormUrl"
+              type="url"
+              placeholder="https://www.oslostudenthub.no/registreringsside-student-hub-2026"
+            />
           </label>
           <label className="flex items-center gap-2 text-sm font-semibold text-primary md:col-span-2">
             <input className="h-4 w-4" defaultChecked name="isActive" type="checkbox" />

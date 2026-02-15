@@ -53,6 +53,62 @@ export default async function CompanyDashboardPage() {
         }
       />
 
+      <section className="grid gap-4 md:grid-cols-3">
+        <Stat label="Event-deltakelser" value={registrations.length} hint="Registrerte events" href="/company/events" />
+        <Stat label="Leads med samtykke" value={consentedLeads} hint="Kun consent=true" href="/company/leads" />
+        <Stat label="Aktive events" value={events.length} hint="Tilgjengelige na" />
+      </section>
+
+      <section className="grid gap-6 lg:grid-cols-2">
+        <Card className="relative overflow-hidden">
+          <Image
+            src="/images/event_giving_a_sheet.jpg"
+            alt="Registrering og oppfolging pa event"
+            fill
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-primary/70" />
+          <div className="relative z-10 flex flex-col gap-4 text-surface">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold text-surface">Registreringsstatus</h3>
+              <span className="text-sm font-semibold text-surface/90">{onboarding.progress}% fullfort</span>
+            </div>
+            <div className="h-3 w-full rounded-full bg-surface/20">
+              <div className="h-3 rounded-full bg-secondary" style={{ width: `${onboarding.progress}%` }} />
+            </div>
+            <ul className="grid gap-2 text-sm text-surface/90">
+              {onboarding.sections.map((section) => (
+                <li
+                  key={section.key}
+                  className="flex items-center justify-between rounded-xl bg-surface/10 px-3 py-2 backdrop-blur-sm"
+                >
+                  <span className="font-semibold text-surface">{section.label}</span>
+                  <span className={section.completed ? "text-success" : "text-warning"}>
+                    {section.completed ? "Fullfort" : "Mangler"}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <Link href="/company/onboarding">
+              <Button variant="secondary">Fortsett registrering</Button>
+            </Link>
+          </div>
+        </Card>
+
+        <Card className="flex flex-col gap-4">
+          <h3 className="text-lg font-bold text-primary">Hva skjer na?</h3>
+          <ol className="list-decimal space-y-2 pl-5 text-sm text-ink/80">
+            <li>Fullfor alle stegene i registreringen.</li>
+            <li>Be OSH-teamet registrere dere pa onsket event.</li>
+            <li>Admin setter pakke (Standard/Solv/Gull/Platinum).</li>
+            <li>Se leads og ROI i dashboardet.</li>
+          </ol>
+          <Link href="/company/events">
+            <Button variant="secondary">Se eventpameldinger</Button>
+          </Link>
+        </Card>
+      </section>
+
       <section className="grid gap-4 lg:grid-cols-3">
         <Card className="relative overflow-hidden p-0 lg:col-span-2">
           <div className="relative aspect-[16/7] w-full">
@@ -63,10 +119,9 @@ export default async function CompanyDashboardPage() {
               priority
               className="object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-primary/85 via-primary/40 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-primary/85 via-primary/45 to-transparent" />
             <div className="absolute inset-x-0 bottom-0 p-6 text-surface">
-              <p className="text-xs font-semibold uppercase tracking-wide text-secondary">Eventfokus</p>
-              <h3 className="mt-1 text-xl font-bold">Bygg relasjoner med riktige kandidater</h3>
+              <h3 className="text-xl font-bold">Bygg relasjoner med riktige kandidater</h3>
               <p className="mt-1 text-sm text-surface/80">
                 Bruk dashboardet til a folge opp pameldinger, leads og neste aktiviteter.
               </p>
@@ -83,8 +138,7 @@ export default async function CompanyDashboardPage() {
                 fill
                 className="object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-primary/75 to-transparent" />
-              <p className="absolute bottom-3 left-3 text-xs font-semibold text-surface">1:1-dialog</p>
+              <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent" />
             </div>
           </Card>
           <Card className="relative overflow-hidden p-0">
@@ -95,55 +149,10 @@ export default async function CompanyDashboardPage() {
                 fill
                 className="object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-primary/75 to-transparent" />
-              <p className="absolute bottom-3 left-3 text-xs font-semibold text-surface">Profilering</p>
+              <div className="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent" />
             </div>
           </Card>
         </div>
-      </section>
-
-      <section className="grid gap-4 md:grid-cols-3">
-        <Stat label="Event-deltakelser" value={registrations.length} hint="Registrerte events" href="/company/events" />
-        <Stat label="Leads med samtykke" value={consentedLeads} hint="Kun consent=true" href="/company/leads" />
-        <Stat label="Aktive events" value={events.length} hint="Tilgjengelige na" />
-      </section>
-
-      <section className="grid gap-6 lg:grid-cols-2">
-        <Card className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold text-primary">Registreringsstatus</h3>
-            <span className="text-sm font-semibold text-primary/70">{onboarding.progress}% fullfort</span>
-          </div>
-          <div className="h-3 w-full rounded-full bg-primary/10">
-            <div className="h-3 rounded-full bg-secondary" style={{ width: `${onboarding.progress}%` }} />
-          </div>
-          <ul className="grid gap-2 text-sm text-ink/80">
-            {onboarding.sections.map((section) => (
-              <li key={section.key} className="flex items-center justify-between rounded-xl bg-primary/5 px-3 py-2">
-                <span className="font-semibold text-primary">{section.label}</span>
-                <span className={section.completed ? "text-success" : "text-warning"}>
-                  {section.completed ? "Fullfort" : "Mangler"}
-                </span>
-              </li>
-            ))}
-          </ul>
-          <Link href="/company/onboarding">
-            <Button>Fortsett registrering</Button>
-          </Link>
-        </Card>
-
-        <Card className="flex flex-col gap-4">
-          <h3 className="text-lg font-bold text-primary">Hva skjer na?</h3>
-          <ol className="list-decimal space-y-2 pl-5 text-sm text-ink/80">
-            <li>Fullfor alle stegene i registreringen.</li>
-            <li>Be OSH-teamet registrere dere pa onsket event.</li>
-            <li>Admin setter pakke (Standard/Solv/Gull/Platinum).</li>
-            <li>Se leads og ROI i dashboardet.</li>
-          </ol>
-          <Link href="/company/events">
-            <Button variant="secondary">Se eventpameldinger</Button>
-          </Link>
-        </Card>
       </section>
     </div>
   );

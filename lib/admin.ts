@@ -273,6 +273,7 @@ export async function upsertEvent(input: {
   slug: string;
   description?: string | null;
   location?: string | null;
+  registration_form_url?: string | null;
   starts_at: string;
   ends_at: string;
   is_active: boolean;
@@ -289,6 +290,7 @@ export async function upsertEvent(input: {
     ...input,
     description: input.description || null,
     location: input.location || null,
+    registration_form_url: input.registration_form_url || null,
     updated_at: now,
   };
 
