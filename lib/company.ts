@@ -5,8 +5,6 @@ import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { computeMatch } from "@/lib/matching";
 
 type Company = TableRow<"companies">;
-type CompanyUser = TableRow<"company_users">;
-type CompanyDomain = TableRow<"company_domains">;
 type EventCompany = TableRow<"event_companies">;
 type Event = TableRow<"events">;
 type Student = TableRow<"students">;
@@ -17,18 +15,12 @@ type Lead = TableRow<"leads">;
 
 type EventRegistration = EventCompany & { event: Event };
 
-function deriveCompanyName(email: string | null | undefined) {
-  if (!email) return "Ny bedrift";
-  const [local] = email.split("@");
-  const cleaned = local.replace(/[._-]+/g, " ").trim();
-  if (!cleaned) return "Ny bedrift";
-  return cleaned
-    .split(" ")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
+export function hasPremiumPackageAccess(packageTier: string | null | undefined) {
+  return packageTier === "gold" || packageTier === "platinum";
 }
 
-export async function getOrCreateCompanyForUser(userId: string, email?: string | null) {
+export async function getOrCreateCompanyForUser(userId: string, _email?: string | null) {
+  void _email;
   let supabase = await createServerSupabaseClient();
   try {
     supabase = createAdminSupabaseClient();
@@ -217,14 +209,57 @@ export async function getTopMatches(company: Company, eventId?: string | null) {
 }
 
 export async function hasPlatinumAccess(userId: string, eventId: string, companyId: string) {
-  const supabase = await createServerSupabaseClient();
-  const { data, error } = await supabase.rpc("has_platinum_access", {
-    uid: userId,
-    event_uuid: eventId,
-    company_uuid: companyId,
-  });
-  if (error) throw error;
-  return Boolean(data);
+  let supabase = await createServerSupabaseClient();
+  try {
+    supabase = createAdminSupabaseClient();
+  } catch {
+    // fallback
+  }
+
+  const now = Date.now();
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", userId)
+    .maybeSingle();
+  if (profileError) throw profileError;
+
+  const isAdmin = profile?.role === "admin";
+
+  if (!isAdmin) {
+    const { data: membership, error: membershipError } = await supabase
+      .from("company_users")
+      .select("id, approved_at")
+      .eq("company_id", companyId)
+      .eq("user_id", userId)
+      .maybeSingle();
+    if (membershipError) throw membershipError;
+    if (!membership?.approved_at) return false;
+  }
+
+  const { data: registration, error: registrationError } = await supabase
+    .from("event_companies")
+    .select("package, access_from, access_until")
+    .eq("company_id", companyId)
+    .eq("event_id", eventId)
+    .maybeSingle();
+  if (registrationError) throw registrationError;
+  if (!registration) return false;
+
+  if (!hasPremiumPackageAccess(registration.package)) return false;
+
+  if (registration.access_from) {
+    const startsAt = new Date(registration.access_from).getTime();
+    if (Number.isFinite(startsAt) && startsAt > now) return false;
+  }
+
+  if (registration.access_until) {
+    const endsAt = new Date(registration.access_until).getTime();
+    if (Number.isFinite(endsAt) && endsAt < now) return false;
+  }
+
+  return true;
 }
 
 export async function getRoiMetrics(companyId: string, eventId: string) {

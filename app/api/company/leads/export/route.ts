@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { getCompanyLeads, getOrCreateCompanyForUser } from "@/lib/company";
+import {
+  getCompanyLeads,
+  getCompanyRegistrations,
+  getOrCreateCompanyForUser,
+  hasPremiumPackageAccess,
+} from "@/lib/company";
 import { toCsv } from "@/lib/csv";
 
 export async function GET() {
@@ -23,6 +28,13 @@ export async function GET() {
   const company = await getOrCreateCompanyForUser(user.id, user.email);
   if (!company) {
     return NextResponse.json({ error: "Tilgang til bedrift er ikke godkjent ennå." }, { status: 403 });
+  }
+  const registrations = await getCompanyRegistrations(company.id);
+  const hasDetailedLeadAccess = registrations.some((registration) =>
+    hasPremiumPackageAccess(registration.package),
+  );
+  if (!hasDetailedLeadAccess) {
+    return NextResponse.json({ error: "Eksport krever Gull eller Platinum." }, { status: 403 });
   }
   const leads = await getCompanyLeads(company.id);
 

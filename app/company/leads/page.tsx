@@ -3,9 +3,20 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { SectionHeader } from "@/components/ui/section-header";
 import { requireRole } from "@/lib/auth";
-import { getCompanyLeads, getOrCreateCompanyForUser } from "@/lib/company";
+import {
+  getCompanyLeads,
+  getCompanyRegistrations,
+  getOrCreateCompanyForUser,
+  hasPremiumPackageAccess,
+} from "@/lib/company";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
+
+function sourceLabel(source: string) {
+  if (source === "stand") return "Stand";
+  if (source === "ticket") return "Pamelding";
+  return "Studentportal";
+}
 
 export default async function CompanyLeadsPage() {
   const profile = await requireRole("company");
@@ -21,11 +32,20 @@ export default async function CompanyLeadsPage() {
   if (!company || !companyId) {
     return (
       <Card className="border border-warning/30 bg-warning/10 text-sm text-ink/90">
-        Bedriftskontoen din er ikke godkjent ennå. En admin må godkjenne tilgang før du kan se leads.
+        Bedriftskontoen din er ikke godkjent enna. En admin ma godkjenne tilgang for du kan se leads.
       </Card>
     );
   }
-  const leads = await getCompanyLeads(companyId);
+
+  const [leads, registrations] = await Promise.all([
+    getCompanyLeads(companyId),
+    getCompanyRegistrations(companyId),
+  ]);
+
+  const hasDetailedLeadAccess = registrations.some((registration) =>
+    hasPremiumPackageAccess(registration.package),
+  );
+
   const grouped = leads.reduce<Record<string, typeof leads>>((acc, row) => {
     const key = row.event?.id ?? "no-event";
     acc[key] = acc[key] ?? [];
@@ -38,18 +58,30 @@ export default async function CompanyLeadsPage() {
       <SectionHeader
         eyebrow="Leads"
         title="Leads fra stand og studentportal"
-        description="Du ser alle leads. Kontaktinfo vises kun når samtykke er gitt."
+        description={
+          hasDetailedLeadAccess
+            ? "Gull/Platinum: Full lead-visning. Kontaktinfo vises kun nar samtykke er gitt."
+            : "Standard/Solv: Du ser antall leads og anonymisert innsikt (studie, ar og interesser)."
+        }
         actions={
-          <Link
-            className={cn(
-              "inline-flex items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-surface transition hover:bg-primary/90",
-            )}
-            href="/api/company/leads/export"
-          >
-            Eksporter CSV
-          </Link>
+          hasDetailedLeadAccess ? (
+            <Link
+              className={cn(
+                "inline-flex items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-surface transition hover:bg-primary/90",
+              )}
+              href="/api/company/leads/export"
+            >
+              Eksporter CSV
+            </Link>
+          ) : undefined
         }
       />
+
+      {!hasDetailedLeadAccess ? (
+        <Card className="border border-warning/30 bg-warning/10 text-sm text-ink/90">
+          Denne pakken gir ikke tilgang til navn eller kontaktinfo. Oppgrader til Gull eller Platinum for full lead-data.
+        </Card>
+      ) : null}
 
       {leads.length === 0 ? (
         <Card className="flex flex-col gap-4">
@@ -70,9 +102,9 @@ export default async function CompanyLeadsPage() {
                 <table className="min-w-full divide-y divide-primary/10 text-sm">
                   <thead>
                     <tr className="text-left text-xs font-semibold uppercase tracking-wide text-primary/60">
-                      <th className="px-3 py-2">Navn</th>
+                      <th className="px-3 py-2">{hasDetailedLeadAccess ? "Navn" : "Lead"}</th>
                       <th className="px-3 py-2">Studie</th>
-                      <th className="px-3 py-2">År</th>
+                      <th className="px-3 py-2">Ar</th>
                       <th className="px-3 py-2">Interesser</th>
                       <th className="px-3 py-2">Kontakt</th>
                       <th className="px-3 py-2">Samtykke</th>
@@ -80,62 +112,58 @@ export default async function CompanyLeadsPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-primary/5">
-                    {rows.map(({ lead, consent, student }) => {
+                    {rows.map(({ lead, consent, student }, index) => {
                       const level = lead.study_level ?? student?.study_level ?? "";
                       const year = lead.study_year;
-                      const yearLabel = year ? `${year}. år` : "";
+                      const yearLabel = year ? `${year}. ar` : "";
                       const studyYearText = year ? `${yearLabel} ${level ? level.toLowerCase() : ""}`.trim() : "";
 
                       return (
                         <tr key={lead.id} className="align-top">
                           <td className="px-3 py-3 font-semibold text-primary">
-                            <Link className="hover:text-secondary" href={`/company/leads/${lead.id}`}>
-                              {student?.full_name ?? "Ukjent student"}
-                            </Link>
+                            {hasDetailedLeadAccess ? (
+                              <Link className="hover:text-secondary" href={`/company/leads/${lead.id}`}>
+                                {student?.full_name ?? "Ukjent student"}
+                              </Link>
+                            ) : (
+                              `Lead ${index + 1}`
+                            )}
                           </td>
-                        <td className="px-3 py-3 text-ink/80">
-                          {lead.field_of_study ?? student?.study_program ?? "—"}
-                          <div className="text-xs text-ink/60">
-                            {lead.study_level ?? student?.study_level ?? ""}
-                          </div>
-                        </td>
-                        <td className="px-3 py-3 text-ink/80">
-                          {studyYearText || "—"}
-                        </td>
-                        <td className="px-3 py-3 text-ink/80">
-                          {lead.interests?.length ? lead.interests.join(", ") : "—"}
-                          <div className="text-xs text-ink/60">{lead.job_types?.join(", ") ?? ""}</div>
-                        </td>
-                        <td className="px-3 py-3 text-ink/80">
-                          {consent?.consent ? (
-                            <>
-                              <div>{student?.email ?? "—"}</div>
-                              <div className="text-xs text-ink/60">{student?.phone ?? ""}</div>
-                            </>
-                          ) : (
-                            <div className="text-xs text-ink/60">Skjult (ingen samtykke)</div>
-                          )}
-                        </td>
-                        <td className="px-3 py-3">
-                          {consent?.consent ? (
-                            <Badge variant="success">Samtykke</Badge>
-                          ) : (
-                            <Badge variant="warning">Ingen</Badge>
-                          )}
-                          <div className="text-xs text-ink/60">
-                            {consent?.updated_at
-                              ? new Date(consent.updated_at).toLocaleString("nb-NO")
-                              : "—"}
-                          </div>
-                        </td>
-                        <td className="px-3 py-3 text-ink/80">
-                          {lead.source === "stand"
-                            ? "Stand"
-                            : lead.source === "ticket"
-                              ? "Påmelding"
-                              : "Studentportal"}
-                        </td>
-                      </tr>
+                          <td className="px-3 py-3 text-ink/80">
+                            {lead.field_of_study ?? student?.study_program ?? "-"}
+                            <div className="text-xs text-ink/60">{lead.study_level ?? student?.study_level ?? ""}</div>
+                          </td>
+                          <td className="px-3 py-3 text-ink/80">{studyYearText || "-"}</td>
+                          <td className="px-3 py-3 text-ink/80">
+                            {lead.interests?.length ? lead.interests.join(", ") : "-"}
+                            <div className="text-xs text-ink/60">{lead.job_types?.join(", ") ?? ""}</div>
+                          </td>
+                          <td className="px-3 py-3 text-ink/80">
+                            {hasDetailedLeadAccess ? (
+                              consent?.consent ? (
+                                <>
+                                  <div>{student?.email ?? "-"}</div>
+                                  <div className="text-xs text-ink/60">{student?.phone ?? ""}</div>
+                                </>
+                              ) : (
+                                <div className="text-xs text-ink/60">Skjult (ingen samtykke)</div>
+                              )
+                            ) : (
+                              <div className="text-xs text-ink/60">Skjult i denne pakken</div>
+                            )}
+                          </td>
+                          <td className="px-3 py-3">
+                            {consent?.consent ? (
+                              <Badge variant="success">Samtykke</Badge>
+                            ) : (
+                              <Badge variant="warning">Ingen</Badge>
+                            )}
+                            <div className="text-xs text-ink/60">
+                              {consent?.updated_at ? new Date(consent.updated_at).toLocaleString("nb-NO") : "-"}
+                            </div>
+                          </td>
+                          <td className="px-3 py-3 text-ink/80">{sourceLabel(lead.source)}</td>
+                        </tr>
                       );
                     })}
                   </tbody>

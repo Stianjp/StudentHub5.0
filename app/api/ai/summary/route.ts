@@ -82,7 +82,7 @@ export async function POST(request: Request) {
 
   const access = await hasPlatinumAccess(user.id, eventId, companyId);
   if (!access) {
-    return NextResponse.json({ error: "Platinum-tilgang kreves" }, { status: 403 });
+    return NextResponse.json({ error: "Gull- eller Platinum-tilgang kreves" }, { status: 403 });
   }
 
   const metrics = await getRoiMetrics(companyId, eventId);

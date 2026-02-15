@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Badge } from "@/components/ui/badge";
 import { requireRole } from "@/lib/auth";
-import { getOrCreateCompanyForUser } from "@/lib/company";
+import { getCompanyRegistrations, getOrCreateCompanyForUser, hasPremiumPackageAccess } from "@/lib/company";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 
@@ -27,6 +27,18 @@ export default async function CompanyLeadPage({ params }: LeadPageProps) {
     return (
       <Card className="border border-warning/30 bg-warning/10 text-sm text-ink/90">
         Bedriftskontoen din er ikke godkjent ennå. En admin må godkjenne tilgang før du kan se lead-detaljer.
+      </Card>
+    );
+  }
+
+  const registrations = await getCompanyRegistrations(companyId);
+  const hasDetailedLeadAccess = registrations.some((registration) =>
+    hasPremiumPackageAccess(registration.package),
+  );
+  if (!hasDetailedLeadAccess) {
+    return (
+      <Card className="border border-warning/30 bg-warning/10 text-sm text-ink/90">
+        Denne pakken har ikke tilgang til lead-detaljer. Standard/Solv kan kun se antall og anonymisert innsikt pa leads.
       </Card>
     );
   }

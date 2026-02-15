@@ -64,9 +64,9 @@ export default async function CompanyRoiPage({ searchParams }: RoiPageProps) {
   return (
     <div className="flex flex-col gap-8">
       <SectionHeader
-        eyebrow="Premium"
+        eyebrow="ROI"
         title="ROI og innsikt"
-        description="Kun tilgjengelig for platinum med gyldig tilgangsperiode per event."
+        description="Kun tilgjengelig for Gull og Platinum med gyldig tilgangsperiode per event."
         actions={
           <div className="flex flex-wrap gap-2">
             {registrations.map((reg) => (
@@ -102,14 +102,20 @@ export default async function CompanyRoiPage({ searchParams }: RoiPageProps) {
                     : "Platinum"}
             </p>
           </div>
-          <Badge variant={currentRegistration.package === "platinum" ? "success" : "warning"}>
+          <Badge
+            variant={
+              currentRegistration.package === "gold" || currentRegistration.package === "platinum"
+                ? "success"
+                : "warning"
+            }
+          >
             {currentRegistration.package}
           </Badge>
         </div>
 
         {!platinum ? (
           <div className="rounded-xl border border-warning/30 bg-warning/10 p-4 text-sm text-ink/90">
-            ROI er ikke tilgjengelig. Be OSH-admin om platinum-tilgang for dette eventet.
+            ROI er ikke tilgjengelig. Be OSH-admin om Gull- eller Platinum-tilgang for dette eventet.
           </div>
         ) : null}
       </Card>
