@@ -18,6 +18,7 @@ import {
   inviteCompanyToEvent,
   registerCompanyForEvent,
   setPackageForCompany,
+  updateEventCompanyPackageSettings,
   updateEventCompanyStandType,
   upsertEvent,
 } from "@/lib/admin";
@@ -26,6 +27,7 @@ import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { sendTransactionalEmail } from "@/lib/resend";
 
 const STAND_TYPE_VALUES = ["Standard", "Premium"] as const;
+const PACKAGE_VALUES = ["standard", "silver", "gold", "platinum"] as const;
 
 function isNextRedirectError(error: unknown) {
   const digest = (error as { digest?: string })?.digest;
@@ -474,6 +476,58 @@ export async function registerCompaniesBulk(formData: FormData) {
     if (typeof returnTo === "string" && returnTo.startsWith("/")) {
       const message = getErrorMessage(error);
       redirect(`${returnTo}?error=${encodeURIComponent(message)}`);
+    }
+    throw error;
+  }
+}
+
+export async function updateCompanyPackageSettings(formData: FormData) {
+  await requireRole("admin");
+  const returnTo = formData.get("returnTo");
+  try {
+    const registrationId = String(getFormValue(formData, "registrationId") ?? "").trim();
+    const packageTier = String(getFormValue(formData, "package") ?? "").trim();
+    const standType = String(getFormValue(formData, "standType") ?? "").trim();
+    const accessFrom = String(getFormValue(formData, "accessFrom") ?? "").trim();
+    const accessUntil = String(getFormValue(formData, "accessUntil") ?? "").trim();
+    const canViewRoi = getFormValue(formData, "canViewRoi") !== null;
+    const canViewLeads = getFormValue(formData, "canViewLeads") !== null;
+
+    if (!isUuid(registrationId)) {
+      throw new Error("Ugyldig registrering.");
+    }
+    if (!PACKAGE_VALUES.includes(packageTier as (typeof PACKAGE_VALUES)[number])) {
+      throw new Error("Ugyldig pakke.");
+    }
+    if (!STAND_TYPE_VALUES.includes(standType as (typeof STAND_TYPE_VALUES)[number])) {
+      throw new Error("Ugyldig standtype.");
+    }
+
+    await updateEventCompanyPackageSettings({
+      registrationId,
+      package: packageTier as (typeof PACKAGE_VALUES)[number],
+      standType: standType as (typeof STAND_TYPE_VALUES)[number],
+      accessFrom: accessFrom || null,
+      accessUntil: accessUntil || null,
+      canViewRoi,
+      canViewLeads,
+    });
+
+    revalidatePath("/admin/company-packages");
+    revalidatePath("/admin/events");
+    revalidatePath("/admin/companies/register-event");
+    revalidatePath("/company/leads");
+    revalidatePath("/company/roi");
+    if (typeof returnTo === "string" && returnTo.startsWith("/")) {
+      const separator = returnTo.includes("?") ? "&" : "?";
+      redirect(`${returnTo}${separator}saved=1`);
+    }
+  } catch (error) {
+    if (isNextRedirectError(error)) throw error;
+    if (typeof returnTo === "string" && returnTo.startsWith("/")) {
+      const message = getErrorMessage(error);
+      const separator = returnTo.includes("?") ? "&" : "?";
+      redirect(`${returnTo}${separator}error=${encodeURIComponent(message)}`);
     }
     throw error;
   }

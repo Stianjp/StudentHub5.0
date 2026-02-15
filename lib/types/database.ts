@@ -367,6 +367,8 @@ export type Database = {
           kpis: string[];
           category_tags: string[];
           package: "standard" | "silver" | "gold" | "platinum";
+          can_view_roi: boolean;
+          can_view_leads: boolean;
           access_from: string | null;
           access_until: string | null;
           invited_email: string | null;
@@ -384,6 +386,8 @@ export type Database = {
           kpis?: string[];
           category_tags?: string[];
           package?: "standard" | "silver" | "gold" | "platinum";
+          can_view_roi?: boolean;
+          can_view_leads?: boolean;
           access_from?: string | null;
           access_until?: string | null;
           invited_email?: string | null;
@@ -401,6 +405,8 @@ export type Database = {
           kpis?: string[];
           category_tags?: string[];
           package?: "standard" | "silver" | "gold" | "platinum";
+          can_view_roi?: boolean;
+          can_view_leads?: boolean;
           access_from?: string | null;
           access_until?: string | null;
           invited_email?: string | null;

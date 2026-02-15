@@ -19,6 +19,20 @@ export function hasPremiumPackageAccess(packageTier: string | null | undefined) 
   return packageTier === "gold" || packageTier === "platinum";
 }
 
+export function hasRoiAccessForRegistration(input: {
+  package: string | null | undefined;
+  can_view_roi?: boolean | null;
+}) {
+  return hasPremiumPackageAccess(input.package) || Boolean(input.can_view_roi);
+}
+
+export function hasLeadDetailsAccessForRegistration(input: {
+  package: string | null | undefined;
+  can_view_leads?: boolean | null;
+}) {
+  return hasPremiumPackageAccess(input.package) || Boolean(input.can_view_leads);
+}
+
 export async function getOrCreateCompanyForUser(userId: string, _email?: string | null) {
   void _email;
   let supabase = await createServerSupabaseClient();
@@ -240,14 +254,14 @@ export async function hasPlatinumAccess(userId: string, eventId: string, company
 
   const { data: registration, error: registrationError } = await supabase
     .from("event_companies")
-    .select("package, access_from, access_until")
+    .select("package, can_view_roi, access_from, access_until")
     .eq("company_id", companyId)
     .eq("event_id", eventId)
     .maybeSingle();
   if (registrationError) throw registrationError;
   if (!registration) return false;
 
-  if (!hasPremiumPackageAccess(registration.package)) return false;
+  if (!hasRoiAccessForRegistration(registration)) return false;
 
   if (registration.access_from) {
     const startsAt = new Date(registration.access_from).getTime();

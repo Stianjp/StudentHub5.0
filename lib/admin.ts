@@ -491,3 +491,34 @@ export async function updateEventCompanyStandType(input: {
   if (error) throw error;
   return data;
 }
+
+export async function updateEventCompanyPackageSettings(input: {
+  registrationId: string;
+  package: "standard" | "silver" | "gold" | "platinum";
+  standType: "Standard" | "Premium";
+  accessFrom?: string | null;
+  accessUntil?: string | null;
+  canViewRoi: boolean;
+  canViewLeads: boolean;
+}) {
+  const supabase = createAdminSupabaseClient();
+  const now = new Date().toISOString();
+
+  const { data, error } = await supabase
+    .from("event_companies")
+    .update({
+      package: input.package,
+      stand_type: input.standType,
+      access_from: input.accessFrom || null,
+      access_until: input.accessUntil || null,
+      can_view_roi: input.canViewRoi,
+      can_view_leads: input.canViewLeads,
+      updated_at: now,
+    })
+    .eq("id", input.registrationId)
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return data;
+}

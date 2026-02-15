@@ -7,7 +7,7 @@ import {
   getCompanyLeads,
   getCompanyRegistrations,
   getOrCreateCompanyForUser,
-  hasPremiumPackageAccess,
+  hasLeadDetailsAccessForRegistration,
 } from "@/lib/company";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
@@ -42,9 +42,13 @@ export default async function CompanyLeadsPage() {
     getCompanyRegistrations(companyId),
   ]);
 
-  const hasDetailedLeadAccess = registrations.some((registration) =>
-    hasPremiumPackageAccess(registration.package),
+  const leadAccessByEvent = new Map(
+    registrations.map((registration) => [
+      registration.event_id,
+      hasLeadDetailsAccessForRegistration(registration),
+    ]),
   );
+  const hasAnyDetailedLeadAccess = Array.from(leadAccessByEvent.values()).some(Boolean);
 
   const grouped = leads.reduce<Record<string, typeof leads>>((acc, row) => {
     const key = row.event?.id ?? "no-event";
@@ -59,12 +63,12 @@ export default async function CompanyLeadsPage() {
         eyebrow="Leads"
         title="Leads fra stand og studentportal"
         description={
-          hasDetailedLeadAccess
-            ? "Gull/Platinum: Full lead-visning. Kontaktinfo vises kun nar samtykke er gitt."
+          hasAnyDetailedLeadAccess
+            ? "Full lead-visning pa events med Gull/Platinum eller ekstra Leads-tilgang. Andre events vises anonymisert."
             : "Standard/Solv: Du ser antall leads og anonymisert innsikt (studie, ar og interesser)."
         }
         actions={
-          hasDetailedLeadAccess ? (
+          hasAnyDetailedLeadAccess ? (
             <Link
               className={cn(
                 "inline-flex items-center justify-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-surface transition hover:bg-primary/90",
@@ -77,9 +81,9 @@ export default async function CompanyLeadsPage() {
         }
       />
 
-      {!hasDetailedLeadAccess ? (
+      {!hasAnyDetailedLeadAccess ? (
         <Card className="border border-warning/30 bg-warning/10 text-sm text-ink/90">
-          Denne pakken gir ikke tilgang til navn eller kontaktinfo. Oppgrader til Gull eller Platinum for full lead-data.
+          Denne pakken gir ikke tilgang til navn eller kontaktinfo. Oppgrader til Gull/Platinum, eller aktiver ekstra tilgang i Bedriftspakker.
         </Card>
       ) : null}
 
@@ -90,6 +94,10 @@ export default async function CompanyLeadsPage() {
       ) : (
         Object.entries(grouped).map(([eventId, rows]) => {
           const eventName = rows[0]?.event?.name ?? "Uten event";
+          const hasDetailedLeadAccessForGroup =
+            eventId === "no-event"
+              ? hasAnyDetailedLeadAccess
+              : (leadAccessByEvent.get(eventId) ?? false);
           return (
             <Card key={eventId} className="flex flex-col gap-4">
               <div className="flex items-center justify-between">
@@ -102,7 +110,7 @@ export default async function CompanyLeadsPage() {
                 <table className="min-w-full divide-y divide-primary/10 text-sm">
                   <thead>
                     <tr className="text-left text-xs font-semibold uppercase tracking-wide text-primary/60">
-                      <th className="px-3 py-2">{hasDetailedLeadAccess ? "Navn" : "Lead"}</th>
+                      <th className="px-3 py-2">{hasDetailedLeadAccessForGroup ? "Navn" : "Lead"}</th>
                       <th className="px-3 py-2">Studie</th>
                       <th className="px-3 py-2">Ar</th>
                       <th className="px-3 py-2">Interesser</th>
@@ -121,7 +129,7 @@ export default async function CompanyLeadsPage() {
                       return (
                         <tr key={lead.id} className="align-top">
                           <td className="px-3 py-3 font-semibold text-primary">
-                            {hasDetailedLeadAccess ? (
+                            {hasDetailedLeadAccessForGroup ? (
                               <Link className="hover:text-secondary" href={`/company/leads/${lead.id}`}>
                                 {student?.full_name ?? "Ukjent student"}
                               </Link>
@@ -139,7 +147,7 @@ export default async function CompanyLeadsPage() {
                             <div className="text-xs text-ink/60">{lead.job_types?.join(", ") ?? ""}</div>
                           </td>
                           <td className="px-3 py-3 text-ink/80">
-                            {hasDetailedLeadAccess ? (
+                            {hasDetailedLeadAccessForGroup ? (
                               consent?.consent ? (
                                 <>
                                   <div>{student?.email ?? "-"}</div>

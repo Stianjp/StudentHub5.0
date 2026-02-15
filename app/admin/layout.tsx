@@ -20,6 +20,7 @@ const nav = [
       { href: "/admin/events/overview", label: "Oversikt over eventer" },
     ],
   },
+  { href: "/admin/company-packages", label: "Bedriftspakker" },
   { href: "/admin/students", label: "Studenter" },
   { href: "/admin/leads", label: "Leads" },
   { href: "/admin/tickets", label: "Billetter" },

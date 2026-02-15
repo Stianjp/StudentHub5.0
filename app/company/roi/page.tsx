@@ -59,7 +59,7 @@ export default async function CompanyRoiPage({ searchParams }: RoiPageProps) {
   const requestedEventId = typeof params.eventId === "string" ? params.eventId : registrations[0].event_id;
   const currentRegistration = registrations.find((reg) => reg.event_id === requestedEventId) ?? registrations[0];
 
-  const platinum = await hasPlatinumAccess(profile.id, currentRegistration.event_id, companyId);
+  const hasRoiAccess = await hasPlatinumAccess(profile.id, currentRegistration.event_id, companyId);
 
   return (
     <div className="flex flex-col gap-8">
@@ -113,14 +113,14 @@ export default async function CompanyRoiPage({ searchParams }: RoiPageProps) {
           </Badge>
         </div>
 
-        {!platinum ? (
+        {!hasRoiAccess ? (
           <div className="rounded-xl border border-warning/30 bg-warning/10 p-4 text-sm text-ink/90">
             ROI er ikke tilgjengelig. Be OSH-admin om Gull- eller Platinum-tilgang for dette eventet.
           </div>
         ) : null}
       </Card>
 
-      {platinum ? <RoiContent eventId={currentRegistration.event_id} companyId={companyId} /> : null}
+      {hasRoiAccess ? <RoiContent eventId={currentRegistration.event_id} companyId={companyId} /> : null}
     </div>
   );
 }

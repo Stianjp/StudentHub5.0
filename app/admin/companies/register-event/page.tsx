@@ -40,7 +40,7 @@ export default async function AdminRegisterCompanyEventPage({ searchParams }: Pa
       <SectionHeader
         eyebrow="Bedrifter"
         title="Registrer bedrift til event"
-        description="Velg event, bedrift, pakke og kategori."
+        description="Velg event, bedrift og kategori. Pakke/tilgang styres i Bedriftspakker."
         actions={<Link className="button-link text-xs" href="/admin/companies/overview">Oversikt bedrifter</Link>}
       />
 
@@ -82,15 +82,7 @@ export default async function AdminRegisterCompanyEventPage({ searchParams }: Pa
                 ))}
               </Select>
             </label>
-            <label className="text-sm font-semibold text-primary">
-              Pakke
-              <Select name="package" defaultValue="standard">
-                <option value="standard">Standard</option>
-                <option value="silver">Sølv</option>
-                <option value="gold">Gull</option>
-                <option value="platinum">Platinum</option>
-              </Select>
-            </label>
+            <input type="hidden" name="package" value="standard" />
             <div className="md:col-span-4">
               <p className="text-sm font-semibold text-primary">
                 Velg bedriftens kategori (oppdateres på bedriften og kan endres av bedriften selv)
@@ -150,8 +142,8 @@ export default async function AdminRegisterCompanyEventPage({ searchParams }: Pa
                   <td className="px-4 py-3 text-ink/80">{event?.name ?? "Event"}</td>
                   <td className="px-4 py-3 text-ink/80">{packageLabel(row.package)}</td>
                   <td className="px-4 py-3">
-                    <Link className="text-xs font-semibold text-primary/70 hover:text-primary" href={`/admin/events/${row.event_id}`}>
-                      Rediger
+                    <Link className="text-xs font-semibold text-primary/70 hover:text-primary" href={`/admin/company-packages?eventId=${row.event_id}`}>
+                      Administrer pakke
                     </Link>
                   </td>
                 </tr>
@@ -166,3 +158,6 @@ export default async function AdminRegisterCompanyEventPage({ searchParams }: Pa
     </div>
   );
 }
+
+
+

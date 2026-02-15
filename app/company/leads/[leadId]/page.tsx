@@ -3,7 +3,11 @@ import { Card } from "@/components/ui/card";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Badge } from "@/components/ui/badge";
 import { requireRole } from "@/lib/auth";
-import { getCompanyRegistrations, getOrCreateCompanyForUser, hasPremiumPackageAccess } from "@/lib/company";
+import {
+  getCompanyRegistrations,
+  getOrCreateCompanyForUser,
+  hasLeadDetailsAccessForRegistration,
+} from "@/lib/company";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 
@@ -31,18 +35,6 @@ export default async function CompanyLeadPage({ params }: LeadPageProps) {
     );
   }
 
-  const registrations = await getCompanyRegistrations(companyId);
-  const hasDetailedLeadAccess = registrations.some((registration) =>
-    hasPremiumPackageAccess(registration.package),
-  );
-  if (!hasDetailedLeadAccess) {
-    return (
-      <Card className="border border-warning/30 bg-warning/10 text-sm text-ink/90">
-        Denne pakken har ikke tilgang til lead-detaljer. Standard/Solv kan kun se antall og anonymisert innsikt pa leads.
-      </Card>
-    );
-  }
-
   const admin = createAdminSupabaseClient();
   const { data: leadRow, error: leadError } = await admin
     .from("leads")
@@ -56,6 +48,22 @@ export default async function CompanyLeadPage({ params }: LeadPageProps) {
     return (
       <Card className="text-sm text-ink/80">
         Lead ikke funnet.
+      </Card>
+    );
+  }
+
+  const registrations = await getCompanyRegistrations(companyId);
+  const leadRegistration = leadRow.event_id
+    ? registrations.find((registration) => registration.event_id === leadRow.event_id)
+    : null;
+  const hasDetailedLeadAccess = leadRegistration
+    ? hasLeadDetailsAccessForRegistration(leadRegistration)
+    : registrations.some((registration) => hasLeadDetailsAccessForRegistration(registration));
+
+  if (!hasDetailedLeadAccess) {
+    return (
+      <Card className="border border-warning/30 bg-warning/10 text-sm text-ink/90">
+        Denne pakken har ikke tilgang til lead-detaljer. Standard/Solv kan kun se antall og anonymisert innsikt pa leads.
       </Card>
     );
   }

@@ -4,7 +4,7 @@ import {
   getCompanyLeads,
   getCompanyRegistrations,
   getOrCreateCompanyForUser,
-  hasPremiumPackageAccess,
+  hasLeadDetailsAccessForRegistration,
 } from "@/lib/company";
 import { toCsv } from "@/lib/csv";
 
@@ -30,13 +30,19 @@ export async function GET() {
     return NextResponse.json({ error: "Tilgang til bedrift er ikke godkjent ennå." }, { status: 403 });
   }
   const registrations = await getCompanyRegistrations(company.id);
-  const hasDetailedLeadAccess = registrations.some((registration) =>
-    hasPremiumPackageAccess(registration.package),
+  const leadAccessByEvent = new Map(
+    registrations.map((registration) => [
+      registration.event_id,
+      hasLeadDetailsAccessForRegistration(registration),
+    ]),
   );
+  const hasDetailedLeadAccess = Array.from(leadAccessByEvent.values()).some(Boolean);
   if (!hasDetailedLeadAccess) {
-    return NextResponse.json({ error: "Eksport krever Gull eller Platinum." }, { status: 403 });
+    return NextResponse.json({ error: "Eksport krever Gull/Platinum eller ekstra Leads-tilgang." }, { status: 403 });
   }
-  const leads = await getCompanyLeads(company.id);
+  const leads = (await getCompanyLeads(company.id)).filter(({ lead }) =>
+    lead.event_id ? (leadAccessByEvent.get(lead.event_id) ?? false) : hasDetailedLeadAccess,
+  );
 
   const rows = leads.map(({ lead, consent, student, event }) => {
     const level = lead.study_level ?? student?.study_level ?? "";

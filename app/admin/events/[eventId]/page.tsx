@@ -11,7 +11,6 @@ import {
   registerCompaniesBulk,
   registerCompany,
   saveEvent,
-  updateRegisteredCompanyStandType,
 } from "@/app/admin/actions";
 
 const packageLabel: Record<string, string> = {
@@ -20,8 +19,6 @@ const packageLabel: Record<string, string> = {
   gold: "Gull",
   platinum: "Platinum",
 };
-
-const standTypeOptions = ["Standard", "Premium"] as const;
 
 type PageProps = {
   params: Promise<{ eventId: string }>;
@@ -145,6 +142,7 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
           <form action={registerCompany} className="grid gap-3 md:grid-cols-3">
             <input name="eventId" type="hidden" value={eventId} readOnly />
             <input type="hidden" name="returnTo" value={`/admin/events/${eventId}`} />
+            <input type="hidden" name="package" value="standard" />
             <label className="text-sm font-semibold text-primary">
               Bedrift
               <Select name="companyId" required defaultValue={availableCompanies[0]?.id}>
@@ -153,15 +151,6 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
                     {company.name}
                   </option>
                 ))}
-              </Select>
-            </label>
-            <label className="text-sm font-semibold text-primary">
-              Pakke
-              <Select name="package" defaultValue="standard">
-                <option value="standard">Standard</option>
-                <option value="silver">Sølv</option>
-                <option value="gold">Gull</option>
-                <option value="platinum">Platinum</option>
               </Select>
             </label>
             <div className="md:col-span-3">
@@ -207,15 +196,7 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
         <form action={registerCompaniesBulk} className="grid gap-4">
           <input name="eventId" type="hidden" value={eventId} readOnly />
           <input type="hidden" name="returnTo" value={`/admin/events/${eventId}`} />
-          <label className="text-sm font-semibold text-primary">
-            Pakke
-            <Select name="package" defaultValue="standard">
-              <option value="standard">Standard</option>
-              <option value="silver">Sølv</option>
-              <option value="gold">Gull</option>
-              <option value="platinum">Platinum</option>
-            </Select>
-          </label>
+          <input type="hidden" name="package" value="standard" />
           <div>
             <p className="text-sm font-semibold text-primary">
               Velg bedriftens kategori (oppdateres på bedriften og kan endres av bedriften selv)
@@ -274,7 +255,12 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
       </Card>
 
       <Card className="flex flex-col gap-4">
-        <h3 className="text-lg font-bold text-primary">Registrerte bedrifter</h3>
+        <div className="flex items-center justify-between gap-3">
+          <h3 className="text-lg font-bold text-primary">Registrerte bedrifter</h3>
+          <Link className="text-xs font-semibold text-primary/70 hover:text-primary" href={`/admin/company-packages?eventId=${eventId}`}>
+            Administrer pakker
+          </Link>
+        </div>
         {eventData.registrations.length === 0 ? (
           <p className="text-sm text-ink/70">Ingen registrerte bedrifter enda.</p>
         ) : (
@@ -290,27 +276,6 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
                     {packageLabel[reg.package] ?? reg.package}
                   </span>
                 </div>
-
-                <form action={updateRegisteredCompanyStandType} className="mt-3 grid gap-2 md:grid-cols-3">
-                  <input type="hidden" name="registrationId" value={reg.id} />
-                  <input type="hidden" name="returnTo" value={`/admin/events/${eventId}`} />
-                  <label className="text-xs font-semibold text-primary md:col-span-2">
-                    Endre standtype
-                    <Select name="standType" required defaultValue={reg.stand_type ?? "Standard"}>
-                      {reg.stand_type && !standTypeOptions.includes(reg.stand_type as (typeof standTypeOptions)[number]) ? (
-                        <option value={reg.stand_type}>{reg.stand_type}</option>
-                      ) : null}
-                      {standTypeOptions.map((option) => (
-                        <option key={option} value={option}>
-                          {option}
-                        </option>
-                      ))}
-                    </Select>
-                  </label>
-                  <Button type="submit" variant="secondary" className="self-end">
-                    Lagre standtype
-                  </Button>
-                </form>
               </li>
             ))}
           </ul>
@@ -319,3 +284,5 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
     </div>
   );
 }
+
+
