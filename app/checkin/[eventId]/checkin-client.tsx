@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -50,6 +50,8 @@ export function CheckinClient({ eventId }: { eventId: string }) {
   const [totalAllCount, setTotalAllCount] = useState<number>(0);
   const [checkedInAllCount, setCheckedInAllCount] = useState<number>(0);
   const [lastPrint, setLastPrint] = useState<PrintPayload | null>(null);
+  const autoSearchTimeoutRef = useRef<number | null>(null);
+  const lastAutoQueryRef = useRef<string>("");
 
   const parsedQr = useMemo(() => {
     const trimmed = query.trim();
@@ -94,13 +96,18 @@ export function CheckinClient({ eventId }: { eventId: string }) {
       return;
     }
     const payload = await response.json();
-    setResults(payload?.results ?? []);
+    const nextResults = (payload?.results ?? []) as TicketRow[];
+    setResults(nextResults);
     setActiveQuery(query.trim());
-    const total = payload?.results?.length ?? 0;
-    const checked = (payload?.results ?? []).filter((row: TicketRow) => Boolean(row.checked_in_at)).length;
+    const total = nextResults.length ?? 0;
+    const checked = nextResults.filter((row: TicketRow) => Boolean(row.checked_in_at)).length;
     setTotalAllCount(total);
     setCheckedInAllCount(checked);
     setStatus("success");
+
+    if ((parsedQr?.t || ticketOnly) && nextResults.length === 1 && !nextResults[0].checked_in_at) {
+      void checkinAndPrint(nextResults[0].id);
+    }
   }
 
   async function loadParticipants(
@@ -140,6 +147,27 @@ export function CheckinClient({ eventId }: { eventId: string }) {
     void loadParticipants();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eventId]);
+
+  useEffect(() => {
+    const trimmed = query.trim();
+    if (!trimmed) {
+      lastAutoQueryRef.current = "";
+      if (autoSearchTimeoutRef.current) {
+        window.clearTimeout(autoSearchTimeoutRef.current);
+        autoSearchTimeoutRef.current = null;
+      }
+      return;
+    }
+    if (!isTicketQuery(trimmed)) return;
+    if (trimmed === lastAutoQueryRef.current) return;
+    if (autoSearchTimeoutRef.current) {
+      window.clearTimeout(autoSearchTimeoutRef.current);
+    }
+    autoSearchTimeoutRef.current = window.setTimeout(() => {
+      lastAutoQueryRef.current = trimmed;
+      void lookupTickets();
+    }, 150);
+  }, [query]);
 
   async function handleFilterChange(nextFilter: "all" | "student" | "company") {
     setFilter(nextFilter);
@@ -200,7 +228,13 @@ export function CheckinClient({ eventId }: { eventId: string }) {
             <Input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Ticketnummer, navn, e-post eller telefon. Du kan også lime inn QR JSON."
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  void lookupTickets();
+                }
+              }}
+              placeholder="Ticketnummer (QR), navn, e-post eller telefon."
             />
           </label>
           <label className="text-sm font-semibold text-primary">
