@@ -257,7 +257,7 @@ export async function registerStudentForEvent(formData: FormData) {
   const { data: event } = await admin.from("events").select("id, name").eq("id", eventId).single();
 
   if (resolvedEmail) {
-    const ticketPayload = encodeURIComponent(JSON.stringify({ t: ticket.ticket_number, e: eventId }));
+    const ticketPayload = encodeURIComponent(ticket.ticket_number);
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${ticketPayload}`;
     await sendTransactionalEmail({
       to: resolvedEmail,
@@ -449,7 +449,7 @@ export async function registerAttendeeForEvent(formData: FormData) {
   }
 
   const { data: event } = await supabase.from("events").select("id, name").eq("id", eventId).single();
-  const ticketPayload = encodeURIComponent(JSON.stringify({ t: ticket.ticket_number, e: eventId }));
+  const ticketPayload = encodeURIComponent(ticket.ticket_number);
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${ticketPayload}`;
 
   await sendTransactionalEmail({

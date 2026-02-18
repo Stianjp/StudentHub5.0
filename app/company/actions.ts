@@ -349,7 +349,7 @@ export async function registerCompanyAttendee(formData: FormData) {
   if (attachError) throw attachError;
 
   const { data: event } = await admin.from("events").select("id, name").eq("id", eventId).single();
-  const ticketPayload = encodeURIComponent(JSON.stringify({ t: ticket.ticket_number, e: eventId }));
+  const ticketPayload = encodeURIComponent(ticket.ticket_number);
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${ticketPayload}`;
 
   await sendTransactionalEmail({

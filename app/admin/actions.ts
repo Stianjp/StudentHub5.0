@@ -604,9 +604,7 @@ export async function resendTicketEmail(formData: FormData) {
 
     if (!email) throw new Error("Mangler e-post for billett.");
 
-    const ticketPayload = encodeURIComponent(
-      JSON.stringify({ t: ticket.ticket_number, e: ticket.event_id }),
-    );
+    const ticketPayload = encodeURIComponent(ticket.ticket_number);
     const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${ticketPayload}`;
 
     await sendTransactionalEmail({

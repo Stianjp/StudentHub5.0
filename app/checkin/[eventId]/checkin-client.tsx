@@ -63,18 +63,27 @@ export function CheckinClient({ eventId }: { eventId: string }) {
     return null;
   }, [query]);
 
+  function isTicketQuery(value: string) {
+    const trimmed = value.trim();
+    if (!trimmed) return false;
+    if (trimmed.startsWith("T-")) return true;
+    return /^[A-Z0-9-]{6,}$/.test(trimmed);
+  }
+
   async function lookupTickets(overrideFilter?: "all" | "student" | "company") {
     if (!query.trim()) return;
     setStatus("loading");
     setMessage(null);
     const activeFilter = overrideFilter ?? filter;
+    const input = query.trim();
+    const ticketOnly = isTicketQuery(input);
     const response = await fetch(`/api/checkin/search`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         eventId,
-        query: parsedQr?.t ? parsedQr.t : query.trim(),
-        mode: parsedQr?.t ? "ticket" : "text",
+        query: parsedQr?.t ? parsedQr.t : input,
+        mode: parsedQr?.t || ticketOnly ? "ticket" : "text",
         filter: activeFilter,
       }),
     });
