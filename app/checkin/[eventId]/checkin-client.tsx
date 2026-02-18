@@ -214,6 +214,9 @@ export function CheckinClient({ eventId }: { eventId: string }) {
     }
     if (printPayload) {
       setLastPrint(printPayload);
+      setQuery("");
+      setActiveQuery("");
+      lastAutoQueryRef.current = "";
     }
     setStatus("success");
     setMessage(payload.action === "reverted" ? "Innsjekk angret." : "Sjekk inn OK.");
