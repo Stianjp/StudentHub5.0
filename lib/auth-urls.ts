@@ -17,6 +17,6 @@ export function getDefaultNextPath(role: Role, hostname?: string | null) {
     return host.startsWith("checkin.") ? "/checkin" : "/admin";
   }
   if (role === "company") return "/company";
-  if (process.env.NEXT_PUBLIC_STUDENT_APP_URL) return "/";
-  return "/student";
+  if (process.env.NEXT_PUBLIC_STUDENT_APP_URL) return "/dashboard";
+  return "/student/dashboard";
 }

@@ -1,13 +1,14 @@
-import { PortalShell } from "@/components/layouts/portal-shell";
+import { StudentShell } from "@/components/layouts/student-shell";
+import { Calendar, LayoutDashboard, Settings, User } from "lucide-react";
 import { requireRole } from "@/lib/auth";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getOrCreateStudentForUser } from "@/lib/student";
 
 const nav = [
-  { href: "/student/dashboard", label: "Dashboard" },
-  { href: "/student", label: "Profil" },
-  { href: "/student/events", label: "Påmelding til event" },
-  { href: "/student/consents", label: "Samtykker" },
+  { href: "/student/dashboard", label: "Oversikt", icon: LayoutDashboard },
+  { href: "/student", label: "Min profil", icon: User },
+  { href: "/student/events", label: "Events", icon: Calendar },
+  { href: "/student/consents", label: "Innstillinger", icon: Settings },
 ];
 
 export const dynamic = "force-dynamic";
@@ -20,19 +21,18 @@ export default async function StudentLayout({ children }: { children: React.Reac
   } = await supabase.auth.getUser();
 
   const student = user ? await getOrCreateStudentForUser(profile.id, user.email) : null;
-  const title = student?.full_name ?? "Studentportal";
+  const userName = student?.full_name ?? "Studentportal";
+  const userInitials = userName
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
 
   return (
-    <PortalShell
-      roleLabel="Student"
-      roleKey="student"
-      title={title}
-      nav={nav}
-      backgroundClass="bg-gradient-to-br from-primary to-secondary"
-      backgroundStyle={{ backgroundImage: "linear-gradient(150deg, #140249 0%, #2D0A73 52%, #FE9A70 100%)" }}
-      mainClass="student-scope bg-primary/10"
-    >
+    <StudentShell nav={nav} userName={userName} userInitials={userInitials}>
       {children}
-    </PortalShell>
+    </StudentShell>
   );
 }

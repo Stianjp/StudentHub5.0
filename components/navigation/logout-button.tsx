@@ -3,8 +3,17 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { cn } from "@/lib/utils";
 
-export function LogoutButton({ role }: { role: "student" | "company" | "admin" }) {
+export function LogoutButton({
+  role,
+  className,
+  children,
+}: {
+  role: "student" | "company" | "admin";
+  className?: string;
+  children?: React.ReactNode;
+}) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -26,11 +35,11 @@ export function LogoutButton({ role }: { role: "student" | "company" | "admin" }
   return (
     <button
       type="button"
-      className="portal-top-link"
+      className={cn("portal-top-link", className)}
       onClick={handleLogout}
       disabled={isPending}
     >
-      Logg ut
+      {children ?? "Logg ut"}
     </button>
   );
 }
