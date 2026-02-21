@@ -15,7 +15,6 @@ async function requireAdmin() {
 type Body = {
   eventId: string;
   ticketId: string;
-  printerUrl?: string;
 };
 
 export async function POST(request: Request) {
@@ -26,7 +25,7 @@ export async function POST(request: Request) {
   const body = (await request.json().catch(() => null)) as Body | null;
   const eventId = body?.eventId?.trim();
   const ticketId = body?.ticketId?.trim();
-  const printerUrl = body?.printerUrl?.trim();
+  const printAgentUrl = process.env.PRINT_AGENT_URL?.trim();
 
   if (!eventId || !ticketId) {
     return NextResponse.json({ error: "Event og ticket mangler." }, { status: 400 });
@@ -84,29 +83,39 @@ export async function POST(request: Request) {
     ? (await supabase.from("companies").select("name").eq("id", ticket.company_id).maybeSingle()).data?.name ?? ""
     : "";
 
+  const isCompanyTicket = Boolean(ticket.company_id);
   const printPayload = {
-    ticketNumber: ticket.ticket_number,
+    type: isCompanyTicket ? "company" : "student",
     fullName: name,
     studyProgram: student?.study_program ?? "",
-    studyLevel: student?.study_level ?? "",
-    studyYear: student?.study_year ?? "",
-    email,
-    phone,
-    companyName,
+    university: "",
+    position: "",
+    companyName: companyName,
   };
 
-  if (printerUrl && !shouldUndoCheckin) {
-    await fetch(printerUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(printPayload),
-    }).catch(() => null);
+  let printJob: { jobId?: string; status?: string; error?: string } | null = null;
+  if (printAgentUrl && !shouldUndoCheckin) {
+    try {
+      const response = await fetch(printAgentUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(printPayload),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        printJob = { status: "failed", error: payload?.error ?? "Print-agent feilet." };
+      } else {
+        printJob = { jobId: payload?.jobId, status: payload?.status ?? "queued" };
+      }
+    } catch (error) {
+      printJob = { status: "failed", error: error instanceof Error ? error.message : "Ukjent print-feil." };
+    }
   }
 
   return NextResponse.json({
     ok: true,
     action: shouldUndoCheckin ? "reverted" : "checked_in",
     ticket,
-    print: shouldUndoCheckin ? null : printPayload,
+    print: shouldUndoCheckin ? null : { payload: printPayload, job: printJob },
   });
 }

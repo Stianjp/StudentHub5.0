@@ -29,14 +29,12 @@ type TicketRow = {
 };
 
 type PrintPayload = {
-  ticketNumber: string;
   fullName: string;
   studyProgram: string;
-  studyLevel: string;
-  studyYear: number | "";
-  email: string;
-  phone: string;
+  university: string;
+  position: string;
   companyName: string;
+  type: "student" | "company";
 };
 
 export function CheckinClient({ eventId }: { eventId: string }) {
@@ -44,12 +42,14 @@ export function CheckinClient({ eventId }: { eventId: string }) {
   const [results, setResults] = useState<TicketRow[]>([]);
   const [status, setStatus] = useState<"idle" | "loading" | "error" | "success">("idle");
   const [message, setMessage] = useState<string | null>(null);
-  const [printerUrl, setPrinterUrl] = useState<string>("");
   const [filter, setFilter] = useState<"all" | "student" | "company">("all");
   const [activeQuery, setActiveQuery] = useState<string>("");
   const [totalAllCount, setTotalAllCount] = useState<number>(0);
   const [checkedInAllCount, setCheckedInAllCount] = useState<number>(0);
-  const [lastPrint, setLastPrint] = useState<PrintPayload | null>(null);
+  const [lastPrint, setLastPrint] = useState<{
+    payload: PrintPayload;
+    job?: { jobId?: string; status?: string; error?: string } | null;
+  } | null>(null);
   const autoSearchTimeoutRef = useRef<number | null>(null);
   const lastAutoQueryRef = useRef<string>("");
 
@@ -191,7 +191,7 @@ export function CheckinClient({ eventId }: { eventId: string }) {
     const response = await fetch(`/api/checkin/checkin`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ eventId, ticketId, printerUrl }),
+      body: JSON.stringify({ eventId, ticketId }),
     });
     if (!response.ok) {
       const payload = await response.json().catch(() => ({}));
@@ -202,9 +202,9 @@ export function CheckinClient({ eventId }: { eventId: string }) {
     const payload = (await response.json()) as {
       action?: "checked_in" | "reverted";
       ticket?: TicketRow;
-      print?: PrintPayload | null;
+      print?: { payload: PrintPayload; job?: { jobId?: string; status?: string; error?: string } | null } | null;
     };
-    const printPayload = payload.print as PrintPayload | undefined;
+    const printPayload = payload.print as { payload: PrintPayload; job?: { jobId?: string; status?: string; error?: string } | null } | undefined;
     setResults((prev) => prev.map((row) => (row.id === ticketId ? { ...row, ...payload.ticket } : row)));
     if (payload.action === "checked_in" && payload.ticket?.checked_in_at && !existing?.checked_in_at) {
       setCheckedInAllCount((prev) => prev + 1);
@@ -225,8 +225,8 @@ export function CheckinClient({ eventId }: { eventId: string }) {
   return (
     <div className="grid gap-6">
       <Card className="flex flex-col gap-4">
-        <div className="grid gap-3 md:grid-cols-3">
-          <label className="text-sm font-semibold text-primary md:col-span-2">
+        <div className="grid gap-3 md:grid-cols-2">
+          <label className="text-sm font-semibold text-primary">
             Søk / skann QR
             <Input
               value={query}
@@ -238,14 +238,6 @@ export function CheckinClient({ eventId }: { eventId: string }) {
                 }
               }}
               placeholder="Ticketnummer (QR), navn, e-post eller telefon."
-            />
-          </label>
-          <label className="text-sm font-semibold text-primary">
-            Printer-URL (valgfritt)
-            <Input
-              value={printerUrl}
-              onChange={(event) => setPrinterUrl(event.target.value)}
-              placeholder="http://localhost:xxxx/print"
             />
           </label>
         </div>
@@ -317,12 +309,18 @@ export function CheckinClient({ eventId }: { eventId: string }) {
       {lastPrint ? (
         <Card className="flex flex-col gap-2 text-xs text-ink/70">
           <p className="text-sm font-semibold text-primary">Siste print</p>
-          <p>Navn: {lastPrint.fullName || "—"}</p>
-          <p>E-post: {lastPrint.email || "—"}</p>
-          <p>Telefon: {lastPrint.phone || "—"}</p>
-          <p>Studie: {lastPrint.studyProgram || "—"} {lastPrint.studyLevel ? `· ${lastPrint.studyLevel}` : ""} {lastPrint.studyYear ? `· ${lastPrint.studyYear}. år` : ""}</p>
-          <p>Bedrift: {lastPrint.companyName || "—"}</p>
-          <p>Billett: {lastPrint.ticketNumber}</p>
+          <p>Navn: {lastPrint.payload.fullName || "—"}</p>
+          <p>Studie: {lastPrint.payload.studyProgram || "—"}</p>
+          <p>Universitet: {lastPrint.payload.university || "—"}</p>
+          <p>Rolle: {lastPrint.payload.position || "—"}</p>
+          <p>Bedrift: {lastPrint.payload.companyName || "—"}</p>
+          <p>Type: {lastPrint.payload.type}</p>
+          {lastPrint.job ? (
+            <p>
+              Printjobb: {lastPrint.job.jobId ?? "ukjent"} · {lastPrint.job.status ?? "ukjent"}
+              {lastPrint.job.error ? ` · ${lastPrint.job.error}` : ""}
+            </p>
+          ) : null}
         </Card>
       ) : null}
     </div>
