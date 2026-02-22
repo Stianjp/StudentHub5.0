@@ -9,6 +9,42 @@ export async function updateSession(request: NextRequest) {
   const domain = resolveCookieDomain(request.headers.get("host"), cookieDomain);
   let response = NextResponse.next({ request });
 
+  function extractRefreshToken(rawValue: string): string | null {
+    if (!rawValue) return null;
+    try {
+      const parsed = JSON.parse(rawValue);
+      if (parsed?.refresh_token) return parsed.refresh_token;
+      if (parsed?.currentSession?.refresh_token) return parsed.currentSession.refresh_token;
+      if (Array.isArray(parsed) && parsed[1]) return parsed[1];
+    } catch {
+      try {
+        const decoded = atob(rawValue);
+        return extractRefreshToken(decoded);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  const sessionCookies = request.cookies.getAll().filter((cookie) => cookie.name.startsWith("sb-"));
+  if (sessionCookies.length === 0) {
+    return response;
+  }
+
+  const hasRefresh = sessionCookies.some((cookie) => Boolean(extractRefreshToken(cookie.value)));
+  if (!hasRefresh) {
+    sessionCookies.forEach((cookie) => {
+      response.cookies.set({
+        name: cookie.name,
+        value: "",
+        maxAge: 0,
+        domain,
+      });
+    });
+    return response;
+  }
+
   const supabase = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
     cookies: {
       get(name: string) {
