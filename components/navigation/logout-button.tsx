@@ -21,12 +21,16 @@ export function LogoutButton({
     startTransition(async () => {
       try {
         const supabase = createClient();
-        // Local sign-out avoids refresh token network calls.
         await supabase.auth.signOut({ scope: "local" });
       } catch {
-        // Always redirect to sign-in even if signOut fails.
+        // Ignore sign-out errors and force redirect.
       } finally {
-        router.replace(`/auth/sign-in?role=${role}`);
+        const target = `/auth/sign-in?role=${role}`;
+        if (typeof window !== "undefined") {
+          window.location.assign(target);
+          return;
+        }
+        router.replace(target);
         router.refresh();
       }
     });
