@@ -198,7 +198,11 @@ export function SignInClient({
       }
     }
 
-    router.replace(nextPath);
+    if (/^https?:\/\//i.test(nextPath)) {
+      window.location.assign(nextPath);
+      return;
+    }
+    window.location.assign(nextPath);
   }
 
   return (
