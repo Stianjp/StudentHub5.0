@@ -76,7 +76,16 @@ export function createClient() {
 
   const domain = resolveCookieDomain(window.location.hostname, cookieDomain);
   const projectRef = getProjectRef(supabaseUrl);
-  const roleKey = getRoleKey(window.location.hostname);
+  let roleKey = getRoleKey(window.location.hostname);
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const roleParam = params.get("role");
+    if (roleParam === "student" || roleParam === "company" || roleParam === "admin") {
+      roleKey = roleParam;
+    }
+  } catch {
+    // ignore search params
+  }
   const storageKey = `sb-${projectRef}-${roleKey}`;
 
   const client = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey, {
