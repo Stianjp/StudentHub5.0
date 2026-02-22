@@ -9,22 +9,29 @@ export async function updateSession(request: NextRequest) {
   const domain = resolveCookieDomain(request.headers.get("host"), cookieDomain);
   let response = NextResponse.next({ request });
 
+  function decodeSessionValue(raw: string) {
+    const trimmed = raw.startsWith("base64-") ? raw.slice(7) : raw;
+    const normalized = trimmed.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
+    try {
+      return Buffer.from(padded, "base64").toString("utf8");
+    } catch {
+      return null;
+    }
+  }
+
   function extractRefreshToken(rawValue: string): string | null {
     if (!rawValue) return null;
+    const decoded = decodeSessionValue(rawValue);
     try {
-      const parsed = JSON.parse(rawValue);
+      const parsed = JSON.parse(decoded ?? rawValue);
       if (parsed?.refresh_token) return parsed.refresh_token;
       if (parsed?.currentSession?.refresh_token) return parsed.currentSession.refresh_token;
-      if (Array.isArray(parsed) && parsed[1]) return parsed[1];
+      if (parsed?.session?.refresh_token) return parsed.session.refresh_token;
+      return null;
     } catch {
-      try {
-        const decoded = atob(rawValue);
-        return extractRefreshToken(decoded);
-      } catch {
-        return null;
-      }
+      return null;
     }
-    return null;
   }
 
   const sessionCookies = request.cookies.getAll().filter((cookie) => cookie.name.startsWith("sb-"));
