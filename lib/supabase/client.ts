@@ -86,7 +86,7 @@ export function createClient() {
   } catch {
     // ignore search params
   }
-  const storageKey = `sb-${projectRef}-${roleKey}`;
+  const storageKey = `sb-${projectRef}-${roleKey}-auth-token`;
 
   const client = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey, {
     auth: {
