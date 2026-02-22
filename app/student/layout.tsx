@@ -1,15 +1,14 @@
 import { StudentShell } from "@/components/layouts/student-shell";
-import { Calendar, LayoutDashboard, Settings, User } from "lucide-react";
 import { requireRole } from "@/lib/auth";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getOrCreateStudentForUser } from "@/lib/student";
 
 const nav = [
-  { href: "/student/dashboard", label: "Oversikt", icon: LayoutDashboard },
-  { href: "/student", label: "Min profil", icon: User },
-  { href: "/student/events", label: "Events", icon: Calendar },
-  { href: "/student/consents", label: "Innstillinger", icon: Settings },
-];
+  { href: "/student/dashboard", label: "Oversikt", icon: "dashboard" },
+  { href: "/student", label: "Min profil", icon: "profile" },
+  { href: "/student/events", label: "Events", icon: "events" },
+  { href: "/student/consents", label: "Innstillinger", icon: "settings" },
+] satisfies Array<{ href: string; label: string; icon: "dashboard" | "profile" | "events" | "settings" }>;
 
 export const dynamic = "force-dynamic";
 

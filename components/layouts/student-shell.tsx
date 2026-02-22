@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ElementType, ReactNode } from "react";
+import type { ReactNode } from "react";
+import { Calendar, LayoutDashboard, Settings, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LogoutButton } from "@/components/navigation/logout-button";
 import { SessionGuard } from "@/components/supabase/session-guard";
@@ -10,7 +11,7 @@ import { SessionGuard } from "@/components/supabase/session-guard";
 type NavItem = {
   href: string;
   label: string;
-  icon: ElementType;
+  icon: "dashboard" | "profile" | "events" | "settings";
 };
 
 type StudentShellProps = {
@@ -23,6 +24,12 @@ type StudentShellProps = {
 export function StudentShell({ nav, userName, userInitials, children }: StudentShellProps) {
   const pathname = usePathname();
   const displayName = userName.split(" ")[0] || userName;
+  const iconMap = {
+    dashboard: LayoutDashboard,
+    profile: User,
+    events: Calendar,
+    settings: Settings,
+  };
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-[#140249] font-['Ubuntu']">
@@ -46,7 +53,7 @@ export function StudentShell({ nav, userName, userInitials, children }: StudentS
               Navigasjon
             </p>
             {nav.map((item) => {
-              const Icon = item.icon;
+              const Icon = iconMap[item.icon];
               const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
               return (
                 <Link
