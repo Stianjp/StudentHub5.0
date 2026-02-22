@@ -60,10 +60,10 @@ export function StudentShell({ nav, userName, userInitials, children }: StudentS
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "mb-2 flex w-full items-center space-x-3 rounded-2xl p-4 text-sm font-bold transition-all duration-300",
+                    "mb-2 flex w-full items-center space-x-3 rounded-2xl border border-transparent p-4 text-sm font-bold transition-all duration-300",
                     isActive
                       ? "bg-[#140249] text-white shadow-xl"
-                      : "text-[#140249]/60 hover:bg-white/70 hover:text-[#140249]",
+                      : "text-[#140249] hover:border-[#140249]/20 hover:bg-[#F2EEFF] hover:text-[#140249]",
                   )}
                 >
                   <Icon size={20} />

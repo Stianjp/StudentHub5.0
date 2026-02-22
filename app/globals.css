@@ -100,6 +100,14 @@ table {
   color: #F8F6FF;
 }
 
+.student-scope nav a {
+  box-shadow: none;
+}
+
+.student-scope nav a:hover {
+  box-shadow: 0 12px 30px rgba(20, 2, 73, 0.12);
+}
+
 button {
   transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease, background-color 150ms ease;
 }
