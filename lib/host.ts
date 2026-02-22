@@ -17,7 +17,7 @@ function isCheckinHost(hostname: string | null | undefined) {
 }
 
 export function defaultPathForRole(role: AppRole, hostname?: string | null) {
-  if (role === "student") return "/student";
+  if (role === "student") return "/dashboard";
   if (role === "admin") return isCheckinHost(hostname) ? "/checkin" : "/admin";
   return "/company";
 }

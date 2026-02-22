@@ -198,11 +198,22 @@ export function SignInClient({
       }
     }
 
-    if (/^https?:\/\//i.test(nextPath)) {
-      window.location.assign(nextPath);
+    const host = window.location.hostname.toLowerCase();
+    let hostNext = nextPath;
+    if (host.startsWith("student.")) {
+      hostNext = "/dashboard";
+    } else if (host.startsWith("bedrift.")) {
+      hostNext = "/";
+    } else if (host.startsWith("checkin.")) {
+      hostNext = "/checkin";
+    } else if (host.startsWith("admin.")) {
+      hostNext = "/admin";
+    }
+    if (/^https?:\/\//i.test(hostNext)) {
+      window.location.assign(hostNext);
       return;
     }
-    window.location.assign(nextPath);
+    window.location.assign(hostNext);
   }
 
   return (
