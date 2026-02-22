@@ -48,6 +48,20 @@ export function SignInClient({
     });
   }, []);
 
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data }) => {
+      if (!data.session) return;
+      const host = window.location.hostname.toLowerCase();
+      let hostNext = next ?? getDefaultNextPath(role, host);
+      if (host.startsWith("student.")) hostNext = "/dashboard";
+      if (host.startsWith("bedrift.")) hostNext = "/";
+      if (host.startsWith("checkin.")) hostNext = "/checkin";
+      if (host.startsWith("admin.")) hostNext = "/admin";
+      window.location.assign(hostNext);
+    });
+  }, [next, role]);
+
 
   const title = useMemo(() => {
     if (mode === "reset") {
