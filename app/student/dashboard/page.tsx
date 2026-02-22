@@ -1,9 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Bell, Briefcase, Calendar, Check, ChevronRight, Heart, Users } from "lucide-react";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getOrCreateStudentForUser } from "@/lib/student";
-import { requireRole } from "@/lib/auth";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { listActiveEvents } from "@/lib/events";
 
 export const dynamic = "force-dynamic";
@@ -26,15 +25,16 @@ function calcProfileCompletion(student: any) {
 }
 
 export default async function StudentDashboardPage() {
-  const profile = await requireRole("student");
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) throw new Error("User not found");
+  if (!user) {
+    redirect("/auth/sign-in?role=student&next=%2Fdashboard");
+  }
 
-  const student = await getOrCreateStudentForUser(profile.id, user.email);
+  const student = await getOrCreateStudentForUser(user.id, user.email);
   const completion = calcProfileCompletion(student);
   const needsOnboarding = !student.full_name || !student.phone || !student.study_program || !student.study_level || !student.study_year;
   if (needsOnboarding) {
