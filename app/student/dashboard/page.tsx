@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Bell, Briefcase, Calendar, Check, ChevronRight, Heart, Search, Users } from "lucide-react";
+import { Bell, Briefcase, Calendar, Check, ChevronRight, Heart, Users } from "lucide-react";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getOrCreateStudentForUser } from "@/lib/student";
 import { requireRole } from "@/lib/auth";
@@ -75,14 +75,6 @@ export default async function StudentDashboardPage() {
           <div className="mt-3 h-1.5 w-16 rounded-full bg-[#FE9A70]" />
         </div>
         <div className="flex flex-wrap items-center gap-4">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60" size={18} />
-            <input
-              type="text"
-              placeholder="Søk..."
-              className="w-48 rounded-2xl border border-white/20 bg-white/10 py-3 pl-12 pr-6 text-sm font-medium text-white placeholder-white/60 backdrop-blur-md transition-all focus:ring-2 focus:ring-white/30"
-            />
-          </div>
           <button className="relative rounded-2xl border border-white/20 bg-white/10 p-3.5 text-white transition-all hover:bg-white/20">
             <Bell size={20} />
             <span className="absolute right-3.5 top-3.5 h-2.5 w-2.5 rounded-full border-2 border-[#846AE6] bg-[#FE9A70]" />
