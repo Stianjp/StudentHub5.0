@@ -36,13 +36,25 @@ export async function createServerSupabaseClient() {
     },
   });
 
+  function decodeSessionValue(raw: string) {
+    const trimmed = raw.startsWith("base64-") ? raw.slice(7) : raw;
+    const normalized = trimmed.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
+    try {
+      return Buffer.from(padded, "base64").toString("utf8");
+    } catch {
+      return null;
+    }
+  }
+
   function extractUserFromCookies() {
     const allCookies = cookieStore.getAll();
     for (const cookie of allCookies) {
       if (!cookie.name.startsWith("sb-")) continue;
       const value = cookie.value;
       try {
-        const json = Buffer.from(value, "base64").toString("utf8");
+        const json = decodeSessionValue(value);
+        if (!json) continue;
         const parsed = JSON.parse(json);
         const session = parsed?.currentSession ?? parsed?.session ?? parsed;
         if (session?.user) return session.user;
