@@ -75,6 +75,25 @@ table {
   color: rgba(237, 232, 245, 0.88);
 }
 
+.student-scope .osh-card :is(input, textarea, select) {
+  background-color: #FFFFFF;
+  color: #140249;
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.student-scope .osh-card :is(input, textarea, select)::placeholder {
+  color: rgba(20, 2, 73, 0.55);
+}
+
+.student-scope .osh-card :is(input, textarea, select):hover {
+  border-color: rgba(254, 154, 112, 0.7);
+}
+
+.student-scope .osh-card :is(input, textarea, select):focus {
+  border-color: #FE9A70;
+  box-shadow: 0 0 0 2px rgba(254, 154, 112, 0.6);
+}
+
 button {
   transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease, background-color 150ms ease;
 }
