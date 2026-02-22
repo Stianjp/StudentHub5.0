@@ -59,8 +59,8 @@ table {
 }
 
 .student-scope .osh-card {
-  background-color: #F8F6FF;
-  border-color: rgba(20, 2, 73, 0.12);
+  background-color: #140249;
+  border-color: rgba(237, 232, 245, 0.16);
 }
 
 .student-scope table {
@@ -68,11 +68,11 @@ table {
 }
 
 .student-scope .osh-card :is(h1, h2, h3, h4, h5, h6, p, label, legend, li, span, a, small, strong)[class*="text-primary"] {
-  color: #140249;
+  color: #EDE8F5;
 }
 
 .student-scope .osh-card :is(h1, h2, h3, h4, h5, h6, p, label, legend, li, span, a, small, strong)[class*="text-ink"] {
-  color: rgba(26, 22, 38, 0.85);
+  color: rgba(237, 232, 245, 0.88);
 }
 
 .student-scope .osh-card :is(input, textarea, select) {
@@ -92,6 +92,12 @@ table {
 .student-scope .osh-card :is(input, textarea, select):focus {
   border-color: #FE9A70;
   box-shadow: 0 0 0 2px rgba(254, 154, 112, 0.6);
+}
+
+.student-scope .osh-card :is(label, div, section)[class*="bg-primary/5"] {
+  background-color: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #F8F6FF;
 }
 
 button {
