@@ -89,7 +89,9 @@ export function createClient() {
     cookies: {
       getAll() {
         const cookies = parseCookies();
-        return Array.from(cookies.entries()).map(([name, value]) => ({ name, value }));
+        return Array.from(cookies.entries())
+          .filter(([name]) => name.startsWith(storageKey))
+          .map(([name, value]) => ({ name, value }));
       },
       setAll(cookies) {
         cookies.forEach(({ name, value, options }) => {
