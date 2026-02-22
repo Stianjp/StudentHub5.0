@@ -18,23 +18,6 @@ function isBrowser() {
   return typeof document !== "undefined";
 }
 
-function getProjectRef(supabaseUrl: string) {
-  try {
-    return new URL(supabaseUrl).hostname.split(".")[0];
-  } catch {
-    return "supabase";
-  }
-}
-
-function getRoleKey(hostname: string) {
-  const host = hostname.toLowerCase();
-  if (host.startsWith("student.")) return "student";
-  if (host.startsWith("admin.")) return "admin";
-  if (host.startsWith("checkin.")) return "admin";
-  if (host.startsWith("bedrift.")) return "company";
-  return "app";
-}
-
 function buildCookieString(name: string, value: string, options: CookieOptions) {
   const parts = [`${name}=${value}`];
   parts.push(`Path=${options.path ?? "/"}`);
@@ -75,60 +58,33 @@ export function createClient() {
   }
 
   const domain = resolveCookieDomain(window.location.hostname, cookieDomain);
-  const projectRef = getProjectRef(supabaseUrl);
-  let roleKey = getRoleKey(window.location.hostname);
-  try {
-    const params = new URLSearchParams(window.location.search);
-    const roleParam = params.get("role");
-    if (roleParam === "student" || roleParam === "company" || roleParam === "admin") {
-      roleKey = roleParam;
-    }
-  } catch {
-    // ignore search params
-  }
-  const storageKey = `sb-${projectRef}-${roleKey}-auth-token`;
 
   const client = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: true,
       detectSessionInUrl: true,
-      storageKey,
     },
     cookies: {
       getAll() {
         const cookies = parseCookies();
-        return Array.from(cookies.entries())
-          .filter(([name]) => name.startsWith(storageKey))
-          .map(([name, value]) => ({ name, value }));
+        return Array.from(cookies.entries()).map(([name, value]) => ({ name, value }));
       },
       setAll(cookies) {
         cookies.forEach(({ name, value, options }) => {
-          if (!name.startsWith(storageKey)) return;
           const cookieString = buildCookieString(name, value, {
             path: options?.path,
             maxAge: options?.maxAge,
             expires: options?.expires,
             sameSite: options?.sameSite,
             secure: options?.secure,
-            domain,
+            domain: undefined,
           });
           document.cookie = cookieString;
         });
       },
     },
   });
-
-  try {
-    document.cookie.split(";").forEach((cookie) => {
-      const [rawName] = cookie.trim().split("=");
-      if (rawName.startsWith("sb-") && !rawName.startsWith(storageKey)) {
-        document.cookie = `${rawName}=; Path=/; Max-Age=0;${domain ? ` Domain=${domain};` : ""}`;
-      }
-    });
-  } catch {
-    // ignore cookie cleanup errors
-  }
 
   client.auth.stopAutoRefresh?.();
   return client;
