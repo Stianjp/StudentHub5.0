@@ -59,7 +59,7 @@ export function createClient() {
 
   const domain = resolveCookieDomain(window.location.hostname, cookieDomain);
 
-  return createBrowserClient<Database>(supabaseUrl, supabaseAnonKey, {
+  const client = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: true,
@@ -85,4 +85,7 @@ export function createClient() {
       },
     },
   });
+
+  client.auth.stopAutoRefresh?.();
+  return client;
 }

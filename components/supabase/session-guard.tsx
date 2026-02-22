@@ -15,6 +15,15 @@ function roleFromHostname(hostname: string) {
 export function SessionGuard() {
   useEffect(() => {
     const supabase = createClient();
+    supabase.auth.stopAutoRefresh?.();
+    try {
+      Object.keys(localStorage)
+        .filter((key) => key.startsWith("sb-") || key.startsWith("supabase."))
+        .forEach((key) => localStorage.removeItem(key));
+    } catch {
+      // ignore localStorage issues
+    }
+
     supabase.auth.getSession().then(({ error }) => {
       if (!error) return;
       const message = error.message?.toLowerCase() ?? "";
