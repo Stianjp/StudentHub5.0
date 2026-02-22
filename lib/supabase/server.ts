@@ -36,14 +36,37 @@ export async function createServerSupabaseClient() {
     },
   });
 
+  function extractUserFromCookies() {
+    const allCookies = cookieStore.getAll();
+    for (const cookie of allCookies) {
+      if (!cookie.name.startsWith("sb-")) continue;
+      const value = cookie.value;
+      try {
+        const json = Buffer.from(value, "base64").toString("utf8");
+        const parsed = JSON.parse(json);
+        const session = parsed?.currentSession ?? parsed?.session ?? parsed;
+        if (session?.user) return session.user;
+      } catch {
+        // ignore parse errors
+      }
+    }
+    return null;
+  }
+
   const originalGetUser = client.auth.getUser.bind(client.auth);
   (client.auth as any).getUser = async (...args: any[]) => {
     try {
-      return await originalGetUser(...args);
+      const result = await originalGetUser(...args);
+      if (result?.data?.user) return result;
+      const cookieUser = extractUserFromCookies();
+      if (cookieUser) return { data: { user: cookieUser }, error: null };
+      return result;
     } catch (error) {
       const message = (error as { message?: string }).message?.toLowerCase() ?? "";
       const code = (error as { code?: string }).code;
       if (code === "refresh_token_not_found" || message.includes("refresh token not found")) {
+        const cookieUser = extractUserFromCookies();
+        if (cookieUser) return { data: { user: cookieUser }, error: null };
         return { data: { user: null }, error: null };
       }
       throw error;
