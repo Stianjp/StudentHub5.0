@@ -32,24 +32,30 @@ export function StudentShell({ nav, userName, userInitials, children }: StudentS
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-[#140249] font-['Ubuntu']">
+    <div className="student-scope min-h-screen bg-[#846AE6] text-[#EDE8F5] font-['Ubuntu']">
+      <a
+        href="#student-main"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-[#FE9A70] focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-[#140249]"
+      >
+        Hopp til innhold
+      </a>
       <SessionGuard />
       <div className="flex min-h-screen">
-        <aside className="w-72 shrink-0 border-r border-slate-100 bg-white p-8 shadow-2xl shadow-black/5">
+        <aside className="w-72 shrink-0 border-r border-white/10 bg-[#140249] p-8 text-[#EDE8F5] shadow-2xl shadow-black/30">
           <div className="flex items-center space-x-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#140249] shadow-lg">
-              <span className="text-lg font-black text-[#846AE6]">OSH</span>
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#0B0130] shadow-lg shadow-black/30">
+              <span className="text-lg font-black text-[#FE9A70]">OSH</span>
             </div>
             <div>
-              <h1 className="mb-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#140249]/40">
+              <h1 className="mb-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#EDE8F5]/55">
                 Oslo Student Hub
               </h1>
-              <p className="text-xl font-black text-[#140249]">Portal</p>
+              <p className="text-xl font-black text-[#EDE8F5]">Portal</p>
             </div>
           </div>
 
           <nav className="mt-12">
-            <p className="mb-6 px-4 text-[11px] font-black uppercase tracking-widest text-slate-300">
+            <p className="mb-6 px-4 text-[11px] font-black uppercase tracking-widest text-[#EDE8F5]/55">
               Navigasjon
             </p>
             {nav.map((item) => {
@@ -60,30 +66,30 @@ export function StudentShell({ nav, userName, userInitials, children }: StudentS
                   key={item.href}
                   href={item.href}
                   className={cn(
-                    "mb-2 flex w-full items-center space-x-3 rounded-2xl border border-transparent p-4 text-sm font-bold transition-all duration-300",
+                    "mb-2 flex w-full items-center space-x-3 rounded-2xl border border-transparent p-4 text-sm font-bold transition-[background-color,border-color,color,box-shadow,transform] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70] focus-visible:ring-offset-2 focus-visible:ring-offset-[#140249]",
                     isActive
-                      ? "bg-[#140249] text-white shadow-xl"
-                      : "text-[#140249] hover:border-[#140249]/20 hover:bg-[#F2EEFF] hover:text-[#140249]",
+                      ? "border-[#FE9A70] bg-[#FE9A70] text-[#140249] shadow-[0_10px_24px_rgba(254,154,112,0.35)]"
+                      : "text-[#EDE8F5] hover:border-[#FE9A70]/70 hover:bg-[#1E0B62] hover:text-white",
                   )}
                 >
-                  <Icon size={20} />
+                  <Icon size={20} aria-hidden="true" />
                   <span>{item.label}</span>
                 </Link>
               );
             })}
           </nav>
 
-          <div className="mt-10 border-t border-slate-100 pt-6">
+          <div className="mt-10 border-t border-white/10 pt-6">
             <LogoutButton
               role="student"
-              className="flex w-full items-center space-x-3 text-sm font-bold text-slate-400 transition-colors hover:text-red-500"
+              className="flex w-full items-center space-x-3 text-sm font-bold text-[#EDE8F5]/70 transition-colors hover:text-[#FE9A70]"
             >
               <span>Logg ut</span>
             </LogoutButton>
           </div>
         </aside>
 
-        <main className="relative flex-1 overflow-y-auto bg-[#846AE6] p-10">
+        <main id="student-main" className="relative flex-1 overflow-y-auto bg-[#846AE6] p-6 md:p-10">
           <div
             className="pointer-events-none absolute inset-0 opacity-10"
             style={{
@@ -93,8 +99,8 @@ export function StudentShell({ nav, userName, userInitials, children }: StudentS
           />
           <div className="relative z-10">
             <div className="mb-10 flex justify-end">
-              <div className="flex items-center space-x-4 rounded-2xl bg-[#140249] px-4 py-2 text-white shadow-xl">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#846AE6] text-sm font-black">
+              <div className="flex items-center space-x-4 rounded-2xl bg-[#140249] px-4 py-2 text-white shadow-xl ring-1 ring-white/15">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FE9A70] text-sm font-black text-[#140249]">
                   {userInitials || "SH"}
                 </div>
                 <span className="text-sm font-bold">{displayName}</span>

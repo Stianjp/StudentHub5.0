@@ -42,6 +42,10 @@ a:focus-visible {
   border-radius: 9999px;
 }
 
+:where(h1, h2, h3, h4, h5, h6)[id] {
+  scroll-margin-top: 6rem;
+}
+
 table tbody tr:hover {
   background-color: rgba(254, 154, 112, 0.12);
 }
@@ -61,10 +65,31 @@ table {
 .student-scope .osh-card {
   background-color: #140249;
   border-color: rgba(237, 232, 245, 0.16);
+  color: #EDE8F5;
 }
 
 .student-scope table {
   background-color: #140249;
+  color: #EDE8F5;
+  border-color: rgba(237, 232, 245, 0.2);
+}
+
+.student-scope .osh-card[class*="bg-success/"] {
+  background-color: rgba(112, 192, 142, 0.15);
+  border-color: rgba(112, 192, 142, 0.5);
+  color: #E7F8EE;
+}
+
+.student-scope .osh-card[class*="bg-error/"] {
+  background-color: rgba(217, 72, 72, 0.16);
+  border-color: rgba(217, 72, 72, 0.52);
+  color: #FCEAEA;
+}
+
+.student-scope .osh-card[class*="bg-info/"] {
+  background-color: rgba(132, 106, 230, 0.24);
+  border-color: rgba(132, 106, 230, 0.58);
+  color: #F1ECFF;
 }
 
 .student-scope .osh-card :is(h1, h2, h3, h4, h5, h6, p, label, legend, li, span, a, small, strong)[class*="text-primary"] {
@@ -76,27 +101,37 @@ table {
 }
 
 .student-scope .osh-card :is(input, textarea, select) {
-  background-color: #FFFFFF;
-  color: #140249;
-  border-color: rgba(255, 255, 255, 0.35);
+  background-color: #1B0858;
+  color: #F8F6FF;
+  border-color: rgba(237, 232, 245, 0.35);
 }
 
 .student-scope .osh-card :is(input, textarea, select)::placeholder {
-  color: rgba(20, 2, 73, 0.55);
+  color: rgba(237, 232, 245, 0.62);
 }
 
 .student-scope .osh-card :is(input, textarea, select):hover {
-  border-color: rgba(254, 154, 112, 0.7);
+  border-color: rgba(254, 154, 112, 0.8);
 }
 
 .student-scope .osh-card :is(input, textarea, select):focus {
   border-color: #FE9A70;
-  box-shadow: 0 0 0 2px rgba(254, 154, 112, 0.6);
+  box-shadow: 0 0 0 2px rgba(254, 154, 112, 0.7);
+}
+
+.student-scope .osh-card select {
+  color-scheme: dark;
+}
+
+.student-scope .osh-card select option,
+.student-scope .osh-card select optgroup {
+  background-color: #140249;
+  color: #EDE8F5;
 }
 
 .student-scope .osh-card :is(label, div, section)[class*="bg-primary/5"] {
-  background-color: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.25);
+  background-color: rgba(27, 8, 88, 0.92);
+  border-color: rgba(237, 232, 245, 0.24);
   color: #F8F6FF;
 }
 
@@ -124,9 +159,12 @@ button:active:not(:disabled) {
 
 @layer components {
   .button-link {
-    @apply inline-flex min-h-11 items-center justify-center rounded-full border border-transparent px-6 py-2.5 text-sm font-bold tracking-wide transition-all;
+    @apply inline-flex min-h-11 items-center justify-center rounded-full border border-transparent px-6 py-2.5 text-sm font-bold tracking-wide;
     background-color: #FE9A70;
     color: #140249;
+    transition-property: transform, box-shadow, border-color, background-color, color;
+    transition-duration: 150ms;
+    transition-timing-function: ease;
   }
 
   .button-link:hover {
@@ -173,7 +211,9 @@ button:active:not(:disabled) {
     color: #FFFFFF;
     border: 1px solid rgba(255, 255, 255, 0.35);
     background: transparent;
-    transition: all 150ms ease;
+    transition-property: color, border-color, box-shadow, background-color, transform;
+    transition-duration: 150ms;
+    transition-timing-function: ease;
     cursor: pointer;
     pointer-events: auto;
   }
@@ -228,7 +268,9 @@ button:active:not(:disabled) {
     font-weight: 600;
     color: #EDE8F5;
     border: 1px solid transparent;
-    transition: all 150ms ease;
+    transition-property: color, border-color, box-shadow, background-color, transform;
+    transition-duration: 150ms;
+    transition-timing-function: ease;
   }
 
   .portal-nav-dropdown-link:hover {

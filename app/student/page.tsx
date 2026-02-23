@@ -88,7 +88,13 @@ export default async function StudentProfilePage({ searchParams }: PageProps) {
         <form action={saveStudentProfile} className="grid gap-4 md:grid-cols-2">
           <label className="text-sm font-semibold text-primary">
             Navn
-            <Input name="fullName" required defaultValue={student.full_name ?? ""} placeholder="Fornavn Etternavn" />
+            <Input
+              name="fullName"
+              required
+              autoComplete="name"
+              defaultValue={student.full_name ?? ""}
+              placeholder="Fornavn Etternavn"
+            />
           </label>
           <label className="text-sm font-semibold text-primary">
             E-post
@@ -96,13 +102,22 @@ export default async function StudentProfilePage({ searchParams }: PageProps) {
               name="email"
               type="email"
               required
+              autoComplete="email"
+              spellCheck={false}
               defaultValue={student.email ?? user.email ?? ""}
               placeholder="navn@epost.no"
             />
           </label>
           <label className="text-sm font-semibold text-primary">
             Telefon
-            <Input name="phone" defaultValue={student.phone ?? ""} placeholder="Telefonnummer" />
+            <Input
+              name="phone"
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              defaultValue={student.phone ?? ""}
+              placeholder="Telefonnummer"
+            />
           </label>
           <label className="text-sm font-semibold text-primary">
             Studieprogram
@@ -207,8 +222,12 @@ export default async function StudentProfilePage({ searchParams }: PageProps) {
             Sosial profil (LinkedIn/GitHub/portfolio)
             <Input
               name="socialProfile"
+              type="url"
+              inputMode="url"
+              autoComplete="url"
+              spellCheck={false}
               defaultValue={student.social_profile ?? ""}
-              placeholder="https://..."
+              placeholder="https://…"
             />
           </label>
           <label className="text-sm font-semibold text-primary">

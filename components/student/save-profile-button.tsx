@@ -7,8 +7,8 @@ export function SaveProfileButton() {
   const { pending } = useFormStatus();
 
   return (
-    <Button className="mt-2 w-full" type="submit" disabled={pending}>
-      {pending ? "Lagrer..." : "Lagre profil"}
+    <Button className="mt-2 w-full" type="submit" disabled={pending} aria-busy={pending}>
+      <span aria-live="polite">{pending ? "Lagrer…" : "Lagre profil"}</span>
     </Button>
   );
 }

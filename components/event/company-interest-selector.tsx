@@ -55,14 +55,14 @@ export function CompanyInterestSelector({
         <button
           type="button"
           onClick={selectAll}
-          className="rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-semibold text-primary transition hover:border-secondary hover:text-secondary"
+          className="rounded-full border border-surface/20 bg-primary/20 px-3 py-1 text-xs font-semibold text-surface transition-[background-color,border-color,color,box-shadow] hover:border-secondary hover:bg-primary/35 hover:text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2 focus-visible:ring-offset-primary"
         >
           Velg alle
         </button>
         <button
           type="button"
           onClick={selectNone}
-          className="rounded-full border border-primary/20 bg-primary/5 px-3 py-1 text-xs font-semibold text-primary transition hover:border-secondary hover:text-secondary"
+          className="rounded-full border border-surface/20 bg-primary/20 px-3 py-1 text-xs font-semibold text-surface transition-[background-color,border-color,color,box-shadow] hover:border-secondary hover:bg-primary/35 hover:text-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2 focus-visible:ring-offset-primary"
         >
           Fjern alle
         </button>
@@ -71,7 +71,7 @@ export function CompanyInterestSelector({
         {companies.map((company) => (
           <label
             key={company.id}
-            className="flex items-center gap-2 rounded-xl border border-primary/10 bg-surface px-3 py-2 text-sm"
+            className="flex items-center gap-2 rounded-xl border border-surface/20 bg-primary/20 px-3 py-2 text-sm"
           >
             <input
               type="checkbox"
@@ -79,9 +79,9 @@ export function CompanyInterestSelector({
               value={company.id}
               checked={selected.has(company.id)}
               onChange={() => toggle(company.id)}
-              className="h-4 w-4 rounded border-primary/30 text-primary focus:ring-primary"
+              className="h-4 w-4 rounded border-surface/30 bg-primary text-secondary focus:ring-secondary"
             />
-            <span className="font-semibold text-primary">{company.name}</span>
+            <span className="font-semibold text-surface">{company.name}</span>
           </label>
         ))}
       </div>

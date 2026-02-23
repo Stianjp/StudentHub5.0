@@ -130,19 +130,33 @@ export default async function StudentEventSignupPage({ params, searchParams }: P
             {needsName ? (
               <label className="text-sm font-semibold text-primary md:col-span-1">
                 Navn
-                <Input name="fullName" required placeholder="Fornavn Etternavn" />
+                <Input name="fullName" required autoComplete="name" placeholder="Fornavn Etternavn" />
               </label>
             ) : null}
             {needsEmail ? (
               <label className="text-sm font-semibold text-primary md:col-span-1">
                 E-post
-                <Input name="email" type="email" required placeholder="navn@epost.no" />
+                <Input
+                  name="email"
+                  type="email"
+                  required
+                  autoComplete="email"
+                  spellCheck={false}
+                  placeholder="navn@epost.no"
+                />
               </label>
             ) : null}
             {needsPhone ? (
               <label className="text-sm font-semibold text-primary md:col-span-1">
                 Telefon
-                <Input name="phone" required placeholder="Telefonnummer" />
+                <Input
+                  name="phone"
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  required
+                  placeholder="Telefonnummer"
+                />
               </label>
             ) : null}
 
