@@ -26,7 +26,7 @@ export default async function CompanyLayout({ children }: { children: React.Reac
 
   if (!company) {
     return (
-      <PortalShell roleLabel="Bedrift" roleKey="company" title="Tilgang under behandling" nav={nav}>
+      <PortalShell roleLabel="Bedrift" roleKey="company" title="Tilgang under behandling" nav={nav} mainClass="company-scope">
         <div className="mx-auto flex w-full max-w-2xl flex-col gap-4 rounded-3xl border border-white/10 bg-primary/60 p-6 text-surface">
           <h2 className="text-xl font-bold">Bedriftskonto ikke godkjent ennå</h2>
           <p className="text-sm text-surface/80">
@@ -55,7 +55,7 @@ export default async function CompanyLayout({ children }: { children: React.Reac
   }
 
   return (
-    <PortalShell roleLabel="Bedrift" roleKey="company" title={title} nav={nav}>
+    <PortalShell roleLabel="Bedrift" roleKey="company" title={title} nav={nav} mainClass="company-scope">
       {children}
     </PortalShell>
   );

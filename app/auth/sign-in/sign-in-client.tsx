@@ -230,159 +230,165 @@ export function SignInClient({
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-6 py-16">
-      <Card className="flex flex-col gap-6">
-        <div className="flex flex-col items-center gap-3 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
-            <Image src="/brand/logo.svg" alt="Oslo Student Hub" width={40} height={40} />
-          </div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-primary/60">Oslo Student Hub</p>
-          <h1 className="mt-2 text-2xl font-bold text-primary">{title}</h1>
-          <p className="mt-1 text-sm text-ink/80">
-            {mode === "reset"
-              ? "Få tilsendt lenke for å sette nytt passord."
-              : mode === "register"
-              ? "Opprett konto med e-post og passord."
-              : "Logg inn med e-post og passord."}
-          </p>
-          {deleted ? (
-            <p className="mt-1 text-xs font-semibold text-success">
-              Profilen din er slettet.
-            </p>
-          ) : null}
-        </div>
-        <form className="flex flex-col gap-4" onSubmit={onSubmit}>
-          <div className={`grid gap-2 ${allowRegister ? "grid-cols-2" : "grid-cols-1"}`}>
-            <button
-              type="button"
-              onClick={() => setMode("login")}
-              className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
-                mode === "login" ? "bg-primary text-surface" : "bg-primary/10 text-primary"
-              }`}
-            >
-              Logg inn
-            </button>
-            {allowRegister ? (
-              <button
-                type="button"
-                onClick={() => setMode("register")}
-                className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
-                  mode === "register" ? "bg-primary text-surface" : "bg-primary/10 text-primary"
-                }`}
-              >
-                Registrer deg
-              </button>
-            ) : null}
-          </div>
-          {allowedRole ? null : (
-            <label className="flex flex-col gap-2 text-sm font-semibold text-primary">
-              Rolle
-              <Select name="role" value={role} onChange={(e) => setRole(e.target.value as Role)}>
-                <option value="company">Bedrift</option>
-                <option value="student">Student</option>
-              </Select>
-            </label>
-          )}
-          <label className="flex flex-col gap-2 text-sm font-semibold text-primary">
-            E-post
-            <Input
-              name="email"
-              required
-              type="email"
-              placeholder="navn@bedrift.no"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              aria-invalid={status === "error"}
-              aria-describedby={status === "error" ? errorId : undefined}
+    <main className="min-h-screen w-full bg-[linear-gradient(180deg,#140249_0%,#6D367F_52%,#FF7282_100%)] px-6 py-16">
+      <div className="mx-auto flex min-h-[calc(100vh-8rem)] w-full max-w-md flex-col justify-center">
+        <Card className="flex flex-col gap-6">
+          <div className="flex flex-col items-center gap-3 text-center">
+            <Image
+              src="/brand/Logo_OSH_Gradient_whitetext.svg"
+              alt="Oslo Student Hub"
+              width={252}
+              height={60}
+              className="h-auto w-[220px] object-contain"
+              priority
             />
-          </label>
-          {mode !== "reset" ? (
-            <label className="flex flex-col gap-2 text-sm font-semibold text-primary">
-              Passord
-              <Input
-                name="password"
-                required
-                type="password"
-                placeholder="Minst 8 tegn"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                aria-invalid={status === "error"}
-                aria-describedby={status === "error" ? errorId : undefined}
-              />
-            </label>
-          ) : null}
-          {mode === "register" && role === "company" ? (
-            <label className="flex flex-col gap-2 text-sm font-semibold text-primary">
-              Organisasjonsnummer
-              <Input
-                name="orgNumber"
-                required
-                inputMode="numeric"
-                pattern="[0-9]{9}"
-                placeholder="9 siffer"
-                value={orgNumber}
-                onChange={(e) => setOrgNumber(e.target.value)}
-                aria-invalid={status === "error"}
-                aria-describedby={status === "error" ? errorId : undefined}
-              />
-            </label>
-          ) : null}
-          <div className="flex flex-col gap-2">
-            <Button disabled={status === "loading" || email.length < 3} type="submit">
-              {status === "loading"
-                ? "Jobber…"
+            <h1 className="mt-2 text-2xl font-bold text-primary">{title}</h1>
+            <p className="mt-1 text-sm text-ink/80">
+              {mode === "reset"
+                ? "Få tilsendt lenke for å sette nytt passord."
                 : mode === "register"
-                  ? "Registrer"
-                  : mode === "reset"
-                    ? "Send lenke"
-                    : "Logg inn"}
-            </Button>
-            {mode === "register" ? (
-              <p className="text-xs text-ink/70">
-                Du får en bekreftelses-epost. Sjekk også søppelpost om du ikke ser den.
+                ? "Opprett konto med e-post og passord."
+                : "Logg inn med e-post og passord."}
+            </p>
+            {deleted ? (
+              <p className="mt-1 text-xs font-semibold text-success">
+                Profilen din er slettet.
               </p>
             ) : null}
-            {mode === "login" ? (
+          </div>
+          <form className="flex flex-col gap-4" onSubmit={onSubmit}>
+            <div className={`grid gap-2 ${allowRegister ? "grid-cols-2" : "grid-cols-1"}`}>
               <button
                 type="button"
-                className="text-xs font-semibold text-primary/70 hover:text-primary"
-                onClick={() => setMode("reset")}
-              >
-                Glemt passord?
-              </button>
-            ) : null}
-            {mode === "reset" ? (
-              <button
-                type="button"
-                className="text-xs font-semibold text-primary/70 hover:text-primary"
                 onClick={() => setMode("login")}
+                className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
+                  mode === "login" ? "bg-primary text-surface" : "bg-primary/10 text-primary"
+                }`}
               >
-                Tilbake til innlogging
+                Logg inn
               </button>
+              {allowRegister ? (
+                <button
+                  type="button"
+                  onClick={() => setMode("register")}
+                  className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
+                    mode === "register" ? "bg-primary text-surface" : "bg-primary/10 text-primary"
+                  }`}
+                >
+                  Registrer deg
+                </button>
+              ) : null}
+            </div>
+            {allowedRole ? null : (
+              <label className="flex flex-col gap-2 text-sm font-semibold text-primary">
+                Rolle
+                <Select name="role" value={role} onChange={(e) => setRole(e.target.value as Role)}>
+                  <option value="company">Bedrift</option>
+                  <option value="student">Student</option>
+                </Select>
+              </label>
+            )}
+            <label className="flex flex-col gap-2 text-sm font-semibold text-primary">
+              E-post
+              <Input
+                name="email"
+                required
+                type="email"
+                placeholder="navn@bedrift.no"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                aria-invalid={status === "error"}
+                aria-describedby={status === "error" ? errorId : undefined}
+              />
+            </label>
+            {mode !== "reset" ? (
+              <label className="flex flex-col gap-2 text-sm font-semibold text-primary">
+                Passord
+                <Input
+                  name="password"
+                  required
+                  type="password"
+                  placeholder="Minst 8 tegn"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  aria-invalid={status === "error"}
+                  aria-describedby={status === "error" ? errorId : undefined}
+                />
+              </label>
             ) : null}
-          </div>
-        </form>
-        {status === "sent" ? (
-          <div className="rounded-xl bg-success/15 px-4 py-3 text-sm font-medium text-success" aria-live="polite">
-            {error ?? "Ferdig."}
-          </div>
-        ) : null}
-        {status === "error" ? (
-          <div
-            id={errorId}
-            className="rounded-xl bg-error/15 px-4 py-3 text-sm font-medium text-error"
-            aria-live="assertive"
-          >
-            {error}
-          </div>
-        ) : null}
-        {reason === "admin-required" ? (
-          <div className="rounded-xl bg-warning/15 px-4 py-3 text-xs font-semibold text-warning">
-            Admin-tilgang må settes manuelt i Supabase (
-            <code className="rounded bg-warning/20 px-1 py-0.5 text-warning">profiles.role=&apos;admin&apos;</code>).
-          </div>
-        ) : null}
-      </Card>
+            {mode === "register" && role === "company" ? (
+              <label className="flex flex-col gap-2 text-sm font-semibold text-primary">
+                Organisasjonsnummer
+                <Input
+                  name="orgNumber"
+                  required
+                  inputMode="numeric"
+                  pattern="[0-9]{9}"
+                  placeholder="9 siffer"
+                  value={orgNumber}
+                  onChange={(e) => setOrgNumber(e.target.value)}
+                  aria-invalid={status === "error"}
+                  aria-describedby={status === "error" ? errorId : undefined}
+                />
+              </label>
+            ) : null}
+            <div className="flex flex-col gap-2">
+              <Button disabled={status === "loading" || email.length < 3} type="submit">
+                {status === "loading"
+                  ? "Jobber…"
+                  : mode === "register"
+                    ? "Registrer"
+                    : mode === "reset"
+                      ? "Send lenke"
+                      : "Logg inn"}
+              </Button>
+              {mode === "register" ? (
+                <p className="text-xs text-ink/70">
+                  Du får en bekreftelses-epost. Sjekk også søppelpost om du ikke ser den.
+                </p>
+              ) : null}
+              {mode === "login" ? (
+                <button
+                  type="button"
+                  className="text-xs font-semibold text-primary/70 hover:text-primary"
+                  onClick={() => setMode("reset")}
+                >
+                  Glemt passord?
+                </button>
+              ) : null}
+              {mode === "reset" ? (
+                <button
+                  type="button"
+                  className="text-xs font-semibold text-primary/70 hover:text-primary"
+                  onClick={() => setMode("login")}
+                >
+                  Tilbake til innlogging
+                </button>
+              ) : null}
+            </div>
+          </form>
+          {status === "sent" ? (
+            <div className="rounded-xl bg-success/15 px-4 py-3 text-sm font-medium text-success" aria-live="polite">
+              {error ?? "Ferdig."}
+            </div>
+          ) : null}
+          {status === "error" ? (
+            <div
+              id={errorId}
+              className="rounded-xl bg-error/15 px-4 py-3 text-sm font-medium text-error"
+              aria-live="assertive"
+            >
+              {error}
+            </div>
+          ) : null}
+          {reason === "admin-required" ? (
+            <div className="rounded-xl bg-warning/15 px-4 py-3 text-xs font-semibold text-warning">
+              Admin-tilgang må settes manuelt i Supabase (
+              <code className="rounded bg-warning/20 px-1 py-0.5 text-warning">profiles.role=&apos;admin&apos;</code>).
+            </div>
+          ) : null}
+        </Card>
+      </div>
     </main>
   );
 }

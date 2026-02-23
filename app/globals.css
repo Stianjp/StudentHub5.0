@@ -58,88 +58,118 @@ table {
   background-color: #140249;
 }
 
-.admin-scope .osh-card {
-  background-color: #140249;
-}
-
-.student-scope .osh-card {
+.student-scope .osh-card,
+.admin-scope .osh-card,
+.company-scope .osh-card {
   background-color: #140249;
   border-color: rgba(237, 232, 245, 0.16);
   color: #EDE8F5;
 }
 
-.student-scope table {
+.student-scope table,
+.admin-scope table,
+.company-scope table {
   background-color: #140249;
   color: #EDE8F5;
   border-color: rgba(237, 232, 245, 0.2);
 }
 
-.student-scope .osh-card[class*="bg-success/"] {
+.student-scope .osh-card[class*="bg-success/"],
+.admin-scope .osh-card[class*="bg-success/"],
+.company-scope .osh-card[class*="bg-success/"] {
   background-color: rgba(112, 192, 142, 0.15);
   border-color: rgba(112, 192, 142, 0.5);
   color: #E7F8EE;
 }
 
-.student-scope .osh-card[class*="bg-error/"] {
+.student-scope .osh-card[class*="bg-error/"],
+.admin-scope .osh-card[class*="bg-error/"],
+.company-scope .osh-card[class*="bg-error/"] {
   background-color: rgba(217, 72, 72, 0.16);
   border-color: rgba(217, 72, 72, 0.52);
   color: #FCEAEA;
 }
 
-.student-scope .osh-card[class*="bg-info/"] {
+.student-scope .osh-card[class*="bg-info/"],
+.admin-scope .osh-card[class*="bg-info/"],
+.company-scope .osh-card[class*="bg-info/"] {
   background-color: rgba(132, 106, 230, 0.24);
   border-color: rgba(132, 106, 230, 0.58);
   color: #F1ECFF;
 }
 
-.student-scope .osh-card :is(h1, h2, h3, h4, h5, h6, p, label, legend, li, span, a, small, strong)[class*="text-primary"] {
+.student-scope .osh-card :is(h1, h2, h3, h4, h5, h6, p, label, legend, li, span, a, small, strong)[class*="text-primary"],
+.admin-scope .osh-card :is(h1, h2, h3, h4, h5, h6, p, label, legend, li, span, a, small, strong)[class*="text-primary"],
+.company-scope .osh-card :is(h1, h2, h3, h4, h5, h6, p, label, legend, li, span, a, small, strong)[class*="text-primary"] {
   color: #EDE8F5;
 }
 
-.student-scope .osh-card :is(h1, h2, h3, h4, h5, h6, p, label, legend, li, span, a, small, strong)[class*="text-ink"] {
+.student-scope .osh-card :is(h1, h2, h3, h4, h5, h6, p, label, legend, li, span, a, small, strong)[class*="text-ink"],
+.admin-scope .osh-card :is(h1, h2, h3, h4, h5, h6, p, label, legend, li, span, a, small, strong)[class*="text-ink"],
+.company-scope .osh-card :is(h1, h2, h3, h4, h5, h6, p, label, legend, li, span, a, small, strong)[class*="text-ink"] {
   color: rgba(237, 232, 245, 0.88);
 }
 
-.student-scope .osh-card :is(input, textarea, select) {
+.student-scope .osh-card :is(input, textarea, select),
+.admin-scope .osh-card :is(input, textarea, select),
+.company-scope .osh-card :is(input, textarea, select) {
   background-color: #1B0858;
   color: #F8F6FF;
   border-color: rgba(237, 232, 245, 0.35);
 }
 
-.student-scope .osh-card :is(input, textarea, select)::placeholder {
+.student-scope .osh-card :is(input, textarea, select)::placeholder,
+.admin-scope .osh-card :is(input, textarea, select)::placeholder,
+.company-scope .osh-card :is(input, textarea, select)::placeholder {
   color: rgba(237, 232, 245, 0.62);
 }
 
-.student-scope .osh-card :is(input, textarea, select):hover {
+.student-scope .osh-card :is(input, textarea, select):hover,
+.admin-scope .osh-card :is(input, textarea, select):hover,
+.company-scope .osh-card :is(input, textarea, select):hover {
   border-color: rgba(254, 154, 112, 0.8);
 }
 
-.student-scope .osh-card :is(input, textarea, select):focus {
+.student-scope .osh-card :is(input, textarea, select):focus,
+.admin-scope .osh-card :is(input, textarea, select):focus,
+.company-scope .osh-card :is(input, textarea, select):focus {
   border-color: #FE9A70;
   box-shadow: 0 0 0 2px rgba(254, 154, 112, 0.7);
 }
 
-.student-scope .osh-card select {
+.student-scope .osh-card select,
+.admin-scope .osh-card select,
+.company-scope .osh-card select {
   color-scheme: dark;
 }
 
 .student-scope .osh-card select option,
-.student-scope .osh-card select optgroup {
+.student-scope .osh-card select optgroup,
+.admin-scope .osh-card select option,
+.admin-scope .osh-card select optgroup,
+.company-scope .osh-card select option,
+.company-scope .osh-card select optgroup {
   background-color: #140249;
   color: #EDE8F5;
 }
 
-.student-scope .osh-card :is(label, div, section)[class*="bg-primary/5"] {
+.student-scope .osh-card :is(label, div, section)[class*="bg-primary/5"],
+.admin-scope .osh-card :is(label, div, section)[class*="bg-primary/5"],
+.company-scope .osh-card :is(label, div, section)[class*="bg-primary/5"] {
   background-color: rgba(27, 8, 88, 0.92);
   border-color: rgba(237, 232, 245, 0.24);
   color: #F8F6FF;
 }
 
-.student-scope nav a {
+.student-scope nav a,
+.admin-scope nav a,
+.company-scope nav a {
   box-shadow: none;
 }
 
-.student-scope nav a:hover {
+.student-scope nav a:hover,
+.admin-scope nav a:hover,
+.company-scope nav a:hover {
   box-shadow: 0 12px 30px rgba(20, 2, 73, 0.12);
 }
 
