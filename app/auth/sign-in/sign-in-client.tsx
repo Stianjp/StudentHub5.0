@@ -232,7 +232,7 @@ export function SignInClient({
   return (
     <main className="min-h-screen w-full bg-[linear-gradient(180deg,#140249_0%,#6D367F_52%,#FF7282_100%)] px-6 py-16">
       <div className="mx-auto flex min-h-[calc(100vh-8rem)] w-full max-w-md flex-col justify-center">
-        <Card className="flex flex-col gap-6">
+        <Card className="flex flex-col gap-6 border border-white/75 bg-primary text-surface shadow-none ring-0">
           <div className="flex flex-col items-center gap-3 text-center">
             <Image
               src="/brand/Logo_OSH_Gradient_whitetext.svg"
@@ -242,8 +242,8 @@ export function SignInClient({
               className="h-auto w-[220px] object-contain"
               priority
             />
-            <h1 className="mt-2 text-2xl font-bold text-primary">{title}</h1>
-            <p className="mt-1 text-sm text-ink/80">
+            <h1 className="mt-2 text-2xl font-bold text-surface">{title}</h1>
+            <p className="mt-1 text-sm text-surface/85">
               {mode === "reset"
                 ? "Få tilsendt lenke for å sette nytt passord."
                 : mode === "register"
@@ -262,7 +262,7 @@ export function SignInClient({
                 type="button"
                 onClick={() => setMode("login")}
                 className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
-                  mode === "login" ? "bg-primary text-surface" : "bg-primary/10 text-primary"
+                  mode === "login" ? "bg-secondary text-primary" : "bg-surface/10 text-surface"
                 }`}
               >
                 Logg inn
@@ -272,7 +272,7 @@ export function SignInClient({
                   type="button"
                   onClick={() => setMode("register")}
                   className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
-                    mode === "register" ? "bg-primary text-surface" : "bg-primary/10 text-primary"
+                    mode === "register" ? "bg-secondary text-primary" : "bg-surface/10 text-surface"
                   }`}
                 >
                   Registrer deg
@@ -280,7 +280,7 @@ export function SignInClient({
               ) : null}
             </div>
             {allowedRole ? null : (
-              <label className="flex flex-col gap-2 text-sm font-semibold text-primary">
+              <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
                 Rolle
                 <Select name="role" value={role} onChange={(e) => setRole(e.target.value as Role)}>
                   <option value="company">Bedrift</option>
@@ -288,7 +288,7 @@ export function SignInClient({
                 </Select>
               </label>
             )}
-            <label className="flex flex-col gap-2 text-sm font-semibold text-primary">
+            <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
               E-post
               <Input
                 name="email"
@@ -302,7 +302,7 @@ export function SignInClient({
               />
             </label>
             {mode !== "reset" ? (
-              <label className="flex flex-col gap-2 text-sm font-semibold text-primary">
+              <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
                 Passord
                 <Input
                   name="password"
@@ -317,7 +317,7 @@ export function SignInClient({
               </label>
             ) : null}
             {mode === "register" && role === "company" ? (
-              <label className="flex flex-col gap-2 text-sm font-semibold text-primary">
+              <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
                 Organisasjonsnummer
                 <Input
                   name="orgNumber"
@@ -343,14 +343,14 @@ export function SignInClient({
                       : "Logg inn"}
               </Button>
               {mode === "register" ? (
-                <p className="text-xs text-ink/70">
+                <p className="text-xs text-surface/75">
                   Du får en bekreftelses-epost. Sjekk også søppelpost om du ikke ser den.
                 </p>
               ) : null}
               {mode === "login" ? (
                 <button
                   type="button"
-                  className="text-xs font-semibold text-primary/70 hover:text-primary"
+                  className="text-xs font-semibold text-surface/75 hover:text-surface"
                   onClick={() => setMode("reset")}
                 >
                   Glemt passord?
@@ -359,7 +359,7 @@ export function SignInClient({
               {mode === "reset" ? (
                 <button
                   type="button"
-                  className="text-xs font-semibold text-primary/70 hover:text-primary"
+                  className="text-xs font-semibold text-surface/75 hover:text-surface"
                   onClick={() => setMode("login")}
                 >
                   Tilbake til innlogging

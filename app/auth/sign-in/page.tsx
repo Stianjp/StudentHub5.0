@@ -15,7 +15,9 @@ export default async function SignInPage() {
       fallback={
         <main className="min-h-screen w-full bg-[linear-gradient(180deg,#140249_0%,#6D367F_52%,#FF7282_100%)] px-6 py-16">
           <div className="mx-auto flex min-h-[calc(100vh-8rem)] w-full max-w-md flex-col justify-center">
-            <Card className="text-center text-sm text-ink/80">Laster inn…</Card>
+            <Card className="border border-white/75 bg-primary text-center text-sm text-surface/85 shadow-none ring-0">
+              Laster inn…
+            </Card>
           </div>
         </main>
       }

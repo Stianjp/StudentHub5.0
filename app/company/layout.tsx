@@ -5,7 +5,7 @@ import { getCompanyAccessStatus, getOrCreateCompanyForUser } from "@/lib/company
 
 const nav = [
   { href: "/company/onboarding", label: "Registrering" },
-  { href: "/company", label: "Dashboard" },
+  { href: "/company", label: "Dashboard", exact: true },
   { href: "/company/events", label: "Events" },
   { href: "/company/leads", label: "Leads" },
   { href: "/company/roi", label: "ROI" },

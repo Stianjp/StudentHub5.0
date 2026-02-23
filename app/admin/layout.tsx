@@ -2,7 +2,7 @@ import { PortalShell } from "@/components/layouts/portal-shell";
 import { requireRole } from "@/lib/auth";
 
 const nav = [
-  { href: "/admin", label: "Oversikt" },
+  { href: "/admin", label: "Oversikt", exact: true },
   {
     href: "/admin/companies",
     label: "Bedrifter",

@@ -45,19 +45,24 @@ export function ResetClient() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-6 py-16">
-      <Card className="flex flex-col gap-6">
+    <main className="min-h-screen w-full bg-[linear-gradient(180deg,#140249_0%,#6D367F_52%,#FF7282_100%)] px-6 py-16">
+      <div className="mx-auto flex min-h-[calc(100vh-8rem)] w-full max-w-md flex-col justify-center">
+      <Card className="flex flex-col gap-6 border border-white/75 bg-primary text-surface shadow-none ring-0">
         <div className="flex flex-col items-center gap-3 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
-            <Image src="/brand/logo.svg" alt="Oslo Student Hub" width={40} height={40} />
-          </div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-primary/60">Oslo Student Hub</p>
-          <h1 className="text-2xl font-bold text-primary">Sett nytt passord</h1>
-          <p className="text-sm text-ink/80">Velg et sterkt passord (minst 8 tegn).</p>
+          <Image
+            src="/brand/Logo_OSH_Gradient_whitetext.svg"
+            alt="Oslo Student Hub"
+            width={252}
+            height={60}
+            className="h-auto w-[220px] object-contain"
+            priority
+          />
+          <h1 className="text-2xl font-bold text-surface">Sett nytt passord</h1>
+          <p className="text-sm text-surface/85">Velg et sterkt passord (minst 8 tegn).</p>
         </div>
 
         <form className="flex flex-col gap-4" onSubmit={onSubmit}>
-          <label className="flex flex-col gap-2 text-sm font-semibold text-primary">
+          <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
             Nytt passord
             <Input
               name="password"
@@ -66,7 +71,7 @@ export function ResetClient() {
               onChange={(e) => setPassword(e.target.value)}
             />
           </label>
-          <label className="flex flex-col gap-2 text-sm font-semibold text-primary">
+          <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
             Bekreft passord
             <Input
               name="confirm"
@@ -91,6 +96,7 @@ export function ResetClient() {
           </div>
         ) : null}
       </Card>
+      </div>
     </main>
   );
 }

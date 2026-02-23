@@ -167,9 +167,7 @@ table {
   box-shadow: none;
 }
 
-.student-scope nav a:hover,
-.admin-scope nav a:hover,
-.company-scope nav a:hover {
+.student-scope nav a:hover {
   box-shadow: 0 12px 30px rgba(20, 2, 73, 0.12);
 }
 

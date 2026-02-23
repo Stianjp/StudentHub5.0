@@ -20,10 +20,11 @@ import { cn } from "@/lib/utils";
 import { LogoutButton } from "@/components/navigation/logout-button";
 import { SessionGuard } from "@/components/supabase/session-guard";
 
-type NavItem = { href: string; label: string; children?: { href: string; label: string }[] };
+type NavItem = { href: string; label: string; exact?: boolean; children?: { href: string; label: string }[] };
 
-function isActivePath(currentPath: string, href: string) {
+function isActivePath(currentPath: string, href: string, exact = false) {
   if (href === "/") return currentPath === "/";
+  if (exact) return currentPath === href;
   return currentPath === href || currentPath.startsWith(`${href}/`);
 }
 
@@ -104,7 +105,7 @@ export function PortalShell({
             {nav.map((item) => {
               const Icon = resolveIcon(item);
               const itemHref = normalizeHref(item.href);
-              const itemIsActive = isActivePath(pathname, itemHref);
+              const itemIsActive = isActivePath(pathname, itemHref, item.exact ?? false);
               const children = (item.children ?? []).map((child) => ({
                 ...child,
                 href: normalizeHref(child.href),
@@ -119,7 +120,7 @@ export function PortalShell({
                     className={cn(
                       "flex w-full items-center justify-between rounded-2xl border border-transparent p-4 text-sm font-bold transition-[background-color,border-color,color,box-shadow,transform] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70] focus-visible:ring-offset-2 focus-visible:ring-offset-[#140249]",
                       isActive
-                        ? "border-[#FE9A70] bg-[#FE9A70] text-[#140249] shadow-[0_10px_24px_rgba(254,154,112,0.35)]"
+                        ? "border-[#F2A786] bg-[#F3A17B] text-[#140249]"
                         : "text-[#EDE8F5] hover:border-[#FE9A70]/70 hover:bg-[#1E0B62] hover:text-white",
                     )}
                   >
