@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -19,12 +18,12 @@ export function SignInClient({
 }: {
   allowedRole?: Role | null;
 }) {
-  const router = useRouter();
   const params = useSearchParams();
   const paramRole = params.get("role") as Role | null;
   const initialRole = allowedRole ?? (paramRole === "admin" ? "company" : paramRole ?? "company");
   const next = params.get("next");
   const reason = params.get("reason");
+  const deleted = params.get("deleted") === "1";
   const defaultMode = (params.get("mode") as Mode | null) ?? "login";
 
   const [role, setRole] = useState<Role>(allowedRole ?? initialRole);
@@ -246,6 +245,11 @@ export function SignInClient({
               ? "Opprett konto med e-post og passord."
               : "Logg inn med e-post og passord."}
           </p>
+          {deleted ? (
+            <p className="mt-1 text-xs font-semibold text-success">
+              Profilen din er slettet.
+            </p>
+          ) : null}
         </div>
         <form className="flex flex-col gap-4" onSubmit={onSubmit}>
           <div className={`grid gap-2 ${allowRegister ? "grid-cols-2" : "grid-cols-1"}`}>

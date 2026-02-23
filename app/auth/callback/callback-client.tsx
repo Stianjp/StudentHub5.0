@@ -80,7 +80,7 @@ export function CallbackClient() {
     void completeAuth().catch((error) => {
       setMessage(error instanceof Error ? error.message : "Ukjent feil under innlogging.");
     });
-  }, [code, nextPath, router]);
+  }, [code, nextPath, router, shouldAutoRedirect]);
 
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-6 py-16">

@@ -2,12 +2,19 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Select } from "@/components/ui/select";
 import { requireRole } from "@/lib/auth";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getOrCreateStudentForUser, listStudentConsents } from "@/lib/student";
-import { giveConsentToAll, giveConsentToCompany, withdrawConsent } from "@/app/student/consents/actions";
+import {
+  changeStudentPassword,
+  deleteStudentAccount,
+  giveConsentToAll,
+  giveConsentToCompany,
+  withdrawConsent,
+} from "@/app/student/consents/actions";
 
 const INDUSTRY_ALL = "all";
 
@@ -37,6 +44,8 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
 
   const selectedIndustry =
     typeof params.industry === "string" ? params.industry : INDUSTRY_ALL;
+  const passwordUpdated = params.passwordUpdated === "1";
+  const accountError = typeof params.accountError === "string" ? params.accountError : "";
 
   const industries = Array.from(
     new Set((companies ?? []).map((company) => company.industry).filter(Boolean)),
@@ -58,6 +67,83 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
 
   return (
     <div className="flex flex-col gap-8 text-surface">
+      <div className="rounded-3xl border border-surface/10 bg-primary p-6 md:p-10">
+        <SectionHeader
+          eyebrow="Konto"
+          title="Innstillinger"
+          description="Endre passord eller slett profilen din."
+          tone="light"
+        />
+
+        {passwordUpdated ? (
+          <Card className="mt-8 border border-success/30 bg-success/10 text-sm text-success">
+            Passordet er oppdatert.
+          </Card>
+        ) : null}
+        {accountError ? (
+          <Card className="mt-4 border border-error/30 bg-error/10 text-sm text-error">
+            {decodeURIComponent(accountError)}
+          </Card>
+        ) : null}
+
+        <div className="mt-8 grid gap-6 lg:grid-cols-2">
+          <Card className="flex flex-col gap-4 bg-primary text-surface ring-1 ring-white/10">
+            <h3 className="text-lg font-bold text-surface">Endre Passord</h3>
+            <form action={changeStudentPassword} className="grid gap-3">
+              <label className="text-sm font-semibold text-surface">
+                Nytt passord
+                <Input
+                  name="newPassword"
+                  type="password"
+                  required
+                  minLength={8}
+                  autoComplete="new-password"
+                  placeholder="Minst 8 tegn"
+                />
+              </label>
+              <label className="text-sm font-semibold text-surface">
+                Bekreft nytt passord
+                <Input
+                  name="confirmPassword"
+                  type="password"
+                  required
+                  minLength={8}
+                  autoComplete="new-password"
+                  placeholder="Gjenta passordet"
+                />
+              </label>
+              <div>
+                <Button type="submit">Oppdater passord</Button>
+              </div>
+            </form>
+          </Card>
+
+          <Card className="flex flex-col gap-4 bg-primary text-surface ring-1 ring-white/10">
+            <h3 className="text-lg font-bold text-surface">Slett Profil</h3>
+            <p className="text-sm text-surface/80">
+              Denne handlingen kan ikke angres. Konto, profil og tilknyttede studentdata blir slettet.
+            </p>
+            <form action={deleteStudentAccount} className="grid gap-3">
+              <label className="text-sm font-semibold text-surface">
+                Skriv <span className="font-black">SLETT</span> for å bekrefte
+                <Input
+                  name="confirmDelete"
+                  required
+                  autoComplete="off"
+                  spellCheck={false}
+                  placeholder="SLETT"
+                />
+              </label>
+              <div>
+                <Button variant="danger" type="submit">
+                  Slett profil
+                </Button>
+              </div>
+            </form>
+          </Card>
+        </div>
+      </div>
+
       <div className="rounded-3xl border border-surface/10 bg-primary p-6 md:p-10">
         <SectionHeader
           eyebrow="Samtykke"
