@@ -133,3 +133,34 @@ export async function saveStudentProfile(formData: FormData) {
 
   redirect("/student?saved=1");
 }
+
+export async function saveLikedCompanies(formData: FormData) {
+  const profile = await requireRole("student");
+  const supabase = await createServerSupabaseClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error("Du må være logget inn");
+  }
+
+  const student = await getOrCreateStudentForUser(profile.id, user.email);
+  const likedCompanyIds = Array.from(new Set(parseMultiValue(formData, "likedCompanyIds")));
+
+  const { error } = await supabase
+    .from("students")
+    .update({
+      liked_company_ids: likedCompanyIds,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", student.id);
+
+  if (error) throw error;
+
+  revalidatePath("/student");
+  revalidatePath("/student/dashboard");
+  revalidatePath("/student/companies");
+
+  redirect("/student/companies?saved=1");
+}

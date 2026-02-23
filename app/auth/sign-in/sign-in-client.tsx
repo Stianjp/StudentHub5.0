@@ -54,7 +54,7 @@ export function SignInClient({
       if (!data.session) return;
       const host = window.location.hostname.toLowerCase();
       let hostNext = next ?? getDefaultNextPath(role, host);
-      if (host.startsWith("student.")) hostNext = "/dashboard";
+      if (host.startsWith("student.")) hostNext = "/student/dashboard";
       if (host.startsWith("bedrift.")) hostNext = "/";
       if (host.startsWith("checkin.")) hostNext = "/checkin";
       if (host.startsWith("admin.")) hostNext = "/admin";
@@ -215,7 +215,7 @@ export function SignInClient({
     const host = window.location.hostname.toLowerCase();
     let hostNext = nextPath;
     if (host.startsWith("student.")) {
-      hostNext = "/dashboard";
+      hostNext = "/student/dashboard";
     } else if (host.startsWith("bedrift.")) {
       hostNext = "/";
     } else if (host.startsWith("checkin.")) {

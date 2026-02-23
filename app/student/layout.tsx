@@ -7,8 +7,9 @@ const nav = [
   { href: "/student/dashboard", label: "Oversikt", icon: "dashboard" },
   { href: "/student", label: "Min profil", icon: "profile" },
   { href: "/student/events", label: "Events", icon: "events" },
+  { href: "/student/companies", label: "Bedrifter", icon: "companies" },
   { href: "/student/consents", label: "Innstillinger", icon: "settings" },
-] satisfies Array<{ href: string; label: string; icon: "dashboard" | "profile" | "events" | "settings" }>;
+] satisfies Array<{ href: string; label: string; icon: "dashboard" | "profile" | "events" | "companies" | "settings" }>;
 
 export const dynamic = "force-dynamic";
 
@@ -19,7 +20,7 @@ export default async function StudentLayout({ children }: { children: React.Reac
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/auth/sign-in?role=student&next=%2Fdashboard");
+    redirect("/auth/sign-in?role=student&next=%2Fstudent%2Fdashboard");
   }
 
   const student = await getOrCreateStudentForUser(user.id, user.email);

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
-import { Calendar, LayoutDashboard, Settings, User } from "lucide-react";
+import { Building2, Calendar, LayoutDashboard, Settings, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LogoutButton } from "@/components/navigation/logout-button";
 import { SessionGuard } from "@/components/supabase/session-guard";
@@ -11,7 +11,7 @@ import { SessionGuard } from "@/components/supabase/session-guard";
 type NavItem = {
   href: string;
   label: string;
-  icon: "dashboard" | "profile" | "events" | "settings";
+  icon: "dashboard" | "profile" | "events" | "companies" | "settings";
 };
 
 type StudentShellProps = {
@@ -22,14 +22,18 @@ type StudentShellProps = {
 };
 
 export function StudentShell({ nav, userName, userInitials, children }: StudentShellProps) {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "";
   const displayName = userName.split(" ")[0] || userName;
   const iconMap = {
     dashboard: LayoutDashboard,
     profile: User,
     events: Calendar,
+    companies: Building2,
     settings: Settings,
   };
+  const activeHref = nav
+    .filter((item) => pathname === item.href || pathname.startsWith(`${item.href}/`))
+    .sort((a, b) => b.href.length - a.href.length)[0]?.href;
 
   return (
     <div className="student-scope min-h-screen bg-[#846AE6] text-[#EDE8F5] font-['Ubuntu']">
@@ -60,7 +64,7 @@ export function StudentShell({ nav, userName, userInitials, children }: StudentS
             </p>
             {nav.map((item) => {
               const Icon = iconMap[item.icon];
-              const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
+              const isActive = activeHref === item.href;
               return (
                 <Link
                   key={item.href}

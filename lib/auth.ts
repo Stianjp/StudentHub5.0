@@ -8,7 +8,7 @@ type Profile = TableRow<"profiles">;
 
 const roleRedirect: Record<Profile["role"], string> = {
   company: "/company",
-  student: "/student",
+  student: "/student/dashboard",
   admin: "/admin",
 };
 

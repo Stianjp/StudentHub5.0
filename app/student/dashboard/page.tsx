@@ -44,15 +44,12 @@ export default async function StudentDashboardPage() {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/auth/sign-in?role=student&next=%2Fdashboard");
+    redirect("/auth/sign-in?role=student&next=%2Fstudent%2Fdashboard");
   }
 
   const student = await getOrCreateStudentForUser(user.id, user.email);
   const completion = calcProfileCompletion(student);
   const needsOnboarding = !student.full_name || !student.phone || !student.study_program || !student.study_level || !student.study_year;
-  if (needsOnboarding) {
-    redirect("/student");
-  }
 
   const [events, likedCompanies] = await Promise.all([
     listActiveEvents(),
@@ -115,9 +112,9 @@ export default async function StudentDashboardPage() {
             </p>
             <Link
               href="/student"
-              className="inline-flex items-center rounded-2xl bg-white px-10 py-5 text-sm font-black text-[#140249] shadow-xl transition-[background-color,transform,box-shadow] hover:bg-[#FE9A70] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70] focus-visible:ring-offset-2 focus-visible:ring-offset-[#140249] active:scale-95"
+              className="inline-flex items-center rounded-2xl bg-[#FE9A70] px-10 py-5 text-sm font-black text-[#140249] shadow-xl shadow-[#FE9A70]/30 transition-[background-color,transform,box-shadow] hover:bg-[#F7A67E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70] focus-visible:ring-offset-2 focus-visible:ring-offset-[#140249] active:scale-95"
             >
-              Se din profil
+              {needsOnboarding ? "Fullfør profil" : "Se din profil"}
             </Link>
           </div>
           <div className="pointer-events-none absolute right-0 top-0 flex h-full w-1/2 items-center justify-center opacity-10">
@@ -189,11 +186,19 @@ export default async function StudentDashboardPage() {
         </div>
 
         <div className="flex flex-col rounded-[3rem] border border-white/15 bg-[#140249] p-10 shadow-xl">
-          <div className="mb-10 flex items-center space-x-4">
-            <div className="rounded-2xl bg-[#FE9A70] p-3 text-[#140249] shadow-lg shadow-[#FE9A70]/20">
-              <Heart size={24} aria-hidden="true" />
+          <div className="mb-10 flex items-center justify-between gap-4">
+            <div className="flex items-center space-x-4">
+              <div className="rounded-2xl bg-[#FE9A70] p-3 text-[#140249] shadow-lg shadow-[#FE9A70]/20">
+                <Heart size={24} aria-hidden="true" />
+              </div>
+              <h4 className="text-xl font-black text-white">Dine favoritter</h4>
             </div>
-            <h4 className="text-xl font-black text-white">Dine favoritter</h4>
+            <Link
+              href="/student/companies"
+              className="rounded-full border border-[#FE9A70]/80 px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-[#FE9A70] transition-[background-color,border-color,color,box-shadow] hover:bg-[#FE9A70] hover:text-[#140249] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70] focus-visible:ring-offset-2 focus-visible:ring-offset-[#140249]"
+            >
+              Finn Flere
+            </Link>
           </div>
 
           <div className="mb-10 flex flex-wrap gap-3">

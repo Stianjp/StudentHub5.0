@@ -58,7 +58,7 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
 
   return (
     <div className="flex flex-col gap-8 text-surface">
-      <div className="rounded-3xl border border-surface/10 bg-primary/60 p-6 md:p-10">
+      <div className="rounded-3xl border border-surface/10 bg-primary p-6 md:p-10">
         <SectionHeader
           eyebrow="Samtykke"
           title="Gi samtykke til bedrifter"
@@ -66,7 +66,7 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
           tone="light"
         />
 
-        <Card className="mt-8 flex flex-col gap-4 bg-primary/20 text-surface ring-1 ring-white/10">
+        <Card className="mt-8 flex flex-col gap-4 bg-primary text-surface ring-1 ring-white/10">
           <form className="grid gap-3 md:grid-cols-2" method="get">
             <label className="text-sm font-semibold text-surface">
               Bransjefilter
@@ -103,7 +103,7 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
           </div>
         </Card>
 
-        <Card className="flex flex-col gap-6 bg-primary/20 text-surface ring-1 ring-white/10">
+        <Card className="flex flex-col gap-6 bg-primary text-surface ring-1 ring-white/10">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-bold text-surface">Bedrifter ({filteredCompanies.length})</h3>
             <Link className="text-sm font-semibold text-surface/80 transition hover:text-surface" href="/student">
@@ -120,7 +120,7 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
                 className={`flex flex-col gap-2 rounded-xl border p-4 md:flex-row md:items-center md:justify-between ${
                   consentedCompanyIds.has(company.id)
                     ? "border-secondary/60 bg-secondary/15 shadow-soft"
-                    : "border-surface/10 bg-primary/30"
+                    : "border-surface/10 bg-[#1B0858]"
                 }`}
               >
                 <div>
@@ -151,7 +151,7 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
           )}
         </Card>
 
-        <Card className="flex flex-col gap-6 bg-primary/20 text-surface ring-1 ring-white/10">
+        <Card className="flex flex-col gap-6 bg-primary text-surface ring-1 ring-white/10">
           <h3 className="text-lg font-bold text-surface">Dine samtykker</h3>
           {activeConsents.length === 0 ? (
             <p className="text-sm text-surface/70">Du har ikke gitt samtykke til noen bedrifter ennå.</p>
