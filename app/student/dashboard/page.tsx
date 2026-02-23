@@ -13,7 +13,7 @@ type StudentCompletionFields = {
   phone?: string | null;
   study_program?: string | null;
   study_level?: string | null;
-  study_year?: string | null;
+  study_year?: number | string | null;
   work_style?: string | null;
   social_profile?: string | null;
   team_size?: string | null;
