@@ -201,6 +201,10 @@ export default async function StudentDashboardPage() {
             </Link>
           </div>
 
+          <p className="mb-6 text-sm font-medium text-[#EDE8F5]/75">
+            Favorittmarkering betyr også samtykke til at bedriften kan kontakte deg.
+          </p>
+
           <div className="mb-10 flex flex-wrap gap-3">
             {(likedCompanies.length > 0 ? likedCompanies : [{ id: "none", name: "Ingen favoritter ennå" }]).map(
               (company) => (

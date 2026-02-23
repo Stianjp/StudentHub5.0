@@ -91,6 +91,9 @@ export default async function StudentCompaniesPage({ searchParams }: PageProps) 
         <p className="text-sm text-ink/80">
           Velg bedrifter du vil følge. Du kan oppdatere listen når som helst.
         </p>
+        <p className="text-xs font-semibold text-secondary">
+          Når du favorittmarkerer en bedrift, gir du også samtykke til at bedriften kan kontakte deg.
+        </p>
 
         <form method="get" className="grid gap-3 md:grid-cols-3">
           <label className="text-sm font-semibold text-primary md:col-span-2">

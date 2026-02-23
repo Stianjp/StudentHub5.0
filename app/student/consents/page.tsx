@@ -17,6 +17,9 @@ import {
 } from "@/app/student/consents/actions";
 
 const INDUSTRY_ALL = "all";
+const STATUS_ALL = "all";
+const STATUS_CONSENTED = "consented";
+const STATUS_NOT_CONSENTED = "not_consented";
 
 type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -42,31 +45,173 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
 
   if (companiesError) throw companiesError;
 
-  const selectedIndustry =
-    typeof params.industry === "string" ? params.industry : INDUSTRY_ALL;
+  const selectedIndustry = typeof params.industry === "string" && params.industry ? params.industry : INDUSTRY_ALL;
+  const statusParam = typeof params.status === "string" ? params.status : STATUS_ALL;
+  const selectedStatus =
+    statusParam === STATUS_CONSENTED || statusParam === STATUS_NOT_CONSENTED ? statusParam : STATUS_ALL;
+  const search = typeof params.q === "string" ? params.q.trim() : "";
+  const normalizedSearch = search.toLowerCase();
   const passwordUpdated = params.passwordUpdated === "1";
   const accountError = typeof params.accountError === "string" ? params.accountError : "";
 
   const industries = Array.from(
-    new Set((companies ?? []).map((company) => company.industry).filter(Boolean)),
-  ) as string[];
+    new Set(
+      (companies ?? [])
+        .map((company) => company.industry)
+        .filter((industry): industry is string => Boolean(industry)),
+    ),
+  ).sort((a, b) => a.localeCompare(b, "nb"));
 
-  const filteredCompanies = (companies ?? []).filter((company) => {
-    if (selectedIndustry === INDUSTRY_ALL) return true;
-    return company.industry === selectedIndustry;
-  });
+  const latestConsentByCompanyId = new Map<string, (typeof consents)[number]>();
+  for (const consent of consents) {
+    const companyId = consent.company?.id;
+    if (!companyId || latestConsentByCompanyId.has(companyId)) continue;
+    latestConsentByCompanyId.set(companyId, consent);
+  }
 
   const consentedCompanyIds = new Set(
-    consents
-      .filter((consent) => consent.consent)
-      .map((consent) => consent.company?.id)
-      .filter(Boolean) as string[],
+    Array.from(latestConsentByCompanyId.entries())
+      .filter(([, consent]) => consent.consent)
+      .map(([companyId]) => companyId),
   );
 
-  const activeConsents = consents.filter((consent) => consent.consent);
+  const totalCompanies = (companies ?? []).length;
+  const consentedCount = consentedCompanyIds.size;
+
+  const filteredCompanies = (companies ?? []).filter((company) => {
+    if (selectedIndustry !== INDUSTRY_ALL && company.industry !== selectedIndustry) return false;
+
+    const latestConsent = latestConsentByCompanyId.get(company.id);
+    const hasConsent = Boolean(latestConsent?.consent);
+    if (selectedStatus === STATUS_CONSENTED && !hasConsent) return false;
+    if (selectedStatus === STATUS_NOT_CONSENTED && hasConsent) return false;
+
+    if (!normalizedSearch) return true;
+    const haystack = `${company.name} ${company.industry ?? ""}`.toLowerCase();
+    return haystack.includes(normalizedSearch);
+  });
 
   return (
     <div className="flex flex-col gap-8 text-surface">
+      <div className="rounded-3xl border border-surface/10 bg-primary p-6 md:p-10">
+        <SectionHeader
+          eyebrow="Samtykker"
+          title="Dine samtykker"
+          description="Oversikt over dine samtykker hos bedriftene."
+          tone="light"
+        />
+
+        <Card className="mt-8 flex flex-col gap-4 bg-primary text-surface ring-1 ring-white/10">
+          <form className="grid gap-3 md:grid-cols-3" method="get">
+            <label className="text-sm font-semibold text-surface md:col-span-2">
+              Søk
+              <Input
+                name="q"
+                defaultValue={search}
+                placeholder="Søk på bedriftsnavn eller bransje..."
+                autoComplete="off"
+              />
+            </label>
+            <label className="text-sm font-semibold text-surface">
+              Bransje
+              <Select name="industry" defaultValue={selectedIndustry}>
+                <option value={INDUSTRY_ALL}>Alle bransjer</option>
+                {industries.map((industry) => (
+                  <option key={industry} value={industry}>
+                    {industry}
+                  </option>
+                ))}
+              </Select>
+            </label>
+            <label className="text-sm font-semibold text-surface">
+              Samtykkestatus
+              <Select name="status" defaultValue={selectedStatus}>
+                <option value={STATUS_ALL}>Alle</option>
+                <option value={STATUS_CONSENTED}>Samtykke gitt</option>
+                <option value={STATUS_NOT_CONSENTED}>Ikke samtykket</option>
+              </Select>
+            </label>
+            <div className="flex items-end gap-3">
+              <Button variant="secondary" type="submit">
+                Oppdater filter
+              </Button>
+              <Link className="button-link text-xs" href="/student/consents">
+                Nullstill
+              </Link>
+            </div>
+          </form>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="success">{consentedCount} med samtykke</Badge>
+            <Badge variant="warning">{Math.max(totalCompanies - consentedCount, 0)} uten samtykke</Badge>
+            <span className="text-xs text-surface/70">
+              Viser {filteredCompanies.length} av {totalCompanies} bedrifter.
+            </span>
+          </div>
+
+          <div className="flex flex-wrap gap-3">
+            <form action={giveConsentToAll}>
+              <Button type="submit">Gi samtykke til alle bedrifter</Button>
+            </form>
+            {selectedIndustry !== INDUSTRY_ALL ? (
+              <form action={giveConsentToAll}>
+                <input type="hidden" name="industry" value={selectedIndustry} />
+                <Button variant="secondary" type="submit">
+                  Gi samtykke til alle {selectedIndustry}-bedrifter
+                </Button>
+              </form>
+            ) : null}
+          </div>
+        </Card>
+
+        <Card className="mt-6 flex flex-col gap-6 bg-primary text-surface ring-1 ring-white/10">
+          <h3 className="text-lg font-bold text-surface">Dine samtykker ({filteredCompanies.length})</h3>
+          {filteredCompanies.length === 0 ? (
+            <p className="text-sm text-surface/70">Ingen treff for valgt søk eller filter.</p>
+          ) : (
+            <ul className="grid gap-6 text-sm text-surface/80">
+              {filteredCompanies.map((company) => {
+                const latestConsent = latestConsentByCompanyId.get(company.id);
+                const hasConsent = Boolean(latestConsent?.consent);
+                const updatedAt = latestConsent?.updated_at ?? latestConsent?.consented_at ?? null;
+                const action = hasConsent ? withdrawConsent : giveConsentToCompany;
+                return (
+                  <li
+                    key={company.id}
+                    className={`flex flex-col gap-2 rounded-xl border p-4 md:flex-row md:items-center md:justify-between ${
+                      hasConsent
+                        ? "border-secondary/60 bg-secondary/15 shadow-soft"
+                        : "border-surface/10 bg-[#1B0858]"
+                    }`}
+                  >
+                    <div>
+                      <p className="font-semibold text-surface">{company.name}</p>
+                      <p className="text-xs text-surface/70">{company.industry ?? "Bransje ikke satt"}</p>
+                      <p className="mt-1 text-xs text-surface/70">
+                        {updatedAt
+                          ? `Sist oppdatert ${new Date(updatedAt).toLocaleString("nb-NO")}`
+                          : "Ingen registrert samtykkehistorikk ennå."}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={hasConsent ? "success" : "warning"}>
+                        {hasConsent ? "Samtykke gitt" : "Ikke samtykket"}
+                      </Badge>
+                      <form action={action}>
+                        <input type="hidden" name="companyId" value={company.id} />
+                        <Button variant={hasConsent ? "ghost" : "secondary"} type="submit">
+                          {hasConsent ? "Fjern samtykke" : "Gi samtykke"}
+                        </Button>
+                      </form>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </Card>
+      </div>
+
       <div className="rounded-3xl border border-surface/10 bg-primary p-6 md:p-10">
         <SectionHeader
           eyebrow="Konto"
@@ -142,132 +287,6 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
             </form>
           </Card>
         </div>
-      </div>
-
-      <div className="rounded-3xl border border-surface/10 bg-primary p-6 md:p-10">
-        <SectionHeader
-          eyebrow="Samtykke"
-          title="Gi samtykke til bedrifter"
-          description="Gi samtykke til bedrifter du vil at skal kunne kontakte deg."
-          tone="light"
-        />
-
-        <Card className="mt-8 flex flex-col gap-4 bg-primary text-surface ring-1 ring-white/10">
-          <form className="grid gap-3 md:grid-cols-2" method="get">
-            <label className="text-sm font-semibold text-surface">
-              Bransjefilter
-              <Select name="industry" defaultValue={selectedIndustry}>
-                <option value={INDUSTRY_ALL}>Alle bransjer</option>
-                {industries.map((industry) => (
-                  <option key={industry} value={industry}>
-                    {industry}
-                  </option>
-                ))}
-              </Select>
-            </label>
-            <div className="md:col-span-2">
-              <Button variant="secondary" type="submit">
-                Oppdater filter
-              </Button>
-            </div>
-          </form>
-
-          <div className="flex flex-wrap gap-3">
-            <form action={giveConsentToAll}>
-              <Button type="submit">
-                Gi samtykke til alle bedrifter
-              </Button>
-            </form>
-            {selectedIndustry !== INDUSTRY_ALL ? (
-              <form action={giveConsentToAll}>
-                <input type="hidden" name="industry" value={selectedIndustry} />
-                <Button variant="secondary" type="submit">
-                  Gi samtykke til alle {selectedIndustry}-bedrifter
-                </Button>
-              </form>
-            ) : null}
-          </div>
-        </Card>
-
-        <Card className="flex flex-col gap-6 bg-primary text-surface ring-1 ring-white/10">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold text-surface">Bedrifter ({filteredCompanies.length})</h3>
-            <Link className="text-sm font-semibold text-surface/80 transition hover:text-surface" href="/student">
-              Tilbake til profil
-            </Link>
-          </div>
-          {filteredCompanies.length === 0 ? (
-            <p className="text-sm text-surface/70">Ingen bedrifter i denne bransjen.</p>
-          ) : (
-          <ul className="grid gap-6 text-sm text-surface/80">
-            {filteredCompanies.map((company) => (
-              <li
-                key={company.id}
-                className={`flex flex-col gap-2 rounded-xl border p-4 md:flex-row md:items-center md:justify-between ${
-                  consentedCompanyIds.has(company.id)
-                    ? "border-secondary/60 bg-secondary/15 shadow-soft"
-                    : "border-surface/10 bg-[#1B0858]"
-                }`}
-              >
-                <div>
-                  <p className="font-semibold text-surface">{company.name}</p>
-                  <p className="text-xs text-surface/70">{company.industry ?? "Bransje ikke satt"}</p>
-                </div>
-                {consentedCompanyIds.has(company.id) ? (
-                  <div className="flex items-center gap-2">
-                    <Badge className="bg-secondary/30 text-secondary">Samtykke gitt</Badge>
-                    <form action={withdrawConsent}>
-                      <input type="hidden" name="companyId" value={company.id} />
-                      <Button variant="ghost" type="submit">
-                        Fjern samtykke
-                      </Button>
-                    </form>
-                  </div>
-                ) : (
-                    <form action={giveConsentToCompany}>
-                      <input type="hidden" name="companyId" value={company.id} />
-                      <Button variant="secondary" type="submit">
-                        Gi samtykke
-                      </Button>
-                    </form>
-                  )}
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
-
-        <Card className="flex flex-col gap-6 bg-primary text-surface ring-1 ring-white/10">
-          <h3 className="text-lg font-bold text-surface">Dine samtykker</h3>
-          {activeConsents.length === 0 ? (
-            <p className="text-sm text-surface/70">Du har ikke gitt samtykke til noen bedrifter ennå.</p>
-          ) : (
-            <ul className="grid gap-6">
-              {activeConsents.map((consent) => (
-                <li key={consent.id} className="rounded-xl border border-secondary/60 bg-secondary/15 p-4 shadow-soft">
-                  <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                    <div>
-                      <p className="text-base font-semibold text-surface">{consent.company?.name ?? "Bedrift"}</p>
-                      <p className="text-xs text-surface/70">{consent.event?.name ?? "Event"}</p>
-                    </div>
-                    <Badge variant={consent.consent ? "success" : "warning"}>
-                      {new Date(consent.consented_at).toLocaleString("nb-NO")}
-                    </Badge>
-                  </div>
-                  <p className="mt-2 text-xs text-surface/80">
-                    Jeg samtykker til at {consent.company?.name ?? "bedriften"} kan kontakte meg om relevante muligheter basert på interessene mine.
-                  </p>
-                  <form action={withdrawConsent} className="mt-3">
-                    <input type="hidden" name="companyId" value={consent.company?.id ?? ""} />
-                    <Button variant="ghost" type="submit">
-                      Fjern samtykke
-                    </Button>
-                  </form>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
       </div>
     </div>
   );

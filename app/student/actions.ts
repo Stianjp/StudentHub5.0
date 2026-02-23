@@ -17,6 +17,51 @@ function parseMultiValue(formData: FormData, key: string) {
     .filter(Boolean);
 }
 
+async function syncFavoriteConsentAndLeads({
+  student,
+  previousLikedCompanyIds,
+  nextLikedCompanyIds,
+}: {
+  student: Awaited<ReturnType<typeof getOrCreateStudentForUser>>;
+  previousLikedCompanyIds: string[];
+  nextLikedCompanyIds: string[];
+}) {
+  const uniqueNextLikedCompanyIds = Array.from(new Set(nextLikedCompanyIds));
+  const nextSet = new Set(uniqueNextLikedCompanyIds);
+  const removedCompanyIds = previousLikedCompanyIds.filter((companyId) => !nextSet.has(companyId));
+
+  await Promise.all([
+    ...uniqueNextLikedCompanyIds.map(async (companyId) => {
+      await upsertConsentForStudent({
+        studentId: student.id,
+        companyId,
+        consentGiven: true,
+        source: "student_portal",
+      });
+      await createLead({
+        student,
+        companyId,
+        eventId: null,
+        interests: student.interests ?? [],
+        jobTypes: student.job_types ?? [],
+        studyLevel: student.study_level,
+        studyYear: student.study_year ?? student.graduation_year,
+        fieldOfStudy: student.study_program,
+        consentGiven: true,
+        source: "student_portal",
+      });
+    }),
+    ...removedCompanyIds.map(async (companyId) => {
+      await upsertConsentForStudent({
+        studentId: student.id,
+        companyId,
+        consentGiven: false,
+        source: "student_portal",
+      });
+    }),
+  ]);
+}
+
 export async function saveStudentProfile(formData: FormData) {
   const profile = await requireRole("student");
   const supabase = await createServerSupabaseClient();
@@ -29,6 +74,7 @@ export async function saveStudentProfile(formData: FormData) {
   }
 
   const student = await getOrCreateStudentForUser(profile.id, user.email);
+  const previousLikedCompanyIds = student.liked_company_ids ?? [];
 
   const studyTrack = String(formData.get("studyTrack") ?? "").trim();
   const trackMatch = studyTrack.match(/^(Bachelor|Master)-(\d)$/);
@@ -85,51 +131,34 @@ export async function saveStudentProfile(formData: FormData) {
 
   if (error) throw error;
 
-  if (parsed.data.likedCompanyIds.length > 0) {
-    await Promise.all(
-      parsed.data.likedCompanyIds.map(async (companyId) => {
-        await upsertConsentForStudent({
-          studentId: student.id,
-          companyId,
-          consentGiven: true,
-          source: "student_portal",
-        });
-        await createLead({
-          student: {
-            ...student,
-            full_name: parsed.data.fullName,
-            email: parsed.data.email,
-            phone: parsed.data.phone || null,
-            study_program: parsed.data.studyProgram,
-            study_level: parsed.data.studyLevel,
-            study_year: parsed.data.studyYear,
-            job_types: parsed.data.jobTypes,
-            interests: parsed.data.interests,
-            values: parsed.data.values,
-            preferred_locations: parsed.data.preferredLocations,
-            willing_to_relocate: parsed.data.willingToRelocate,
-            liked_company_ids: parsed.data.likedCompanyIds,
-            about: parsed.data.about || null,
-            work_style: parsed.data.workStyle || null,
-            social_profile: parsed.data.socialProfile || null,
-            team_size: parsed.data.teamSize || null,
-          },
-          companyId,
-          eventId: null,
-          interests: parsed.data.interests,
-          jobTypes: parsed.data.jobTypes,
-          studyLevel: parsed.data.studyLevel,
-          studyYear: parsed.data.studyYear,
-          fieldOfStudy: parsed.data.studyProgram,
-          consentGiven: true,
-          source: "student_portal",
-        });
-      }),
-    );
-  }
+  await syncFavoriteConsentAndLeads({
+    student: {
+      ...student,
+      full_name: parsed.data.fullName,
+      email: parsed.data.email,
+      phone: parsed.data.phone || null,
+      study_program: parsed.data.studyProgram,
+      study_level: parsed.data.studyLevel,
+      study_year: parsed.data.studyYear,
+      job_types: parsed.data.jobTypes,
+      interests: parsed.data.interests,
+      values: parsed.data.values,
+      preferred_locations: parsed.data.preferredLocations,
+      willing_to_relocate: parsed.data.willingToRelocate,
+      liked_company_ids: parsed.data.likedCompanyIds,
+      about: parsed.data.about || null,
+      work_style: parsed.data.workStyle || null,
+      social_profile: parsed.data.socialProfile || null,
+      team_size: parsed.data.teamSize || null,
+    },
+    previousLikedCompanyIds,
+    nextLikedCompanyIds: parsed.data.likedCompanyIds,
+  });
 
   revalidatePath("/student");
   revalidatePath("/student/consents");
+  revalidatePath("/company/leads");
+  revalidatePath("/company/roi");
 
   redirect("/student?saved=1");
 }
@@ -147,6 +176,7 @@ export async function saveLikedCompanies(formData: FormData) {
 
   const student = await getOrCreateStudentForUser(profile.id, user.email);
   const likedCompanyIds = Array.from(new Set(parseMultiValue(formData, "likedCompanyIds")));
+  const previousLikedCompanyIds = student.liked_company_ids ?? [];
 
   const { error } = await supabase
     .from("students")
@@ -158,9 +188,21 @@ export async function saveLikedCompanies(formData: FormData) {
 
   if (error) throw error;
 
+  await syncFavoriteConsentAndLeads({
+    student: {
+      ...student,
+      liked_company_ids: previousLikedCompanyIds,
+    },
+    previousLikedCompanyIds,
+    nextLikedCompanyIds: likedCompanyIds,
+  });
+
   revalidatePath("/student");
   revalidatePath("/student/dashboard");
   revalidatePath("/student/companies");
+  revalidatePath("/student/consents");
+  revalidatePath("/company/leads");
+  revalidatePath("/company/roi");
 
   redirect("/student/companies?saved=1");
 }

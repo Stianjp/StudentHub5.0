@@ -244,6 +244,9 @@ export default async function StudentProfilePage({ searchParams }: PageProps) {
 
           <div className="flex flex-col gap-2 md:col-span-2">
             <p className="text-sm font-semibold text-primary">Favorittbedrifter</p>
+            <p className="text-xs text-ink/70">
+              Favorittmarkering gir også samtykke til at bedriften kan kontakte deg om relevante muligheter.
+            </p>
             <LikedCompanies
               companies={companies ?? []}
               initialSelected={student.liked_company_ids ?? []}
