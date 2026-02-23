@@ -47,55 +47,58 @@ export function ResetClient() {
   return (
     <main className="min-h-screen w-full bg-[linear-gradient(180deg,#140249_0%,#6D367F_52%,#FF7282_100%)] px-6 py-16">
       <div className="mx-auto flex min-h-[calc(100vh-8rem)] w-full max-w-md flex-col justify-center">
-      <Card className="flex flex-col gap-6 border border-white/75 bg-primary text-surface shadow-none ring-0">
-        <div className="flex flex-col items-center gap-3 text-center">
-          <Image
-            src="/brand/Logo_OSH_Gradient_whitetext.svg"
-            alt="Oslo Student Hub"
-            width={252}
-            height={60}
-            className="h-auto w-[220px] object-contain"
-            priority
-          />
-          <h1 className="text-2xl font-bold text-surface">Sett nytt passord</h1>
-          <p className="text-sm text-surface/85">Velg et sterkt passord (minst 8 tegn).</p>
-        </div>
-
-        <form className="flex flex-col gap-4" onSubmit={onSubmit}>
-          <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
-            Nytt passord
-            <Input
-              name="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+        <Card
+          className="flex flex-col gap-6 border border-white/75 !bg-[#140249] text-surface shadow-none ring-0"
+          style={{ backgroundColor: "#140249" }}
+        >
+          <div className="flex flex-col items-center gap-3 text-center">
+            <Image
+              src="/brand/Logo_OSH_Gradient_whitetext.svg"
+              alt="Oslo Student Hub"
+              width={252}
+              height={60}
+              className="h-auto w-[220px] object-contain"
+              priority
             />
-          </label>
-          <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
-            Bekreft passord
-            <Input
-              name="confirm"
-              type="password"
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-            />
-          </label>
-          <Button type="submit" disabled={status === "loading"}>
-            {status === "loading" ? "Oppdaterer…" : "Oppdater passord"}
-          </Button>
-        </form>
+            <h1 className="text-2xl font-bold text-surface">Sett nytt passord</h1>
+            <p className="text-sm text-surface/85">Velg et sterkt passord (minst 8 tegn).</p>
+          </div>
 
-        {status === "error" && error ? (
-          <div className="rounded-xl bg-error/15 px-4 py-3 text-sm font-medium text-error" aria-live="assertive">
-            {error}
-          </div>
-        ) : null}
-        {status === "success" && error ? (
-          <div className="rounded-xl bg-success/15 px-4 py-3 text-sm font-medium text-success" aria-live="polite">
-            {error}
-          </div>
-        ) : null}
-      </Card>
+          <form className="flex flex-col gap-4" onSubmit={onSubmit}>
+            <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
+              Nytt passord
+              <Input
+                name="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </label>
+            <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
+              Bekreft passord
+              <Input
+                name="confirm"
+                type="password"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+              />
+            </label>
+            <Button type="submit" disabled={status === "loading"}>
+              {status === "loading" ? "Oppdaterer…" : "Oppdater passord"}
+            </Button>
+          </form>
+
+          {status === "error" && error ? (
+            <div className="rounded-xl bg-error/15 px-4 py-3 text-sm font-medium text-error" aria-live="assertive">
+              {error}
+            </div>
+          ) : null}
+          {status === "success" && error ? (
+            <div className="rounded-xl bg-success/15 px-4 py-3 text-sm font-medium text-success" aria-live="polite">
+              {error}
+            </div>
+          ) : null}
+        </Card>
       </div>
     </main>
   );

@@ -232,7 +232,10 @@ export function SignInClient({
   return (
     <main className="min-h-screen w-full bg-[linear-gradient(180deg,#140249_0%,#6D367F_52%,#FF7282_100%)] px-6 py-16">
       <div className="mx-auto flex min-h-[calc(100vh-8rem)] w-full max-w-md flex-col justify-center">
-        <Card className="flex flex-col gap-6 border border-white/75 bg-primary text-surface shadow-none ring-0">
+        <Card
+          className="flex flex-col gap-6 border border-white/75 !bg-[#140249] text-surface shadow-none ring-0"
+          style={{ backgroundColor: "#140249" }}
+        >
           <div className="flex flex-col items-center gap-3 text-center">
             <Image
               src="/brand/Logo_OSH_Gradient_whitetext.svg"
