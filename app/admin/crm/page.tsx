@@ -80,8 +80,8 @@ export default async function AdminCrmPage({ searchParams }: PageProps) {
       <div className="flex flex-col gap-8">
         <SectionHeader
           eyebrow="CRM"
-          title="Leads dashboard"
-          description="Klarte ikke a laste Google Sheet-data."
+          title="Henvendelsesdashbord"
+          description="Klarte ikke å laste Google Sheet-data."
         />
 
         <Card className="border border-warning/30 bg-warning/10 text-sm text-ink/90">
@@ -123,8 +123,8 @@ export default async function AdminCrmPage({ searchParams }: PageProps) {
     <div className="flex flex-col gap-8">
       <SectionHeader
         eyebrow="CRM"
-        title="OSH CRM Leads"
-        description="Live masterdata fra Google Sheet + Discord/bot-felter (thread, source message, kanal)."
+        title="OSH CRM-henvendelser"
+        description="Oppdaterte masterdata fra Google Sheet + Discord/bot-felter (tråd, kildemelding, kanal)."
         actions={
           <>
             <Link
@@ -137,7 +137,7 @@ export default async function AdminCrmPage({ searchParams }: PageProps) {
               className="inline-flex items-center justify-center rounded-xl border border-primary/20 bg-primary/5 px-4 py-2 text-xs font-semibold text-primary transition hover:border-secondary hover:bg-secondary/10 hover:text-secondary"
               href={apiHref}
             >
-              Apne API (JSON)
+              Åpne API (JSON)
             </Link>
           </>
         }
@@ -145,26 +145,26 @@ export default async function AdminCrmPage({ searchParams }: PageProps) {
 
       <div className="grid gap-4 md:grid-cols-4">
         <Stat label="Totalt (filtrert)" value={metrics.totalLeads} hint={`${dataset.leads.length} totalt i arket`} />
-        <Stat label="Pending approval" value={metrics.pendingApproval} />
-        <Stat label="Waiting/Edit requested" value={metrics.waiting} />
-        <Stat label="Replied" value={metrics.replied} />
+        <Stat label="Venter godkjenning" value={metrics.pendingApproval} />
+        <Stat label="Venter/Redigering bedt om" value={metrics.waiting} />
+        <Stat label="Besvart" value={metrics.replied} />
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <Stat label="Bounced" value={metrics.bounced} />
-        <Stat label="Dialogue" value={metrics.dialogue} />
-        <Stat label="Closed Lost" value={metrics.closedLost} />
+        <Stat label="Avvist" value={metrics.bounced} />
+        <Stat label="Dialog" value={metrics.dialogue} />
+        <Stat label="Avsluttet tapt" value={metrics.closedLost} />
       </div>
 
       <div className="grid gap-4 md:grid-cols-1">
-        <Stat label="Pipeline sum" value={Math.round(metrics.pipelineTotal)} hint="Summer av PipelineValue i filtrert utvalg" />
+        <Stat label="Pipelinesum" value={Math.round(metrics.pipelineTotal)} hint="Sum av pipelineverdi i filtrert utvalg" />
       </div>
 
       <Card className="flex flex-col gap-4">
         <form method="get" className="grid gap-3 md:grid-cols-8 md:items-end">
           <label className="text-sm font-semibold text-primary md:col-span-2">
-            Sok
-            <Input name="q" defaultValue={query} placeholder="Navn, e-post, bedrift, thread, kanal" />
+            Søk
+            <Input name="q" defaultValue={query} placeholder="Navn, e-post, bedrift, tråd, kanal" />
           </label>
 
           <label className="text-sm font-semibold text-primary">
@@ -262,8 +262,8 @@ export default async function AdminCrmPage({ searchParams }: PageProps) {
                 <th className="px-3 py-2">Event</th>
                 <th className="px-3 py-2">Tid</th>
                 <th className="px-3 py-2">Discord kanal</th>
-                <th className="px-3 py-2">Trad / Message</th>
-                <th className="px-3 py-2">Stop/Pipeline</th>
+                <th className="px-3 py-2">Tråd / Melding</th>
+                <th className="px-3 py-2">Stopp/Pipeline</th>
                 <th className="px-3 py-2">Rad</th>
               </tr>
             </thead>
@@ -308,9 +308,9 @@ export default async function AdminCrmPage({ searchParams }: PageProps) {
                     <div className="text-xs text-ink/60 break-all">{lead.companyChannelId || "-"}</div>
                   </td>
                   <td className="px-3 py-3 text-ink/80">
-                    <div className="text-xs break-all">Thread: {lead.threadId || "-"}</div>
+                    <div className="text-xs break-all">Tråd: {lead.threadId || "-"}</div>
                     <div className="text-xs text-ink/60 break-all">
-                      Msg: {lead.sourceMessageId || "-"}
+                      Melding: {lead.sourceMessageId || "-"}
                       {discordGuildId && lead.companyChannelId && lead.sourceMessageId ? (
                         <>
                           {" "}
@@ -321,7 +321,7 @@ export default async function AdminCrmPage({ searchParams }: PageProps) {
                             target="_blank"
                             rel="noreferrer"
                           >
-                            apne
+                            åpne
                           </a>
                         </>
                       ) : null}
@@ -329,7 +329,7 @@ export default async function AdminCrmPage({ searchParams }: PageProps) {
                   </td>
                   <td className="px-3 py-3 text-ink/80">
                     <div>{lead.stopReason || "-"}</div>
-                    <div className="text-xs text-ink/60">Step: {lead.sequenceStep || "-"}</div>
+                    <div className="text-xs text-ink/60">Steg: {lead.sequenceStep || "-"}</div>
                     <div className="text-xs text-ink/60">Pipeline: {lead.pipelineValue || "0"}</div>
                   </td>
                   <td className="px-3 py-3 text-ink/80">
