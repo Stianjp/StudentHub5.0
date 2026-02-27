@@ -36,6 +36,7 @@ function resolveIcon(item: NavItem): LucideIcon {
   if (href.includes("/companies") || label.includes("bedrift")) return Building2;
   if (href.includes("/students") || label.includes("student")) return Users;
   if (href.includes("/leads") || label.includes("lead")) return ClipboardList;
+  if (href.includes("/crm") || label.includes("crm")) return ClipboardList;
   if (href.includes("/tickets") || label.includes("billett")) return Ticket;
   if (href.includes("/packages") || label.includes("pakke")) return Package;
   if (href.includes("/roi")) return BarChart3;

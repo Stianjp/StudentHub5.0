@@ -44,6 +44,19 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 # Valgfri (men anbefalt i prod)
 RESEND_API_KEY=...
 GEMINI_API_KEY=...
+
+# CRM (Google Sheets masterdata)
+CRM_GOOGLE_SHEET_ID=... # Sheet ID eller full Google Sheet URL
+CRM_GOOGLE_SHEET_RANGE=OSH CRM Leads!A1:ZZ
+CRM_GOOGLE_SERVICE_ACCOUNT_EMAIL=...
+CRM_GOOGLE_PRIVATE_KEY=\"-----BEGIN PRIVATE KEY-----\\n...\\n-----END PRIVATE KEY-----\\n\"
+CRM_DISCORD_GUILD_ID=... # valgfri, brukes for lenker til Discord-kanal/melding
+
+# Fallback (kun hvis sheet er offentlig/publisert)
+GOOGLE_SHEETS_API_KEY=...
+
+# Hvis arket er offentlig delt, kan CRM lese via gviz uten nøkler.
+# Da holder det med CRM_GOOGLE_SHEET_ID.
 ```
 
 Viktig:
@@ -118,6 +131,8 @@ npm run build
 - Invitere bedrifter (Resend + `email_logs`)
 - Sette pakker per bedrift per event
 - Totaloversikt
+- CRM dashboard fra Google Sheet: `/admin/crm`
+- CRM API (admin-beskyttet): `/api/admin/crm/leads`
 
 ## Matching (regelbasert)
 
