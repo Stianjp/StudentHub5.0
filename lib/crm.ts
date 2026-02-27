@@ -287,12 +287,28 @@ function hasStatus(value: string, pattern: string) {
 }
 
 function parseGvizRows(text: string) {
-  const jsonMatch = text.match(/setResponse\\(([\\s\\S]*)\\);?\\s*$/);
-  if (!jsonMatch?.[1]) {
+  const marker = "setResponse(";
+  const start = text.indexOf(marker);
+  if (start < 0) {
     throw new Error("Could not parse Google gviz response.");
   }
 
-  const parsed = JSON.parse(jsonMatch[1]) as {
+  const jsonStart = start + marker.length;
+  const endWithSemicolon = text.lastIndexOf(");");
+  const endWithParen = text.lastIndexOf(")");
+  const jsonEnd =
+    endWithSemicolon >= jsonStart
+      ? endWithSemicolon
+      : endWithParen >= jsonStart
+        ? endWithParen
+        : -1;
+
+  if (jsonEnd < jsonStart) {
+    throw new Error("Could not parse Google gviz response.");
+  }
+
+  const payload = text.slice(jsonStart, jsonEnd).trim();
+  const parsed = JSON.parse(payload) as {
     status?: string;
     table?: {
       rows?: Array<{ c?: Array<{ v?: string | number | boolean | null } | null> }>;
