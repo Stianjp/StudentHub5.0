@@ -1,5 +1,10 @@
 import { createSign } from "node:crypto";
 
+export const CRM_PIPELINE_STAGES = ["Kontaktet", "Venter svar", "Dialog", "Påmeldt", "Tapt"] as const;
+export type CrmPipelineStage = (typeof CRM_PIPELINE_STAGES)[number];
+
+const DEFAULT_LEAD_STATUSES = ["pending_approval", "waiting", "replied", "bounced", "edit_requested"] as const;
+
 export type CrmLead = {
   rowNumber: number;
   leadId: string;
@@ -16,7 +21,7 @@ export type CrmLead = {
   snoozeUntilIso: string;
   companyChannelName: string;
   companyChannelId: string;
-  companyStatus: string;
+  companyStatus: CrmPipelineStage | "";
   eventName: string;
   temperature: string;
   pipelineValue: string;
@@ -34,14 +39,30 @@ export type CrmLeadFilters = {
   sequenceStep?: string;
 };
 
+export type CrmCompanyCard = {
+  key: string;
+  company: string;
+  eventName: string;
+  pipelineStage: CrmPipelineStage;
+  companyChannelName: string;
+  companyChannelId: string;
+  totalContacts: number;
+  openLeadCount: number;
+  waitingReplyCount: number;
+  repliedCount: number;
+  pipelineValueTotal: number;
+  lastSentAtIso: string;
+  lastUpdatedAtIso: string;
+  leadIds: string[];
+};
+
 export type CrmMetrics = {
   totalLeads: number;
-  pendingApproval: number;
-  waiting: number;
-  replied: number;
-  bounced: number;
-  dialogue: number;
-  closedLost: number;
+  totalCompanies: number;
+  missingReplies: number;
+  dialogueCompanies: number;
+  signedCompanies: number;
+  lostCompanies: number;
   pipelineTotal: number;
 };
 
@@ -51,9 +72,11 @@ export type CrmDataset = {
   sheetRange: string;
   headers: string[];
   leads: CrmLead[];
+  companyCards: CrmCompanyCard[];
+  missingReplyLeads: CrmLead[];
   options: {
     leadStatuses: string[];
-    companyStatuses: string[];
+    companyStatuses: CrmPipelineStage[];
     events: string[];
     temperatures: string[];
     stopReasons: string[];
@@ -141,6 +164,12 @@ function parseSheetId(input: string) {
   return match?.[1] ?? trimmed;
 }
 
+function parseSheetNameFromRange(range: string) {
+  const [rawName] = range.split("!");
+  if (!rawName) return "Sheet1";
+  return rawName.replace(/^'+|'+$/g, "").trim() || "Sheet1";
+}
+
 function getSheetConfig() {
   const sheetIdRaw = process.env.CRM_GOOGLE_SHEET_ID;
   const sheetRange = process.env.CRM_GOOGLE_SHEET_RANGE ?? "OSH CRM Leads!A1:ZZ";
@@ -174,6 +203,7 @@ function getSheetConfig() {
     sheetId: parseSheetId(sheetIdRaw),
     auth: auth as AuthConfig,
     sheetRange,
+    sheetName: parseSheetNameFromRange(sheetRange),
   };
 }
 
@@ -269,9 +299,16 @@ function uniqueSorted(values: string[]) {
   );
 }
 
+function orderLeadStatuses(values: string[]) {
+  const seen = new Set(values.filter(Boolean));
+  const ordered = DEFAULT_LEAD_STATUSES.filter((value) => seen.has(value));
+  const extra = uniqueSorted(values).filter((value) => !ordered.includes(value as (typeof DEFAULT_LEAD_STATUSES)[number]));
+  return [...ordered, ...extra];
+}
+
 function parseNumber(value: string) {
   if (!value.trim()) return 0;
-  const normalized = value.replace(",", ".");
+  const normalized = value.replace(/\s+/g, "").replace(",", ".");
   const parsed = Number(normalized);
   return Number.isFinite(parsed) ? parsed : 0;
 }
@@ -323,34 +360,168 @@ function parseGvizRows(text: string) {
   return gvizRows.map((row) => (row.c ?? []).map((cell) => toCellString(cell?.v ?? "")));
 }
 
-function buildMetrics(leads: CrmLead[]): CrmMetrics {
-  return leads.reduce<CrmMetrics>(
-    (acc, lead) => {
-      const leadStatus = normalizeText(lead.leadStatus);
-      const companyStatus = normalizeText(lead.companyStatus);
-      const stopReason = normalizeText(lead.stopReason);
+export function normalizePipelineStage(value: string): CrmPipelineStage | "" {
+  const normalized = normalizeText(value);
+  if (!normalized) return "";
+  if (normalized.includes("pameld") || normalized.includes("won") || normalized.includes("signed") || normalized.includes("registered")) {
+    return "Påmeldt";
+  }
+  if (normalized.includes("dialog")) return "Dialog";
+  if (normalized === "venter svar" || normalized === "waiting" || normalized === "awaiting reply") {
+    return "Venter svar";
+  }
+  if (normalized.includes("closed lost") || normalized === "tapt" || normalized === "lost") {
+    return "Tapt";
+  }
+  if (normalized.includes("contacted") || normalized.includes("kontaktet")) {
+    return "Kontaktet";
+  }
+  return "Kontaktet";
+}
 
-      if (leadStatus === "pending approval") acc.pendingApproval += 1;
-      if (leadStatus === "waiting" || leadStatus === "edit requested") acc.waiting += 1;
-      if (leadStatus === "replied") acc.replied += 1;
-      if (leadStatus === "bounced" || stopReason === "bounced") acc.bounced += 1;
-      if (companyStatus.includes("dialogue")) acc.dialogue += 1;
-      if (companyStatus.includes("closed lost")) acc.closedLost += 1;
-      acc.pipelineTotal += parseNumber(lead.pipelineValue);
+function normalizeLeadStatus(value: string) {
+  const normalized = normalizeText(value);
+  if (!normalized) return "";
+  if (normalized === "pending approval") return "pending_approval";
+  if (normalized === "edit requested") return "edit_requested";
+  if (normalized === "waiting") return "waiting";
+  if (normalized === "replied") return "replied";
+  if (normalized === "bounced") return "bounced";
+  return value.trim();
+}
 
-      return acc;
-    },
+function isLeadClosed(lead: CrmLead) {
+  const leadStatus = normalizeText(lead.leadStatus);
+  const stopReason = normalizeText(lead.stopReason);
+  return leadStatus === "replied" || leadStatus === "bounced" || stopReason === "replied" || stopReason === "bounced";
+}
+
+function isFutureIso(value: string) {
+  const time = dateToMillis(value);
+  return time > Date.now();
+}
+
+export function isLeadMissingReply(lead: CrmLead) {
+  return normalizeText(lead.leadStatus) === "waiting" && !isFutureIso(lead.snoozeUntilIso);
+}
+
+export function getLeadAgeInDays(lead: CrmLead) {
+  const sourceTime = dateToMillis(lead.sentAtIso) || dateToMillis(lead.updatedAtIso);
+  if (!sourceTime) return 0;
+  return Math.max(0, Math.floor((Date.now() - sourceTime) / 86_400_000));
+}
+
+export function getMissingReplyLeads(leads: CrmLead[]) {
+  return leads
+    .filter(isLeadMissingReply)
+    .sort((a, b) => {
+      const sentDiff = dateToMillis(a.sentAtIso) - dateToMillis(b.sentAtIso);
+      if (sentDiff !== 0) return sentDiff;
+      return dateToMillis(a.updatedAtIso) - dateToMillis(b.updatedAtIso);
+    });
+}
+
+function resolvePipelineStage(leads: CrmLead[]) {
+  const explicitStages = new Set(leads.map((lead) => lead.companyStatus).filter(Boolean));
+  for (const stage of ["Påmeldt", "Dialog", "Venter svar", "Kontaktet", "Tapt"] as const) {
+    if (explicitStages.has(stage)) return stage;
+  }
+
+  if (leads.some((lead) => isLeadMissingReply(lead))) return "Venter svar";
+  if (leads.some((lead) => normalizeText(lead.leadStatus) === "replied")) return "Dialog";
+  if (leads.some((lead) => normalizeText(lead.leadStatus) === "bounced")) return "Tapt";
+  return "Kontaktet";
+}
+
+export function buildCrmCompanyCards(leads: CrmLead[]) {
+  const grouped = new Map<
+    string,
     {
-      totalLeads: leads.length,
-      pendingApproval: 0,
-      waiting: 0,
-      replied: 0,
-      bounced: 0,
-      dialogue: 0,
-      closedLost: 0,
-      pipelineTotal: 0,
-    },
-  );
+      company: string;
+      eventName: string;
+      companyChannelName: string;
+      companyChannelId: string;
+      leads: CrmLead[];
+      totalContacts: number;
+      openLeadCount: number;
+      waitingReplyCount: number;
+      repliedCount: number;
+      pipelineValueTotal: number;
+      lastSentAtIso: string;
+      lastUpdatedAtIso: string;
+      leadIds: string[];
+    }
+  >();
+
+  for (const lead of leads) {
+    const key = `${normalizeText(lead.company)}::${normalizeText(lead.eventName)}`;
+    const current = grouped.get(key) ?? {
+      company: lead.company,
+      eventName: lead.eventName,
+      companyChannelName: lead.companyChannelName,
+      companyChannelId: lead.companyChannelId,
+      leads: [],
+      totalContacts: 0,
+      openLeadCount: 0,
+      waitingReplyCount: 0,
+      repliedCount: 0,
+      pipelineValueTotal: 0,
+      lastSentAtIso: "",
+      lastUpdatedAtIso: "",
+      leadIds: [],
+    };
+
+    current.leads.push(lead);
+    current.totalContacts += 1;
+    if (!isLeadClosed(lead)) current.openLeadCount += 1;
+    if (isLeadMissingReply(lead)) current.waitingReplyCount += 1;
+    if (normalizeText(lead.leadStatus) === "replied") current.repliedCount += 1;
+    current.pipelineValueTotal += parseNumber(lead.pipelineValue);
+    if (!current.companyChannelName && lead.companyChannelName) current.companyChannelName = lead.companyChannelName;
+    if (!current.companyChannelId && lead.companyChannelId) current.companyChannelId = lead.companyChannelId;
+    if (dateToMillis(lead.sentAtIso) > dateToMillis(current.lastSentAtIso)) current.lastSentAtIso = lead.sentAtIso;
+    if (dateToMillis(lead.updatedAtIso) > dateToMillis(current.lastUpdatedAtIso)) current.lastUpdatedAtIso = lead.updatedAtIso;
+    current.leadIds.push(lead.leadId);
+
+    grouped.set(key, current);
+  }
+
+  return Array.from(grouped.entries())
+    .map(([key, value]) => ({
+      key,
+      company: value.company,
+      eventName: value.eventName,
+      pipelineStage: resolvePipelineStage(value.leads),
+      companyChannelName: value.companyChannelName,
+      companyChannelId: value.companyChannelId,
+      totalContacts: value.totalContacts,
+      openLeadCount: value.openLeadCount,
+      waitingReplyCount: value.waitingReplyCount,
+      repliedCount: value.repliedCount,
+      pipelineValueTotal: value.pipelineValueTotal,
+      lastSentAtIso: value.lastSentAtIso,
+      lastUpdatedAtIso: value.lastUpdatedAtIso,
+      leadIds: value.leadIds,
+    }))
+    .sort((a, b) => {
+      const pipelineDiff = CRM_PIPELINE_STAGES.indexOf(a.pipelineStage) - CRM_PIPELINE_STAGES.indexOf(b.pipelineStage);
+      if (pipelineDiff !== 0) return pipelineDiff;
+      return dateToMillis(b.lastUpdatedAtIso) - dateToMillis(a.lastUpdatedAtIso);
+    });
+}
+
+function buildMetrics(leads: CrmLead[]): CrmMetrics {
+  const companyCards = buildCrmCompanyCards(leads);
+
+  return {
+    totalLeads: leads.length,
+    totalCompanies: companyCards.length,
+    missingReplies: getMissingReplyLeads(leads).length,
+    dialogueCompanies: companyCards.filter((card) => card.pipelineStage === "Dialog").length,
+    signedCompanies: companyCards.filter((card) => card.pipelineStage === "Påmeldt").length,
+    lostCompanies: companyCards.filter((card) => card.pipelineStage === "Tapt").length,
+    pipelineTotal: leads.reduce((acc, lead) => acc + parseNumber(lead.pipelineValue), 0),
+  };
 }
 
 export function applyCrmLeadFilters(leads: CrmLead[], filters: CrmLeadFilters) {
@@ -418,7 +589,7 @@ export async function loadCrmDataset(): Promise<CrmDataset> {
   let rows: string[][] = [];
 
   if (config.auth.mode === "publicGviz") {
-    const gvizUrl = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(config.sheetId)}/gviz/tq?tqx=out:json&gid=0`;
+    const gvizUrl = `https://docs.google.com/spreadsheets/d/${encodeURIComponent(config.sheetId)}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(config.sheetName)}`;
     const response = await fetch(gvizUrl, {
       cache: "no-store",
       next: { revalidate: 0 },
@@ -467,9 +638,11 @@ export async function loadCrmDataset(): Promise<CrmDataset> {
       sheetRange: config.sheetRange,
       headers: [],
       leads: [],
+      companyCards: [],
+      missingReplyLeads: [],
       options: {
-        leadStatuses: [],
-        companyStatuses: [],
+        leadStatuses: [...DEFAULT_LEAD_STATUSES],
+        companyStatuses: [...CRM_PIPELINE_STAGES],
         events: [],
         temperatures: [],
         stopReasons: [],
@@ -477,12 +650,11 @@ export async function loadCrmDataset(): Promise<CrmDataset> {
       },
       metrics: {
         totalLeads: 0,
-        pendingApproval: 0,
-        waiting: 0,
-        replied: 0,
-        bounced: 0,
-        dialogue: 0,
-        closedLost: 0,
+        totalCompanies: 0,
+        missingReplies: 0,
+        dialogueCompanies: 0,
+        signedCompanies: 0,
+        lostCompanies: 0,
         pipelineTotal: 0,
       },
     };
@@ -540,12 +712,12 @@ export async function loadCrmDataset(): Promise<CrmDataset> {
         sourceMessageId: readField(row, "sourceMessageId"),
         sentAtIso: readField(row, "sentAtIso"),
         sequenceStep: readField(row, "sequenceStep"),
-        leadStatus: readField(row, "leadStatus"),
+        leadStatus: normalizeLeadStatus(readField(row, "leadStatus")),
         stopReason: readField(row, "stopReason"),
         snoozeUntilIso: readField(row, "snoozeUntilIso"),
         companyChannelName: readField(row, "companyChannelName"),
         companyChannelId: readField(row, "companyChannelId"),
-        companyStatus: readField(row, "companyStatus"),
+        companyStatus: normalizePipelineStage(readField(row, "companyStatus")),
         eventName: readField(row, "eventName"),
         temperature: readField(row, "temperature"),
         pipelineValue: readField(row, "pipelineValue"),
@@ -572,9 +744,11 @@ export async function loadCrmDataset(): Promise<CrmDataset> {
     sheetRange: config.sheetRange,
     headers: headerRow,
     leads,
+    companyCards: buildCrmCompanyCards(leads),
+    missingReplyLeads: getMissingReplyLeads(leads),
     options: {
-      leadStatuses: uniqueSorted(leads.map((lead) => lead.leadStatus)),
-      companyStatuses: uniqueSorted(leads.map((lead) => lead.companyStatus)),
+      leadStatuses: orderLeadStatuses(leads.map((lead) => lead.leadStatus)),
+      companyStatuses: [...CRM_PIPELINE_STAGES],
       events: uniqueSorted(leads.map((lead) => lead.eventName)),
       temperatures: uniqueSorted(leads.map((lead) => lead.temperature)),
       stopReasons: uniqueSorted(leads.map((lead) => lead.stopReason)),

@@ -51,12 +51,14 @@ CRM_GOOGLE_SHEET_RANGE=OSH CRM Leads!A1:ZZ
 CRM_GOOGLE_SERVICE_ACCOUNT_EMAIL=...
 CRM_GOOGLE_PRIVATE_KEY=\"-----BEGIN PRIVATE KEY-----\\n...\\n-----END PRIVATE KEY-----\\n\"
 CRM_DISCORD_GUILD_ID=... # valgfri, brukes for lenker til Discord-kanal/melding
+CRM_SYNC_WEBHOOK_SECRET=... # kreves for bot -> sheet sync endpoint
 
 # Fallback (kun hvis sheet er offentlig/publisert)
 GOOGLE_SHEETS_API_KEY=...
 
 # Hvis arket er offentlig delt, kan CRM lese via gviz uten nøkler.
 # Da holder det med CRM_GOOGLE_SHEET_ID.
+# Men admin-redigering og bot -> sheet sync krever service account-variablene over.
 ```
 
 Viktig:
@@ -132,7 +134,40 @@ npm run build
 - Sette pakker per bedrift per event
 - Totaloversikt
 - CRM dashboard fra Google Sheet: `/admin/crm`
+- CRM board + oppfolgingsliste for manglende svar med auto-refresh hvert 30. sek.
 - CRM API (admin-beskyttet): `/api/admin/crm/leads`
+- Discord webhook for CRM sync: `POST /api/integrations/discord/crm`
+
+Eksempel payload (Discord bot):
+
+```json
+{
+  "action": "email_sent",
+  "leadId": "19c2ac6b5a31027f:heidi.bluhme@norwegian.com",
+  "company": "Norwegian",
+  "contactName": "heidi bluhme",
+  "contactEmail": "heidi.bluhme@norwegian.com",
+  "threadId": "19c2ac6b5a31027f",
+  "sourceMessageId": "19c2c8c0569f9130",
+  "leadStatus": "waiting",
+  "companyStatus": "Kontaktet",
+  "eventName": "Women in STEM / Student Connect 2026",
+  "temperature": "Warm",
+  "updatedAtIso": "2026-02-27T12:00:00.000Z"
+}
+```
+
+Header:
+
+- `x-crm-webhook-secret: <CRM_SYNC_WEBHOOK_SECRET>`
+
+Pipeline-steg i CRM standardiseres til:
+
+- `Kontaktet`
+- `Venter svar`
+- `Dialog`
+- `Påmeldt`
+- `Tapt`
 
 ## Matching (regelbasert)
 

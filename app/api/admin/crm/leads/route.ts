@@ -1,6 +1,12 @@
 import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { applyCrmLeadFilters, buildCrmMetrics, loadCrmDataset } from "@/lib/crm";
+import {
+  applyCrmLeadFilters,
+  buildCrmCompanyCards,
+  buildCrmMetrics,
+  getMissingReplyLeads,
+  loadCrmDataset,
+} from "@/lib/crm";
 
 async function requireAdmin() {
   const supabase = await createServerSupabaseClient();
@@ -55,6 +61,8 @@ export async function GET(request: Request) {
         filteredCount: filteredLeads.length,
         options: dataset.options,
         metrics: buildCrmMetrics(filteredLeads),
+        companyCards: buildCrmCompanyCards(filteredLeads),
+        missingReplies: getMissingReplyLeads(filteredLeads),
         leads: filteredLeads,
       },
       { status: 200 },
