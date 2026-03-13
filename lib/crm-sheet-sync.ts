@@ -152,7 +152,8 @@ function columnLabelFromIndex(index: number) {
 
 function getSyncConfig(): Config {
   const sheetIdRaw = process.env.CRM_GOOGLE_SHEET_ID;
-  const sheetRange = process.env.CRM_GOOGLE_SHEET_RANGE ?? "OSH CRM Leads!A:ZZ";
+  const sheetNameFromEnv = process.env.CRM_GOOGLE_SHEET_NAME?.trim();
+  const sheetRange = process.env.CRM_GOOGLE_SHEET_RANGE?.trim() ?? "";
   const clientEmail = process.env.CRM_GOOGLE_SERVICE_ACCOUNT_EMAIL?.trim();
   const privateKey = process.env.CRM_GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n");
 
@@ -163,9 +164,13 @@ function getSyncConfig(): Config {
     throw new Error("Missing CRM_GOOGLE_SERVICE_ACCOUNT_EMAIL and/or CRM_GOOGLE_PRIVATE_KEY for sheet sync");
   }
 
+  const sheetName =
+    (sheetNameFromEnv ? parseSheetNameFromRange(`${sheetNameFromEnv}!A:ZZ`) : "") ||
+    parseSheetNameFromRange(sheetRange || "OSH CRM Leads!A:ZZ");
+
   return {
     sheetId: parseSheetId(sheetIdRaw),
-    sheetName: parseSheetNameFromRange(sheetRange),
+    sheetName,
     clientEmail,
     privateKey,
   };
@@ -259,49 +264,13 @@ async function updateSheetRow(config: Config, accessToken: string, rangeA1: stri
   }
 }
 
-async function appendSheetRow(config: Config, accessToken: string, rangeA1: string, values: string[]) {
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(config.sheetId)}/values/${encodeURIComponent(rangeA1)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      majorDimension: "ROWS",
-      values: [values],
-    }),
-    cache: "no-store",
-  });
-
-  const body = (await response.json().catch(() => ({}))) as SheetWriteResponse;
-  if (!response.ok) {
-    throw new Error(body.error?.message ?? "Failed to append Google Sheet row");
-  }
-
-  return body.updates?.updatedRange ?? "";
-}
-
-function extractRowNumberFromRange(rangeA1: string) {
-  const match = rangeA1.match(/![A-Z]+(\d+):[A-Z]+(\d+)/);
-  if (!match?.[1]) return null;
-  const parsed = Number(match[1]);
-  return Number.isFinite(parsed) ? parsed : null;
-}
-
 async function loadSheetSnapshot(): Promise<SheetSnapshot> {
   const config = getSyncConfig();
   const accessToken = await getServiceAccountAccessToken(config);
   const escapedSheetName = escapeSheetName(config.sheetName);
-  const headerRange = `${escapedSheetName}!1:1`;
-  const dataRange = `${escapedSheetName}!2:ZZ`;
-
-  const [headerRows, dataRows] = await Promise.all([
-    fetchSheetValues(config, accessToken, headerRange),
-    fetchSheetValues(config, accessToken, dataRange),
-  ]);
-
-  const headers = headerRows[0] ?? [];
+  const fullSheetRange = escapedSheetName;
+  const allRows = await fetchSheetValues(config, accessToken, fullSheetRange);
+  const headers = allRows[0] ?? [];
   if (headers.length === 0) {
     throw new Error("Sheet header row is empty");
   }
@@ -311,7 +280,7 @@ async function loadSheetSnapshot(): Promise<SheetSnapshot> {
     accessToken,
     escapedSheetName,
     headers,
-    dataRows,
+    dataRows: allRows.slice(1),
   };
 }
 
@@ -371,9 +340,10 @@ export async function syncLeadToGoogleSheet(input: CrmSyncInput) {
     };
   }
 
-  const appendRange = `${snapshot.escapedSheetName}!A:ZZ`;
-  const updatedRange = await appendSheetRow(snapshot.config, snapshot.accessToken, appendRange, rowValues);
-  const rowNumber = extractRowNumberFromRange(updatedRange);
+  const rowNumber = snapshot.dataRows.length + 2;
+  const endCol = columnLabelFromIndex(Math.max(snapshot.headers.length - 1, 0));
+  const rowRange = `${snapshot.escapedSheetName}!A${rowNumber}:${endCol}${rowNumber}`;
+  await updateSheetRow(snapshot.config, snapshot.accessToken, rowRange, rowValues);
 
   return {
     mode: "appended" as const,

@@ -195,7 +195,8 @@ function normalizeSheetRange(range: string) {
 
 function getSheetConfig() {
   const sheetIdRaw = process.env.CRM_GOOGLE_SHEET_ID;
-  const rawSheetRange = process.env.CRM_GOOGLE_SHEET_RANGE ?? "OSH CRM Leads!A:ZZ";
+  const sheetNameFromEnv = process.env.CRM_GOOGLE_SHEET_NAME?.trim();
+  const rawSheetRange = process.env.CRM_GOOGLE_SHEET_RANGE?.trim() ?? "";
   const apiKey = process.env.GOOGLE_SHEETS_API_KEY?.trim();
   const serviceAccountEmail = process.env.CRM_GOOGLE_SERVICE_ACCOUNT_EMAIL?.trim();
   const serviceAccountPrivateKey = process.env.CRM_GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n");
@@ -222,11 +223,19 @@ function getSheetConfig() {
     };
   }
 
+  const sheetName =
+    (sheetNameFromEnv ? parseSheetNameFromRange(`${sheetNameFromEnv}!A:ZZ`) : "") ||
+    parseSheetNameFromRange(rawSheetRange || "OSH CRM Leads!A:ZZ");
+  const normalizedSheetRange = normalizeSheetRange(
+    rawSheetRange || `${sheetName}!A:ZZ`,
+  );
+
   return {
     sheetId: parseSheetId(sheetIdRaw),
     auth: auth as AuthConfig,
-    sheetRange: normalizeSheetRange(rawSheetRange),
-    sheetName: parseSheetNameFromRange(rawSheetRange),
+    sheetRange: normalizedSheetRange,
+    sheetName,
+    sheetReadRange: escapeSheetName(sheetName),
   };
 }
 
@@ -625,7 +634,7 @@ export async function loadCrmDataset(): Promise<CrmDataset> {
     const text = await response.text();
     rows = parseGvizRows(text);
   } else {
-    const encodedRange = encodeURIComponent(config.sheetRange);
+    const encodedRange = encodeURIComponent(config.sheetReadRange);
     const baseUrl = `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(config.sheetId)}/values/${encodedRange}?majorDimension=ROWS`;
 
     const headers: HeadersInit = {};

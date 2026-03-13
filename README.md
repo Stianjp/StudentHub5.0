@@ -47,6 +47,8 @@ GEMINI_API_KEY=...
 
 # CRM (Google Sheets masterdata)
 CRM_GOOGLE_SHEET_ID=... # Sheet ID eller full Google Sheet URL
+CRM_GOOGLE_SHEET_NAME=OSH CRM Leads
+# Valgfri fallback for eldre oppsett:
 CRM_GOOGLE_SHEET_RANGE=OSH CRM Leads!A:ZZ
 CRM_GOOGLE_SERVICE_ACCOUNT_EMAIL=...
 CRM_GOOGLE_PRIVATE_KEY=\"-----BEGIN PRIVATE KEY-----\\n...\\n-----END PRIVATE KEY-----\\n\"
