@@ -170,9 +170,32 @@ function parseSheetNameFromRange(range: string) {
   return rawName.replace(/^'+|'+$/g, "").trim() || "Sheet1";
 }
 
+function escapeSheetName(name: string) {
+  if (/^[A-Za-z0-9_]+$/.test(name)) return name;
+  return `'${name.replace(/'/g, "''")}'`;
+}
+
+function normalizeRangePart(rangePart: string) {
+  const trimmed = rangePart.trim();
+  if (!trimmed) return "A:ZZ";
+
+  const missingEndRowMatch = trimmed.match(/^([A-Za-z]+)\d+:([A-Za-z]+)$/);
+  if (missingEndRowMatch) {
+    return `${missingEndRowMatch[1].toUpperCase()}:${missingEndRowMatch[2].toUpperCase()}`;
+  }
+
+  return trimmed;
+}
+
+function normalizeSheetRange(range: string) {
+  const sheetName = parseSheetNameFromRange(range);
+  const rangePart = range.includes("!") ? range.slice(range.indexOf("!") + 1) : "";
+  return `${escapeSheetName(sheetName)}!${normalizeRangePart(rangePart)}`;
+}
+
 function getSheetConfig() {
   const sheetIdRaw = process.env.CRM_GOOGLE_SHEET_ID;
-  const sheetRange = process.env.CRM_GOOGLE_SHEET_RANGE ?? "OSH CRM Leads!A1:ZZ";
+  const rawSheetRange = process.env.CRM_GOOGLE_SHEET_RANGE ?? "OSH CRM Leads!A:ZZ";
   const apiKey = process.env.GOOGLE_SHEETS_API_KEY?.trim();
   const serviceAccountEmail = process.env.CRM_GOOGLE_SERVICE_ACCOUNT_EMAIL?.trim();
   const serviceAccountPrivateKey = process.env.CRM_GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n");
@@ -202,8 +225,8 @@ function getSheetConfig() {
   return {
     sheetId: parseSheetId(sheetIdRaw),
     auth: auth as AuthConfig,
-    sheetRange,
-    sheetName: parseSheetNameFromRange(sheetRange),
+    sheetRange: normalizeSheetRange(rawSheetRange),
+    sheetName: parseSheetNameFromRange(rawSheetRange),
   };
 }
 

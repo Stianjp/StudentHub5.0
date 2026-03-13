@@ -47,7 +47,7 @@ GEMINI_API_KEY=...
 
 # CRM (Google Sheets masterdata)
 CRM_GOOGLE_SHEET_ID=... # Sheet ID eller full Google Sheet URL
-CRM_GOOGLE_SHEET_RANGE=OSH CRM Leads!A1:ZZ
+CRM_GOOGLE_SHEET_RANGE=OSH CRM Leads!A:ZZ
 CRM_GOOGLE_SERVICE_ACCOUNT_EMAIL=...
 CRM_GOOGLE_PRIVATE_KEY=\"-----BEGIN PRIVATE KEY-----\\n...\\n-----END PRIVATE KEY-----\\n\"
 CRM_DISCORD_GUILD_ID=... # valgfri, brukes for lenker til Discord-kanal/melding

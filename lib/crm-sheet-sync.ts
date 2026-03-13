@@ -152,7 +152,7 @@ function columnLabelFromIndex(index: number) {
 
 function getSyncConfig(): Config {
   const sheetIdRaw = process.env.CRM_GOOGLE_SHEET_ID;
-  const sheetRange = process.env.CRM_GOOGLE_SHEET_RANGE ?? "OSH CRM Leads!A1:ZZ";
+  const sheetRange = process.env.CRM_GOOGLE_SHEET_RANGE ?? "OSH CRM Leads!A:ZZ";
   const clientEmail = process.env.CRM_GOOGLE_SERVICE_ACCOUNT_EMAIL?.trim();
   const privateKey = process.env.CRM_GOOGLE_PRIVATE_KEY?.replace(/\\n/g, "\n");
 
