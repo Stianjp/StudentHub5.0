@@ -193,6 +193,10 @@ function normalizeSheetRange(range: string) {
   return `${escapeSheetName(sheetName)}!${normalizeRangePart(rangePart)}`;
 }
 
+function buildDefaultReadRange(sheetName: string) {
+  return `${escapeSheetName(sheetName)}!A1:ZZ10000`;
+}
+
 function getSheetConfig() {
   const sheetIdRaw = process.env.CRM_GOOGLE_SHEET_ID;
   const sheetNameFromEnv = process.env.CRM_GOOGLE_SHEET_NAME?.trim();
@@ -235,7 +239,7 @@ function getSheetConfig() {
     auth: auth as AuthConfig,
     sheetRange: normalizedSheetRange,
     sheetName,
-    sheetReadRange: escapeSheetName(sheetName),
+    sheetReadRange: buildDefaultReadRange(sheetName),
   };
 }
 

@@ -268,7 +268,7 @@ async function loadSheetSnapshot(): Promise<SheetSnapshot> {
   const config = getSyncConfig();
   const accessToken = await getServiceAccountAccessToken(config);
   const escapedSheetName = escapeSheetName(config.sheetName);
-  const fullSheetRange = escapedSheetName;
+  const fullSheetRange = `${escapedSheetName}!A1:ZZ10000`;
   const allRows = await fetchSheetValues(config, accessToken, fullSheetRange);
   const headers = allRows[0] ?? [];
   if (headers.length === 0) {
