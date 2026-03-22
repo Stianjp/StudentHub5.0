@@ -329,6 +329,7 @@ export function PublicRegistrationForm({
 
         {currentStep === 0 ? (
           <div className="grid gap-4 md:grid-cols-2">
+            <p className="text-lg font-semibold text-primary/80 md:col-span-2">First let us know who you are</p>
             <label className="text-sm font-semibold text-primary">
               First name
               <Input value={contactFirstName} onChange={(event) => setContactFirstName(event.target.value)} />
@@ -359,7 +360,7 @@ export function PublicRegistrationForm({
               <Input value={companyName} onChange={(event) => setCompanyName(event.target.value)} />
             </label>
             <label className="text-sm font-semibold text-primary">
-              Org. number
+              MVA-ID
               <Input value={orgNumber} onChange={(event) => setOrgNumber(event.target.value)} placeholder="123456789" />
             </label>
             <label className="text-sm font-semibold text-primary">
@@ -368,7 +369,12 @@ export function PublicRegistrationForm({
             </label>
             <label className="text-sm font-semibold text-primary md:col-span-2">
               Address
-              <Input value={address} onChange={(event) => setAddress(event.target.value)} />
+              <Textarea
+                value={address}
+                onChange={(event) => setAddress(event.target.value)}
+                rows={3}
+                placeholder={"Street address\nAddress line 2 (optional)"}
+              />
             </label>
             <label className="text-sm font-semibold text-primary">
               City
@@ -464,7 +470,7 @@ export function PublicRegistrationForm({
                 </label>
               ))}
             </div>
-            {candidateFields.includes("Annet") ? (
+            {candidateFields.includes("Other") ? (
               <label className="text-sm font-semibold text-primary">
                 Other field
                 <Input

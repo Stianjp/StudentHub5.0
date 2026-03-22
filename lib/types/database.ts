@@ -981,6 +981,8 @@ export type Database = {
           payload: Json;
           sent_at: string;
           created_at: string;
+          batch_id: string | null;
+          template_id: string | null;
         };
         Insert: {
           id?: string;
@@ -990,6 +992,8 @@ export type Database = {
           payload?: Json;
           sent_at?: string;
           created_at?: string;
+          batch_id?: string | null;
+          template_id?: string | null;
         };
         Update: {
           id?: string;
@@ -999,6 +1003,170 @@ export type Database = {
           payload?: Json;
           sent_at?: string;
           created_at?: string;
+          batch_id?: string | null;
+          template_id?: string | null;
+        };
+        Relationships: [];
+      };
+      crm_pipeline_entries: {
+        Row: {
+          id: string;
+          lead_id: string;
+          company: string;
+          contact_name: string;
+          contact_email: string;
+          subject: string;
+          thread_id: string;
+          source_message_id: string;
+          sent_at: string | null;
+          snooze_until: string | null;
+          sequence_step: string;
+          lead_status: string;
+          stop_reason: string;
+          company_status: "Kontaktet" | "Venter svar" | "Dialog" | "Påmeldt" | "Tapt";
+          event_name: string;
+          temperature: string;
+          pipeline_value: number;
+          company_channel_name: string;
+          company_channel_id: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          lead_id: string;
+          company: string;
+          contact_name?: string;
+          contact_email?: string;
+          subject?: string;
+          thread_id?: string;
+          source_message_id?: string;
+          sent_at?: string | null;
+          snooze_until?: string | null;
+          sequence_step?: string;
+          lead_status?: string;
+          stop_reason?: string;
+          company_status?: "Kontaktet" | "Venter svar" | "Dialog" | "Påmeldt" | "Tapt";
+          event_name?: string;
+          temperature?: string;
+          pipeline_value?: number;
+          company_channel_name?: string;
+          company_channel_id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          lead_id?: string;
+          company?: string;
+          contact_name?: string;
+          contact_email?: string;
+          subject?: string;
+          thread_id?: string;
+          source_message_id?: string;
+          sent_at?: string | null;
+          snooze_until?: string | null;
+          sequence_step?: string;
+          lead_status?: string;
+          stop_reason?: string;
+          company_status?: "Kontaktet" | "Venter svar" | "Dialog" | "Påmeldt" | "Tapt";
+          event_name?: string;
+          temperature?: string;
+          pipeline_value?: number;
+          company_channel_name?: string;
+          company_channel_id?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      email_groups: {
+        Row: {
+          id: string;
+          name: string;
+          description: string | null;
+          member_type: "company" | "student";
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          description?: string | null;
+          member_type: "company" | "student";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          description?: string | null;
+          member_type?: "company" | "student";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      email_group_members: {
+        Row: {
+          id: string;
+          group_id: string;
+          company_id: string | null;
+          student_id: string | null;
+          email: string;
+          display_name: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          group_id: string;
+          company_id?: string | null;
+          student_id?: string | null;
+          email: string;
+          display_name?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          group_id?: string;
+          company_id?: string | null;
+          student_id?: string | null;
+          email?: string;
+          display_name?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      email_templates: {
+        Row: {
+          id: string;
+          name: string;
+          subject: string;
+          html_body: string;
+          variables: string[];
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          subject: string;
+          html_body: string;
+          variables?: string[];
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          subject?: string;
+          html_body?: string;
+          variables?: string[];
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
         };
         Relationships: [];
       };
@@ -1018,6 +1186,8 @@ export type Database = {
       app_role: "student" | "company" | "admin";
       package_tier: "standard" | "silver" | "gold" | "platinum";
       visit_source: "qr" | "kiosk";
+      crm_pipeline_stage: "Kontaktet" | "Venter svar" | "Dialog" | "Påmeldt" | "Tapt";
+      email_group_member_type: "company" | "student";
     };
     CompositeTypes: Record<string, never>;
   };

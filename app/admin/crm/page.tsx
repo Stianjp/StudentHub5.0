@@ -14,9 +14,9 @@ import {
   CRM_PIPELINE_STAGES,
   getLeadAgeInDays,
   getMissingReplyLeads,
-  loadCrmDataset,
   type CrmDataset,
 } from "@/lib/crm";
+import { loadCrmEntriesFromSupabase } from "@/lib/crm-supabase";
 import { updateCrmCompanyPipeline, updateCrmLead } from "./actions";
 import { CrmRefreshControls } from "./refresh-controls";
 
@@ -96,9 +96,6 @@ export default async function AdminCrmPage({ searchParams }: PageProps) {
 
   const params = await searchParams;
   const discordGuildId = process.env.CRM_DISCORD_GUILD_ID?.trim() ?? "";
-  const canWrite = Boolean(
-    process.env.CRM_GOOGLE_SERVICE_ACCOUNT_EMAIL?.trim() && process.env.CRM_GOOGLE_PRIVATE_KEY?.trim(),
-  );
   const query = firstValue(params.q).trim();
   const leadStatus = firstValue(params.leadStatus).trim();
   const companyStatus = firstValue(params.companyStatus).trim();
@@ -111,7 +108,7 @@ export default async function AdminCrmPage({ searchParams }: PageProps) {
   let dataset: CrmDataset | null = null;
 
   try {
-    dataset = await loadCrmDataset();
+    dataset = await loadCrmEntriesFromSupabase();
   } catch (error) {
     datasetError = error instanceof Error ? error.message : "Kunne ikke laste CRM-data.";
   }
@@ -122,16 +119,11 @@ export default async function AdminCrmPage({ searchParams }: PageProps) {
         <SectionHeader
           eyebrow="CRM"
           title="Henvendelsesdashbord"
-          description="Klarte ikke å laste Google Sheet-data."
+          description="Klarte ikke å laste CRM-data fra databasen."
         />
-
         <Card className="border border-warning/30 bg-warning/10 text-sm text-ink/90">
           <p className="font-semibold text-primary">Feil ved CRM-data</p>
           <p className="mt-2">{datasetError}</p>
-          <p className="mt-2">
-            Sjekk <code>CRM_GOOGLE_SHEET_ID</code> og tilgang til arket. For private ark: sett Google auth
-            (<code>CRM_GOOGLE_SERVICE_ACCOUNT_EMAIL</code> + <code>CRM_GOOGLE_PRIVATE_KEY</code>, eller <code>GOOGLE_SHEETS_API_KEY</code>).
-          </p>
         </Card>
       </div>
     );
@@ -167,7 +159,7 @@ export default async function AdminCrmPage({ searchParams }: PageProps) {
       <SectionHeader
         eyebrow="CRM"
         title="OSH CRM"
-        description="Google Sheet er masterdata. Admin kan følge opp manglende svar, styre pipeline per bedrift og skrive tilbake til arket."
+        description="Følg opp henvendelser, styr pipeline per bedrift og hold oversikt over dialog og avtalestatus."
         actions={
           <>
             <Link
@@ -187,14 +179,6 @@ export default async function AdminCrmPage({ searchParams }: PageProps) {
         }
       />
 
-      {!canWrite ? (
-        <Card className="border border-warning/30 bg-warning/10 text-sm text-ink/90">
-          <p className="font-semibold text-primary">Skrivetilgang er ikke konfigurert</p>
-          <p className="mt-2">
-            CRM-siden kan lese arket nå, men admin-redigering og webhook-sync krever <code>CRM_GOOGLE_SERVICE_ACCOUNT_EMAIL</code> og <code>CRM_GOOGLE_PRIVATE_KEY</code>.
-          </p>
-        </Card>
-      ) : null}
 
       <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
         <Stat label="Bedrifter" value={metrics.totalCompanies} hint={`${metrics.totalLeads} leads i filtrert utvalg`} />
@@ -213,7 +197,7 @@ export default async function AdminCrmPage({ searchParams }: PageProps) {
             <p className="text-sm text-ink/70">Viser kun leads med <code>waiting</code> og uten aktiv snooze.</p>
           </div>
           <p className="text-xs text-ink/60">
-            Sist hentet: {new Date(dataset.fetchedAt).toLocaleString("nb-NO")} · Kilde: {dataset.sheetRange}
+            Oppdatert: {new Date(dataset.fetchedAt).toLocaleString("nb-NO")}
           </p>
         </div>
 

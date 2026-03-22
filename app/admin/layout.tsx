@@ -24,6 +24,15 @@ const nav = [
   { href: "/admin/students", label: "Studenter" },
   { href: "/admin/leads", label: "Leads" },
   { href: "/admin/crm", label: "CRM" },
+  {
+    href: "/admin/email",
+    label: "E-post",
+    children: [
+      { href: "/admin/email", label: "Send e-post" },
+      { href: "/admin/email/groups", label: "Grupper" },
+      { href: "/admin/email/templates", label: "Maler" },
+    ],
+  },
   { href: "/admin/tickets", label: "Billetter" },
 ];
 

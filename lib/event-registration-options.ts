@@ -1,21 +1,22 @@
 export const REGISTRATION_STUDENT_FIELDS = [
-  "Bygg",
-  "Data/IT",
-  "Elektro",
-  "Energi & Miljø",
-  "Biotek/Kjemi",
-  "Maskin",
-  "Økonomi",
-  "Ledelse",
-  "HR",
-  "Annet",
+  "IT / Computer engineer",
+  "Electrical engineer",
+  "Mechanical engineer",
+  "Construction engineer",
+  "Economics and administration",
+  "Human resources (HR)",
+  "Management",
+  "Biotechnology and Chemical Engineer",
+  "Law",
+  "Mathematical modelling",
+  "Other",
 ] as const;
 
 export const REGISTRATION_STAND_NEEDS = [
-  "Bord",
+  "Tables",
   "TV",
-  "Mat/snacks/drikke",
-  "Annet",
+  "Food/snacks/drinks to serve the students",
+  "Other",
 ] as const;
 
 export const REGISTRATION_LEVEL_OPTIONS = [

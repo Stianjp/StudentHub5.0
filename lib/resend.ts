@@ -2,7 +2,7 @@ import { Resend } from "resend";
 import type { Database, Json } from "@/lib/types/database";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-type EmailType = "invite_company" | "event_confirmation" | "roi_ready" | "company_portal_invite";
+type EmailType = "invite_company" | "event_confirmation" | "roi_ready" | "company_portal_invite" | "bulk_admin" | string;
 
 type SendEmailInput = {
   to: string;
@@ -70,4 +70,83 @@ export async function sendTransactionalEmail({
   });
 
   return { status, providerMessageId, errorMessage };
+}
+
+export function renderTemplate(htmlBody: string, variables: Record<string, string>): string {
+  return htmlBody.replace(/\{\{(\w+)\}\}/g, (_, key) => variables[key] ?? `{{${key}}}`);
+}
+
+type BulkRecipient = {
+  email: string;
+  variables?: Record<string, string>;
+};
+
+type SendBulkEmailInput = {
+  recipients: BulkRecipient[];
+  subject: string;
+  htmlBody: string;
+  type: string;
+  templateId?: string;
+  batchId: string;
+  supabase: SupabaseClient<Database>;
+};
+
+export async function sendBulkEmail({
+  recipients,
+  subject,
+  htmlBody,
+  type,
+  templateId,
+  batchId,
+  supabase,
+}: SendBulkEmailInput): Promise<{ sent: number; failed: number; skipped: number }> {
+  const resend = getResendClient();
+  let sent = 0;
+  let failed = 0;
+  let skipped = 0;
+
+  for (const recipient of recipients) {
+    const renderedHtml = renderTemplate(htmlBody, recipient.variables ?? {});
+    const renderedSubject = renderTemplate(subject, recipient.variables ?? {});
+    const now = new Date().toISOString();
+
+    let providerMessageId: string | null = null;
+    let status: "sent" | "skipped" | "failed" = "skipped";
+    let errorMessage: string | null = null;
+
+    if (resend) {
+      try {
+        const response = await resend.emails.send({
+          from: "OSH StudentHub <noreply@oslostudenthub.no>",
+          to: recipient.email,
+          subject: renderedSubject,
+          html: renderedHtml,
+        });
+        providerMessageId = response.data?.id ?? null;
+        status = "sent";
+        sent++;
+      } catch (error) {
+        status = "failed";
+        errorMessage = error instanceof Error ? error.message : "Unknown resend error";
+        failed++;
+      }
+    } else {
+      skipped++;
+    }
+
+    const logPayload: Json = { providerMessageId, status, errorMessage };
+
+    await supabase.from("email_logs").insert({
+      to_email: recipient.email,
+      type,
+      subject: renderedSubject,
+      payload: logPayload,
+      sent_at: now,
+      created_at: now,
+      batch_id: batchId,
+      template_id: templateId ?? null,
+    });
+  }
+
+  return { sent, failed, skipped };
 }
