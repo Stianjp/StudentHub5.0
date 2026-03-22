@@ -28,6 +28,15 @@ export default async function AdminEventsLandingPage() {
             Åpne
           </Link>
         </Card>
+        <Card className="flex flex-col gap-3 md:col-span-2">
+          <h3 className="text-lg font-bold text-primary">Offentlige registreringer</h3>
+          <p className="text-sm text-ink/70">
+            Administrer eventregister.oslostudenthub.no per event, med kampanjer, standkart og godkjenning av søknader.
+          </p>
+          <Link className="button-link text-xs" href="/admin/events/overview">
+            Velg event
+          </Link>
+        </Card>
       </div>
     </div>
   );

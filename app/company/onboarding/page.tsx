@@ -9,6 +9,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { saveCompanyInfo } from "@/app/company/actions";
 import { OnboardingSteps } from "@/components/company/onboarding-steps";
 import { STUDY_CATEGORIES } from "@/components/event/study-categories";
+import { normalizeStudyCategories } from "@/lib/company-categories";
 
 type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
@@ -33,6 +34,8 @@ export default async function CompanyOnboardingInfoPage({ searchParams }: PagePr
       </Card>
     );
   }
+
+  const selectedIndustryCategories = normalizeStudyCategories(company.recruitment_fields);
 
   return (
     <div className="flex flex-col gap-8">
@@ -87,7 +90,7 @@ export default async function CompanyOnboardingInfoPage({ searchParams }: PagePr
                       type="checkbox"
                       name="industryCategories"
                       value={category}
-                      defaultChecked={company.recruitment_fields.includes(category)}
+                      defaultChecked={selectedIndustryCategories.includes(category)}
                       className="h-4 w-4 rounded border-primary/30 text-primary focus:ring-primary"
                     />
                     <span className="font-semibold text-primary">{category}</span>

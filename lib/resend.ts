@@ -2,7 +2,7 @@ import { Resend } from "resend";
 import type { Database, Json } from "@/lib/types/database";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-type EmailType = "invite_company" | "event_confirmation" | "roi_ready";
+type EmailType = "invite_company" | "event_confirmation" | "roi_ready" | "company_portal_invite";
 
 type SendEmailInput = {
   to: string;

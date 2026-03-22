@@ -3,6 +3,7 @@ import type { TableRow } from "@/lib/types/database";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { computeMatch } from "@/lib/matching";
+import { reconcileApprovedCompanyPortalInvites } from "@/lib/event-registration";
 
 type Company = TableRow<"companies">;
 type EventCompany = TableRow<"event_companies">;
@@ -56,8 +57,7 @@ export function hasLeadDetailsAccessForRegistration(input: {
   return hasPremiumPackageAccess(input.package) || Boolean(input.can_view_leads);
 }
 
-export async function getOrCreateCompanyForUser(userId: string, _email?: string | null) {
-  void _email;
+export async function getOrCreateCompanyForUser(userId: string, email?: string | null) {
   let supabase = await createServerSupabaseClient();
   try {
     supabase = createAdminSupabaseClient();
@@ -79,6 +79,27 @@ export async function getOrCreateCompanyForUser(userId: string, _email?: string 
       .maybeSingle();
     if (company) return company as Company;
   }
+
+  if (email) {
+    await reconcileApprovedCompanyPortalInvites(userId, email);
+
+    const { data: invitedMembership } = await supabase
+      .from("company_users")
+      .select("company_id, approved_at")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (invitedMembership?.company_id && invitedMembership.approved_at) {
+      const { data: company } = await supabase
+        .from("companies")
+        .select("*")
+        .eq("id", invitedMembership.company_id)
+        .maybeSingle();
+
+      if (company) return company as Company;
+    }
+  }
+
   return null;
 }
 

@@ -7,6 +7,8 @@ import { getOrCreateCompanyForUser } from "@/lib/company";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { saveCompanyRecruitment } from "@/app/company/actions";
 import { OnboardingSteps } from "@/components/company/onboarding-steps";
+import { STUDY_CATEGORIES } from "@/components/event/study-categories";
+import { normalizeStudyCategories } from "@/lib/company-categories";
 
 export default async function CompanyOnboardingRecruitmentPage() {
   const profile = await requireRole("company");
@@ -26,17 +28,8 @@ export default async function CompanyOnboardingRecruitmentPage() {
     );
   }
 
-  const fieldOptions = [
-    "BYGGINGENIØRER",
-    "DATAINGENIØR/IT",
-    "ELEKTROINGENIØRER",
-    "ENERGI & MILJØ INGENIØR",
-    "BIOTEKNOLOGI- OG KJEMIINGENIØR",
-    "MASKINIGENIØRER",
-    "ØKONOMI OG ADMINISTRASJON",
-    "LEDELSE",
-    "HUMAN RESOURCES",
-  ];
+  const fieldOptions = STUDY_CATEGORIES;
+  const selectedRecruitmentFields = normalizeStudyCategories(company.recruitment_fields);
 
   const jobTypeOptions = [
     "Fast jobb",
@@ -78,7 +71,7 @@ export default async function CompanyOnboardingRecruitmentPage() {
                     type="checkbox"
                     name="recruitmentFields"
                     value={option}
-                    defaultChecked={company.recruitment_fields.includes(option)}
+                    defaultChecked={selectedRecruitmentFields.includes(option)}
                     className="h-4 w-4 rounded border-primary/30 text-primary focus:ring-primary"
                   />
                   <span className="font-semibold text-primary">{option}</span>

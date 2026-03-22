@@ -7,6 +7,7 @@ type HostTarget = {
 };
 
 const HOST_TARGETS: HostTarget[] = [
+  { match: "eventregister.", basePath: "/event-register" },
   { match: "bedrift.", basePath: "/company" },
   { match: "admin.", basePath: "/admin" },
   { match: "student.", basePath: "/student" },

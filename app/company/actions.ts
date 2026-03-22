@@ -16,6 +16,7 @@ import {
   getCompanyAttendeeTicketAllowance,
   getOrCreateCompanyForUser,
 } from "@/lib/company";
+import { normalizeStudyCategories } from "@/lib/company-categories";
 import { sendTransactionalEmail } from "@/lib/resend";
 
 function generateTicketNumber() {
@@ -99,7 +100,7 @@ export async function saveCompanyInfo(formData: FormData) {
   const { supabase, company } = await getCompanyContext();
   const now = new Date().toISOString();
 
-  const selectedCategories = parsed.data.industryCategories ?? [];
+  const selectedCategories = normalizeStudyCategories(parsed.data.industryCategories ?? []);
   const primaryIndustry = selectedCategories[0] ?? parsed.data.industry ?? null;
 
   const { error } = await supabase
@@ -141,12 +142,13 @@ export async function saveCompanyRecruitment(formData: FormData) {
 
   const { supabase, company } = await getCompanyContext();
   const now = new Date().toISOString();
+  const normalizedRecruitmentFields = normalizeStudyCategories(parsed.data.recruitmentFields);
 
   const { error } = await supabase
     .from("companies")
     .update({
       recruitment_roles: parsed.data.recruitmentRoles,
-      recruitment_fields: parsed.data.recruitmentFields,
+      recruitment_fields: normalizedRecruitmentFields,
       recruitment_levels: parsed.data.recruitmentLevels,
       recruitment_years_bachelor: parsed.data.recruitmentYearsBachelor,
       recruitment_years_master: parsed.data.recruitmentYearsMaster,

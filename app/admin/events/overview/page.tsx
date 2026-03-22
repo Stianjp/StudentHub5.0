@@ -36,6 +36,9 @@ export default async function AdminEventsOverviewPage() {
                   <Link className="button-link text-xs" href={`/admin/events/${event.id}`}>
                     Rediger
                   </Link>
+                  <Link className="button-link text-xs" href={`/admin/events/${event.id}/registration`}>
+                    Registrering
+                  </Link>
                 </div>
               </div>
               <div className="text-xs font-semibold text-primary/70">

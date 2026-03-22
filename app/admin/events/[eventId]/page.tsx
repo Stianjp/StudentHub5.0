@@ -69,9 +69,14 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
         title={eventData.event.name}
         description="Oversikt over registrerte bedrifter og mulighet til å legge til flere."
         actions={
-          <Link className="text-sm font-semibold text-primary/70 transition hover:text-primary" href="/admin/events/overview">
-            Tilbake
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link className="button-link text-xs" href={`/admin/events/${eventId}/registration`}>
+              Offentlig registrering
+            </Link>
+            <Link className="text-sm font-semibold text-primary/70 transition hover:text-primary" href="/admin/events/overview">
+              Tilbake
+            </Link>
+          </div>
         }
       />
 
@@ -284,5 +289,4 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
     </div>
   );
 }
-
 
