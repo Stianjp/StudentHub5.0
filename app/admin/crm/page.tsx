@@ -321,7 +321,7 @@ export default async function AdminCrmPage({ searchParams }: PageProps) {
                               </option>
                             ))}
                           </Select>
-                          <Button variant="secondary" type="submit" disabled={!canWrite} className="rounded-xl px-4 py-2 text-xs">
+                          <Button variant="secondary" type="submit" className="rounded-xl px-4 py-2 text-xs">
                             Lagre pipeline
                           </Button>
                         </form>
@@ -539,7 +539,7 @@ export default async function AdminCrmPage({ searchParams }: PageProps) {
                         <Input name="stopReason" defaultValue={lead.stopReason} placeholder="Stop reason" />
                         <Input name="snoozeUntilIso" type="datetime-local" defaultValue={toDateTimeLocalValue(lead.snoozeUntilIso)} />
 
-                        <Button variant="secondary" type="submit" disabled={!canWrite} className="rounded-xl px-4 py-2 text-xs">
+                        <Button variant="secondary" type="submit" className="rounded-xl px-4 py-2 text-xs">
                           Lagre rad
                         </Button>
                       </form>

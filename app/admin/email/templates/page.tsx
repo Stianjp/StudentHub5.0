@@ -25,7 +25,7 @@ export default async function EmailTemplatesPage() {
         description="Opprett og rediger maler med variabelsubstitusjon ({{variabelNavn}})."
         actions={
           <Link href="/admin/email/templates/new">
-            <Button size="sm">+ Ny mal</Button>
+            <Button>+ Ny mal</Button>
           </Link>
         }
       />
@@ -71,7 +71,7 @@ export default async function EmailTemplatesPage() {
               </div>
               <div className="flex shrink-0 gap-2">
                 <Link href={`/admin/email/templates/${template.id}`}>
-                  <Button size="sm" variant="outline">Rediger</Button>
+                  <Button variant="ghost">Rediger</Button>
                 </Link>
               </div>
             </Card>

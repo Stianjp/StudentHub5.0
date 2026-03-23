@@ -20,19 +20,18 @@ export default async function GroupDetailPage({ params }: Props) {
 
   const { data: group } = await supabase
     .from("email_groups")
-    .select("*, email_group_members(*)")
+    .select("*")
     .eq("id", groupId)
     .single();
 
   if (!group) notFound();
 
-  const members = (group.email_group_members as Array<{
-    id: string;
-    email: string;
-    display_name: string | null;
-    company_id: string | null;
-    student_id: string | null;
-  }>) ?? [];
+  const { data: membersData } = await supabase
+    .from("email_group_members")
+    .select("id, email, display_name, company_id, student_id")
+    .eq("group_id", groupId);
+
+  const members = membersData ?? [];
 
   let candidates: Array<{ id: string; label: string }> = [];
 
@@ -83,7 +82,7 @@ export default async function GroupDetailPage({ params }: Props) {
                 ))}
               </Select>
             </div>
-            <Button type="submit" size="sm">Legg til</Button>
+            <Button type="submit">Legg til</Button>
           </form>
         </Card>
       )}
@@ -109,7 +108,7 @@ export default async function GroupDetailPage({ params }: Props) {
                 <form action={removeGroupMember}>
                   <input type="hidden" name="member_id" value={member.id} />
                   <input type="hidden" name="group_id" value={groupId} />
-                  <Button type="submit" size="sm" variant="destructive">Fjern</Button>
+                  <Button type="submit" variant="danger">Fjern</Button>
                 </form>
               </div>
             ))}

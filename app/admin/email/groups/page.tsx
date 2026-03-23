@@ -18,8 +18,12 @@ export default async function EmailGroupsPage() {
 
   const { data: groups } = await supabase
     .from("email_groups")
-    .select("*, email_group_members(id)")
+    .select("*")
     .order("name");
+
+  const { data: allMembers } = await supabase
+    .from("email_group_members")
+    .select("group_id");
 
   return (
     <div className="flex flex-col gap-8">
@@ -58,7 +62,7 @@ export default async function EmailGroupsPage() {
       ) : (
         <div className="flex flex-col gap-3">
           {groups?.map((group) => {
-            const memberCount = (group.email_group_members as { id: string }[])?.length ?? 0;
+            const memberCount = (allMembers ?? []).filter((m) => m.group_id === group.id).length;
             return (
               <Card key={group.id} className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                 <div className="flex flex-col gap-1">
@@ -73,11 +77,11 @@ export default async function EmailGroupsPage() {
                 </div>
                 <div className="flex shrink-0 gap-2">
                   <Link href={`/admin/email/groups/${group.id}`}>
-                    <Button size="sm" variant="outline">Administrer</Button>
+                    <Button variant="ghost">Administrer</Button>
                   </Link>
                   <form action={deleteEmailGroup}>
                     <input type="hidden" name="id" value={group.id} />
-                    <Button type="submit" size="sm" variant="destructive">Slett</Button>
+                    <Button type="submit" variant="danger">Slett</Button>
                   </form>
                 </div>
               </Card>

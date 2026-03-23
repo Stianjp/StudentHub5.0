@@ -88,7 +88,7 @@ export default async function EditTemplatePage({ params }: Props) {
         <p className="mt-1 text-xs text-ink/70">Kan ikke angres. Sendte e-poster bevares i loggen.</p>
         <form action={deleteTemplate} className="mt-3">
           <input type="hidden" name="id" value={template.id} />
-          <Button type="submit" variant="destructive" size="sm">Slett mal</Button>
+          <Button type="submit" variant="danger">Slett mal</Button>
         </form>
       </Card>
     </div>

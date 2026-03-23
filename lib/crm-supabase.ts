@@ -1,4 +1,4 @@
-import { createAdminSupabaseClient } from "@/lib/supabase/server";
+import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import type { CrmLead, CrmPipelineStage, CrmDataset } from "@/lib/crm";
 import {
   CRM_PIPELINE_STAGES,
@@ -70,7 +70,7 @@ export async function loadCrmEntriesFromSupabase(): Promise<CrmDataset> {
   const leads = (data ?? []).map((row, i) => dbRowToCrmLead(row, i));
   const companyCards = buildCrmCompanyCards(leads);
   const missingReplyLeads = getMissingReplyLeads(leads);
-  const metrics = buildCrmMetrics(leads, companyCards);
+  const metrics = buildCrmMetrics(leads);
   const options = {
     leadStatuses: [...new Set(leads.map((l) => l.leadStatus).filter(Boolean))],
     companyStatuses: [...CRM_PIPELINE_STAGES] as CrmPipelineStage[],

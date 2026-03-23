@@ -11,12 +11,12 @@ function norm(value: FormDataEntryValue | null) {
 
 type Recipient = { email: string; variables?: Record<string, string> };
 
-export async function sendEmailAction(formData: FormData): Promise<{
-  sent: number;
-  failed: number;
-  skipped: number;
-  error?: string;
-}> {
+type ActionState = { sent?: number; failed?: number; skipped?: number; error?: string } | null;
+
+export async function sendEmailAction(
+  _prevState: ActionState,
+  formData: FormData
+): Promise<ActionState> {
   await requireRole("admin");
 
   const templateId = norm(formData.get("template_id")) || undefined;
