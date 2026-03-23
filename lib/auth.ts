@@ -60,7 +60,7 @@ export async function getProfile() {
   return data as Profile | null;
 }
 
-export async function ensureProfile(role: Profile["role"]) {
+export async function ensureProfile(role: Profile["role"]): Promise<Profile> {
   const user = await getUser();
   if (!user) {
     const hostContext = await resolveHostContext();
@@ -94,7 +94,7 @@ export async function ensureProfile(role: Profile["role"]) {
       const nextPath = roleRedirect[role] ?? "/";
       redirect(`/auth/sign-in?role=${role}&next=${encodeURIComponent(nextPath)}`);
     }
-    return existing;
+    return existing as Profile;
   }
 
   const effectiveRole: AppRole = hostRole ?? role;
@@ -113,10 +113,10 @@ export async function ensureProfile(role: Profile["role"]) {
     throw insertError;
   }
 
-  return created;
+  return created as Profile;
 }
 
-export async function requireRole(role: Profile["role"]) {
+export async function requireRole(role: Profile["role"]): Promise<Profile> {
   const profile = await ensureProfile(role);
   const hostContext = await resolveHostContext();
   const hostRole = hostContext.role;

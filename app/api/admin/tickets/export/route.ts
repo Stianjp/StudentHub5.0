@@ -9,8 +9,9 @@ async function requireAdmin() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return false;
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
-  return profile?.role === "admin";
+  const { data: profile } = await supabase.from("profiles").select("id, role").eq("id" as never, user.id as never).maybeSingle();
+  const typedProfile = profile as { role?: string } | null;
+  return typedProfile?.role === "admin";
 }
 
 export async function GET(request: Request) {
@@ -35,16 +36,36 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const studentIds = (tickets ?? []).map((ticket) => ticket.student_id).filter(Boolean) as string[];
+  const typedTickets = (tickets ?? []) as Array<{
+    student_id: string | null;
+    company_id: string | null;
+    attendee_name: string | null;
+    attendee_email: string | null;
+    attendee_phone: string | null;
+    ticket_number: string;
+    status: string;
+    checked_in_at: string | null;
+    created_at: string;
+  }>;
+  const studentIds = typedTickets.map((ticket) => ticket.student_id).filter(Boolean) as string[];
   const { data: students } = studentIds.length
     ? await supabase
         .from("students")
         .select("id, full_name, email, phone, study_program, study_level, study_year")
         .in("id", studentIds)
     : { data: [] };
-  const studentMap = new Map((students ?? []).map((student) => [student.id, student]));
+  const typedStudents = (students ?? []) as Array<{
+    id: string;
+    full_name: string | null;
+    email: string | null;
+    phone: string | null;
+    study_program: string | null;
+    study_level: string | null;
+    study_year: number | null;
+  }>;
+  const studentMap = new Map(typedStudents.map((student) => [student.id, student]));
 
-  const rows = (tickets ?? []).map((ticket) => {
+  const rows = typedTickets.map((ticket) => {
     const student = ticket.student_id ? studentMap.get(ticket.student_id) : null;
     const name = student?.full_name ?? ticket.attendee_name ?? "";
     const email = student?.email ?? ticket.attendee_email ?? "";

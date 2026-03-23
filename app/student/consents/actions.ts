@@ -103,7 +103,8 @@ export async function giveConsentToAll(formData: FormData) {
     : await query;
 
   if (companiesError) throw companiesError;
-  const companyIds = (companies ?? []).map((company) => company.id);
+  const typedCompanies = (companies ?? []) as Array<{ id: string }>;
+  const companyIds = typedCompanies.map((company) => company.id);
 
   if (companyIds.length === 0) return;
 

@@ -50,7 +50,7 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
     listCompanies(),
   ]);
 
-  const registrations = eventData.registrations as Array<{
+  const registrations = eventData.registrations as unknown as Array<{
     id: string;
     stand_type: string | null;
     package: string;
@@ -289,4 +289,3 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
     </div>
   );
 }
-

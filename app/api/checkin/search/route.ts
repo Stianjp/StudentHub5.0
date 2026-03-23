@@ -8,8 +8,9 @@ async function requireAdmin() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return false;
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
-  return profile?.role === "admin";
+  const { data: profile } = await supabase.from("profiles").select("id, role").eq("id" as never, user.id as never).maybeSingle();
+  const typedProfile = profile as { role?: string } | null;
+  return typedProfile?.role === "admin";
 }
 
 type Body = {
@@ -107,7 +108,22 @@ export async function POST(request: Request) {
   if (studentError) return NextResponse.json({ error: studentError.message }, { status: 500 });
   if (attendeeError) return NextResponse.json({ error: attendeeError.message }, { status: 500 });
 
-  const studentIds = (students ?? []).map((student) => student.id);
+  const typedStudents = (students ?? []) as Array<{
+    id: string;
+    full_name: string | null;
+    email: string | null;
+    phone: string | null;
+    study_program: string | null;
+    study_level: string | null;
+    study_year: number | null;
+  }>;
+  const typedTicketAttendees = (ticketAttendees ?? []) as Array<{
+    id: string;
+    student_id: string | null;
+    company?: { id: string; name: string | null } | null;
+  } & Record<string, unknown>>;
+
+  const studentIds = typedStudents.map((student) => student.id);
   const { data: ticketsByStudent, error: ticketError } = studentIds.length
     ? await supabase
         .from("event_tickets")
@@ -119,13 +135,19 @@ export async function POST(request: Request) {
 
   if (ticketError) return NextResponse.json({ error: ticketError.message }, { status: 500 });
 
-  const studentMap = new Map((students ?? []).map((student) => [student.id, student]));
+  const typedTicketsByStudent = (ticketsByStudent ?? []) as Array<{
+    id: string;
+    student_id: string | null;
+    company?: { id: string; name: string | null } | null;
+  } & Record<string, unknown>>;
+
+  const studentMap = new Map(typedStudents.map((student) => [student.id, student]));
   const merged = new Map<string, any>();
 
-  (ticketsByStudent ?? []).forEach((ticket) => {
+  typedTicketsByStudent.forEach((ticket) => {
     merged.set(ticket.id, { ...ticket, student: studentMap.get(ticket.student_id ?? "") ?? null });
   });
-  (ticketAttendees ?? []).forEach((ticket) => {
+  typedTicketAttendees.forEach((ticket) => {
     if (!merged.has(ticket.id)) {
       merged.set(ticket.id, { ...ticket, student: studentMap.get(ticket.student_id ?? "") ?? null });
     }

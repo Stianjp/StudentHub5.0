@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import type { TableUpdate } from "@/lib/types/database";
 import {
   companyBrandingSchema,
   companyEventGoalsSchema,
@@ -26,7 +27,7 @@ function generateTicketNumber() {
 async function ensureCapacity(supabase: ReturnType<typeof createAdminSupabaseClient>, eventId: string) {
   const { data: event, error: eventError } = await supabase
     .from("events")
-    .select("ticket_limit")
+    .select("id, ticket_limit")
     .eq("id", eventId)
     .single();
   if (eventError) throw eventError;
@@ -34,8 +35,8 @@ async function ensureCapacity(supabase: ReturnType<typeof createAdminSupabaseCli
 
   const { count, error: countError } = await supabase
     .from("event_tickets")
-    .select("id", { count: "exact", head: true })
-    .eq("event_id", eventId);
+    .select("id, event_id", { count: "exact", head: true })
+    .eq("event_id" as never, eventId as never);
   if (countError) throw countError;
 
   if ((count ?? 0) >= event.ticket_limit) {
@@ -102,19 +103,20 @@ export async function saveCompanyInfo(formData: FormData) {
 
   const selectedCategories = normalizeStudyCategories(parsed.data.industryCategories ?? []);
   const primaryIndustry = selectedCategories[0] ?? parsed.data.industry ?? null;
+  const companyUpdate: TableUpdate<"companies"> = {
+    name: parsed.data.name,
+    org_number: parsed.data.orgNumber || null,
+    industry: primaryIndustry || null,
+    recruitment_fields: selectedCategories,
+    size: parsed.data.size || null,
+    location: parsed.data.location || null,
+    website: parsed.data.website ? parsed.data.website : null,
+    updated_at: now,
+  };
 
   const { error } = await supabase
     .from("companies")
-    .update({
-      name: parsed.data.name,
-      org_number: parsed.data.orgNumber || null,
-      industry: primaryIndustry || null,
-      recruitment_fields: selectedCategories,
-      size: parsed.data.size || null,
-      location: parsed.data.location || null,
-      website: parsed.data.website ? parsed.data.website : null,
-      updated_at: now,
-    })
+    .update(companyUpdate)
     .eq("id", company.id);
 
   if (error) throw error;
@@ -324,9 +326,9 @@ export async function registerCompanyAttendee(formData: FormData) {
   const attendeeLimit = getCompanyAttendeeTicketAllowance(registration);
   const { count: attendeeCount, error: attendeeCountError } = await admin
     .from("event_tickets")
-    .select("id", { count: "exact", head: true })
-    .eq("event_id", eventId)
-    .eq("company_id", company.id);
+    .select("id, event_id, company_id", { count: "exact", head: true })
+    .eq("event_id" as never, eventId as never)
+    .eq("company_id" as never, company.id as never);
 
   if (attendeeCountError) throw attendeeCountError;
   if ((attendeeCount ?? 0) >= attendeeLimit) {

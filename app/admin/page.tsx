@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 export default async function AdminOverviewPage() {
   let supabase = await createServerSupabaseClient();
   try {
-    supabase = createAdminSupabaseClient();
+    supabase = createAdminSupabaseClient() as unknown as typeof supabase;
   } catch {
     // fall back to session-based client
   }
@@ -23,13 +23,23 @@ export default async function AdminOverviewPage() {
     supabase.from("companies").select("id", { count: "exact", head: true }),
     supabase.from("students").select("id", { count: "exact", head: true }),
     supabase.from("stand_visits").select("id", { count: "exact", head: true }),
-    supabase.from("consents").select("id", { count: "exact", head: true }).eq("consent", true),
+    supabase.from("consents").select("id, consent", { count: "exact", head: true }).eq("consent" as never, true as never),
     listCompanyAccessRequests(),
     supabase.from("event_tickets").select("event_id"),
   ]);
 
+  const typedEvents = events as Array<{
+    id: string;
+    name: string;
+    starts_at: string;
+    companyCount: number;
+    visitCount: number;
+    leadCount: number;
+    ticket_limit: number | null;
+  }>;
+  const typedTicketCounts = (ticketCounts.data ?? []) as unknown as Array<{ event_id: string | null }>;
   const ticketCountMap = new Map<string, number>();
-  (ticketCounts.data ?? []).forEach((row: { event_id: string | null }) => {
+  typedTicketCounts.forEach((row) => {
     if (!row.event_id) return;
     ticketCountMap.set(row.event_id, (ticketCountMap.get(row.event_id) ?? 0) + 1);
   });
@@ -76,7 +86,7 @@ export default async function AdminOverviewPage() {
           <p className="text-sm text-ink/70">Ingen events opprettet ennå.</p>
         ) : (
           <ul className="grid gap-2 text-sm text-ink/80">
-            {events.slice(0, 5).map((event) => (
+            {typedEvents.slice(0, 5).map((event) => (
               <li key={event.id} className="flex flex-col gap-1 rounded-xl border border-primary/10 bg-primary/5 px-4 py-3 md:flex-row md:items-center md:justify-between">
                 <div>
                   <p className="font-semibold text-primary">{event.name}</p>

@@ -108,7 +108,7 @@ function appendQueryParam(path: string, key: string, value: string) {
 async function ensureCapacity(supabase: AdminClient, eventId: string) {
   const { data: event, error: eventError } = await supabase
     .from("events")
-    .select("ticket_limit")
+    .select("id, ticket_limit")
     .eq("id", eventId)
     .single();
   if (eventError) throw eventError;
@@ -116,8 +116,8 @@ async function ensureCapacity(supabase: AdminClient, eventId: string) {
 
   const { count, error: countError } = await supabase
     .from("event_tickets")
-    .select("id", { count: "exact", head: true })
-    .eq("event_id", eventId);
+    .select("id, event_id", { count: "exact", head: true })
+    .eq("event_id" as never, eventId as never);
   if (countError) throw countError;
 
   if ((count ?? 0) >= event.ticket_limit) {

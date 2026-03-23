@@ -67,7 +67,8 @@ export async function loadCrmEntriesFromSupabase(): Promise<CrmDataset> {
 
   if (error) throw new Error(`CRM Supabase fetch failed: ${error.message}`);
 
-  const leads = (data ?? []).map((row, i) => dbRowToCrmLead(row, i));
+  const typedData = (data ?? []) as DbEntry[];
+  const leads = typedData.map((row, i) => dbRowToCrmLead(row, i));
   const companyCards = buildCrmCompanyCards(leads);
   const missingReplyLeads = getMissingReplyLeads(leads);
   const metrics = buildCrmMetrics(leads);

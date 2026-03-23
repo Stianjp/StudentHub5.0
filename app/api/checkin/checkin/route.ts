@@ -8,8 +8,9 @@ async function requireAdmin() {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return false;
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
-  return profile?.role === "admin";
+  const { data: profile } = await supabase.from("profiles").select("id, role").eq("id" as never, user.id as never).maybeSingle();
+  const typedProfile = profile as { role?: string } | null;
+  return typedProfile?.role === "admin";
 }
 
 type Body = {
@@ -70,7 +71,7 @@ export async function POST(request: Request) {
   if (ticket?.student_id) {
     const { data: studentRow } = await supabase
       .from("students")
-      .select("full_name, email, phone, study_program, study_level, study_year")
+      .select("id, full_name, email, phone, study_program, study_level, study_year")
       .eq("id", ticket.student_id)
       .maybeSingle();
     student = studentRow ?? null;

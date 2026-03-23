@@ -41,6 +41,26 @@ export default async function CompanyLeadsPage() {
     getCompanyLeads(companyId),
     getCompanyRegistrations(companyId),
   ]);
+  const typedLeads = leads as Array<{
+    lead: {
+      id: string;
+      source: string;
+      field_of_study: string | null;
+      study_level: string | null;
+      study_year: number | null;
+      interests: string[] | null;
+      job_types: string[] | null;
+    };
+    consent: { consent: boolean; updated_at: string | null } | null;
+    student: {
+      full_name: string | null;
+      email: string | null;
+      phone: string | null;
+      study_program: string | null;
+      study_level: string | null;
+    } | null;
+    event: { id: string | null; name: string | null } | null;
+  }>;
 
   const leadAccessByEvent = new Map(
     registrations.map((registration) => [
@@ -50,7 +70,7 @@ export default async function CompanyLeadsPage() {
   );
   const hasAnyDetailedLeadAccess = Array.from(leadAccessByEvent.values()).some(Boolean);
 
-  const grouped = leads.reduce<Record<string, typeof leads>>((acc, row) => {
+  const grouped = typedLeads.reduce<Record<string, typeof typedLeads>>((acc, row) => {
     const key = row.event?.id ?? "no-event";
     acc[key] = acc[key] ?? [];
     acc[key].push(row);
@@ -87,7 +107,7 @@ export default async function CompanyLeadsPage() {
         </Card>
       ) : null}
 
-      {leads.length === 0 ? (
+      {typedLeads.length === 0 ? (
         <Card className="flex flex-col gap-4">
           <p className="text-sm text-ink/70">Ingen leads enda.</p>
         </Card>

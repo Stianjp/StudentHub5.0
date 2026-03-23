@@ -31,9 +31,15 @@ export default async function StudentEventsPage() {
     listActiveEvents(),
     supabase
       .from("event_tickets")
-      .select("id, event_id, ticket_number, checked_in_at, status")
+      .select("id, event_id, student_id, ticket_number, checked_in_at, status")
       .eq("student_id", student.id),
   ]);
+  const typedEvents = events as Array<{
+    id: string;
+    name: string;
+    starts_at: string;
+    ends_at: string;
+  }>;
 
   const ticketByEvent = new Map(
     ((ticketRows ?? []) as StudentTicket[]).map((ticket) => [ticket.event_id, ticket]),
@@ -47,13 +53,13 @@ export default async function StudentEventsPage() {
         description="Du kan ha en billett per event. Du kan være påmeldt flere ulike event samtidig."
       />
 
-      {events.length === 0 ? (
+      {typedEvents.length === 0 ? (
         <Card>
           <p className="text-sm text-ink/70">Ingen aktive events tilgjengelig.</p>
         </Card>
       ) : (
         <div className="grid gap-3 md:grid-cols-2">
-          {events.map((event) => {
+          {typedEvents.map((event) => {
             const ticket = ticketByEvent.get(event.id);
             return (
               <Card key={event.id} className="flex flex-col gap-3">

@@ -60,6 +60,7 @@ export default async function StudentDashboardPage() {
       return data ?? [];
     })(),
   ]);
+  const typedLikedCompanies = likedCompanies as Array<{ id: string; name: string }>;
 
   const nextEvent = events[0];
   const eventDate = nextEvent?.starts_at
@@ -206,7 +207,7 @@ export default async function StudentDashboardPage() {
           </p>
 
           <div className="mb-10 flex flex-wrap gap-3">
-            {(likedCompanies.length > 0 ? likedCompanies : [{ id: "none", name: "Ingen favoritter ennå" }]).map(
+            {(typedLikedCompanies.length > 0 ? typedLikedCompanies : [{ id: "none", name: "Ingen favoritter ennå" }]).map(
               (company) => (
                 <div
                   key={company.id}

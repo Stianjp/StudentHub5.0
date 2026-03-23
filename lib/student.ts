@@ -147,7 +147,7 @@ export async function getOrCreateStudentByEmail(email: string) {
 export async function listStudentConsents(studentId: string) {
   let supabase = await createServerSupabaseClient();
   try {
-    supabase = createAdminSupabaseClient();
+    supabase = createAdminSupabaseClient() as unknown as typeof supabase;
   } catch {
     // Use session-based client if service role is missing.
   }

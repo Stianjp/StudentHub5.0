@@ -37,6 +37,8 @@ export default async function AdminLeadsPage({ searchParams }: PageProps) {
     company: { id: string; name: string | null } | null;
     event: { id: string; name: string | null } | null;
   }>;
+  const typedStudents = (students ?? []) as Array<{ id: string; full_name: string | null; email: string | null }>;
+  const typedCompanies = (companies ?? []) as Array<{ id: string; name: string | null }>;
 
   const filtered = typedConsents.filter((lead) => {
     if (!query) return true;
@@ -63,7 +65,7 @@ export default async function AdminLeadsPage({ searchParams }: PageProps) {
           <label className="text-sm font-semibold text-primary">
             Student
             <Select name="studentId" required>
-              {(students ?? []).map((student) => (
+              {typedStudents.map((student) => (
                 <option key={student.id} value={student.id}>
                   {student.full_name ?? student.email ?? "Student"}
                 </option>
@@ -73,7 +75,7 @@ export default async function AdminLeadsPage({ searchParams }: PageProps) {
           <label className="text-sm font-semibold text-primary">
             Bedrift
             <Select name="companyId" required>
-              {(companies ?? []).map((company) => (
+              {typedCompanies.map((company) => (
                 <option key={company.id} value={company.id}>
                   {company.name}
                 </option>

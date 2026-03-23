@@ -34,6 +34,9 @@ export default async function AdminRegisterCompanyEventPage({ searchParams }: Pa
     listCompanies(),
     supabase.from("event_companies").select("*").order("created_at", { ascending: false }),
   ]);
+  const typedCompanies = companies as Array<{ id: string; name: string }>;
+  const typedEvents = (events ?? []) as unknown as Array<{ id: string; name: string }>;
+  const typedEventCompanies = (eventCompanies ?? []) as unknown as Array<{ id: string; event_id: string; company_id: string; package: string }>;
 
   return (
     <div className="flex flex-col gap-8">
@@ -57,15 +60,15 @@ export default async function AdminRegisterCompanyEventPage({ searchParams }: Pa
 
       <Card className="flex flex-col gap-4">
         <h3 className="text-lg font-bold text-primary">Registrer bedrift til event</h3>
-        {companies.length === 0 ? (
+        {typedCompanies.length === 0 ? (
           <p className="text-sm text-ink/70">Ingen bedrifter å registrere.</p>
         ) : (
           <form action={registerCompany} className="grid gap-3 md:grid-cols-4">
             <input type="hidden" name="returnTo" value="/admin/companies/register-event" />
             <label className="text-sm font-semibold text-primary">
               Event
-              <Select name="eventId" required defaultValue={events?.[0]?.id}>
-                {(events ?? []).map((event) => (
+              <Select name="eventId" required defaultValue={typedEvents[0]?.id}>
+                {typedEvents.map((event) => (
                   <option key={event.id} value={event.id}>
                     {event.name}
                   </option>
@@ -74,8 +77,8 @@ export default async function AdminRegisterCompanyEventPage({ searchParams }: Pa
             </label>
             <label className="text-sm font-semibold text-primary">
               Bedrift
-              <Select name="companyId" required defaultValue={companies[0]?.id}>
-                {companies.map((company) => (
+              <Select name="companyId" required defaultValue={typedCompanies[0]?.id}>
+                {typedCompanies.map((company) => (
                   <option key={company.id} value={company.id}>
                     {company.name}
                   </option>
@@ -133,9 +136,9 @@ export default async function AdminRegisterCompanyEventPage({ searchParams }: Pa
             </tr>
           </thead>
           <tbody className="divide-y divide-primary/5">
-            {(eventCompanies ?? []).map((row) => {
-              const company = companies.find((c) => c.id === row.company_id);
-              const event = (events ?? []).find((e) => e.id === row.event_id);
+            {typedEventCompanies.map((row) => {
+              const company = typedCompanies.find((c) => c.id === row.company_id);
+              const event = typedEvents.find((e) => e.id === row.event_id);
               return (
                 <tr key={row.id}>
                   <td className="px-4 py-3 font-semibold text-primary">{company?.name ?? "Bedrift"}</td>
@@ -151,13 +154,10 @@ export default async function AdminRegisterCompanyEventPage({ searchParams }: Pa
             })}
           </tbody>
         </table>
-        {(eventCompanies ?? []).length === 0 ? (
+        {typedEventCompanies.length === 0 ? (
           <p className="px-4 py-4 text-sm text-ink/70">Ingen bedrifter registrert på events enda.</p>
         ) : null}
       </Card>
     </div>
   );
 }
-
-
-

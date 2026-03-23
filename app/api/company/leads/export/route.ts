@@ -19,8 +19,9 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
-  const role = profile?.role;
+  const { data: profile } = await supabase.from("profiles").select("id, role").eq("id" as never, user.id as never).maybeSingle();
+  const typedProfile = profile as { role?: string } | null;
+  const role = typedProfile?.role;
   if (role !== "company" && role !== "admin") {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
@@ -43,8 +44,32 @@ export async function GET() {
   const leads = (await getCompanyLeads(company.id)).filter(({ lead }) =>
     lead.event_id ? (leadAccessByEvent.get(lead.event_id) ?? false) : hasDetailedLeadAccess,
   );
+  const typedLeads = leads as Array<{
+    lead: {
+      id: string;
+      event_id: string | null;
+      interests: string[] | null;
+      job_types: string[] | null;
+      study_level: string | null;
+      study_year: number | null;
+      field_of_study: string | null;
+      source: string;
+      created_at: string;
+    };
+    consent: { consent: boolean; updated_at: string | null } | null;
+    student: {
+      full_name: string | null;
+      email: string | null;
+      phone: string | null;
+      study_program: string | null;
+      study_level: string | null;
+      study_year: number | null;
+      graduation_year: number | null;
+    } | null;
+    event: { name?: string | null } | null;
+  }>;
 
-  const rows = leads.map(({ lead, consent, student, event }) => {
+  const rows = typedLeads.map(({ lead, consent, student, event }) => {
     const level = lead.study_level ?? student?.study_level ?? "";
     const year = lead.study_year ?? student?.study_year ?? student?.graduation_year ?? "";
     const yearLabel = typeof year === "number" && year > 0 ? `${year}. år` : year ? String(year) : "";

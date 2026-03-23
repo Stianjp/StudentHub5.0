@@ -60,7 +60,7 @@ export function hasLeadDetailsAccessForRegistration(input: {
 export async function getOrCreateCompanyForUser(userId: string, email?: string | null) {
   let supabase = await createServerSupabaseClient();
   try {
-    supabase = createAdminSupabaseClient();
+    supabase = createAdminSupabaseClient() as unknown as typeof supabase;
   } catch {
     // fallback
   }
@@ -106,7 +106,7 @@ export async function getOrCreateCompanyForUser(userId: string, email?: string |
 export async function getCompanyAccessStatus(userId: string) {
   let supabase = await createServerSupabaseClient();
   try {
-    supabase = createAdminSupabaseClient();
+    supabase = createAdminSupabaseClient() as unknown as typeof supabase;
   } catch {
     // fallback
   }
@@ -155,14 +155,14 @@ export async function getCompanyRegistrations(companyId: string) {
 export async function getCompanyAttendeeCountByEvent(companyId: string) {
   let supabase = await createServerSupabaseClient();
   try {
-    supabase = createAdminSupabaseClient();
+    supabase = createAdminSupabaseClient() as unknown as typeof supabase;
   } catch {
     // fallback
   }
 
   const { data, error } = await supabase
     .from("event_tickets")
-    .select("event_id")
+    .select("company_id, event_id")
     .eq("company_id", companyId);
 
   if (error) throw error;
@@ -178,7 +178,7 @@ export async function getCompanyAttendeeCountByEvent(companyId: string) {
 export async function getCompanyLeads(companyId: string) {
   let supabase = await createServerSupabaseClient();
   try {
-    supabase = createAdminSupabaseClient();
+    supabase = createAdminSupabaseClient() as unknown as typeof supabase;
   } catch {
     // fallback
   }
@@ -204,8 +204,9 @@ export async function getCompanyLeads(companyId: string) {
 
   if (consentError) throw consentError;
 
+  const typedConsents = (consents ?? []) as Consent[];
   const consentMap = new Map(
-    (consents ?? []).map((row) => [row.student_id, row as Consent]),
+    typedConsents.map((row) => [row.student_id, row]),
   );
 
   const { data: students } = await supabase
@@ -218,8 +219,10 @@ export async function getCompanyLeads(companyId: string) {
     .select("id, name")
     .in("id", leadRows.map((lead) => lead.event_id).filter(Boolean) as string[]);
 
-  const studentMap = new Map((students ?? []).map((row) => [row.id, row as Student]));
-  const eventMap = new Map((events ?? []).map((row) => [row.id, row]));
+  const typedStudents = (students ?? []) as Student[];
+  const typedEvents = (events ?? []) as Array<{ id: string; name: string | null }>;
+  const studentMap = new Map(typedStudents.map((row) => [row.id, row]));
+  const eventMap = new Map(typedEvents.map((row) => [row.id, row]));
 
   return leadRows.map((lead) => ({
     lead,
@@ -292,7 +295,7 @@ export async function getTopMatches(company: Company, eventId?: string | null) {
 export async function hasPlatinumAccess(userId: string, eventId: string, companyId: string) {
   let supabase = await createServerSupabaseClient();
   try {
-    supabase = createAdminSupabaseClient();
+    supabase = createAdminSupabaseClient() as unknown as typeof supabase;
   } catch {
     // fallback
   }
@@ -301,12 +304,13 @@ export async function hasPlatinumAccess(userId: string, eventId: string, company
 
   const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("role")
-    .eq("id", userId)
+    .select("id, role")
+    .eq("id" as never, userId as never)
     .maybeSingle();
   if (profileError) throw profileError;
+  const typedProfile = profile as { role?: string } | null;
 
-  const isAdmin = profile?.role === "admin";
+  const isAdmin = typedProfile?.role === "admin";
 
   if (!isAdmin) {
     const { data: membership, error: membershipError } = await supabase
@@ -343,7 +347,21 @@ export async function hasPlatinumAccess(userId: string, eventId: string, company
   return true;
 }
 
-export async function getRoiMetrics(companyId: string, eventId: string) {
+export type RoiMetrics = {
+  visitsCount: number;
+  leadsCount: number;
+  conversion: number;
+  targetLevels: string[];
+  targetYearsBachelor: number[];
+  targetYearsMaster: number[];
+  leadsByLevel: Array<{ level: string; count: number }>;
+  leadsByYearBachelor: Array<{ year: number; count: number }>;
+  leadsByYearMaster: Array<{ year: number; count: number }>;
+  visitsByHour: Array<{ hour: string; count: number }>;
+  topStudyPrograms: Array<{ program: string; count: number }>;
+};
+
+export async function getRoiMetrics(companyId: string, eventId: string): Promise<RoiMetrics> {
   const supabase = await createServerSupabaseClient();
 
   const [
@@ -362,7 +380,7 @@ export async function getRoiMetrics(companyId: string, eventId: string) {
       .select("*")
       .eq("company_id", companyId)
       .eq("event_id", eventId)
-      .eq("consent", true),
+      .eq("consent" as never, true as never),
     supabase
       .from("leads")
       .select("study_level, study_year, field_of_study")
@@ -370,7 +388,7 @@ export async function getRoiMetrics(companyId: string, eventId: string) {
       .eq("event_id", eventId),
     supabase
       .from("companies")
-      .select("recruitment_levels, recruitment_years_bachelor, recruitment_years_master")
+      .select("id, recruitment_levels, recruitment_years_bachelor, recruitment_years_master")
       .eq("id", companyId)
       .single(),
   ]);
@@ -382,7 +400,7 @@ export async function getRoiMetrics(companyId: string, eventId: string) {
 
   const visitRows = (visits ?? []) as StandVisit[];
   const consentRows = (consents ?? []) as Consent[];
-  const leadRows = (leads ?? []) as Array<{
+  const leadRows = (leads ?? []) as unknown as Array<{
     study_level: string | null;
     study_year: number | null;
     field_of_study: string | null;
@@ -412,8 +430,9 @@ export async function getRoiMetrics(companyId: string, eventId: string) {
       .in("id", studentIds);
 
     if (studentsError) throw studentsError;
+    const typedStudents = (students ?? []) as Array<{ id: string; study_program: string | null }>;
 
-    (students ?? []).forEach((student) => {
+    typedStudents.forEach((student) => {
       const program = student.study_program ?? "Ukjent";
       studyCounts.set(program, (studyCounts.get(program) ?? 0) + 1);
     });

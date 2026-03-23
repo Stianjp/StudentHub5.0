@@ -35,7 +35,7 @@ export async function upsertConsentForStudent(input: {
 
   const { data: existing } = await supabase
     .from("consents")
-    .select("id, event_id")
+    .select("id, event_id, student_id, company_id")
     .eq("student_id", input.studentId)
     .eq("company_id", input.companyId)
     .maybeSingle();
@@ -79,7 +79,7 @@ export async function createLead(input: LeadInput) {
 
   let query = supabase
     .from("leads")
-    .select("id, created_at")
+    .select("id, created_at, student_id, company_id, source")
     .eq("student_id", input.student.id)
     .eq("company_id", input.companyId)
     .eq("source", input.source)

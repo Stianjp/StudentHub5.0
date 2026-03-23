@@ -44,6 +44,8 @@ export default async function AdminStudentDetailPage({ params }: PageProps) {
     company: { id: string; name: string | null } | null;
     event: { id: string; name: string | null } | null;
   }>;
+  const typedCompanies = (companies ?? []) as Array<{ id: string; name: string | null }>;
+  const typedEvents = (events ?? []) as Array<{ id: string; name: string | null }>;
   const activeConsents = typedConsents.filter((consent) => consent.consent);
 
   return (
@@ -104,7 +106,7 @@ export default async function AdminStudentDetailPage({ params }: PageProps) {
           <label className="text-sm font-semibold text-primary">
             Bedrift
             <Select name="companyId" required>
-              {(companies ?? []).map((company) => (
+              {typedCompanies.map((company) => (
                 <option key={company.id} value={company.id}>
                   {company.name}
                 </option>
@@ -114,7 +116,7 @@ export default async function AdminStudentDetailPage({ params }: PageProps) {
           <label className="text-sm font-semibold text-primary">
             Event
             <Select name="eventId" required>
-              {(events ?? []).map((event) => (
+              {typedEvents.map((event) => (
                 <option key={event.id} value={event.id}>
                   {event.name}
                 </option>

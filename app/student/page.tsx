@@ -57,13 +57,28 @@ export default async function StudentProfilePage({ searchParams }: PageProps) {
   ]);
 
   if (companiesError) throw companiesError;
+  const typedStudent = student as {
+    full_name: string | null;
+    email: string | null;
+    phone: string | null;
+    study_program: string | null;
+    study_level: string | null;
+    study_year: number | null;
+    graduation_year: number | null;
+    interests: string[] | null;
+    social_profile: string | null;
+    work_style: string | null;
+    team_size: string | null;
+    liked_company_ids: string[] | null;
+  };
+  const typedCompanies = (companies ?? []) as Array<{ id: string; name: string; industry: string | null }>;
 
-  const interestSet = new Set((student.interests ?? []).map(normalize));
-  const customInterests = (student.interests ?? []).filter(
+  const interestSet = new Set((typedStudent.interests ?? []).map(normalize));
+  const customInterests = (typedStudent.interests ?? []).filter(
     (interest) => !INTEREST_OPTIONS.some((option) => normalize(option) === normalize(interest)),
   );
   const selectedStudyTrack =
-    student.study_level && student.study_year ? `${student.study_level}-${student.study_year}` : "";
+    typedStudent.study_level && typedStudent.study_year ? `${typedStudent.study_level}-${typedStudent.study_year}` : "";
 
   return (
     <div className="flex flex-col gap-8">

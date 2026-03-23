@@ -11,6 +11,12 @@ export default async function CheckinHomePage() {
     .from("events")
     .select("id, name, starts_at, ends_at")
     .order("starts_at", { ascending: false });
+  const typedEvents = (events ?? []) as Array<{
+    id: string;
+    name: string;
+    starts_at: string;
+    ends_at: string;
+  }>;
 
   return (
     <div className="flex flex-col gap-6">
@@ -20,11 +26,11 @@ export default async function CheckinHomePage() {
         description="Velg eventet dere skal sjekke inn til."
       />
       <Card className="flex flex-col gap-3">
-        {(events ?? []).length === 0 ? (
+        {typedEvents.length === 0 ? (
           <p className="text-sm text-ink/70">Ingen events tilgjengelig.</p>
         ) : (
           <ul className="grid gap-2 text-sm text-ink/80">
-            {events?.map((event) => (
+            {typedEvents.map((event) => (
               <li key={event.id} className="flex items-center justify-between rounded-xl bg-primary/5 px-3 py-2">
                 <div>
                   <p className="font-semibold text-primary">{event.name}</p>

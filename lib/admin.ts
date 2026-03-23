@@ -8,6 +8,8 @@ type Company = TableRow<"companies">;
 type EventCompany = TableRow<"event_companies">;
 type CompanyDomain = TableRow<"company_domains">;
 type CompanyUserRequest = TableRow<"company_user_requests">;
+type Lead = TableRow<"leads">;
+type Consent = TableRow<"consents">;
 
 type EventWithStats = Event & {
   companyCount: number;
@@ -18,7 +20,7 @@ type EventWithStats = Event & {
 export async function listEventsWithStats(): Promise<EventWithStats[]> {
   let supabase = await createServerSupabaseClient();
   try {
-    supabase = createAdminSupabaseClient();
+    supabase = createAdminSupabaseClient() as unknown as typeof supabase;
   } catch {
     // fallback
   }
@@ -36,17 +38,17 @@ export async function listEventsWithStats(): Promise<EventWithStats[]> {
     const [{ count: companyCount }, { count: visitCount }, { count: leadCount }] = await Promise.all([
       supabase
         .from("event_companies")
-        .select("id", { count: "exact", head: true })
-        .eq("event_id", event.id),
+        .select("id, event_id", { count: "exact", head: true })
+        .eq("event_id" as never, event.id as never),
       supabase
         .from("stand_visits")
-        .select("id", { count: "exact", head: true })
-        .eq("event_id", event.id),
+        .select("id, event_id", { count: "exact", head: true })
+        .eq("event_id" as never, event.id as never),
       supabase
         .from("consents")
-        .select("id", { count: "exact", head: true })
-        .eq("event_id", event.id)
-        .eq("consent", true),
+        .select("id, event_id, consent", { count: "exact", head: true })
+        .eq("event_id" as never, event.id as never)
+        .eq("consent" as never, true as never),
     ]);
 
     results.push({
@@ -63,7 +65,7 @@ export async function listEventsWithStats(): Promise<EventWithStats[]> {
 export async function listCompanies() {
   let supabase = await createServerSupabaseClient();
   try {
-    supabase = createAdminSupabaseClient();
+    supabase = createAdminSupabaseClient() as unknown as typeof supabase;
   } catch {
     // fallback
   }
@@ -80,7 +82,7 @@ export async function createCompany(input: {
 }) {
   let supabase = await createServerSupabaseClient();
   try {
-    supabase = createAdminSupabaseClient();
+    supabase = createAdminSupabaseClient() as unknown as typeof supabase;
   } catch {
     // fallback
   }
@@ -105,7 +107,7 @@ export async function createCompany(input: {
 export async function listCompanyDomains() {
   let supabase = await createServerSupabaseClient();
   try {
-    supabase = createAdminSupabaseClient();
+    supabase = createAdminSupabaseClient() as unknown as typeof supabase;
   } catch {
     // fallback
   }
@@ -120,7 +122,7 @@ export async function listCompanyDomains() {
 export async function addCompanyDomain(input: { companyId: string; domain: string }) {
   let supabase = await createServerSupabaseClient();
   try {
-    supabase = createAdminSupabaseClient();
+    supabase = createAdminSupabaseClient() as unknown as typeof supabase;
   } catch {
     // fallback
   }
@@ -134,7 +136,7 @@ export async function addCompanyDomain(input: { companyId: string; domain: strin
 export async function listCompanyAccessRequests() {
   let supabase = await createServerSupabaseClient();
   try {
-    supabase = createAdminSupabaseClient();
+    supabase = createAdminSupabaseClient() as unknown as typeof supabase;
   } catch {
     // fallback
   }
@@ -169,7 +171,7 @@ export async function approveCompanyAccess(input: { requestId: string; companyId
 export async function listEventCompanies(eventId: string) {
   let supabase = await createServerSupabaseClient();
   try {
-    supabase = createAdminSupabaseClient();
+    supabase = createAdminSupabaseClient() as unknown as typeof supabase;
   } catch {
     // fallback
   }
@@ -186,7 +188,7 @@ export async function listEventCompanies(eventId: string) {
 export async function getCompanyWithDetails(companyId: string) {
   let supabase = await createServerSupabaseClient();
   try {
-    supabase = createAdminSupabaseClient();
+    supabase = createAdminSupabaseClient() as unknown as typeof supabase;
   } catch {
     // fallback
   }
@@ -198,7 +200,7 @@ export async function getCompanyWithDetails(companyId: string) {
 export async function listCompanyLeads(companyId: string) {
   let supabase = await createServerSupabaseClient();
   try {
-    supabase = createAdminSupabaseClient();
+    supabase = createAdminSupabaseClient() as unknown as typeof supabase;
   } catch {
     // fallback
   }
@@ -209,7 +211,7 @@ export async function listCompanyLeads(companyId: string) {
     .order("created_at", { ascending: false });
 
   if (error) throw error;
-  const leadRows = leads ?? [];
+  const leadRows = (leads ?? []) as Array<Lead & { student?: TableRow<"students"> | null; event?: Pick<Event, "id" | "name"> | null }>;
   if (leadRows.length === 0) return [];
 
   const studentIds = leadRows.map((row) => row.student_id);
@@ -219,7 +221,8 @@ export async function listCompanyLeads(companyId: string) {
     .eq("company_id", companyId)
     .in("student_id", studentIds);
 
-  const consentMap = new Map((consents ?? []).map((row) => [row.student_id, row]));
+  const typedConsents = (consents ?? []) as Consent[];
+  const consentMap = new Map(typedConsents.map((row) => [row.student_id, row]));
 
   return leadRows.map((lead) => ({
     lead,
@@ -232,7 +235,7 @@ export async function listCompanyLeads(companyId: string) {
 export async function listCompanyRegistrations(companyId: string) {
   let supabase = await createServerSupabaseClient();
   try {
-    supabase = createAdminSupabaseClient();
+    supabase = createAdminSupabaseClient() as unknown as typeof supabase;
   } catch {
     // fallback
   }
@@ -249,7 +252,7 @@ export async function listCompanyRegistrations(companyId: string) {
 export async function getEventWithRegistrations(eventId: string) {
   let supabase = await createServerSupabaseClient();
   try {
-    supabase = createAdminSupabaseClient();
+    supabase = createAdminSupabaseClient() as unknown as typeof supabase;
   } catch {
     // fallback
   }
@@ -280,7 +283,7 @@ export async function upsertEvent(input: {
 }) {
   let supabase = await createServerSupabaseClient();
   try {
-    supabase = createAdminSupabaseClient();
+    supabase = createAdminSupabaseClient() as unknown as typeof supabase;
   } catch {
     // fallback
   }
@@ -322,7 +325,7 @@ export async function inviteCompanyToEvent(input: {
 }) {
   let supabase = await createServerSupabaseClient();
   try {
-    supabase = createAdminSupabaseClient();
+    supabase = createAdminSupabaseClient() as unknown as typeof supabase;
   } catch {
     // fallback
   }
@@ -411,7 +414,7 @@ export async function registerCompanyForEvent(input: {
   if (categoryTags.length === 0) {
     const { data: company } = await supabase
       .from("companies")
-      .select("recruitment_fields")
+      .select("id, recruitment_fields")
       .eq("id", input.companyId)
       .single();
     categoryTags = company?.recruitment_fields ?? [];

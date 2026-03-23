@@ -27,16 +27,18 @@ export default async function EventPage({ params, searchParams }: EventPageProps
   ] = await Promise.all([getEvent(eventId), getEventCompanies(eventId), supabase.auth.getUser()]);
 
   const { data: profile } = user
-    ? await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle()
+    ? await supabase.from("profiles").select("id, role").eq("id" as never, user.id as never).maybeSingle()
     : { data: null };
+  const typedProfile = profile as { role?: string } | null;
 
   const student =
-    user && profile?.role === "student" ? await getOrCreateStudentForUser(user.id, user.email) : null;
+    user && typedProfile?.role === "student" ? await getOrCreateStudentForUser(user.id, user.email) : null;
 
   const { data: tickets } = student
-    ? await supabase.from("event_tickets").select("id, event_id").eq("student_id", student.id ?? "")
+    ? await supabase.from("event_tickets").select("id, event_id, student_id").eq("student_id", student.id ?? "")
     : { data: [] };
-  const registeredEventIds = new Set((tickets ?? []).map((ticket) => ticket.event_id));
+  const typedTickets = (tickets ?? []) as Array<{ id: string; event_id: string; student_id: string | null }>;
+  const registeredEventIds = new Set(typedTickets.map((ticket) => ticket.event_id));
   const companyOptions = registrations.map((registration) => ({
     id: registration.company_id,
     name: registration.company.name,

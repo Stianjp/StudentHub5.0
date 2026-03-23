@@ -54,7 +54,11 @@ export default async function StudentCompaniesPage({ searchParams }: PageProps) 
   ]);
 
   if (companiesError) throw companiesError;
-  const allCompanies = companies ?? [];
+  const allCompanies = (companies ?? []) as Array<{
+    id: string;
+    name: string;
+    industry: string | null;
+  }>;
   const industryOptions = Array.from(
     new Set([...INDUSTRY_OPTIONS, ...allCompanies.map((company) => company.industry).filter(Boolean)]),
   ) as string[];

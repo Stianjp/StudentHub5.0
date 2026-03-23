@@ -10,7 +10,11 @@ export function shouldBypassSupabaseInDev() {
   return process.env.NODE_ENV !== "production" && !hasSupabaseEnv();
 }
 
-export function assertSupabaseEnv() {
+export function assertSupabaseEnv(): {
+  supabaseUrl: string;
+  supabaseAnonKey: string;
+  cookieDomain: string | undefined;
+} {
   if (!hasSupabaseEnv()) {
     throw new Error(
       "Missing Supabase env vars. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.",
@@ -18,8 +22,8 @@ export function assertSupabaseEnv() {
   }
 
   return {
-    supabaseUrl,
-    supabaseAnonKey,
+    supabaseUrl: supabaseUrl as string,
+    supabaseAnonKey: supabaseAnonKey as string,
     cookieDomain,
   };
 }

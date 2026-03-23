@@ -462,13 +462,13 @@ export async function listAdminRegistrationCampaignsForEvent(eventId: string) {
       const [{ count: total }, { count: pending }] = await Promise.all([
         supabase
           .from("event_registration_applications")
-          .select("id", { count: "exact", head: true })
-          .eq("campaign_id", campaign.id),
+          .select("id, campaign_id", { count: "exact", head: true })
+          .eq("campaign_id" as never, campaign.id as never),
         supabase
           .from("event_registration_applications")
-          .select("id", { count: "exact", head: true })
-          .eq("campaign_id", campaign.id)
-          .eq("status", "pending"),
+          .select("id, campaign_id, status", { count: "exact", head: true })
+          .eq("campaign_id" as never, campaign.id as never)
+          .eq("status" as never, "pending" as never),
       ]);
       return { campaignId: campaign.id, total: total ?? 0, pending: pending ?? 0 };
     }),
@@ -743,10 +743,10 @@ export async function approveRegistrationApplication(input: {
   if (typedPackage.internal_capacity !== null) {
     const { count } = await supabase
       .from("event_registration_applications")
-      .select("id", { count: "exact", head: true })
-      .eq("campaign_id", typedApplication.campaign_id)
-      .eq("status", "approved")
-      .eq("approved_package_id", typedPackage.id);
+      .select("id, campaign_id, status, approved_package_id", { count: "exact", head: true })
+      .eq("campaign_id" as never, typedApplication.campaign_id as never)
+      .eq("status" as never, "approved" as never)
+      .eq("approved_package_id" as never, typedPackage.id as never);
 
     if ((count ?? 0) >= typedPackage.internal_capacity) {
       throw new Error("The selected package has reached its internal capacity.");
@@ -942,7 +942,7 @@ export async function rejectRegistrationApplication(input: {
   const supabase = createAdminSupabaseClient();
   const { data: application, error } = await supabase
     .from("event_registration_applications")
-    .select("status")
+    .select("id, status")
     .eq("id", input.applicationId)
     .single();
   if (error) throw error;

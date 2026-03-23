@@ -44,6 +44,11 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
     .order("name");
 
   if (companiesError) throw companiesError;
+  const typedCompanies = (companies ?? []) as Array<{
+    id: string;
+    name: string;
+    industry: string | null;
+  }>;
 
   const selectedIndustry = typeof params.industry === "string" && params.industry ? params.industry : INDUSTRY_ALL;
   const statusParam = typeof params.status === "string" ? params.status : STATUS_ALL;
@@ -56,7 +61,7 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
 
   const industries = Array.from(
     new Set(
-      (companies ?? [])
+      typedCompanies
         .map((company) => company.industry)
         .filter((industry): industry is string => Boolean(industry)),
     ),
@@ -75,10 +80,10 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
       .map(([companyId]) => companyId),
   );
 
-  const totalCompanies = (companies ?? []).length;
+  const totalCompanies = typedCompanies.length;
   const consentedCount = consentedCompanyIds.size;
 
-  const filteredCompanies = (companies ?? []).filter((company) => {
+  const filteredCompanies = typedCompanies.filter((company) => {
     if (selectedIndustry !== INDUSTRY_ALL && company.industry !== selectedIndustry) return false;
 
     const latestConsent = latestConsentByCompanyId.get(company.id);

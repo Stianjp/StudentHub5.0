@@ -24,7 +24,7 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
 
   let supabase = await createServerSupabaseClient();
   try {
-    supabase = createAdminSupabaseClient();
+    supabase = createAdminSupabaseClient() as unknown as typeof supabase;
   } catch {
     // fall back
   }
@@ -42,6 +42,15 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
 
   if (error) throw error;
 
+  const typedStudents = (students ?? []) as unknown as Array<{
+    id: string;
+    full_name: string | null;
+    email: string | null;
+    study_program: string | null;
+    study_level: string | null;
+    study_year: number | null;
+    graduation_year: number | null;
+  }>;
   const totalPages = Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE));
 
   return (
@@ -90,7 +99,7 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
             </tr>
           </thead>
           <tbody className="divide-y divide-primary/5">
-            {(students ?? []).map((student) => (
+            {typedStudents.map((student) => (
               <tr key={student.id}>
                 <td className="px-4 py-3 font-semibold text-primary">
                   <Link className="hover:underline" href={`/admin/students/${student.id}`}>

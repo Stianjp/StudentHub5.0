@@ -29,14 +29,34 @@ export default async function AdminTicketsPage({ searchParams }: PageProps) {
         .order("created_at", { ascending: false })
     : { data: [] };
 
-  const studentIds = (tickets ?? []).map((ticket) => ticket.student_id).filter(Boolean) as string[];
+  const typedEvents = (events ?? []) as Array<{ id: string; name: string; ticket_limit: number | null }>;
+  const typedTickets = (tickets ?? []) as Array<{
+    id: string;
+    student_id: string | null;
+    attendee_name: string | null;
+    attendee_email: string | null;
+    attendee_phone: string | null;
+    ticket_number: string;
+    status: string;
+    checked_in_at: string | null;
+  }>;
+  const studentIds = typedTickets.map((ticket) => ticket.student_id).filter(Boolean) as string[];
   const { data: students } = studentIds.length
     ? await supabase
         .from("students")
         .select("id, full_name, email, phone, study_program, study_level, study_year")
         .in("id", studentIds)
     : { data: [] };
-  const studentMap = new Map((students ?? []).map((student) => [student.id, student]));
+  const typedStudents = (students ?? []) as Array<{
+    id: string;
+    full_name: string | null;
+    email: string | null;
+    phone: string | null;
+    study_program: string | null;
+    study_level: string | null;
+    study_year: number | null;
+  }>;
+  const studentMap = new Map(typedStudents.map((student) => [student.id, student]));
 
   return (
     <div className="flex flex-col gap-8">
@@ -73,7 +93,7 @@ export default async function AdminTicketsPage({ searchParams }: PageProps) {
             Velg event
             <Select name="eventId" defaultValue={eventId}>
               <option value="">Velg</option>
-              {(events ?? []).map((event) => (
+              {typedEvents.map((event) => (
                 <option key={event.id} value={event.id}>
                   {event.name}
                 </option>
@@ -96,7 +116,7 @@ export default async function AdminTicketsPage({ searchParams }: PageProps) {
                 min={1}
                 className="mt-1 w-full rounded-xl border border-primary/20 bg-surface px-3 py-2 text-sm"
                 placeholder="Ingen grense"
-                defaultValue={events?.find((event) => event.id === eventId)?.ticket_limit ?? ""}
+                defaultValue={typedEvents.find((event) => event.id === eventId)?.ticket_limit ?? ""}
               />
             </label>
             <Button type="submit" variant="secondary" className="self-end">
@@ -108,7 +128,7 @@ export default async function AdminTicketsPage({ searchParams }: PageProps) {
 
       <Card className="flex flex-col gap-4">
         <h3 className="text-lg font-bold text-primary">Påmeldte</h3>
-        {(tickets ?? []).length === 0 ? (
+        {typedTickets.length === 0 ? (
           <p className="text-sm text-ink/70">Ingen billetter funnet.</p>
         ) : (
           <div className="overflow-x-auto">
@@ -125,7 +145,7 @@ export default async function AdminTicketsPage({ searchParams }: PageProps) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-primary/5">
-                {(tickets ?? []).map((ticket) => {
+                {typedTickets.map((ticket) => {
                   const student = ticket.student_id ? studentMap.get(ticket.student_id) : null;
                   const name = student?.full_name ?? ticket.attendee_name ?? "—";
                   const email = student?.email ?? ticket.attendee_email ?? "—";

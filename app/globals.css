@@ -3,6 +3,7 @@
 :root {
   --background: #140249;
   --foreground: #ede8f5;
+  --font-ubuntu: "Ubuntu", system-ui, sans-serif;
 }
 
 body {

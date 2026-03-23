@@ -26,6 +26,21 @@ export default async function AdminRegisterCompanyPage({ searchParams }: PagePro
     listCompanyAccessRequests(),
     supabase.from("events").select("id, name").order("starts_at", { ascending: false }),
   ]);
+  const typedCompanies = companies as Array<{ id: string; name: string }>;
+  const typedCompanyDomains = companyDomains as Array<{
+    id: string;
+    domain: string;
+    company?: { name?: string | null } | null;
+  }>;
+  const typedAccessRequests = accessRequests as Array<{
+    id: string;
+    email: string;
+    domain: string | null;
+    org_number: string | null;
+    company_id: string | null;
+    user_id: string;
+    company?: { name?: string | null } | null;
+  }>;
 
   return (
     <div className="flex flex-col gap-8">
@@ -78,15 +93,15 @@ export default async function AdminRegisterCompanyPage({ searchParams }: PagePro
 
       <Card className="flex flex-col gap-4">
         <h3 className="text-lg font-bold text-primary">Domener for bedrifts-tilgang</h3>
-        {companies.length === 0 ? (
+        {typedCompanies.length === 0 ? (
           <p className="text-sm text-ink/70">Opprett en bedrift før du legger til domene.</p>
         ) : (
           <form action={addCompanyDomainAction} className="grid gap-3 md:grid-cols-3">
             <input type="hidden" name="returnTo" value="/admin/companies/register" />
             <label className="text-sm font-semibold text-primary">
               Bedrift
-              <Select name="companyId" required defaultValue={companies[0]?.id}>
-                {companies.map((company) => (
+              <Select name="companyId" required defaultValue={typedCompanies[0]?.id}>
+                {typedCompanies.map((company) => (
                   <option key={company.id} value={company.id}>
                     {company.name}
                   </option>
@@ -102,11 +117,11 @@ export default async function AdminRegisterCompanyPage({ searchParams }: PagePro
             </Button>
           </form>
         )}
-        {companyDomains.length === 0 ? (
+        {typedCompanyDomains.length === 0 ? (
           <p className="text-xs text-ink/60">Ingen domener registrert ennå.</p>
         ) : (
           <div className="flex flex-wrap gap-2 text-xs text-ink/70">
-            {companyDomains.map((domain) => (
+            {typedCompanyDomains.map((domain) => (
               <span key={domain.id} className="rounded-full bg-primary/5 px-3 py-1">
                 {domain.domain} · {domain.company?.name ?? "Bedrift"}
               </span>
@@ -117,11 +132,11 @@ export default async function AdminRegisterCompanyPage({ searchParams }: PagePro
 
       <Card className="flex flex-col gap-4">
         <h3 className="text-lg font-bold text-primary">Tilgangsforespørsler</h3>
-        {accessRequests.length === 0 ? (
+        {typedAccessRequests.length === 0 ? (
           <p className="text-sm text-ink/70">Ingen forespørsler akkurat nå.</p>
         ) : (
           <div className="grid gap-3">
-            {accessRequests.map((request) => (
+            {typedAccessRequests.map((request) => (
               <div key={request.id} className="rounded-xl border border-primary/10 bg-primary/5 p-4">
                 <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                   <div>
@@ -143,7 +158,7 @@ export default async function AdminRegisterCompanyPage({ searchParams }: PagePro
                       Bedrift
                       <Select name="companyId" required defaultValue={request.company_id ?? "new"}>
                         <option value="new">Opprett ny bedrift</option>
-                        {companies.map((company) => (
+                        {typedCompanies.map((company) => (
                           <option key={company.id} value={company.id}>
                             {company.name}
                           </option>

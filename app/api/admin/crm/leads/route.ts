@@ -18,11 +18,12 @@ async function requireAdmin() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
-    .eq("id", user.id)
+    .select("id, role")
+    .eq("id" as never, user.id as never)
     .maybeSingle();
+  const typedProfile = profile as { role?: string } | null;
 
-  return profile?.role === "admin";
+  return typedProfile?.role === "admin";
 }
 
 export async function GET(request: Request) {

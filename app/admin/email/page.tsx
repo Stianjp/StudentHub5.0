@@ -16,13 +16,28 @@ export default async function EmailPage() {
     supabase.from("email_groups").select("*").order("name"),
     supabase.from("email_group_members").select("group_id"),
   ]);
+  const typedTemplates = (templates ?? []) as Array<{
+    id: string;
+    name: string;
+    subject: string;
+    html_body: string;
+    variables: string[];
+    is_active: boolean;
+  }>;
+  const typedGroups = (groups ?? []) as Array<{
+    id: string;
+    name: string;
+    description: string | null;
+    member_type: "company" | "student";
+  }>;
+  const typedMembers = (members ?? []) as Array<{ group_id: string }>;
 
   const memberCountByGroup: Record<string, number> = {};
-  for (const m of members ?? []) {
+  for (const m of typedMembers) {
     memberCountByGroup[m.group_id] = (memberCountByGroup[m.group_id] ?? 0) + 1;
   }
 
-  const groupsWithCount = (groups ?? []).map((g) => ({
+  const groupsWithCount = typedGroups.map((g) => ({
     ...g,
     memberCount: memberCountByGroup[g.id] ?? 0,
   }));
@@ -52,7 +67,7 @@ export default async function EmailPage() {
       />
 
       <EmailComposeForm
-        templates={templates ?? []}
+        templates={typedTemplates}
         groups={groupsWithCount}
       />
     </div>

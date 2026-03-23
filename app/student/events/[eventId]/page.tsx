@@ -55,8 +55,12 @@ export default async function StudentEventSignupPage({ params, searchParams }: P
       .order("created_at", { ascending: false })
       .limit(1),
   ]);
+  const typedRegistrations = registrations as Array<{
+    company_id: string;
+    company: { name: string };
+  }>;
   const existingTicket = ((ticketRows ?? [])[0] ?? null) as StudentTicket | null;
-  const companyOptions = registrations.map((registration) => ({
+  const companyOptions = typedRegistrations.map((registration) => ({
     id: registration.company_id,
     name: registration.company.name,
   }));

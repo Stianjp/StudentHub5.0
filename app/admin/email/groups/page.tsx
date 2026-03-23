@@ -24,6 +24,13 @@ export default async function EmailGroupsPage() {
   const { data: allMembers } = await supabase
     .from("email_group_members")
     .select("group_id");
+  const typedGroups = (groups ?? []) as Array<{
+    id: string;
+    name: string;
+    description: string | null;
+    member_type: "company" | "student";
+  }>;
+  const typedMembers = (allMembers ?? []) as Array<{ group_id: string }>;
 
   return (
     <div className="flex flex-col gap-8">
@@ -55,14 +62,14 @@ export default async function EmailGroupsPage() {
         </form>
       </Card>
 
-      {groups?.length === 0 ? (
+      {typedGroups.length === 0 ? (
         <Card className="text-sm text-ink/70">
           <p>Ingen grupper opprettet ennå.</p>
         </Card>
       ) : (
         <div className="flex flex-col gap-3">
-          {groups?.map((group) => {
-            const memberCount = (allMembers ?? []).filter((m) => m.group_id === group.id).length;
+          {typedGroups.map((group) => {
+            const memberCount = typedMembers.filter((m) => m.group_id === group.id).length;
             return (
               <Card key={group.id} className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                 <div className="flex flex-col gap-1">

@@ -53,7 +53,7 @@ export default async function AdminCompanyPackagesPage({ searchParams }: PagePro
 
   let supabase = await createServerSupabaseClient();
   try {
-    supabase = createAdminSupabaseClient();
+    supabase = createAdminSupabaseClient() as unknown as typeof supabase;
   } catch {
     // fallback
   }
@@ -67,7 +67,7 @@ export default async function AdminCompanyPackagesPage({ searchParams }: PagePro
     .order("created_at", { ascending: false });
 
   if (selectedEventId !== "all") {
-    registrationsQuery = registrationsQuery.eq("event_id", selectedEventId);
+    registrationsQuery = registrationsQuery.eq("event_id" as never, selectedEventId as never);
   }
 
   const [{ data: events, error: eventsError }, { data: registrations, error: registrationsError }] =
@@ -75,6 +75,11 @@ export default async function AdminCompanyPackagesPage({ searchParams }: PagePro
   if (eventsError) throw eventsError;
   if (registrationsError) throw registrationsError;
 
+  const typedEvents = (events ?? []) as unknown as Array<{
+    id: string;
+    name: string;
+    starts_at: string;
+  }>;
   const rows = (registrations ?? []) as unknown as Array<{
     id: string;
     event_id: string;
@@ -117,7 +122,7 @@ export default async function AdminCompanyPackagesPage({ searchParams }: PagePro
             Event
             <Select name="eventId" defaultValue={selectedEventId}>
               <option value="all">Alle events</option>
-              {(events ?? []).map((event) => (
+              {typedEvents.map((event) => (
                 <option key={event.id} value={event.id}>
                   {event.name}
                 </option>

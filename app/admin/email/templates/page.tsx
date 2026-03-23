@@ -16,6 +16,13 @@ export default async function EmailTemplatesPage() {
     .from("email_templates")
     .select("*")
     .order("name");
+  const typedTemplates = (templates ?? []) as Array<{
+    id: string;
+    name: string;
+    subject: string;
+    variables: string[];
+    is_active: boolean;
+  }>;
 
   return (
     <div className="flex flex-col gap-8">
@@ -35,7 +42,7 @@ export default async function EmailTemplatesPage() {
           <p className="font-semibold text-primary">Feil ved lasting av maler</p>
           <p className="mt-2">{error.message}</p>
         </Card>
-      ) : templates?.length === 0 ? (
+      ) : typedTemplates.length === 0 ? (
         <Card className="text-sm text-ink/70">
           <p>Ingen maler opprettet ennå.</p>
           <p className="mt-1">
@@ -46,7 +53,7 @@ export default async function EmailTemplatesPage() {
         </Card>
       ) : (
         <div className="flex flex-col gap-3">
-          {templates?.map((template) => (
+          {typedTemplates.map((template) => (
             <Card key={template.id} className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-2">

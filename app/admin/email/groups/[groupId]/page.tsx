@@ -32,7 +32,13 @@ export default async function GroupDetailPage({ params }: Props) {
     .select("id, email, display_name, company_id, student_id")
     .eq("group_id", groupId);
 
-  const members = membersData ?? [];
+  const members = (membersData ?? []) as Array<{
+    id: string;
+    email: string;
+    display_name: string | null;
+    company_id: string | null;
+    student_id: string | null;
+  }>;
 
   let candidates: Array<{ id: string; label: string }> = [];
 
@@ -42,8 +48,9 @@ export default async function GroupDetailPage({ params }: Props) {
       .from("companies")
       .select("id, name")
       .order("name");
+    const typedCompanies = (companies ?? []) as Array<{ id: string; name: string }>;
 
-    candidates = (companies ?? [])
+    candidates = typedCompanies
       .filter((c) => !existingCompanyIds.includes(c.id))
       .map((c) => ({ id: c.id, label: c.name }));
   } else {
@@ -53,8 +60,9 @@ export default async function GroupDetailPage({ params }: Props) {
       .select("id, full_name, email")
       .not("email", "is", null)
       .order("full_name");
+    const typedStudents = (students ?? []) as Array<{ id: string; full_name: string | null; email: string | null }>;
 
-    candidates = (students ?? [])
+    candidates = typedStudents
       .filter((s) => s.id && !existingStudentIds.includes(s.id))
       .map((s) => ({ id: s.id, label: `${s.full_name ?? "Ukjent"} (${s.email})` }));
   }

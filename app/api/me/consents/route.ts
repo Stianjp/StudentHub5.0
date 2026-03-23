@@ -18,7 +18,7 @@ export async function GET() {
 
   const { data: consents, error } = await admin
     .from("consents")
-    .select("company_id, consent, updated_at")
+    .select("student_id, company_id, consent, updated_at")
     .eq("student_id", student.id)
     .order("updated_at", { ascending: false });
 
@@ -26,16 +26,23 @@ export async function GET() {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const companyIds = Array.from(new Set((consents ?? []).map((row) => row.company_id)));
+  const typedConsents = (consents ?? []) as Array<{
+    student_id: string;
+    company_id: string;
+    consent: boolean;
+    updated_at: string | null;
+  }>;
+  const companyIds = Array.from(new Set(typedConsents.map((row) => row.company_id)));
   const { data: companies } = await admin
     .from("companies")
     .select("id, name")
     .in("id", companyIds);
+  const typedCompanies = (companies ?? []) as Array<{ id: string; name: string | null }>;
 
-  const companyMap = new Map((companies ?? []).map((company) => [company.id, company.name ?? ""]));
+  const companyMap = new Map(typedCompanies.map((company) => [company.id, company.name ?? ""]));
 
   return NextResponse.json(
-    (consents ?? []).map((row) => ({
+    typedConsents.map((row) => ({
       companyId: row.company_id,
       companyName: companyMap.get(row.company_id) ?? "",
       consentGiven: row.consent,

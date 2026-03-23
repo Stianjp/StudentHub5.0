@@ -186,15 +186,21 @@ export async function POST(request: Request) {
     getRoiMetrics(companyId, eventId),
     supabase
       .from("leads")
-      .select("source, interests, job_types, study_level, study_year, field_of_study")
-      .eq("company_id", companyId)
-      .eq("event_id", eventId),
+      .select("company_id, event_id, source, interests, job_types, study_level, study_year, field_of_study")
+      .eq("company_id" as never, companyId as never)
+      .eq("event_id" as never, eventId as never),
   ]);
 
   if (leadsResult.error) {
     throw leadsResult.error;
   }
 
+  const typedMetrics = metrics as {
+    visitsCount: number;
+    leadsCount: number;
+    conversion: number;
+    topStudyPrograms: Array<{ program: string; count: number }>;
+  };
   const leads = (leadsResult.data ?? []) as LeadRow[];
   const facts = aggregateLeadFacts(leads);
 
@@ -202,16 +208,16 @@ export async function POST(request: Request) {
     const prompt = [
       "Du er en senior rådgiver for karrieredager.",
       "Oppsummer ROI-data og gi 3 konkrete anbefalinger.",
-      `Standbesøk: ${metrics.visitsCount}`,
-      `Leads: ${metrics.leadsCount}`,
-      `Konvertering: ${metrics.conversion}%`,
+      `Standbesøk: ${typedMetrics.visitsCount}`,
+      `Leads: ${typedMetrics.leadsCount}`,
+      `Konvertering: ${typedMetrics.conversion}%`,
       `Topp studieretninger: ${
-        metrics.topStudyPrograms.map((item) => `${item.program} (${item.count})`).join(", ") || "ingen data"
+        typedMetrics.topStudyPrograms.map((item) => `${item.program} (${item.count})`).join(", ") || "ingen data"
       }`,
     ].join("\n");
 
     const gemini = await callGemini(prompt);
-    const summary = gemini.text ?? buildFallbackSummary(metrics);
+    const summary = gemini.text ?? buildFallbackSummary(metrics as Awaited<ReturnType<typeof getRoiMetrics>>);
     return NextResponse.json({ summary, fallback: gemini.text ? false : true, mode: "summary" });
   }
 
@@ -219,9 +225,9 @@ export async function POST(request: Request) {
     event_id: eventId,
     company_id: companyId,
     metrics: {
-      visits: metrics.visitsCount,
-      leads: metrics.leadsCount,
-      conversion_percent: metrics.conversion,
+      visits: typedMetrics.visitsCount,
+      leads: typedMetrics.leadsCount,
+      conversion_percent: typedMetrics.conversion,
     },
     lead_facts: {
       leads_total: facts.leadsTotal,

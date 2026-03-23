@@ -30,14 +30,14 @@ export default async function AdminCompanyDetailPage({ params }: PageProps) {
     listCompanyLeads(companyId),
   ]);
 
-  const typedRegistrations = registrations as Array<{
+  const typedRegistrations = registrations as unknown as Array<{
     id: string;
     stand_type: string | null;
     package: string;
     event?: { name?: string };
   }>;
 
-  const typedLeads = leads as Array<{
+  const typedLeads = leads as unknown as Array<{
     lead: { id: string; source: string; field_of_study?: string | null; study_level?: string | null };
     consent?: { consent?: boolean; updated_at?: string | null } | null;
     student?: { full_name?: string; study_program?: string; email?: string; phone?: string };

@@ -36,7 +36,8 @@ export default async function CompanyDashboardPage() {
     getCompanyLeads(companyId),
     listActiveEvents(),
   ]);
-  const consentedLeads = leads.filter((lead) => lead.consent?.consent).length;
+  const typedLeads = leads as Array<{ consent: { consent: boolean } | null }>;
+  const consentedLeads = typedLeads.filter((lead) => lead.consent?.consent).length;
 
   const onboarding = getCompanyOnboardingStatus(company);
 
@@ -159,4 +160,3 @@ export default async function CompanyDashboardPage() {
     </div>
   );
 }
-

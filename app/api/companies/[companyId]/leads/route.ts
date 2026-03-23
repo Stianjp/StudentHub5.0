@@ -89,7 +89,8 @@ export async function GET(request: Request, { params }: RouteParams) {
     return NextResponse.json({ error: "Du må være logget inn." }, { status: 401 });
   }
 
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+  const { data: profile } = await supabase.from("profiles").select("id, role").eq("id" as never, user.id as never).maybeSingle();
+  const typedProfile = profile as { role?: string } | null;
   if (!profile) {
     return NextResponse.json({ error: "Fant ikke profil." }, { status: 403 });
   }
@@ -102,7 +103,7 @@ export async function GET(request: Request, { params }: RouteParams) {
   const admin = createAdminSupabaseClient();
   const { data: company } = await admin.from("companies").select("id, user_id").eq("id", companyId).maybeSingle();
 
-  if (!company || (profile.role !== "admin" && company.user_id !== user.id)) {
+  if (!company || (typedProfile?.role !== "admin" && company.user_id !== user.id)) {
     return NextResponse.json({ error: "Ingen tilgang til bedriften." }, { status: 403 });
   }
 
@@ -115,18 +116,45 @@ export async function GET(request: Request, { params }: RouteParams) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  const studentIds = (leads ?? []).map((lead) => lead.student_id);
+  const typedLeads = (leads ?? []) as Array<{
+    id: string;
+    student_id: string;
+    student: {
+      id: string;
+      full_name: string | null;
+      email: string | null;
+      phone: string | null;
+      study_program: string | null;
+      study_level: string | null;
+      study_year: number | null;
+      graduation_year: number | null;
+    } | null;
+    interests: string[] | null;
+    job_types: string[] | null;
+    study_level: string | null;
+    study_year: number | null;
+    field_of_study: string | null;
+    source: string;
+    event_id: string | null;
+    created_at: string;
+  }>;
+  const studentIds = typedLeads.map((lead) => lead.student_id);
   const { data: consents } = await admin
     .from("consents")
-    .select("student_id, consent, updated_at")
+    .select("company_id, student_id, consent, updated_at")
     .eq("company_id", companyId)
     .in("student_id", studentIds);
+  const typedConsents = (consents ?? []) as Array<{
+    student_id: string;
+    consent: boolean;
+    updated_at: string | null;
+  }>;
 
   const consentMap = new Map(
-    (consents ?? []).map((row) => [row.student_id, { consent: row.consent, updated_at: row.updated_at }]),
+    typedConsents.map((row) => [row.student_id, { consent: row.consent, updated_at: row.updated_at }]),
   );
 
-  const rows = (leads ?? [])
+  const rows = typedLeads
     .map((lead) => {
       const consent = consentMap.get(lead.student_id);
       return {
