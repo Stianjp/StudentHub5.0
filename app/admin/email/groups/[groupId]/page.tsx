@@ -6,7 +6,8 @@ import { Select } from "@/components/ui/select";
 import { SectionHeader } from "@/components/ui/section-header";
 import { requireRole } from "@/lib/auth";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
-import { addGroupMember, removeGroupMember } from "../actions";
+import { Input } from "@/components/ui/input";
+import { addGroupMember, addManualGroupMember, removeGroupMember } from "../actions";
 
 export const dynamic = "force-dynamic";
 
@@ -88,6 +89,22 @@ export default async function GroupDetailPage({ params }: Props) {
       )}
 
       <Card>
+        <p className="text-sm font-semibold text-primary mb-4">Legg til manuell e-post</p>
+        <form action={addManualGroupMember} className="flex flex-col gap-3 md:flex-row md:items-end">
+          <input type="hidden" name="group_id" value={groupId} />
+          <div className="flex flex-1 flex-col gap-1.5">
+            <label className="text-xs font-medium text-ink/70" htmlFor="manual_email">E-postadresse</label>
+            <Input id="manual_email" name="email" type="email" placeholder="navn@domene.no" required />
+          </div>
+          <div className="flex flex-1 flex-col gap-1.5">
+            <label className="text-xs font-medium text-ink/70" htmlFor="manual_name">Navn (valgfritt)</label>
+            <Input id="manual_name" name="display_name" placeholder="Fornavn Etternavn" />
+          </div>
+          <Button type="submit" className="shrink-0">Legg til</Button>
+        </form>
+      </Card>
+
+      <Card>
         <div className="flex items-center justify-between mb-4">
           <p className="text-sm font-semibold text-primary">
             Medlemmer ({members.length})
@@ -102,7 +119,12 @@ export default async function GroupDetailPage({ params }: Props) {
             {members.map((member) => (
               <div key={member.id} className="flex items-center justify-between gap-3 rounded-xl border border-primary/10 bg-surface px-4 py-3">
                 <div>
-                  <p className="text-sm font-medium text-primary">{member.display_name ?? "-"}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium text-primary">{member.display_name ?? member.email}</p>
+                    {!member.company_id && !member.student_id && (
+                      <span className="rounded-md bg-secondary/20 px-2 py-0.5 text-xs text-ink/60">manuell</span>
+                    )}
+                  </div>
                   <p className="text-xs text-ink/60">{member.email}</p>
                 </div>
                 <form action={removeGroupMember}>

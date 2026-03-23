@@ -96,6 +96,27 @@ export async function addGroupMember(formData: FormData) {
   revalidatePath(`/admin/email/groups/${groupId}`);
 }
 
+export async function addManualGroupMember(formData: FormData) {
+  await requireRole("admin");
+
+  const groupId = norm(formData.get("group_id"));
+  const email = norm(formData.get("email"));
+  const displayName = norm(formData.get("display_name")) || null;
+
+  if (!groupId) throw new Error("Gruppe-ID mangler.");
+  if (!email || !email.includes("@")) throw new Error("Ugyldig e-postadresse.");
+
+  const supabase = createAdminSupabaseClient();
+  const { error } = await supabase.from("email_group_members").insert({
+    group_id: groupId,
+    email,
+    display_name: displayName,
+  });
+  if (error) throw new Error(`Kunne ikke legge til: ${error.message}`);
+
+  revalidatePath(`/admin/email/groups/${groupId}`);
+}
+
 export async function removeGroupMember(formData: FormData) {
   await requireRole("admin");
 
