@@ -352,6 +352,16 @@ export async function submitPublicRegistrationApplication(input: {
     throw insertError;
   }
 
+  // Lock the requested stand immediately so no other applicant can book it
+  if (selectedStand) {
+    const adminSupabase = createAdminSupabaseClient();
+    await adminSupabase
+      .from("event_registration_stands")
+      .update({ status: "assigned", assigned_application_id: applicationId })
+      .eq("id", selectedStand.id)
+      .eq("status", "available"); // guard against double-booking in a race condition
+  }
+
   const emailRows = parsed.data.portalEmails.map((email) => ({
     application_id: applicationId,
     email,
