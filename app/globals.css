@@ -185,6 +185,23 @@ button:active:not(:disabled) {
   box-shadow: 0 0 0 2px rgba(254, 154, 112, 0.75), 0 0 0 5px rgba(20, 2, 73, 0.9);
 }
 
+/* ── Event-register public pages (light background) ───────────────────── */
+.event-register-scope {
+  /* Body inherits #ede8f5 (light lavender) — override to dark for light bg pages */
+  background: #ffffff;
+  color: #1A1626;
+}
+
+.event-register-scope button:hover:not(:disabled) {
+  border-color: #FE9A70;
+  /* Drop the near-black outer ring — it only looks good on the dark portal */
+  box-shadow: 0 0 0 2px rgba(254, 154, 112, 0.55);
+}
+
+.event-register-scope button:active:not(:disabled) {
+  box-shadow: 0 0 0 2px rgba(254, 154, 112, 0.7);
+}
+
 @layer components {
   .button-link {
     @apply inline-flex min-h-11 items-center justify-center rounded-full border border-transparent px-6 py-2.5 text-sm font-bold tracking-wide;

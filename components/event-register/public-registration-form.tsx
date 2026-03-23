@@ -291,7 +291,7 @@ export function PublicRegistrationForm({
 
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-      <Card className="grid gap-6 bg-white/95">
+      <Card className="grid gap-6 bg-white shadow-md ring-1 ring-gray-200">
         <div className="grid gap-4">
           <div className="flex flex-wrap gap-2">
             {steps.map((step, index) => (
@@ -302,11 +302,11 @@ export function PublicRegistrationForm({
                 className={cn(
                   "inline-flex min-h-10 items-center gap-2 rounded-full border px-3 py-2 text-xs font-semibold transition",
                   index === currentStep
-                    ? "border-secondary bg-secondary text-primary"
-                    : "border-primary/15 bg-primary/5 text-primary/70 hover:border-secondary/50 hover:text-primary",
+                    ? "border-[#FE9A70] bg-[#FE9A70] text-[#140249]"
+                    : "border-gray-300 bg-white text-gray-700 hover:border-[#FE9A70] hover:text-[#140249]",
                 )}
               >
-                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-[11px]">
+                <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#140249]/10 text-[11px] text-[#140249]">
                   {step.label}
                 </span>
                 <span>{step.title}</span>
@@ -314,22 +314,22 @@ export function PublicRegistrationForm({
             ))}
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary/60">
+            <p className="text-xs font-bold uppercase tracking-widest text-[#6d28d9]">
               {campaign.eventName}
             </p>
-            <h2 className="mt-2 text-3xl font-bold text-primary">{campaign.publicTitle}</h2>
+            <h2 className="mt-2 text-3xl font-extrabold text-[#140249]">{campaign.publicTitle}</h2>
             {campaign.publicSubtitle ? (
-              <p className="mt-2 text-lg font-medium text-primary/80">{campaign.publicSubtitle}</p>
+              <p className="mt-2 text-lg font-semibold text-[#140249]/80">{campaign.publicSubtitle}</p>
             ) : null}
             {campaign.publicDescription ? (
-              <p className="mt-3 max-w-3xl text-sm leading-6 text-ink/75">{campaign.publicDescription}</p>
+              <p className="mt-3 max-w-3xl text-sm leading-6 text-[#1A1626]">{campaign.publicDescription}</p>
             ) : null}
           </div>
         </div>
 
         {currentStep === 0 ? (
           <div className="grid gap-4 md:grid-cols-2">
-            <p className="text-lg font-semibold text-primary/80 md:col-span-2">First let us know who you are</p>
+            <p className="text-lg font-bold text-[#140249] md:col-span-2">First let us know who you are</p>
             <label className="text-sm font-semibold text-primary">
               First name
               <Input value={contactFirstName} onChange={(event) => setContactFirstName(event.target.value)} />
@@ -398,8 +398,8 @@ export function PublicRegistrationForm({
                   className={cn(
                     "rounded-2xl border px-4 py-4 text-left transition",
                     invoiceDeliveryMethod === option.value
-                      ? "border-secondary bg-secondary/15 shadow-soft"
-                      : "border-primary/15 bg-surface hover:border-secondary/40",
+                      ? "border-[#FE9A70] bg-[#FE9A70]/15 shadow-sm"
+                      : "border-gray-300 bg-white hover:border-[#FE9A70]",
                   )}
                 >
                   <p className="text-sm font-semibold text-primary">{option.label}</p>
@@ -441,8 +441,8 @@ export function PublicRegistrationForm({
                   className={cn(
                     "rounded-2xl border px-4 py-4 text-left transition",
                     candidateLevel === option.value
-                      ? "border-secondary bg-secondary/15 shadow-soft"
-                      : "border-primary/15 bg-surface hover:border-secondary/40",
+                      ? "border-[#FE9A70] bg-[#FE9A70]/15 shadow-sm"
+                      : "border-gray-300 bg-white hover:border-[#FE9A70]",
                   )}
                 >
                   <span className="text-sm font-semibold text-primary">{option.label}</span>
@@ -456,8 +456,8 @@ export function PublicRegistrationForm({
                   className={cn(
                     "flex min-h-12 items-center gap-3 rounded-2xl border px-4 py-3 text-sm transition",
                     candidateFields.includes(field)
-                      ? "border-secondary bg-secondary/15"
-                      : "border-primary/15 bg-surface hover:border-secondary/40",
+                      ? "border-[#FE9A70] bg-[#FE9A70]/15"
+                      : "border-gray-300 bg-white hover:border-[#FE9A70]",
                   )}
                 >
                   <input
@@ -493,8 +493,8 @@ export function PublicRegistrationForm({
                 className={cn(
                   "rounded-3xl border px-5 py-5 text-left transition",
                   requestedPackageId === pkg.id
-                    ? "border-secondary bg-secondary/15 shadow-soft"
-                    : "border-primary/15 bg-surface hover:border-secondary/40",
+                    ? "border-[#FE9A70] bg-[#FE9A70]/15 shadow-sm"
+                    : "border-gray-300 bg-white hover:border-[#FE9A70]",
                 )}
               >
                 <div className="flex items-start justify-between gap-4">
@@ -516,15 +516,15 @@ export function PublicRegistrationForm({
         {currentStep === 5 ? (
           <div className="grid gap-5">
             {!selectedPackage ? (
-              <Card className="border border-warning/30 bg-warning/10">
-                <p className="text-sm text-ink/80">Choose a package first.</p>
-              </Card>
+              <div className="rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3">
+                <p className="text-sm font-medium text-amber-800">Choose a package first.</p>
+              </div>
             ) : !selectedPackage.mapped_package ? (
-              <Card className="border border-primary/15 bg-primary/5">
-                <p className="text-sm text-ink/80">
+              <div className="rounded-2xl border border-gray-300 bg-gray-50 px-4 py-3">
+                <p className="text-sm text-gray-700">
                   This package requires OSH follow-up before a stand can be assigned. Continue to the final step and submit the application.
                 </p>
-              </Card>
+              </div>
             ) : (
               <>
                 <div className="relative overflow-hidden rounded-[32px] border border-primary/15 bg-[#f6f0ff] p-3">
@@ -583,10 +583,10 @@ export function PublicRegistrationForm({
                         className={cn(
                           "rounded-2xl border px-4 py-3 text-left transition",
                           isSelected
-                            ? "border-secondary bg-secondary/15 shadow-soft"
+                            ? "border-[#FE9A70] bg-[#FE9A70]/15 shadow-sm"
                             : unavailable
-                              ? "cursor-not-allowed border-primary/10 bg-primary/5 text-ink/45"
-                              : "border-primary/15 bg-surface hover:border-secondary/40",
+                              ? "cursor-not-allowed border-gray-200 bg-gray-50 text-gray-400"
+                              : "border-gray-300 bg-white hover:border-[#FE9A70]",
                         )}
                       >
                         <span className="block text-sm font-semibold text-primary">{stand.display_label ?? stand.stand_code}</span>
@@ -611,8 +611,8 @@ export function PublicRegistrationForm({
                   className={cn(
                     "flex min-h-12 items-center gap-3 rounded-2xl border px-4 py-3 text-sm transition",
                     standNeeds.includes(need)
-                      ? "border-secondary bg-secondary/15"
-                      : "border-primary/15 bg-surface hover:border-secondary/40",
+                      ? "border-[#FE9A70] bg-[#FE9A70]/15"
+                      : "border-gray-300 bg-white hover:border-[#FE9A70]",
                   )}
                 >
                   <input
@@ -691,7 +691,7 @@ export function PublicRegistrationForm({
         ) : null}
 
         {error ? (
-          <div className="rounded-2xl border border-error/30 bg-error/10 px-4 py-3 text-sm text-error">
+          <div className="rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
             {error}
           </div>
         ) : null}
@@ -713,41 +713,41 @@ export function PublicRegistrationForm({
       </Card>
 
       <div className="grid gap-4 xl:sticky xl:top-8 xl:self-start">
-        <Card className="bg-primary text-surface">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-surface/70">Application summary</p>
+        <Card className="bg-[#140249] text-white shadow-md">
+          <p className="text-xs font-bold uppercase tracking-widest text-white/60">Application summary</p>
           <div className="mt-4 grid gap-4 text-sm">
             <div>
-              <p className="text-surface/60">Contact</p>
-              <p className="font-semibold text-surface">
+              <p className="text-white/60">Contact</p>
+              <p className="font-semibold text-white">
                 {[contactFirstName, contactLastName].filter(Boolean).join(" ") || "Not filled in"}
               </p>
             </div>
             <div>
-              <p className="text-surface/60">Company</p>
-              <p className="font-semibold text-surface">{companyName || "Not filled in"}</p>
+              <p className="text-white/60">Company</p>
+              <p className="font-semibold text-white">{companyName || "Not filled in"}</p>
             </div>
             <div>
-              <p className="text-surface/60">Package</p>
-              <p className="font-semibold text-surface">{selectedPackage ? selectedPackage.public_name : "Not selected"}</p>
+              <p className="text-white/60">Package</p>
+              <p className="font-semibold text-white">{selectedPackage ? selectedPackage.public_name : "Not selected"}</p>
             </div>
             <div>
-              <p className="text-surface/60">Stand</p>
-              <p className="font-semibold text-surface">
+              <p className="text-white/60">Stand</p>
+              <p className="font-semibold text-white">
                 {stands.find((stand) => stand.id === requestedStandId)?.stand_code ?? "Not selected"}
               </p>
             </div>
             <div>
-              <p className="text-surface/60">Portal emails</p>
-              <p className="font-semibold text-surface">
+              <p className="text-white/60">Portal emails</p>
+              <p className="font-semibold text-white">
                 {portalEmails.map((value) => value.trim()).filter(Boolean).length} of 5 added
               </p>
             </div>
           </div>
         </Card>
 
-        <Card className="bg-white/90">
-          <p className="text-sm font-semibold text-primary">What happens next?</p>
-          <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm text-ink/75">
+        <Card className="bg-white shadow-md ring-1 ring-gray-200">
+          <p className="text-sm font-bold text-[#140249]">What happens next?</p>
+          <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm text-[#1A1626]">
             <li>You submit the event application.</li>
             <li>OSH reviews package, stand and company details.</li>
             <li>Approved portal users receive access after OSH approval.</li>
