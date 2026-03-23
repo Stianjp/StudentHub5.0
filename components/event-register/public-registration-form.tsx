@@ -1,13 +1,14 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import type { TableRow } from "@/lib/types/database";
 import { REGISTRATION_INVOICE_OPTIONS, REGISTRATION_LEVEL_OPTIONS, REGISTRATION_STAND_NEEDS, REGISTRATION_STUDENT_FIELDS } from "@/lib/event-registration-options";
+import { STUDENT_CONNECT_2026_FLOORPLAN } from "@/lib/event-registration-fixtures";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { StandMap } from "@/components/event-register/stand-map";
 import { cn } from "@/lib/utils";
 
 type RegistrationPackage = TableRow<"event_registration_packages">;
@@ -65,25 +66,6 @@ function packageLabel(pkg: RegistrationPackage) {
   return pkg.public_name;
 }
 
-function standStateClass(stand: RegistrationStand, isSelected: boolean) {
-  if (isSelected) {
-    return "border-secondary bg-secondary/85 text-primary shadow-soft";
-  }
-  if (stand.status !== "available" || stand.assigned_application_id) {
-    return "border-primary/20 bg-primary/70 text-surface/60 cursor-not-allowed opacity-55";
-  }
-  if (stand.package_tier === "platinum") {
-    return "border-white/80 bg-[#f7b3c1]/80 text-primary";
-  }
-  if (stand.package_tier === "gold") {
-    return "border-primary/50 bg-[#ffd85a]/85 text-primary";
-  }
-  if (stand.package_tier === "silver") {
-    return "border-primary/40 bg-[#b7e7ff]/85 text-primary";
-  }
-  return "border-primary/40 bg-[#c5f1bb]/85 text-primary";
-}
-
 export function PublicRegistrationForm({
   slug,
   campaign,
@@ -132,7 +114,7 @@ export function PublicRegistrationForm({
 
   const filteredStands = useMemo(() => {
     if (!selectedPackage?.mapped_package) return [];
-    return stands.filter((stand) => stand.package_tier === selectedPackage.mapped_package);
+    return stands.filter((stand) => stand.package_tier === selectedPackage.mapped_package && stand.status !== "disabled");
   }, [selectedPackage, stands]);
 
   useEffect(() => {
@@ -546,47 +528,17 @@ export function PublicRegistrationForm({
               </div>
             ) : (
               <>
-                <div className="relative overflow-hidden rounded-[32px] border border-primary/15 bg-[#f6f0ff] p-3">
-                  <div className="relative mx-auto aspect-[403/749] w-full max-w-[620px] overflow-hidden rounded-[28px] bg-white shadow-soft">
-                    {campaign.floorplanImagePath ? (
-                      <Image
-                        src={campaign.floorplanImagePath}
-                        alt="Student Connect 2026 floor plan"
-                        fill
-                        sizes="(max-width: 768px) 100vw, 620px"
-                        className="object-contain"
-                        priority
-                      />
-                    ) : null}
-                    {filteredStands.map((stand) => {
-                      const unavailable = stand.status !== "available" || Boolean(stand.assigned_application_id);
-                      const isSelected = requestedStandId === stand.id;
-                      return (
-                        <button
-                          key={stand.id}
-                          type="button"
-                          onClick={() => {
-                            if (unavailable) return;
-                            setRequestedStandId(stand.id);
-                          }}
-                          disabled={unavailable}
-                          style={{
-                            left: `${stand.x}%`,
-                            top: `${stand.y}%`,
-                            width: `${stand.width}%`,
-                            height: `${stand.height}%`,
-                          }}
-                          className={cn(
-                            "absolute rounded-md border text-[10px] font-bold leading-none transition md:text-xs",
-                            standStateClass(stand, isSelected),
-                          )}
-                        >
-                          <span className="block truncate px-1">{stand.display_label ?? stand.stand_code}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
+                {campaign.floorplanImagePath ? (
+                  <StandMap
+                    floorplanImagePath={campaign.floorplanImagePath}
+                    floorplanAlt={STUDENT_CONNECT_2026_FLOORPLAN.alt}
+                    floorplanWidth={STUDENT_CONNECT_2026_FLOORPLAN.width}
+                    floorplanHeight={STUDENT_CONNECT_2026_FLOORPLAN.height}
+                    stands={filteredStands}
+                    selectedStandId={requestedStandId}
+                    onSelectStand={setRequestedStandId}
+                  />
+                ) : null}
                 <div className="grid gap-2 sm:grid-cols-2">
                   {filteredStands.map((stand) => {
                     const unavailable = stand.status !== "available" || Boolean(stand.assigned_application_id);

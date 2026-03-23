@@ -5,6 +5,8 @@ import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { publicRegistrationApplicationSchema } from "@/lib/validation/event-registration";
 import { getBaseUrlForRole } from "@/lib/auth-urls";
 import { sendTransactionalEmail } from "@/lib/resend";
+import { getPreviewRegistrationDetail, listPreviewRegistrationCampaigns } from "@/lib/event-registration-fixtures";
+import { shouldBypassSupabaseInDev } from "@/lib/supabase/env";
 
 type RegistrationCampaign = TableRow<"event_registration_campaigns">;
 type RegistrationPackage = TableRow<"event_registration_packages">;
@@ -24,6 +26,10 @@ type PublicCampaignDetail = {
 
 const LOGO_BUCKET = "event-registration-assets";
 const COMPANY_PORTAL_FALLBACK_URL = "https://bedrift.oslostudenthub.no";
+
+function shouldUsePreviewRegistrationData() {
+  return shouldBypassSupabaseInDev();
+}
 
 function normalizeEmail(value: string) {
   return value.trim().toLowerCase();
@@ -155,6 +161,10 @@ async function sendCompanyPortalInvite(input: {
 }
 
 export async function listPublicRegistrationCampaigns() {
+  if (shouldUsePreviewRegistrationData()) {
+    return listPreviewRegistrationCampaigns();
+  }
+
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase
     .from("event_registration_campaigns")
@@ -169,6 +179,10 @@ export async function listPublicRegistrationCampaigns() {
 }
 
 export async function getPublicRegistrationCampaignBySlug(slug: string): Promise<PublicCampaignDetail | null> {
+  if (shouldUsePreviewRegistrationData()) {
+    return getPreviewRegistrationDetail(slug);
+  }
+
   const supabase = await createServerSupabaseClient();
   const { data: campaign, error } = await supabase
     .from("event_registration_campaigns")
@@ -215,6 +229,10 @@ export async function submitPublicRegistrationApplication(input: {
   slug: string;
   formData: FormData;
 }) {
+  if (shouldUsePreviewRegistrationData()) {
+    throw new Error("Submitting registrations requires configured Supabase environment variables.");
+  }
+
   const supabase = createAdminSupabaseClient();
   const detail = await getPublicRegistrationCampaignBySlug(input.slug);
   if (!detail) {

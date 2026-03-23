@@ -6,6 +6,10 @@ import { test, expect } from "@playwright/test";
  * Sjekker at sider er oppe og fungerer uten innlogging.
  */
 
+async function clickNext(page: import("@playwright/test").Page) {
+  await page.getByRole("button", { name: "Next", exact: true }).click();
+}
+
 test("Event register-forsiden laster og viser kampanjer", async ({ page }) => {
   await page.goto("/event-register");
 
@@ -39,14 +43,54 @@ test("Registreringsskjema navigerer mellom steg", async ({ page }) => {
   // Fyll ut Contact-steg
   await page.getByLabel("First name").fill("Ola");
   await page.getByLabel("Last name").fill("Nordmann");
-  await page.locator('input[type="email"]').first().fill("ola@test.no");
-  await page.locator('input[type="tel"], input[placeholder*="phone" i]').first().fill("12345678");
+  await page.getByLabel("E-mail").fill("ola@test.no");
+  await page.getByLabel("Phone number").fill("12345678");
 
   // Klikk neste (Company-steg)
-  await page.getByRole("button", { name: /next|neste/i }).click();
+  await clickNext(page);
 
   // Skal nå være på Company-steget
-  await expect(page.getByText(/Company name|MVA-ID/i)).toBeVisible();
+  await expect(page.getByLabel("Company name")).toBeVisible();
+});
+
+test("Pakkevalg filtrerer stander og nullstiller tidligere standvalg", async ({ page }) => {
+  await page.goto("/event-register/student-connect-2026");
+
+  await page.getByLabel("First name").fill("Ola");
+  await page.getByLabel("Last name").fill("Nordmann");
+  await page.getByLabel("E-mail").fill("ola@test.no");
+  await page.getByLabel("Phone number").fill("12345678");
+  await clickNext(page);
+
+  await page.getByLabel("Company name").fill("Acme AS");
+  await page.getByLabel("MVA-ID").fill("123456789");
+  await page.getByLabel("Country / Region").fill("Norway");
+  await page.getByLabel("Address").fill("Karl Johans gate 1");
+  await page.getByLabel("City").fill("Oslo");
+  await page.getByLabel("Zip / Postal code").fill("0154");
+  await clickNext(page);
+
+  await clickNext(page);
+
+  await page.getByLabel("IT / Computer engineer").check();
+  await clickNext(page);
+
+  await page.getByRole("button", { name: /^Silver\b/i }).click();
+  await clickNext(page);
+
+  await expect(page.getByRole("button", { name: "Silver 1", exact: true }).first()).toBeVisible();
+  await expect(page.getByRole("button", { name: "Gold 1", exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: "Silver 1", exact: true }).first().click();
+
+  await page.getByRole("button", { name: /back/i }).click();
+  await page.getByRole("button", { name: /^Gold\b/i }).click();
+  await clickNext(page);
+
+  await expect(page.getByRole("button", { name: "Gold 1", exact: true }).first()).toBeVisible();
+  await expect(page.getByRole("button", { name: "Silver 1", exact: true })).toHaveCount(0);
+
+  await clickNext(page);
+  await expect(page.getByText("Choose a stand on the floor plan before continuing.")).toBeVisible();
 });
 
 test("Innloggingssiden laster", async ({ page }) => {
