@@ -47,6 +47,20 @@ const steps: Array<{ key: StepKey; label: string; title: string }> = [
   { key: "finish", label: "8", title: "Finish" },
 ];
 
+const PACKAGE_PRICES: Record<string, number> = {
+  platinum: 65000,
+  gold: 50000,
+  silver: 30000,
+  standard: 20000,
+};
+
+function packagePrice(pkg: RegistrationPackage): string | null {
+  if (!pkg.mapped_package) return null;
+  const price = PACKAGE_PRICES[pkg.mapped_package];
+  if (!price) return null;
+  return `${price.toLocaleString("nb-NO")} kr eks. mva`;
+}
+
 function packageLabel(pkg: RegistrationPackage) {
   return pkg.public_name;
 }
@@ -499,14 +513,19 @@ export function PublicRegistrationForm({
               >
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <h3 className="text-lg font-bold text-primary">{packageLabel(pkg)}</h3>
+                    <h3 className="text-lg font-bold text-[#140249]">{packageLabel(pkg)}</h3>
                     {pkg.description ? (
-                      <p className="mt-1 text-sm text-ink/70">{pkg.description}</p>
+                      <p className="mt-1 text-sm text-[#1A1626]/70">{pkg.description}</p>
                     ) : null}
                   </div>
-                  <span className="rounded-full bg-primary/8 px-3 py-1 text-xs font-semibold text-primary/70">
-                    {pkg.mapped_package ? pkg.mapped_package.toUpperCase() : "FOLLOW UP"}
-                  </span>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    {packagePrice(pkg) ? (
+                      <span className="text-base font-extrabold text-[#140249]">{packagePrice(pkg)}</span>
+                    ) : null}
+                    <span className="rounded-full bg-[#140249]/8 px-3 py-1 text-xs font-semibold text-[#140249]/60">
+                      {pkg.mapped_package ? pkg.mapped_package.toUpperCase() : "FOLLOW UP"}
+                    </span>
+                  </div>
                 </div>
               </button>
             ))}

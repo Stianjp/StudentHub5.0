@@ -11,10 +11,13 @@ import {
   applyCrmLeadFilters,
   buildCrmCompanyCards,
   buildCrmMetrics,
+  CRM_OUTREACH_STAGES,
   CRM_PIPELINE_STAGES,
+  CRM_REGISTRATION_STAGES,
   getLeadAgeInDays,
   getMissingReplyLeads,
   type CrmDataset,
+  type CrmPipelineStage,
 } from "@/lib/crm";
 import { loadCrmEntriesFromSupabase } from "@/lib/crm-supabase";
 import { updateCrmCompanyPipeline, updateCrmLead } from "./actions";
@@ -43,9 +46,10 @@ function leadStatusVariant(status: string): "default" | "success" | "warning" | 
 function companyStatusVariant(status: string): "default" | "success" | "warning" | "info" {
   const normalized = status.trim().toLowerCase();
 
-  if (normalized === "dialog" || normalized === "påmeldt") return "success";
+  if (normalized === "betalt") return "success";
+  if (normalized === "dialog" || normalized === "påmeldt" || normalized === "venter kontrakt" || normalized === "venter faktura") return "info";
   if (normalized === "tapt") return "warning";
-  if (normalized === "venter svar") return "info";
+  if (normalized === "venter svar") return "default";
 
   return "default";
 }
@@ -87,6 +91,91 @@ function toDateTimeLocalValue(value: string) {
 
   const pad = (part: number) => String(part).padStart(2, "0");
   return `${parsed.getFullYear()}-${pad(parsed.getMonth() + 1)}-${pad(parsed.getDate())}T${pad(parsed.getHours())}:${pad(parsed.getMinutes())}`;
+}
+
+type PipelineBoardProps = {
+  title: string;
+  description: string;
+  stages: CrmPipelineStage[];
+  companyCards: ReturnType<typeof buildCrmCompanyCards>;
+  updateAction: (formData: FormData) => Promise<void>;
+  highlight?: boolean;
+};
+
+function PipelineBoard({ title, description, stages, companyCards, updateAction, highlight }: PipelineBoardProps) {
+  return (
+    <Card className={`flex flex-col gap-5 ${highlight ? "border-secondary/30" : ""}`}>
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-wide text-primary/60">Pipeline</p>
+        <h2 className="text-xl font-bold text-primary">{title}</h2>
+        <p className="text-sm text-ink/70">{description}</p>
+      </div>
+
+      <div className={`grid gap-4`} style={{ gridTemplateColumns: `repeat(${stages.length}, minmax(0, 1fr))` }}>
+        {stages.map((stage) => {
+          const stageCards = companyCards.filter((card) => card.pipelineStage === stage);
+          return (
+            <div key={stage} className="flex min-h-[16rem] flex-col rounded-2xl border border-primary/10 bg-mist/40 p-4">
+              <div className="mb-4 flex items-center justify-between gap-2">
+                <div>
+                  <p className="text-sm font-bold text-primary">{stage}</p>
+                  <p className="text-xs text-ink/60">{stageCards.length} bedrifter</p>
+                </div>
+                <Badge variant={companyStatusVariant(stage)}>{stageCards.length}</Badge>
+              </div>
+
+              <div className="flex flex-1 flex-col gap-3">
+                {stageCards.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-primary/10 bg-surface/70 p-4 text-xs text-ink/50">
+                    Ingen bedrifter
+                  </div>
+                ) : (
+                  stageCards.map((card) => (
+                    <Card key={card.key} className="flex flex-col gap-3 p-4">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="text-sm font-bold text-primary leading-tight">{card.company || "Ukjent bedrift"}</p>
+                          <p className="text-xs text-ink/60">{card.eventName || "Uten event"}</p>
+                        </div>
+                        <Badge variant={companyStatusVariant(card.pipelineStage)} />
+                      </div>
+                      <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-xs text-ink/70">
+                        <p>{card.totalContacts} kontakt{card.totalContacts !== 1 ? "er" : ""}</p>
+                        <p>{card.openLeadCount} åpne</p>
+                        {card.pipelineValueTotal > 0 && (
+                          <p className="col-span-2 font-semibold text-primary">
+                            {Math.round(card.pipelineValueTotal).toLocaleString("nb-NO")} kr
+                          </p>
+                        )}
+                        <p className="col-span-2 text-ink/50">
+                          Oppdatert: {formatDateTime(card.lastUpdatedAtIso)}
+                        </p>
+                      </div>
+
+                      <form action={updateAction} className="flex flex-col gap-2">
+                        <input type="hidden" name="company" value={card.company} />
+                        <input type="hidden" name="eventName" value={card.eventName} />
+                        <Select name="companyStatus" defaultValue={card.pipelineStage}>
+                          {CRM_PIPELINE_STAGES.map((value) => (
+                            <option key={`${card.key}-${value}`} value={value}>
+                              {value}
+                            </option>
+                          ))}
+                        </Select>
+                        <Button variant="secondary" type="submit" className="rounded-xl px-4 py-2 text-xs">
+                          Flytt
+                        </Button>
+                      </form>
+                    </Card>
+                  ))
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </Card>
+  );
 }
 
 export const dynamic = "force-dynamic";
@@ -181,12 +270,12 @@ export default async function AdminCrmPage({ searchParams }: PageProps) {
 
 
       <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
-        <Stat label="Bedrifter" value={metrics.totalCompanies} hint={`${metrics.totalLeads} leads i filtrert utvalg`} />
+        <Stat label="Bedrifter totalt" value={metrics.totalCompanies} hint={`${metrics.totalLeads} leads`} />
         <Stat label="Mangler svar" value={metrics.missingReplies} href="/admin/crm?leadStatus=waiting" />
         <Stat label="I dialog" value={metrics.dialogueCompanies} href="/admin/crm?companyStatus=Dialog" />
         <Stat label="Påmeldt" value={metrics.signedCompanies} href="/admin/crm?companyStatus=Påmeldt" />
+        <Stat label="Betalt" value={companyCards.filter(c => (c.pipelineStage as string) === "Betalt").length} href="/admin/crm?companyStatus=Betalt" />
         <Stat label="Tapt" value={metrics.lostCompanies} href="/admin/crm?companyStatus=Tapt" />
-        <Stat label="Pipelinesum" value={Math.round(metrics.pipelineTotal)} hint="Sum av pipelineverdi" />
       </div>
 
       <Card className="flex flex-col gap-4">
@@ -265,75 +354,22 @@ export default async function AdminCrmPage({ searchParams }: PageProps) {
         )}
       </Card>
 
-      <Card className="flex flex-col gap-5">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-primary/60">Pipeline</p>
-          <h2 className="text-xl font-bold text-primary">Bedriftsboard</h2>
-          <p className="text-sm text-ink/70">Kortene grupperes på bedrift + event. Endring av pipeline oppdaterer alle tilhørende rader i arket.</p>
-        </div>
+      <PipelineBoard
+        title="Utadrettet kontakt"
+        description="Leads og dialog før påmelding."
+        stages={[...CRM_OUTREACH_STAGES]}
+        companyCards={companyCards}
+        updateAction={updateCrmCompanyPipeline}
+      />
 
-        <div className="grid gap-4 xl:grid-cols-5">
-          {CRM_PIPELINE_STAGES.map((stage) => {
-            const stageCards = companyCards.filter((card) => card.pipelineStage === stage);
-            return (
-              <div key={stage} className="flex min-h-[18rem] flex-col rounded-2xl border border-primary/10 bg-mist/40 p-4">
-                <div className="mb-4 flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-sm font-bold text-primary">{stage}</p>
-                    <p className="text-xs text-ink/60">{stageCards.length} bedrifter</p>
-                  </div>
-                  <Badge variant={companyStatusVariant(stage)}>{stage}</Badge>
-                </div>
-
-                <div className="flex flex-1 flex-col gap-3">
-                  {stageCards.length === 0 ? (
-                    <div className="rounded-2xl border border-dashed border-primary/10 bg-surface/70 p-4 text-sm text-ink/60">
-                      Ingen bedrifter i dette steget.
-                    </div>
-                  ) : (
-                    stageCards.map((card) => (
-                      <Card key={card.key} className="flex flex-col gap-4 p-4">
-                        <div className="flex flex-col gap-2">
-                          <div className="flex items-start justify-between gap-3">
-                            <div>
-                              <p className="font-bold text-primary">{card.company || "Ukjent bedrift"}</p>
-                              <p className="text-xs text-ink/60">{card.eventName || "Uten event"}</p>
-                            </div>
-                            <Badge variant={companyStatusVariant(card.pipelineStage)}>{card.pipelineStage}</Badge>
-                          </div>
-                          <div className="grid gap-1 text-xs text-ink/70">
-                            <p>{card.totalContacts} kontakter</p>
-                            <p>{card.openLeadCount} åpne leads</p>
-                            <p>{card.waitingReplyCount} venter svar</p>
-                            <p>Pipelinesum: {Math.round(card.pipelineValueTotal)}</p>
-                            <p>Sist sendt: {formatDateTime(card.lastSentAtIso)}</p>
-                            <p>Sist oppdatert: {formatDateTime(card.lastUpdatedAtIso)}</p>
-                          </div>
-                        </div>
-
-                        <form action={updateCrmCompanyPipeline} className="flex flex-col gap-2">
-                          <input type="hidden" name="company" value={card.company} />
-                          <input type="hidden" name="eventName" value={card.eventName} />
-                          <Select name="companyStatus" defaultValue={card.pipelineStage}>
-                            {CRM_PIPELINE_STAGES.map((value) => (
-                              <option key={`${card.key}-${value}`} value={value}>
-                                {value}
-                              </option>
-                            ))}
-                          </Select>
-                          <Button variant="secondary" type="submit" className="rounded-xl px-4 py-2 text-xs">
-                            Lagre pipeline
-                          </Button>
-                        </form>
-                      </Card>
-                    ))
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </Card>
+      <PipelineBoard
+        title="Registrerte bedrifter"
+        description="Bedrifter som har meldt seg på. Følg opp kontrakt og faktura."
+        stages={[...CRM_REGISTRATION_STAGES]}
+        companyCards={companyCards}
+        updateAction={updateCrmCompanyPipeline}
+        highlight
+      />
 
       <Card className="flex flex-col gap-4">
         <form method="get" className="grid gap-3 md:grid-cols-8 md:items-end">

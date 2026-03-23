@@ -1,6 +1,8 @@
 import { createSign } from "node:crypto";
 
-export const CRM_PIPELINE_STAGES = ["Kontaktet", "Venter svar", "Dialog", "Påmeldt", "Tapt"] as const;
+export const CRM_OUTREACH_STAGES = ["Kontaktet", "Venter svar", "Dialog", "Tapt"] as const;
+export const CRM_REGISTRATION_STAGES = ["Påmeldt", "Venter kontrakt", "Venter faktura", "Betalt"] as const;
+export const CRM_PIPELINE_STAGES = [...CRM_OUTREACH_STAGES, ...CRM_REGISTRATION_STAGES] as const;
 export type CrmPipelineStage = (typeof CRM_PIPELINE_STAGES)[number];
 
 const DEFAULT_LEAD_STATUSES = ["pending_approval", "waiting", "replied", "bounced", "edit_requested"] as const;

@@ -367,6 +367,54 @@ export async function submitPublicRegistrationApplication(input: {
     throw emailError;
   }
 
+  // Notify OSH about new registration (non-fatal)
+  await Promise.resolve(
+    supabase.from("email_logs").insert({
+      to_email: "stian@oslostudenthub.no",
+      subject: `Ny registrert bedrift: ${parsed.data.companyName.trim()} bestilte ${selectedPackage.public_name}`,
+      type: "registration_notification",
+    })
+  ).catch(() => undefined);
+
+  const { Resend } = await import("resend");
+  const resendKey = process.env.RESEND_API_KEY;
+  if (resendKey) {
+    await new Resend(resendKey).emails
+      .send({
+        from: "OSH StudentHub <noreply@oslostudenthub.no>",
+        to: "stian@oslostudenthub.no",
+        subject: `Ny registrert bedrift: ${parsed.data.companyName.trim()} bestilte ${selectedPackage.public_name}`,
+        html: `<p><strong>${parsed.data.companyName.trim()}</strong> har registrert seg for <strong>${detail.campaign.event.name}</strong>.</p><p>Pakke: <strong>${selectedPackage.public_name}</strong></p><p>Kontaktperson: ${parsed.data.contactFirstName} ${parsed.data.contactLastName} &lt;${parsed.data.contactEmail}&gt;</p><p>Application-ID: <code>${applicationId}</code></p>`,
+      })
+      .catch(() => undefined);
+  }
+
+  // Auto-create CRM entry at "Påmeldt" stage (non-fatal)
+  const crmLeadId = `reg-${applicationId}`;
+  await Promise.resolve(
+    supabase.from("crm_pipeline_entries").upsert(
+      {
+        lead_id: crmLeadId,
+        company: parsed.data.companyName.trim(),
+        contact_name: `${parsed.data.contactFirstName} ${parsed.data.contactLastName}`.trim(),
+        contact_email: normalizeEmail(parsed.data.contactEmail),
+        subject: `Registrering: ${selectedPackage.public_name}`,
+        lead_status: "replied",
+        company_status: "Påmeldt" as const,
+        event_name: detail.campaign.event.name,
+        sequence_step: "1",
+        thread_id: "",
+        source_message_id: "",
+        stop_reason: "",
+        company_channel_name: "",
+        company_channel_id: "",
+        temperature: "varm",
+        pipeline_value: ({ platinum: 65000, gold: 50000, silver: 30000, standard: 20000 } as Record<string, number>)[selectedPackage.mapped_package ?? ""] ?? 0,
+      },
+      { onConflict: "lead_id" }
+    )
+  ).catch(() => undefined);
+
   return { id: applicationId };
 }
 

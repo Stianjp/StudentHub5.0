@@ -1023,7 +1023,7 @@ export type Database = {
           sequence_step: string;
           lead_status: string;
           stop_reason: string;
-          company_status: "Kontaktet" | "Venter svar" | "Dialog" | "Påmeldt" | "Tapt";
+          company_status: "Kontaktet" | "Venter svar" | "Dialog" | "Tapt" | "Påmeldt" | "Venter kontrakt" | "Venter faktura" | "Betalt";
           event_name: string;
           temperature: string;
           pipeline_value: number;
@@ -1046,7 +1046,7 @@ export type Database = {
           sequence_step?: string;
           lead_status?: string;
           stop_reason?: string;
-          company_status?: "Kontaktet" | "Venter svar" | "Dialog" | "Påmeldt" | "Tapt";
+          company_status?: "Kontaktet" | "Venter svar" | "Dialog" | "Tapt" | "Påmeldt" | "Venter kontrakt" | "Venter faktura" | "Betalt";
           event_name?: string;
           temperature?: string;
           pipeline_value?: number;
@@ -1069,7 +1069,7 @@ export type Database = {
           sequence_step?: string;
           lead_status?: string;
           stop_reason?: string;
-          company_status?: "Kontaktet" | "Venter svar" | "Dialog" | "Påmeldt" | "Tapt";
+          company_status?: "Kontaktet" | "Venter svar" | "Dialog" | "Tapt" | "Påmeldt" | "Venter kontrakt" | "Venter faktura" | "Betalt";
           event_name?: string;
           temperature?: string;
           pipeline_value?: number;
@@ -1186,7 +1186,7 @@ export type Database = {
       app_role: "student" | "company" | "admin";
       package_tier: "standard" | "silver" | "gold" | "platinum";
       visit_source: "qr" | "kiosk";
-      crm_pipeline_stage: "Kontaktet" | "Venter svar" | "Dialog" | "Påmeldt" | "Tapt";
+      crm_pipeline_stage: "Kontaktet" | "Venter svar" | "Dialog" | "Tapt" | "Påmeldt" | "Venter kontrakt" | "Venter faktura" | "Betalt";
       email_group_member_type: "company" | "student";
     };
     CompositeTypes: Record<string, never>;
