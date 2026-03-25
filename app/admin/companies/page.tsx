@@ -3,8 +3,6 @@ import { Card } from "@/components/ui/card";
 import { SectionHeader } from "@/components/ui/section-header";
 import { listCompanyAccessRequests } from "@/lib/admin";
 
-export const dynamic = "force-dynamic";
-
 type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };

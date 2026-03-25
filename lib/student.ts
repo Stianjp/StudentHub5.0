@@ -1,3 +1,4 @@
+import { cache } from "react";
 import type { TableRow } from "@/lib/types/database";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
@@ -30,7 +31,10 @@ function deriveStudentName(email: string | null | undefined) {
     .join(" ");
 }
 
-export async function getOrCreateStudentForUser(userId: string, email?: string | null) {
+export const getOrCreateStudentForUser = cache(async function getOrCreateStudentForUser(
+  userId: string,
+  email?: string | null,
+) {
   const supabase = await createServerSupabaseClient();
   const normalizedEmail = email ? email.toLowerCase() : null;
 
@@ -98,7 +102,7 @@ export async function getOrCreateStudentForUser(userId: string, email?: string |
     throw insertError;
   }
   return created as Student;
-}
+});
 
 export async function getOrCreateStudentByEmail(email: string) {
   const admin = createAdminSupabaseClient();

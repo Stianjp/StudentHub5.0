@@ -3,8 +3,6 @@ import { Card } from "@/components/ui/card";
 import { SectionHeader } from "@/components/ui/section-header";
 import { listEventsWithStats } from "@/lib/admin";
 
-export const dynamic = "force-dynamic";
-
 export default async function AdminEventsOverviewPage() {
   const events = await listEventsWithStats();
 

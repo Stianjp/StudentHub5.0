@@ -10,8 +10,6 @@ import { getOrCreateStudentForUser } from "@/lib/student";
 import { requireRole } from "@/lib/auth";
 import { cancelStudentEventTicket, registerStudentForEvent } from "@/app/event/actions";
 
-export const dynamic = "force-dynamic";
-
 type PageProps = {
   params: Promise<{ eventId: string }>;
   searchParams?: Promise<Record<string, string | string[] | undefined>>;

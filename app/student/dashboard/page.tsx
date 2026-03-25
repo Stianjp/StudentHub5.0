@@ -5,8 +5,6 @@ import { getOrCreateStudentForUser } from "@/lib/student";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { listActiveEvents } from "@/lib/events";
 
-export const dynamic = "force-dynamic";
-
 type StudentCompletionFields = {
   full_name?: string | null;
   email?: string | null;

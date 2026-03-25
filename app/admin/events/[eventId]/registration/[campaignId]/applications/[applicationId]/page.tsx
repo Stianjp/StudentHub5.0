@@ -13,8 +13,6 @@ import {
   resendCompanyPortalInviteAction,
 } from "@/app/admin/event-registration-actions";
 
-export const dynamic = "force-dynamic";
-
 type PageProps = {
   params: Promise<{ eventId: string; campaignId: string; applicationId: string }>;
   searchParams?: Promise<Record<string, string | string[] | undefined>>;

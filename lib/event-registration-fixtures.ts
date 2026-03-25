@@ -8,7 +8,7 @@ type RegistrationStand = TableRow<"event_registration_stands">;
 export type RegistrationPackageTier = RegistrationStand["package_tier"];
 
 export type PreviewRegistrationCampaign = RegistrationCampaign & {
-  event: Pick<EventRow, "id" | "name" | "slug" | "starts_at" | "ends_at" | "location">;
+  event: Pick<EventRow, "id" | "name" | "slug" | "starts_at" | "ends_at" | "location" | "registration_form_url">;
 };
 
 export type PreviewRegistrationDetail = {
@@ -30,13 +30,14 @@ const FIXTURE_TIMESTAMP = "2026-01-15T12:00:00.000Z";
 const FIXTURE_EVENT_ID = "fixture-event-student-connect-2026";
 const FIXTURE_CAMPAIGN_ID = "fixture-campaign-student-connect-2026";
 
-const FIXTURE_EVENT: Pick<EventRow, "id" | "name" | "slug" | "starts_at" | "ends_at" | "location"> = {
+const FIXTURE_EVENT: Pick<EventRow, "id" | "name" | "slug" | "starts_at" | "ends_at" | "location" | "registration_form_url"> = {
   id: FIXTURE_EVENT_ID,
   name: "Student Connect 2026",
   slug: "student-connect-2026",
   starts_at: "2026-09-10T08:00:00.000Z",
   ends_at: "2026-09-10T16:00:00.000Z",
   location: "Oslo",
+  registration_form_url: "/event-register/student-connect-2026",
 };
 
 const FIXTURE_CAMPAIGN: PreviewRegistrationCampaign = {

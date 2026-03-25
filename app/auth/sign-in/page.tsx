@@ -1,15 +1,8 @@
 import { Suspense } from "react";
 import { Card } from "@/components/ui/card";
 import { SignInClient } from "@/app/auth/sign-in/sign-in-client";
-import { headers } from "next/headers";
-import { roleFromHost } from "@/lib/host";
 
-export const dynamic = "force-dynamic";
-
-export default async function SignInPage() {
-  const host = (await headers()).get("host");
-  const allowedRole = roleFromHost(host);
-
+export default function SignInPage() {
   return (
     <Suspense
       fallback={
@@ -25,7 +18,7 @@ export default async function SignInPage() {
         </main>
       }
     >
-      <SignInClient allowedRole={allowedRole} />
+      <SignInClient />
     </Suspense>
   );
 }

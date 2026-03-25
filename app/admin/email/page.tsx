@@ -4,8 +4,6 @@ import { requireRole } from "@/lib/auth";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { EmailComposeForm } from "./email-compose-form";
 
-export const dynamic = "force-dynamic";
-
 export default async function EmailPage() {
   await requireRole("admin");
 

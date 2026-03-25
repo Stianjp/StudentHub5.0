@@ -7,8 +7,6 @@ import { createCompanyAction, addCompanyDomainAction, approveCompanyAccessAction
 import { listCompanies, listCompanyAccessRequests, listCompanyDomains } from "@/lib/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
-export const dynamic = "force-dynamic";
-
 type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };

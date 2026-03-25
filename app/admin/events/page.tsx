@@ -2,8 +2,6 @@ import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { SectionHeader } from "@/components/ui/section-header";
 
-export const dynamic = "force-dynamic";
-
 export default async function AdminEventsLandingPage() {
   return (
     <div className="flex flex-col gap-8">

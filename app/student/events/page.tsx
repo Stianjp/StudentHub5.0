@@ -7,8 +7,6 @@ import { listActiveEvents } from "@/lib/events";
 import { getOrCreateStudentForUser } from "@/lib/student";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
-export const dynamic = "force-dynamic";
-
 type StudentTicket = {
   id: string;
   event_id: string;

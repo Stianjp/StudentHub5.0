@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import type { TableRow } from "@/lib/types/database";
@@ -12,15 +13,15 @@ const roleRedirect: Record<Profile["role"], string> = {
   admin: "/admin",
 };
 
-async function resolveHostContext() {
+const resolveHostContext = cache(async function resolveHostContext() {
   const host = (await headers()).get("host");
   return {
     host,
     role: roleFromHost(host),
   };
-}
+});
 
-export async function getUser() {
+export const getUser = cache(async function getUser() {
   const supabase = await createServerSupabaseClient();
   const { data, error } = await supabase.auth.getUser();
 
@@ -38,9 +39,9 @@ export async function getUser() {
   }
 
   return data.user ?? null;
-}
+});
 
-export async function getProfile() {
+export const getProfile = cache(async function getProfile() {
   const user = await getUser();
   if (!user) {
     return null;
@@ -58,9 +59,9 @@ export async function getProfile() {
   }
 
   return data as Profile | null;
-}
+});
 
-export async function ensureProfile(role: Profile["role"]): Promise<Profile> {
+export const ensureProfile = cache(async function ensureProfile(role: Profile["role"]): Promise<Profile> {
   const user = await getUser();
   if (!user) {
     const hostContext = await resolveHostContext();
@@ -114,7 +115,7 @@ export async function ensureProfile(role: Profile["role"]): Promise<Profile> {
   }
 
   return created as Profile;
-}
+});
 
 export async function requireRole(role: Profile["role"]): Promise<Profile> {
   const profile = await ensureProfile(role);

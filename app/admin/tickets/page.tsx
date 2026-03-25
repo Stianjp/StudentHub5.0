@@ -10,8 +10,6 @@ type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export const dynamic = "force-dynamic";
-
 export default async function AdminTicketsPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const eventId = typeof params.eventId === "string" ? params.eventId : "";

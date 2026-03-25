@@ -9,8 +9,6 @@ import { requireRole } from "@/lib/auth";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { createEmailGroup, deleteEmailGroup } from "./actions";
 
-export const dynamic = "force-dynamic";
-
 export default async function EmailGroupsPage() {
   await requireRole("admin");
 

@@ -9,8 +9,6 @@ import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { Input } from "@/components/ui/input";
 import { addGroupMember, addManualGroupMember, removeGroupMember } from "../actions";
 
-export const dynamic = "force-dynamic";
-
 type Props = { params: Promise<{ groupId: string }> };
 
 export default async function GroupDetailPage({ params }: Props) {

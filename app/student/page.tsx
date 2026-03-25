@@ -27,8 +27,6 @@ type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export const dynamic = "force-dynamic";
-
 function normalize(value: string) {
   return value.trim().toLowerCase();
 }

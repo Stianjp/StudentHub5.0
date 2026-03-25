@@ -6,8 +6,6 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { requireRole } from "@/lib/auth";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 
-export const dynamic = "force-dynamic";
-
 export default async function EmailTemplatesPage() {
   await requireRole("admin");
 

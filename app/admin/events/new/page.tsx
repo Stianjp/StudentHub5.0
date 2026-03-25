@@ -5,8 +5,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { saveEvent } from "@/app/admin/actions";
 
-export const dynamic = "force-dynamic";
-
 type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };

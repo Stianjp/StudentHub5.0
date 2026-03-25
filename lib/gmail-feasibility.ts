@@ -52,7 +52,7 @@ function getConfig() {
     normalizePrivateKey(process.env.CRM_GOOGLE_PRIVATE_KEY);
   const delegatedUser =
     process.env.GMAIL_WORKSPACE_DELEGATED_USER?.trim() ||
-    "salg@oslostudenthub.no";
+    "stian@oslostudenthub.no";
   const testRecipient =
     process.env.GMAIL_WORKSPACE_TEST_TO?.trim() ||
     "stian@oslostudenthub.no";
@@ -153,7 +153,7 @@ async function listRecentThreads(config: GmailWorkspaceConfig) {
 function buildRawTestMessage(config: GmailWorkspaceConfig) {
   const subject = "OSH Gmail feasibility test";
   const raw = [
-    `From: OSH Salg <${config.delegatedUser}>`,
+    `From: OSH CRM <${config.delegatedUser}>`,
     `To: ${config.testRecipient}`,
     `Subject: ${subject}`,
     "Content-Type: text/plain; charset=UTF-8",

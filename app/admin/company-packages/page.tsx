@@ -13,8 +13,6 @@ import {
   hasRoiAccessForRegistration,
 } from "@/lib/company";
 
-export const dynamic = "force-dynamic";
-
 type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };

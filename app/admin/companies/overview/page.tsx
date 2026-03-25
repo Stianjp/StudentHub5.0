@@ -6,8 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { listCompanies } from "@/lib/admin";
 
-export const dynamic = "force-dynamic";
-
 type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };

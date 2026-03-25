@@ -1,13 +1,11 @@
 import Link from "next/link";
-import { headers } from "next/headers";
 import { listPublicRegistrationCampaigns } from "@/lib/event-registration";
+import { resolvePublicRegistrationCampaignHref } from "@/lib/event-registration-links";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export default async function EventRegisterLandingPage() {
   const campaigns = await listPublicRegistrationCampaigns();
-  const host = ((await headers()).get("host") ?? "").toLowerCase();
-  const usesPublicHost = host.startsWith("eventregister.");
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#f0ebff] via-[#fdf4ef] to-white px-4 py-10 md:px-8">
@@ -41,7 +39,7 @@ export default async function EventRegisterLandingPage() {
               {campaigns.map((campaign) => (
                 <Link
                   key={campaign.id}
-                  href={usesPublicHost ? `/${campaign.slug}` : `/event-register/${campaign.slug}`}
+                  href={resolvePublicRegistrationCampaignHref(campaign.event.registration_form_url, campaign.slug)}
                   className="block"
                 >
                   <div className="h-full rounded-2xl border border-gray-200 bg-white p-6 shadow-sm transition hover:-translate-y-0.5 hover:border-[#FE9A70] hover:shadow-md">

@@ -1,7 +1,9 @@
 import { randomUUID } from "crypto";
+import { unstable_cache } from "next/cache";
 import type { Json, TableRow } from "@/lib/types/database";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { createPublicSupabaseClient } from "@/lib/supabase/public";
 import { publicRegistrationApplicationSchema } from "@/lib/validation/event-registration";
 import { getBaseUrlForRole } from "@/lib/auth-urls";
 import { sendTransactionalEmail } from "@/lib/resend";
@@ -11,7 +13,7 @@ import {
   buildRegistrationPackageGroupName,
 } from "@/lib/event-registration-automation";
 import { getPreviewRegistrationDetail, listPreviewRegistrationCampaigns } from "@/lib/event-registration-fixtures";
-import { shouldBypassSupabaseInDev } from "@/lib/supabase/env";
+import { hasSupabaseEnv, shouldBypassSupabaseInDev } from "@/lib/supabase/env";
 import {
   listCompanyEventCrmEntries,
   syncCompanyEventPipelineStage,
@@ -32,8 +34,10 @@ type EmailGroup = TableRow<"email_groups">;
 type EmailGroupMember = TableRow<"email_group_members">;
 type CrmPipelineEntry = TableRow<"crm_pipeline_entries">;
 
+type PublicEventSummary = Pick<Event, "id" | "name" | "slug" | "starts_at" | "ends_at" | "location" | "registration_form_url">;
+type PublicCampaign = RegistrationCampaign & { event: PublicEventSummary };
 type PublicCampaignDetail = {
-  campaign: RegistrationCampaign & { event: Pick<Event, "id" | "name" | "slug" | "starts_at" | "ends_at" | "location"> };
+  campaign: PublicCampaign;
   packages: RegistrationPackage[];
   stands: RegistrationStand[];
 };
@@ -46,7 +50,11 @@ function buildRegistrationLeadId(applicationId: string) {
 }
 
 function shouldUsePreviewRegistrationData() {
-  return shouldBypassSupabaseInDev();
+  if (shouldBypassSupabaseInDev()) {
+    return true;
+  }
+
+  return !hasSupabaseEnv() && !process.env.VERCEL;
 }
 
 function normalizeEmail(value: string) {
@@ -75,6 +83,70 @@ function isCampaignOpen(campaign: RegistrationCampaign) {
   if (closesAt && now > closesAt) return false;
   return true;
 }
+
+const PUBLIC_EVENT_FIELDS = "id, name, slug, starts_at, ends_at, location, registration_form_url";
+
+const loadPublicRegistrationCampaigns = unstable_cache(
+  async () => {
+    const supabase = createPublicSupabaseClient();
+    const { data, error } = await supabase
+      .from("event_registration_campaigns")
+      .select(`*, event:events(${PUBLIC_EVENT_FIELDS})`)
+      .order("opens_at", { ascending: true });
+
+    if (error) throw error;
+
+    const campaigns = (data ?? []) as unknown as PublicCampaign[];
+    return campaigns.filter((campaign) => isCampaignOpen(campaign));
+  },
+  ["event-registration-public-campaigns"],
+  { revalidate: 300 },
+);
+
+const loadPublicRegistrationCampaignDetail = unstable_cache(
+  async (slug: string): Promise<PublicCampaignDetail | null> => {
+    const supabase = createPublicSupabaseClient();
+    const { data: campaign, error } = await supabase
+      .from("event_registration_campaigns")
+      .select(`*, event:events(${PUBLIC_EVENT_FIELDS})`)
+      .eq("slug", slug)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!campaign) return null;
+
+    const typedCampaign = campaign as unknown as PublicCampaign;
+
+    if (!isCampaignOpen(typedCampaign)) {
+      return null;
+    }
+
+    const [{ data: packages, error: packagesError }, { data: stands, error: standsError }] = await Promise.all([
+      supabase
+        .from("event_registration_packages")
+        .select("*")
+        .eq("campaign_id", typedCampaign.id)
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true }),
+      supabase
+        .from("event_registration_stands")
+        .select("*")
+        .eq("campaign_id", typedCampaign.id)
+        .order("sort_order", { ascending: true }),
+    ]);
+
+    if (packagesError) throw packagesError;
+    if (standsError) throw standsError;
+
+    return {
+      campaign: typedCampaign,
+      packages: (packages ?? []) as RegistrationPackage[],
+      stands: (stands ?? []) as RegistrationStand[],
+    };
+  },
+  ["event-registration-public-campaign-detail"],
+  { revalidate: 300 },
+);
 
 function inferStandTypeFromPackage(packageTier: RegistrationPackage["mapped_package"]) {
   if (packageTier === "gold" || packageTier === "platinum") return "Premium";
@@ -320,65 +392,14 @@ export async function listPublicRegistrationCampaigns() {
   if (shouldUsePreviewRegistrationData()) {
     return listPreviewRegistrationCampaigns();
   }
-
-  const supabase = await createServerSupabaseClient();
-  const { data, error } = await supabase
-    .from("event_registration_campaigns")
-    .select("*, event:events(id, name, slug, starts_at, ends_at, location)")
-    .order("opens_at", { ascending: true });
-
-  if (error) throw error;
-  const campaigns = (data ?? []) as unknown as Array<
-    RegistrationCampaign & { event: Pick<Event, "id" | "name" | "slug" | "starts_at" | "ends_at" | "location"> }
-  >;
-  return campaigns.filter((campaign) => isCampaignOpen(campaign));
+  return loadPublicRegistrationCampaigns();
 }
 
 export async function getPublicRegistrationCampaignBySlug(slug: string): Promise<PublicCampaignDetail | null> {
   if (shouldUsePreviewRegistrationData()) {
     return getPreviewRegistrationDetail(slug);
   }
-
-  const supabase = await createServerSupabaseClient();
-  const { data: campaign, error } = await supabase
-    .from("event_registration_campaigns")
-    .select("*, event:events(id, name, slug, starts_at, ends_at, location)")
-    .eq("slug", slug)
-    .maybeSingle();
-
-  if (error) throw error;
-  if (!campaign) return null;
-
-  const typedCampaign = campaign as unknown as RegistrationCampaign & {
-    event: Pick<Event, "id" | "name" | "slug" | "starts_at" | "ends_at" | "location">;
-  };
-
-  if (!isCampaignOpen(typedCampaign)) {
-    return null;
-  }
-
-  const [{ data: packages, error: packagesError }, { data: stands, error: standsError }] = await Promise.all([
-    supabase
-      .from("event_registration_packages")
-      .select("*")
-      .eq("campaign_id", typedCampaign.id)
-      .eq("is_active", true)
-      .order("sort_order", { ascending: true }),
-    supabase
-      .from("event_registration_stands")
-      .select("*")
-      .eq("campaign_id", typedCampaign.id)
-      .order("sort_order", { ascending: true }),
-  ]);
-
-  if (packagesError) throw packagesError;
-  if (standsError) throw standsError;
-
-  return {
-    campaign: typedCampaign,
-    packages: (packages ?? []) as RegistrationPackage[],
-    stands: (stands ?? []) as RegistrationStand[],
-  };
+  return loadPublicRegistrationCampaignDetail(slug);
 }
 
 export async function submitPublicRegistrationApplication(input: {

@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { headers } from "next/headers";
 import { PublicRegistrationForm } from "@/components/event-register/public-registration-form";
 import { getPublicRegistrationCampaignBySlug } from "@/lib/event-registration";
+import { resolvePublicRegistrationLandingHref } from "@/lib/event-registration-links";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -17,9 +17,7 @@ export default async function EventRegisterCampaignPage({ params }: PageProps) {
   if (!detail) {
     notFound();
   }
-
-  const host = ((await headers()).get("host") ?? "").toLowerCase();
-  const backHref = host.startsWith("eventregister.") ? "/" : "/event-register";
+  const backHref = resolvePublicRegistrationLandingHref(detail.campaign.event.registration_form_url);
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#f0ebff] via-[#fdf4ef] to-white px-4 py-8 md:px-8">

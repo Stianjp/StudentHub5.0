@@ -178,8 +178,6 @@ function PipelineBoard({ title, description, stages, companyCards, updateAction,
   );
 }
 
-export const dynamic = "force-dynamic";
-
 export default async function AdminCrmPage({ searchParams }: PageProps) {
   await requireRole("admin");
 

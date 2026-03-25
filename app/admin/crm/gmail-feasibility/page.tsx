@@ -5,8 +5,6 @@ import { requireRole } from "@/lib/auth";
 import { getGmailFeasibilitySummary } from "@/lib/gmail-feasibility";
 import { GmailFeasibilityRunForm } from "./run-form";
 
-export const dynamic = "force-dynamic";
-
 export default async function AdminCrmGmailFeasibilityPage() {
   await requireRole("admin");
   const summary = getGmailFeasibilitySummary();
@@ -16,7 +14,7 @@ export default async function AdminCrmGmailFeasibilityPage() {
       <SectionHeader
         eyebrow="CRM / Gmail"
         title="Gmail Feasibility"
-        description="Avklar om OSH kan lese og sende e-post som salg@oslostudenthub.no via Gmail API og domain-wide delegation."
+        description="Avklar om OSH kan lese og sende e-post som testkontoen via Gmail API og domain-wide delegation. Standard testbruker er stian@oslostudenthub.no til salg@ er klar."
         actions={
           <Link
             className="inline-flex items-center justify-center rounded-xl border border-primary/20 bg-primary/5 px-4 py-2 text-xs font-semibold text-primary transition hover:border-secondary hover:bg-secondary/10 hover:text-secondary"

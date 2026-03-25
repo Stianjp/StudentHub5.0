@@ -1,4 +1,5 @@
 import { startOfHour } from "date-fns";
+import { cache } from "react";
 import type { TableRow } from "@/lib/types/database";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
@@ -57,7 +58,10 @@ export function hasLeadDetailsAccessForRegistration(input: {
   return hasPremiumPackageAccess(input.package) || Boolean(input.can_view_leads);
 }
 
-export async function getOrCreateCompanyForUser(userId: string, email?: string | null) {
+export const getOrCreateCompanyForUser = cache(async function getOrCreateCompanyForUser(
+  userId: string,
+  email?: string | null,
+) {
   let supabase = await createServerSupabaseClient();
   try {
     supabase = createAdminSupabaseClient() as unknown as typeof supabase;
@@ -101,9 +105,9 @@ export async function getOrCreateCompanyForUser(userId: string, email?: string |
   }
 
   return null;
-}
+});
 
-export async function getCompanyAccessStatus(userId: string) {
+export const getCompanyAccessStatus = cache(async function getCompanyAccessStatus(userId: string) {
   let supabase = await createServerSupabaseClient();
   try {
     supabase = createAdminSupabaseClient() as unknown as typeof supabase;
@@ -138,7 +142,7 @@ export async function getCompanyAccessStatus(userId: string) {
   }
 
   return { status: "missing" as const };
-}
+});
 
 export async function getCompanyRegistrations(companyId: string) {
   const supabase = await createServerSupabaseClient();

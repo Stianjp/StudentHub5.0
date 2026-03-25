@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { createClient } from "@/lib/supabase/client";
 import { getBaseUrlForRole, getDefaultNextPath } from "@/lib/auth-urls";
+import { roleFromHost } from "@/lib/host";
 import Image from "next/image";
 
 type Role = "student" | "company" | "admin";
@@ -20,21 +21,32 @@ export function SignInClient({
 }) {
   const params = useSearchParams();
   const paramRole = params.get("role") as Role | null;
-  const initialRole = allowedRole ?? (paramRole === "admin" ? "company" : paramRole ?? "company");
+  const detectedRole = useMemo(
+    () => (typeof window === "undefined" ? null : roleFromHost(window.location.host)),
+    [],
+  );
+  const effectiveAllowedRole = allowedRole ?? detectedRole;
+  const initialRole = effectiveAllowedRole ?? (paramRole === "admin" ? "company" : paramRole ?? "company");
   const next = params.get("next");
   const reason = params.get("reason");
   const deleted = params.get("deleted") === "1";
   const defaultMode = (params.get("mode") as Mode | null) ?? "login";
 
-  const [role, setRole] = useState<Role>(allowedRole ?? initialRole);
+  const [role, setRole] = useState<Role>(initialRole);
   const [mode, setMode] = useState<Mode>(defaultMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [orgNumber, setOrgNumber] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "sent" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
-  const allowRegister = allowedRole !== "admin";
+  const allowRegister = effectiveAllowedRole !== "admin";
   const errorId = "auth-error";
+
+  useEffect(() => {
+    if (effectiveAllowedRole && role !== effectiveAllowedRole) {
+      setRole(effectiveAllowedRole);
+    }
+  }, [effectiveAllowedRole, role]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -83,7 +95,7 @@ export function SignInClient({
 
     const formData = new FormData(event.currentTarget);
     const emailValue = String(formData.get("email") ?? "").trim();
-    const roleValue = (allowedRole ?? String(formData.get("role") ?? role)) as Role;
+    const roleValue = (effectiveAllowedRole ?? String(formData.get("role") ?? role)) as Role;
 
     if (!emailValue) {
       setStatus("error");
@@ -197,7 +209,7 @@ export function SignInClient({
       return;
     }
 
-    if (allowedRole) {
+    if (effectiveAllowedRole) {
       const { data: profile } = await supabase
         .from("profiles")
         .select("id, role")
@@ -206,8 +218,8 @@ export function SignInClient({
       const typedProfile = profile as { role?: string } | null;
       if (
         typedProfile?.role &&
-        typedProfile.role !== allowedRole &&
-        !(typedProfile.role === "admin" && allowedRole === "company")
+        typedProfile.role !== effectiveAllowedRole &&
+        !(typedProfile.role === "admin" && effectiveAllowedRole === "company")
       ) {
         await supabase.auth.signOut();
         setStatus("error");

@@ -7,8 +7,6 @@ import { requireRole } from "@/lib/auth";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { updateTemplate, deleteTemplate } from "../actions";
 
-export const dynamic = "force-dynamic";
-
 type Props = { params: Promise<{ templateId: string }> };
 
 export default async function EditTemplatePage({ params }: Props) {

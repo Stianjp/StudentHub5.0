@@ -7,8 +7,6 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { listCompanies } from "@/lib/admin";
 import { registerCompany } from "@/app/admin/actions";
 
-export const dynamic = "force-dynamic";
-
 type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };

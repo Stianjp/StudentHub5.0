@@ -27,8 +27,6 @@ type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export const dynamic = "force-dynamic";
-
 export default async function StudentCompaniesPage({ searchParams }: PageProps) {
   const paramsData = (await (searchParams ?? Promise.resolve({}))) as Record<
     string,

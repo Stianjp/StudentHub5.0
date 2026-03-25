@@ -2,8 +2,6 @@ import { Suspense } from "react";
 import { Card } from "@/components/ui/card";
 import { ResetClient } from "@/app/auth/reset/reset-client";
 
-export const dynamic = "force-dynamic";
-
 export default function ResetPage() {
   return (
     <Suspense
