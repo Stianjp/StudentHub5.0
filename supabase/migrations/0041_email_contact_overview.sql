@@ -4,7 +4,7 @@ create type public.email_contact_case_status as enum (
   'closed',
   'archived'
 );
-
+(); 
 create type public.email_contact_message_direction as enum (
   'inbound',
   'outbound',
