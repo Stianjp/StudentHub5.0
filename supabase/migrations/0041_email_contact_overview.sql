@@ -18,7 +18,7 @@ create type public.email_contact_checklist_key as enum (
   'contract',
   'payment'
 );
-
+;
 create table if not exists public.email_contact_companies (
   id uuid primary key default gen_random_uuid(),
   linked_company_id uuid references public.companies(id) on delete set null,
