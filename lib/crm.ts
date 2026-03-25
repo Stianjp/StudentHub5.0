@@ -147,7 +147,7 @@ const fieldAliases: Record<CanonicalField, string[]> = {
   updatedAtIso: ["updatedatiso", "updated at", "updated"],
 };
 
-function normalizeText(value: string) {
+export function normalizeCrmText(value: string) {
   return value
     .trim()
     .toLowerCase()
@@ -317,8 +317,8 @@ function toCellString(value: string | number | boolean | null | undefined) {
 }
 
 function findFieldIndex(headers: string[], field: CanonicalField) {
-  const normalizedHeaders = headers.map((header) => normalizeText(header));
-  const aliases = fieldAliases[field].map((alias) => normalizeText(alias));
+  const normalizedHeaders = headers.map((header) => normalizeCrmText(header));
+  const aliases = fieldAliases[field].map((alias) => normalizeCrmText(alias));
 
   for (let index = 0; index < normalizedHeaders.length; index += 1) {
     const header = normalizedHeaders[index];
@@ -358,7 +358,7 @@ function dateToMillis(value: string) {
 }
 
 function hasStatus(value: string, pattern: string) {
-  return normalizeText(value) === normalizeText(pattern);
+  return normalizeCrmText(value) === normalizeCrmText(pattern);
 }
 
 function parseGvizRows(text: string) {
@@ -399,8 +399,17 @@ function parseGvizRows(text: string) {
 }
 
 export function normalizePipelineStage(value: string): CrmPipelineStage | "" {
-  const normalized = normalizeText(value);
+  const normalized = normalizeCrmText(value);
   if (!normalized) return "";
+  if (normalized === "betalt" || normalized === "paid") {
+    return "Betalt";
+  }
+  if (normalized === "venter faktura" || normalized === "awaiting invoice" || normalized === "invoice pending") {
+    return "Venter faktura";
+  }
+  if (normalized === "venter kontrakt" || normalized === "awaiting contract" || normalized === "contract pending") {
+    return "Venter kontrakt";
+  }
   if (normalized.includes("pameld") || normalized.includes("won") || normalized.includes("signed") || normalized.includes("registered")) {
     return "Påmeldt";
   }
@@ -414,11 +423,11 @@ export function normalizePipelineStage(value: string): CrmPipelineStage | "" {
   if (normalized.includes("contacted") || normalized.includes("kontaktet")) {
     return "Kontaktet";
   }
-  return "Kontaktet";
+  return "";
 }
 
 function normalizeLeadStatus(value: string) {
-  const normalized = normalizeText(value);
+  const normalized = normalizeCrmText(value);
   if (!normalized) return "";
   if (normalized === "pending approval") return "pending_approval";
   if (normalized === "edit requested") return "edit_requested";
@@ -429,8 +438,8 @@ function normalizeLeadStatus(value: string) {
 }
 
 function isLeadClosed(lead: CrmLead) {
-  const leadStatus = normalizeText(lead.leadStatus);
-  const stopReason = normalizeText(lead.stopReason);
+  const leadStatus = normalizeCrmText(lead.leadStatus);
+  const stopReason = normalizeCrmText(lead.stopReason);
   return leadStatus === "replied" || leadStatus === "bounced" || stopReason === "replied" || stopReason === "bounced";
 }
 
@@ -440,7 +449,7 @@ function isFutureIso(value: string) {
 }
 
 export function isLeadMissingReply(lead: CrmLead) {
-  return normalizeText(lead.leadStatus) === "waiting" && !isFutureIso(lead.snoozeUntilIso);
+  return normalizeCrmText(lead.leadStatus) === "waiting" && !isFutureIso(lead.snoozeUntilIso);
 }
 
 export function getLeadAgeInDays(lead: CrmLead) {
@@ -461,13 +470,13 @@ export function getMissingReplyLeads(leads: CrmLead[]) {
 
 function resolvePipelineStage(leads: CrmLead[]) {
   const explicitStages = new Set(leads.map((lead) => lead.companyStatus).filter(Boolean));
-  for (const stage of ["Påmeldt", "Dialog", "Venter svar", "Kontaktet", "Tapt"] as const) {
+  for (const stage of ["Betalt", "Venter faktura", "Venter kontrakt", "Påmeldt", "Dialog", "Venter svar", "Kontaktet", "Tapt"] as const) {
     if (explicitStages.has(stage)) return stage;
   }
 
   if (leads.some((lead) => isLeadMissingReply(lead))) return "Venter svar";
-  if (leads.some((lead) => normalizeText(lead.leadStatus) === "replied")) return "Dialog";
-  if (leads.some((lead) => normalizeText(lead.leadStatus) === "bounced")) return "Tapt";
+  if (leads.some((lead) => normalizeCrmText(lead.leadStatus) === "replied")) return "Dialog";
+  if (leads.some((lead) => normalizeCrmText(lead.leadStatus) === "bounced")) return "Tapt";
   return "Kontaktet";
 }
 
@@ -492,7 +501,7 @@ export function buildCrmCompanyCards(leads: CrmLead[]) {
   >();
 
   for (const lead of leads) {
-    const key = `${normalizeText(lead.company)}::${normalizeText(lead.eventName)}`;
+    const key = `${normalizeCrmText(lead.company)}::${normalizeCrmText(lead.eventName)}`;
     const current = grouped.get(key) ?? {
       company: lead.company,
       eventName: lead.eventName,
@@ -513,7 +522,7 @@ export function buildCrmCompanyCards(leads: CrmLead[]) {
     current.totalContacts += 1;
     if (!isLeadClosed(lead)) current.openLeadCount += 1;
     if (isLeadMissingReply(lead)) current.waitingReplyCount += 1;
-    if (normalizeText(lead.leadStatus) === "replied") current.repliedCount += 1;
+    if (normalizeCrmText(lead.leadStatus) === "replied") current.repliedCount += 1;
     current.pipelineValueTotal += parseNumber(lead.pipelineValue);
     if (!current.companyChannelName && lead.companyChannelName) current.companyChannelName = lead.companyChannelName;
     if (!current.companyChannelId && lead.companyChannelId) current.companyChannelId = lead.companyChannelId;

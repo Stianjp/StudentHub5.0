@@ -4,6 +4,7 @@ import {
   isLeadMissingReply,
   getLeadAgeInDays,
   CRM_PIPELINE_STAGES,
+  buildCrmCompanyCards,
   type CrmLead,
 } from "@/lib/crm";
 
@@ -40,8 +41,11 @@ describe("CRM_PIPELINE_STAGES", () => {
     expect(CRM_PIPELINE_STAGES).toContain("Venter svar");
     expect(CRM_PIPELINE_STAGES).toContain("Dialog");
     expect(CRM_PIPELINE_STAGES).toContain("Påmeldt");
+    expect(CRM_PIPELINE_STAGES).toContain("Venter kontrakt");
+    expect(CRM_PIPELINE_STAGES).toContain("Venter faktura");
+    expect(CRM_PIPELINE_STAGES).toContain("Betalt");
     expect(CRM_PIPELINE_STAGES).toContain("Tapt");
-    expect(CRM_PIPELINE_STAGES).toHaveLength(5);
+    expect(CRM_PIPELINE_STAGES).toHaveLength(8);
   });
 });
 
@@ -50,13 +54,15 @@ describe("normalizePipelineStage", () => {
     expect(normalizePipelineStage("Kontaktet")).toBe("Kontaktet");
     expect(normalizePipelineStage("Dialog")).toBe("Dialog");
     expect(normalizePipelineStage("Påmeldt")).toBe("Påmeldt");
+    expect(normalizePipelineStage("Venter kontrakt")).toBe("Venter kontrakt");
+    expect(normalizePipelineStage("Venter faktura")).toBe("Venter faktura");
+    expect(normalizePipelineStage("Betalt")).toBe("Betalt");
     expect(normalizePipelineStage("Tapt")).toBe("Tapt");
   });
 
   it("returnerer tom streng for ugyldig verdi", () => {
     expect(normalizePipelineStage("Ukjent")).toBe("");
     expect(normalizePipelineStage("")).toBe("");
-    expect(normalizePipelineStage("dialog")).toBe(""); // case-sensitive
   });
 });
 
@@ -101,5 +107,17 @@ describe("getLeadAgeInDays", () => {
   it("returnerer 0 for lead sendt i dag", () => {
     const lead = makeLead({ sentAtIso: new Date().toISOString() });
     expect(getLeadAgeInDays(lead)).toBe(0);
+  });
+});
+
+describe("buildCrmCompanyCards", () => {
+  it("prioriterer senere registreringssteg over påmeldt", () => {
+    const companyCards = buildCrmCompanyCards([
+      makeLead({ leadId: "lead-1", companyStatus: "Påmeldt" }),
+      makeLead({ leadId: "lead-2", companyStatus: "Betalt" }),
+    ]);
+
+    expect(companyCards).toHaveLength(1);
+    expect(companyCards[0]?.pipelineStage).toBe("Betalt");
   });
 });

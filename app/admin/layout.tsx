@@ -23,7 +23,14 @@ const nav = [
   { href: "/admin/company-packages", label: "Bedriftspakker" },
   { href: "/admin/students", label: "Studenter" },
   { href: "/admin/leads", label: "Leads" },
-  { href: "/admin/crm", label: "CRM" },
+  {
+    href: "/admin/crm",
+    label: "CRM",
+    children: [
+      { href: "/admin/crm", label: "CRM" },
+      { href: "/admin/crm/gmail-feasibility", label: "Gmail-spike" },
+    ],
+  },
   {
     href: "/admin/email",
     label: "E-post",

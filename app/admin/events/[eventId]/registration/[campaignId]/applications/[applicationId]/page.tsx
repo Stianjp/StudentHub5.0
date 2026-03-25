@@ -32,6 +32,10 @@ function statusClass(status: string) {
   return "bg-secondary/20 text-primary";
 }
 
+function automationPillClass(active: boolean) {
+  return active ? "bg-success/15 text-success" : "bg-primary/10 text-primary/70";
+}
+
 export default async function AdminRegistrationApplicationPage({ params, searchParams }: PageProps) {
   await requireRole("admin");
   const { eventId, campaignId, applicationId } = await params;
@@ -44,6 +48,15 @@ export default async function AdminRegistrationApplicationPage({ params, searchP
   const approvedStand = detail.stands.find((stand) => stand.id === detail.application.approved_stand_id) ?? null;
   const defaultPackageId = detail.application.approved_package_id ?? detail.application.requested_package_id ?? "";
   const defaultStandId = detail.application.approved_stand_id ?? detail.application.requested_stand_id ?? "";
+  const registrationLead = detail.automationStatus.crmEntries.find(
+    (entry) => entry.lead_id === detail.automationStatus.registrationLeadId,
+  );
+  const crmSignedCount = detail.automationStatus.crmEntries.filter((entry) => entry.company_status === "Påmeldt").length;
+  const registrationNotificationSent = Boolean(detail.automationStatus.registrationNotificationLog);
+  const registrationConfirmationSent = Boolean(detail.automationStatus.registrationConfirmationLog);
+  const packageGroupReady = Boolean(detail.automationStatus.packageGroupMembership);
+  const portalInvitesReady =
+    detail.invites.length > 0 && detail.invites.every((invite) => invite.status === "invited" || invite.status === "accepted");
 
   return (
     <div className="flex flex-col gap-8">
@@ -142,6 +155,59 @@ export default async function AdminRegistrationApplicationPage({ params, searchP
           </div>
         </Card>
       </section>
+
+      <Card className="grid gap-4">
+        <div className="flex items-center justify-between gap-3">
+          <h3 className="text-lg font-bold text-primary">Automatisering og integrasjoner</h3>
+          <span className={`rounded-full px-3 py-1 text-xs font-semibold ${automationPillClass(Boolean(registrationLead))}`}>
+            {registrationLead ? "CRM synket" : "CRM mangler"}
+          </span>
+        </div>
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <div className="rounded-2xl border border-primary/10 bg-primary/5 p-4 text-sm text-ink/80">
+            <p className="font-semibold text-primary">CRM</p>
+            <p className="mt-1">Registreringslead: {registrationLead ? registrationLead.company_status : "Ikke funnet"}</p>
+            <p>Matchende CRM-rader: {detail.automationStatus.crmEntries.length}</p>
+            <p>Påmeldt-rader: {crmSignedCount}</p>
+          </div>
+          <div className="rounded-2xl border border-primary/10 bg-primary/5 p-4 text-sm text-ink/80">
+            <p className="font-semibold text-primary">Internt varsel</p>
+            <p className={`mt-1 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${automationPillClass(registrationNotificationSent)}`}>
+              {registrationNotificationSent ? "Logget" : "Ikke logget"}
+            </p>
+            <p className="mt-2 text-xs text-ink/60">
+              {detail.automationStatus.registrationNotificationLog?.created_at
+                ? `Sist sendt ${new Date(detail.automationStatus.registrationNotificationLog.created_at).toLocaleString("nb-NO")}`
+                : "Ingen logg funnet"}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-primary/10 bg-primary/5 p-4 text-sm text-ink/80">
+            <p className="font-semibold text-primary">Kontaktbekreftelse</p>
+            <p className={`mt-1 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${automationPillClass(registrationConfirmationSent)}`}>
+              {registrationConfirmationSent ? "Logget" : "Ikke logget"}
+            </p>
+            <p className="mt-2 text-xs text-ink/60">
+              {detail.automationStatus.registrationConfirmationLog?.created_at
+                ? `Sist sendt ${new Date(detail.automationStatus.registrationConfirmationLog.created_at).toLocaleString("nb-NO")}`
+                : "Ingen logg funnet"}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-primary/10 bg-primary/5 p-4 text-sm text-ink/80">
+            <p className="font-semibold text-primary">Pakkebasert e-postgruppe</p>
+            <p className="mt-1">{detail.automationStatus.packageGroupName ?? "Ingen gruppe beregnet ennå"}</p>
+            <p className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${automationPillClass(packageGroupReady)}`}>
+              {packageGroupReady ? "Bedrift lagt til" : "Ikke tilordnet"}
+            </p>
+          </div>
+          <div className="rounded-2xl border border-primary/10 bg-primary/5 p-4 text-sm text-ink/80">
+            <p className="font-semibold text-primary">Portalinvitasjoner</p>
+            <p className="mt-1">{detail.invites.length} opprettet</p>
+            <p className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${automationPillClass(portalInvitesReady)}`}>
+              {portalInvitesReady ? "Sendt" : "Venter / ikke opprettet"}
+            </p>
+          </div>
+        </div>
+      </Card>
 
       {detail.application.status === "pending" ? (
         <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">

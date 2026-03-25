@@ -5,8 +5,11 @@ import {
   buildCrmCompanyCards,
   getMissingReplyLeads,
   buildCrmMetrics,
+  normalizeCrmText,
+  normalizePipelineStage,
 } from "@/lib/crm";
 import type { TableRow } from "@/lib/types/database";
+import type { CrmSyncField } from "@/lib/crm-sheet-sync";
 
 type DbEntry = TableRow<"crm_pipeline_entries">;
 
@@ -30,6 +33,8 @@ export type CrmEntryUpsert = {
   companyChannelName?: string;
   companyChannelId?: string;
 };
+
+type CrmEntryFields = Partial<Omit<CrmEntryUpsert, "leadId">>;
 
 function dbRowToCrmLead(row: DbEntry, index: number): CrmLead {
   return {
@@ -55,6 +60,34 @@ function dbRowToCrmLead(row: DbEntry, index: number): CrmLead {
     updatedAtIso: row.updated_at,
     raw: {},
   };
+}
+
+function parsePipelineValue(value: string | undefined) {
+  if (!value) return undefined;
+  const parsed = Number.parseFloat(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function matchesCompanyEvent(row: Pick<DbEntry, "company" | "event_name">, company: string, eventName: string) {
+  const normalizedCompany = normalizeCrmText(company);
+  const normalizedEvent = normalizeCrmText(eventName);
+  if (!normalizedCompany) return false;
+
+  const companyMatches = normalizeCrmText(row.company) === normalizedCompany;
+  if (!companyMatches) return false;
+  if (!normalizedEvent) return true;
+
+  return normalizeCrmText(row.event_name) === normalizedEvent;
+}
+
+async function listMatchingCompanyEventEntries(company: string, eventName: string) {
+  const supabase = createAdminSupabaseClient();
+  const { data, error } = await supabase
+    .from("crm_pipeline_entries")
+    .select("*");
+
+  if (error) throw new Error(`CRM Supabase fetch failed: ${error.message}`);
+  return ((data ?? []) as DbEntry[]).filter((row) => matchesCompanyEvent(row, company, eventName));
 }
 
 export async function loadCrmEntriesFromSupabase(): Promise<CrmDataset> {
@@ -136,6 +169,75 @@ export async function upsertCrmEntry(input: CrmEntryUpsert): Promise<void> {
   if (error) throw new Error(`CRM upsert failed: ${error.message}`);
 }
 
+export async function syncCrmLeadEntry(input: {
+  leadId: string;
+  fields: CrmEntryFields;
+}): Promise<void> {
+  const existing = await getCrmEntry(input.leadId);
+  const nextCompany = input.fields.company ?? existing?.company ?? "";
+
+  if (!nextCompany.trim()) {
+    throw new Error("CRM lead requires company before it can be synced.");
+  }
+
+  const nextCompanyStatus =
+    input.fields.companyStatus ??
+    (existing?.companyStatus ? normalizePipelineStage(existing.companyStatus) || undefined : undefined);
+
+  await upsertCrmEntry({
+    leadId: input.leadId,
+    company: nextCompany,
+    contactName: input.fields.contactName ?? existing?.contactName ?? "",
+    contactEmail: input.fields.contactEmail ?? existing?.contactEmail ?? "",
+    subject: input.fields.subject ?? existing?.subject ?? "",
+    threadId: input.fields.threadId ?? existing?.threadId ?? "",
+    sourceMessageId: input.fields.sourceMessageId ?? existing?.sourceMessageId ?? "",
+    sentAtIso: input.fields.sentAtIso ?? existing?.sentAtIso ?? "",
+    sequenceStep: input.fields.sequenceStep ?? existing?.sequenceStep ?? "",
+    leadStatus: input.fields.leadStatus ?? existing?.leadStatus ?? "",
+    stopReason: input.fields.stopReason ?? existing?.stopReason ?? "",
+    snoozeUntilIso: input.fields.snoozeUntilIso ?? existing?.snoozeUntilIso ?? "",
+    companyStatus: nextCompanyStatus,
+    eventName: input.fields.eventName ?? existing?.eventName ?? "",
+    temperature: input.fields.temperature ?? existing?.temperature ?? "",
+    pipelineValue: input.fields.pipelineValue ?? parsePipelineValue(existing?.pipelineValue),
+    companyChannelName: input.fields.companyChannelName ?? existing?.companyChannelName ?? "",
+    companyChannelId: input.fields.companyChannelId ?? existing?.companyChannelId ?? "",
+  });
+}
+
+export async function syncCrmLeadEntryFromFields(input: {
+  leadId: string;
+  updates: Partial<Record<CrmSyncField, string>>;
+}): Promise<void> {
+  const companyStatus = input.updates.companyStatus
+    ? normalizePipelineStage(input.updates.companyStatus) || undefined
+    : undefined;
+
+  await syncCrmLeadEntry({
+    leadId: input.leadId,
+    fields: {
+      company: input.updates.company,
+      contactName: input.updates.contactName,
+      contactEmail: input.updates.contactEmail,
+      subject: input.updates.subject,
+      threadId: input.updates.threadId,
+      sourceMessageId: input.updates.sourceMessageId,
+      sentAtIso: input.updates.sentAtIso,
+      sequenceStep: input.updates.sequenceStep,
+      leadStatus: input.updates.leadStatus,
+      stopReason: input.updates.stopReason,
+      snoozeUntilIso: input.updates.snoozeUntilIso,
+      companyStatus,
+      eventName: input.updates.eventName,
+      temperature: input.updates.temperature,
+      pipelineValue: parsePipelineValue(input.updates.pipelineValue),
+      companyChannelName: input.updates.companyChannelName,
+      companyChannelId: input.updates.companyChannelId,
+    },
+  });
+}
+
 export async function updateCrmLeadFields(
   leadId: string,
   fields: {
@@ -167,12 +269,55 @@ export async function updateCompanyPipelineStage(
   stage: CrmPipelineStage
 ): Promise<void> {
   const supabase = createAdminSupabaseClient();
+  const matchingEntries = await listMatchingCompanyEventEntries(company, eventName);
 
+  if (matchingEntries.length === 0) {
+    throw new Error("CRM company pipeline stage update failed: no matching leads found.");
+  }
+
+  const leadIds = matchingEntries.map((row) => row.lead_id);
   const { error } = await supabase
     .from("crm_pipeline_entries")
     .update({ company_status: stage })
-    .eq("company", company)
-    .eq("event_name", eventName);
+    .in("lead_id", leadIds);
 
   if (error) throw new Error(`CRM pipeline stage update failed: ${error.message}`);
+}
+
+export async function syncCompanyEventPipelineStage(
+  company: string,
+  eventName: string,
+  stage: CrmPipelineStage,
+  extraFields: {
+    leadStatus?: string;
+    stopReason?: string;
+  } = {},
+) {
+  const supabase = createAdminSupabaseClient();
+  const matchingEntries = await listMatchingCompanyEventEntries(company, eventName);
+  if (matchingEntries.length === 0) return 0;
+
+  const leadIds = matchingEntries.map((row) => row.lead_id);
+  const update: Partial<DbEntry> = {
+    company_status: stage,
+  };
+
+  if (extraFields.leadStatus !== undefined) {
+    update.lead_status = extraFields.leadStatus;
+  }
+  if (extraFields.stopReason !== undefined) {
+    update.stop_reason = extraFields.stopReason;
+  }
+
+  const { error } = await supabase
+    .from("crm_pipeline_entries")
+    .update(update)
+    .in("lead_id", leadIds);
+
+  if (error) throw new Error(`CRM company-event sync failed: ${error.message}`);
+  return leadIds.length;
+}
+
+export async function listCompanyEventCrmEntries(company: string, eventName: string) {
+  return listMatchingCompanyEventEntries(company, eventName);
 }

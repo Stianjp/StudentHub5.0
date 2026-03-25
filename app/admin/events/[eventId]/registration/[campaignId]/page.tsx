@@ -110,6 +110,10 @@ export default async function AdminRegistrationCampaignDetailPage({ params, sear
             <Input name="floorplanImagePath" defaultValue={detail.campaign.floorplan_image_path ?? ""} />
           </label>
           <label className="text-sm font-semibold text-primary">
+            E-postgruppe-prefiks
+            <Input name="emailGroupPrefix" defaultValue={detail.campaign.email_group_prefix ?? ""} placeholder="SC26" />
+          </label>
+          <label className="text-sm font-semibold text-primary">
             Åpner
             <Input name="opensAt" type="datetime-local" defaultValue={toDateTimeLocal(detail.campaign.opens_at)} />
           </label>

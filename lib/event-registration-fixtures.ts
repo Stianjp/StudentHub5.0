@@ -47,6 +47,7 @@ const FIXTURE_CAMPAIGN: PreviewRegistrationCampaign = {
   public_subtitle: "Pick your package and stand request directly on the floor plan.",
   public_description: "Complete the registration to request a package, stand placement and company portal access for your team.",
   floorplan_image_path: STUDENT_CONNECT_2026_FLOORPLAN.imagePath,
+  email_group_prefix: "SC26",
   is_published: true,
   opens_at: "2026-01-01T00:00:00.000Z",
   closes_at: null,

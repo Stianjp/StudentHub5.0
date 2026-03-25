@@ -259,6 +259,12 @@ export default async function AdminCrmPage({ searchParams }: PageProps) {
             </Link>
             <Link
               className="inline-flex items-center justify-center rounded-xl border border-primary/20 bg-primary/5 px-4 py-2 text-xs font-semibold text-primary transition hover:border-secondary hover:bg-secondary/10 hover:text-secondary"
+              href="/admin/crm/gmail-feasibility"
+            >
+              Gmail-spike
+            </Link>
+            <Link
+              className="inline-flex items-center justify-center rounded-xl border border-primary/20 bg-primary/5 px-4 py-2 text-xs font-semibold text-primary transition hover:border-secondary hover:bg-secondary/10 hover:text-secondary"
               href={apiHref}
             >
               Åpne API (JSON)
@@ -600,4 +606,3 @@ export default async function AdminCrmPage({ searchParams }: PageProps) {
     </div>
   );
 }
-

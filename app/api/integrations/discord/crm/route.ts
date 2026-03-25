@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { normalizePipelineStage } from "@/lib/crm";
 import { syncLeadToGoogleSheet, type CrmSyncField } from "@/lib/crm-sheet-sync";
+import { syncCrmLeadEntryFromFields } from "@/lib/crm-supabase";
 
 const syncPayloadSchema = z
   .object({
@@ -39,6 +40,14 @@ function hasOwn(obj: object, key: string) {
 function normalizeValue(value: unknown) {
   if (value === null || value === undefined) return "";
   return String(value);
+}
+
+function hasGoogleSheetMirrorEnv() {
+  return Boolean(
+    process.env.CRM_GOOGLE_SHEET_ID?.trim() &&
+      process.env.CRM_GOOGLE_SERVICE_ACCOUNT_EMAIL?.trim() &&
+      process.env.CRM_GOOGLE_PRIVATE_KEY?.trim(),
+  );
 }
 
 export async function POST(request: Request) {
@@ -97,7 +106,14 @@ export async function POST(request: Request) {
   directFields.forEach(([payloadKey, field]) => {
     if (!hasOwn(rawBody, payloadKey)) return;
     const rawValue = normalizeValue(payload[payloadKey]);
-    updates[field] = field === "companyStatus" ? normalizePipelineStage(rawValue) || rawValue : rawValue;
+    if (field === "companyStatus") {
+      const normalizedStage = normalizePipelineStage(rawValue);
+      if (normalizedStage) {
+        updates[field] = normalizedStage;
+      }
+      return;
+    }
+    updates[field] = rawValue;
   });
 
   if (payload.action === "lead_created") {
@@ -123,17 +139,43 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await syncLeadToGoogleSheet({
+    await syncCrmLeadEntryFromFields({
       leadId: payload.leadId,
       updates,
     });
 
+    let googleSheet:
+      | { attempted: false }
+      | { attempted: true; ok: true; mode: "updated" | "appended"; rowNumber: number }
+      | { attempted: true; ok: false; error: string } = { attempted: false };
+
+    if (hasGoogleSheetMirrorEnv()) {
+      try {
+        const result = await syncLeadToGoogleSheet({
+          leadId: payload.leadId,
+          updates,
+        });
+        googleSheet = {
+          attempted: true,
+          ok: true,
+          mode: result.mode,
+          rowNumber: result.rowNumber,
+        };
+      } catch (error) {
+        googleSheet = {
+          attempted: true,
+          ok: false,
+          error: error instanceof Error ? error.message : "Failed to sync Google Sheet",
+        };
+      }
+    }
+
     return NextResponse.json(
       {
         ok: true,
-        mode: result.mode,
-        rowNumber: result.rowNumber,
-        leadId: result.leadId,
+        leadId: payload.leadId,
+        mode: "supabase",
+        googleSheet,
       },
       { status: 200 },
     );

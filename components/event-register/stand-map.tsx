@@ -24,7 +24,7 @@ type StandMapProps = {
 
 function standStateClass(stand: StandMapStand, isSelected: boolean) {
   if (isSelected) {
-    return "border-secondary bg-secondary/85 text-primary shadow-soft";
+    return "z-20 scale-[1.04] border-[#140249] bg-[#140249] text-white ring-2 ring-white outline outline-2 outline-[#FE9A70] shadow-[0_0_0_4px_rgba(254,154,112,0.28),0_10px_24px_rgba(20,2,73,0.34)]";
   }
   if (stand.status !== "available" || stand.assigned_application_id) {
     return "border-primary/20 bg-primary/70 text-surface/60 cursor-not-allowed opacity-55";
@@ -94,11 +94,19 @@ export function StandMap({
                 height: `${stand.height}%`,
               }}
               className={cn(
-                "absolute flex items-center justify-center overflow-hidden rounded-md border px-1 text-center text-[9px] font-bold leading-none transition md:text-[10px]",
+                "absolute flex items-center justify-center overflow-hidden rounded-md border px-1 text-center text-[9px] font-bold leading-none transition duration-150 md:text-[10px]",
                 standStateClass(stand, isSelected),
+                isInteractive && !unavailable ? "hover:scale-[1.02] focus-visible:scale-[1.02]" : undefined,
+                isInteractive ? "focus-visible:ring-2 focus-visible:ring-[#FE9A70] focus-visible:ring-offset-0 focus-visible:outline-none" : undefined,
                 !isInteractive ? "pointer-events-none" : undefined,
               )}
             >
+              {isSelected ? (
+                <span
+                  aria-hidden="true"
+                  className="absolute right-0.5 top-0.5 h-2.5 w-2.5 rounded-full bg-[#FE9A70] ring-1 ring-white"
+                />
+              ) : null}
               <span className="block truncate">{stand.display_label ?? stand.stand_code}</span>
             </button>
           );

@@ -101,6 +101,10 @@ export default async function AdminEventRegistrationPage({ params, searchParams 
             <Input name="floorplanImagePath" defaultValue="/event-register/student-connect-2026-floorplan.png" />
           </label>
           <label className="text-sm font-semibold text-primary">
+            E-postgruppe-prefiks
+            <Input name="emailGroupPrefix" defaultValue="SC26" placeholder="SC26" />
+          </label>
+          <label className="text-sm font-semibold text-primary">
             Åpner
             <Input name="opensAt" type="datetime-local" defaultValue={toDateTimeLocal(eventData.event.starts_at)} />
           </label>
@@ -146,6 +150,7 @@ export default async function AdminEventRegistrationPage({ params, searchParams 
                 <p><span className="font-semibold text-primary">Åpner:</span> {campaign.opens_at ? new Date(campaign.opens_at).toLocaleString("nb-NO") : "Ikke satt"}</p>
                 <p><span className="font-semibold text-primary">Lukker:</span> {campaign.closes_at ? new Date(campaign.closes_at).toLocaleString("nb-NO") : "Ikke satt"}</p>
                 <p><span className="font-semibold text-primary">Offentlig URL:</span> https://eventregister.oslostudenthub.no/{campaign.slug}</p>
+                <p><span className="font-semibold text-primary">E-postgruppe-prefiks:</span> {campaign.email_group_prefix || "Ikke satt"}</p>
               </div>
               <div className="flex flex-wrap gap-3">
                 <Link className="button-link text-xs" href={`/admin/events/${eventId}/registration/${campaign.id}`}>

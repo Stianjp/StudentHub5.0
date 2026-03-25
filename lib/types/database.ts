@@ -366,6 +366,7 @@ export type Database = {
           public_subtitle: string | null;
           public_description: string | null;
           floorplan_image_path: string | null;
+          email_group_prefix: string | null;
           is_published: boolean;
           opens_at: string | null;
           closes_at: string | null;
@@ -380,6 +381,7 @@ export type Database = {
           public_subtitle?: string | null;
           public_description?: string | null;
           floorplan_image_path?: string | null;
+          email_group_prefix?: string | null;
           is_published?: boolean;
           opens_at?: string | null;
           closes_at?: string | null;
@@ -394,6 +396,7 @@ export type Database = {
           public_subtitle?: string | null;
           public_description?: string | null;
           floorplan_image_path?: string | null;
+          email_group_prefix?: string | null;
           is_published?: boolean;
           opens_at?: string | null;
           closes_at?: string | null;

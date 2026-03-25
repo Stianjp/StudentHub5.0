@@ -77,6 +77,11 @@ export const registrationCampaignSchema = z.object({
   publicSubtitle: z.string().optional().or(z.literal("")),
   publicDescription: z.string().optional().or(z.literal("")),
   floorplanImagePath: z.string().optional().or(z.literal("")),
+  emailGroupPrefix: z
+    .string()
+    .trim()
+    .transform((value) => value.toUpperCase())
+    .refine((value) => value === "" || /^[A-Z0-9-]+$/.test(value), "E-postgruppe-prefiks kan kun inneholde store bokstaver, tall og bindestrek."),
   opensAt: z.string().optional().or(z.literal("")),
   closesAt: z.string().optional().or(z.literal("")),
   isPublished: z.coerce.boolean().default(false),

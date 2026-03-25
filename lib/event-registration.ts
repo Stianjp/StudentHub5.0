@@ -5,8 +5,18 @@ import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { publicRegistrationApplicationSchema } from "@/lib/validation/event-registration";
 import { getBaseUrlForRole } from "@/lib/auth-urls";
 import { sendTransactionalEmail } from "@/lib/resend";
+import {
+  buildRegistrationConfirmationHtml,
+  buildRegistrationNotificationHtml,
+  buildRegistrationPackageGroupName,
+} from "@/lib/event-registration-automation";
 import { getPreviewRegistrationDetail, listPreviewRegistrationCampaigns } from "@/lib/event-registration-fixtures";
 import { shouldBypassSupabaseInDev } from "@/lib/supabase/env";
+import {
+  listCompanyEventCrmEntries,
+  syncCompanyEventPipelineStage,
+  syncCrmLeadEntry,
+} from "@/lib/crm-supabase";
 
 type RegistrationCampaign = TableRow<"event_registration_campaigns">;
 type RegistrationPackage = TableRow<"event_registration_packages">;
@@ -17,6 +27,10 @@ type CompanyPortalInvite = TableRow<"company_portal_invites">;
 type Event = TableRow<"events">;
 type Company = TableRow<"companies">;
 type EventCompany = TableRow<"event_companies">;
+type EmailLog = TableRow<"email_logs">;
+type EmailGroup = TableRow<"email_groups">;
+type EmailGroupMember = TableRow<"email_group_members">;
+type CrmPipelineEntry = TableRow<"crm_pipeline_entries">;
 
 type PublicCampaignDetail = {
   campaign: RegistrationCampaign & { event: Pick<Event, "id" | "name" | "slug" | "starts_at" | "ends_at" | "location"> };
@@ -26,6 +40,10 @@ type PublicCampaignDetail = {
 
 const LOGO_BUCKET = "event-registration-assets";
 const COMPANY_PORTAL_FALLBACK_URL = "https://bedrift.oslostudenthub.no";
+
+function buildRegistrationLeadId(applicationId: string) {
+  return `reg-${applicationId}`;
+}
 
 function shouldUsePreviewRegistrationData() {
   return shouldBypassSupabaseInDev();
@@ -80,6 +98,138 @@ async function logEmailEvent(input: {
   });
 }
 
+async function releaseStandReservation(standId: string | null | undefined) {
+  if (!standId) return;
+  const supabase = createAdminSupabaseClient();
+  try {
+    await supabase
+      .from("event_registration_stands")
+      .update({
+        status: "available",
+        assigned_application_id: null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", standId);
+  } catch {
+    return;
+  }
+}
+
+async function sendRegistrationNotificationEmail(input: {
+  applicationId: string;
+  companyName: string;
+  eventName: string;
+  packageName: string;
+  contactName: string;
+  contactEmail: string;
+}) {
+  const supabase = createAdminSupabaseClient();
+  const subject = `Ny registrert bedrift: ${input.companyName} bestilte ${input.packageName}`;
+
+  await sendTransactionalEmail({
+    to: "stian@oslostudenthub.no",
+    subject,
+    type: "registration_notification",
+    html: buildRegistrationNotificationHtml(input),
+    payload: {
+      applicationId: input.applicationId,
+      companyName: input.companyName,
+      eventName: input.eventName,
+      packageName: input.packageName,
+      contactEmail: input.contactEmail,
+    },
+    supabase,
+  });
+}
+
+async function sendRegistrationConfirmationEmail(input: {
+  applicationId: string;
+  companyName: string;
+  eventName: string;
+  packageName: string;
+  contactEmail: string;
+  portalEmails: string[];
+}) {
+  const supabase = createAdminSupabaseClient();
+
+  await sendTransactionalEmail({
+    to: input.contactEmail,
+    subject: `Vi har mottatt registreringen til ${input.eventName}`,
+    type: "registration_confirmation",
+    html: buildRegistrationConfirmationHtml(input),
+    payload: {
+      applicationId: input.applicationId,
+      companyName: input.companyName,
+      eventName: input.eventName,
+      packageName: input.packageName,
+      portalEmails: input.portalEmails,
+    },
+    supabase,
+  });
+}
+
+async function ensurePackageEmailGroupMembership(input: {
+  campaign: RegistrationCampaign;
+  packageTier: RegistrationPackage["mapped_package"];
+  company: Company;
+  companyName: string;
+  contactEmail: string;
+}) {
+  if (!input.packageTier) {
+    throw new Error("Approved package is missing a mapped package tier.");
+  }
+
+  const groupName = buildRegistrationPackageGroupName(input.campaign.email_group_prefix, input.packageTier);
+  if (!groupName) {
+    throw new Error("Sett et e-postgruppe-prefiks på kampanjen før bedrifter kan godkjennes.");
+  }
+
+  const supabase = createAdminSupabaseClient();
+  const { data: existingGroups, error: groupLookupError } = await supabase
+    .from("email_groups")
+    .select("*")
+    .eq("name", groupName)
+    .limit(1);
+
+  if (groupLookupError) throw groupLookupError;
+
+  let group = ((existingGroups ?? [])[0] ?? null) as EmailGroup | null;
+  if (group && group.member_type !== "company") {
+    throw new Error(`E-postgruppen ${groupName} finnes allerede, men er ikke en bedriftsgruppe.`);
+  }
+
+  if (!group) {
+    const { data: createdGroup, error: createGroupError } = await supabase
+      .from("email_groups")
+      .insert({
+        name: groupName,
+        description: `Autoopprettet gruppe for ${input.campaign.slug} / ${input.packageTier}.`,
+        member_type: "company",
+      })
+      .select("*")
+      .single();
+
+    if (createGroupError) throw createGroupError;
+    group = createdGroup as EmailGroup;
+  }
+
+  const { error: membershipError } = await supabase
+    .from("email_group_members")
+    .upsert(
+      {
+        group_id: group.id,
+        company_id: input.company.id,
+        email: normalizeEmail(input.contactEmail),
+        display_name: input.companyName,
+      },
+      { onConflict: "group_id,company_id" },
+    );
+
+  if (membershipError) throw membershipError;
+
+  return group;
+}
+
 async function findAuthUserByEmail(email: string) {
   const supabase = createAdminSupabaseClient();
   const target = normalizeEmail(email);
@@ -113,6 +263,12 @@ async function sendCompanyPortalInvite(input: {
   const subject = `Access to ${input.company.name} on OSH StudentHub`;
   const loginUrl = `${companyPortalUrl}/auth/sign-in?role=company&next=%2Fcompany`;
   const existingUser = await findAuthUserByEmail(normalizedEmail);
+  const { data: event } = await supabase
+    .from("events")
+    .select("name")
+    .eq("id", input.application.event_id)
+    .maybeSingle();
+  const eventName = event?.name ?? "your event";
 
   if (!existingUser) {
     const redirectTo = `${companyPortalUrl}/auth/callback?role=company&mode=verify&next=%2Fcompany`;
@@ -137,7 +293,7 @@ async function sendCompanyPortalInvite(input: {
       subject,
       type: "company_portal_invite",
       html: `<p>Hello,</p>
-<p>OSH has approved ${input.company.name} for Student Connect 2026.</p>
+<p>OSH has approved ${input.company.name} for ${eventName}.</p>
 <p>You now have access to the company portal. Sign in here: <a href="${loginUrl}">${loginUrl}</a></p>`,
       payload: {
         companyId: input.company.id,
@@ -389,59 +545,83 @@ export async function submitPublicRegistrationApplication(input: {
   const { error: emailError } = await supabase.from("event_registration_portal_emails").insert(emailRows);
   if (emailError) {
     await supabase.from("event_registration_applications").delete().eq("id", applicationId);
+    await releaseStandReservation(selectedStand?.id);
     if (logoPath) {
       await supabase.storage.from(LOGO_BUCKET).remove([logoPath]).catch(() => undefined);
     }
     throw emailError;
   }
 
-  // Notify OSH about new registration (non-fatal)
-  await Promise.resolve(
-    supabase.from("email_logs").insert({
-      to_email: "stian@oslostudenthub.no",
-      subject: `Ny registrert bedrift: ${parsed.data.companyName.trim()} bestilte ${selectedPackage.public_name}`,
-      type: "registration_notification",
-    })
-  ).catch(() => undefined);
+  try {
+    const contactName = `${parsed.data.contactFirstName} ${parsed.data.contactLastName}`.trim();
+    const normalizedContactEmail = normalizeEmail(parsed.data.contactEmail);
+    const crmLeadId = buildRegistrationLeadId(applicationId);
 
-  const { Resend } = await import("resend");
-  const resendKey = process.env.RESEND_API_KEY;
-  if (resendKey) {
-    await new Resend(resendKey).emails
-      .send({
-        from: "OSH StudentHub <noreply@oslostudenthub.no>",
-        to: "stian@oslostudenthub.no",
-        subject: `Ny registrert bedrift: ${parsed.data.companyName.trim()} bestilte ${selectedPackage.public_name}`,
-        html: `<p><strong>${parsed.data.companyName.trim()}</strong> har registrert seg for <strong>${detail.campaign.event.name}</strong>.</p><p>Pakke: <strong>${selectedPackage.public_name}</strong></p><p>Kontaktperson: ${parsed.data.contactFirstName} ${parsed.data.contactLastName} &lt;${parsed.data.contactEmail}&gt;</p><p>Application-ID: <code>${applicationId}</code></p>`,
-      })
-      .catch(() => undefined);
+    await syncCrmLeadEntry({
+      leadId: crmLeadId,
+      fields: {
+        company: parsed.data.companyName.trim(),
+        contactName,
+        contactEmail: normalizedContactEmail,
+        subject: `Registrering: ${selectedPackage.public_name}`,
+        leadStatus: "replied",
+        companyStatus: "Påmeldt",
+        eventName: detail.campaign.event.name,
+        sequenceStep: "1",
+        threadId: "",
+        sourceMessageId: "",
+        stopReason: "",
+        companyChannelName: "",
+        companyChannelId: "",
+        temperature: "varm",
+        pipelineValue:
+          ({ platinum: 65000, gold: 50000, silver: 30000, standard: 20000 } as Record<string, number>)[
+            selectedPackage.mapped_package ?? ""
+          ] ?? 0,
+      },
+    });
+
+    await syncCompanyEventPipelineStage(parsed.data.companyName.trim(), detail.campaign.event.name, "Påmeldt");
+  } catch (error) {
+    try {
+      await supabase.from("event_registration_portal_emails").delete().eq("application_id", applicationId);
+    } catch {
+      // best-effort rollback
+    }
+    try {
+      await supabase.from("event_registration_applications").delete().eq("id", applicationId);
+    } catch {
+      // best-effort rollback
+    }
+    await releaseStandReservation(selectedStand?.id);
+    if (logoPath) {
+      await supabase.storage.from(LOGO_BUCKET).remove([logoPath]).catch(() => undefined);
+    }
+    throw error;
   }
 
-  // Auto-create CRM entry at "Påmeldt" stage (non-fatal)
-  const crmLeadId = `reg-${applicationId}`;
-  await Promise.resolve(
-    supabase.from("crm_pipeline_entries").upsert(
-      {
-        lead_id: crmLeadId,
-        company: parsed.data.companyName.trim(),
-        contact_name: `${parsed.data.contactFirstName} ${parsed.data.contactLastName}`.trim(),
-        contact_email: normalizeEmail(parsed.data.contactEmail),
-        subject: `Registrering: ${selectedPackage.public_name}`,
-        lead_status: "replied",
-        company_status: "Påmeldt" as const,
-        event_name: detail.campaign.event.name,
-        sequence_step: "1",
-        thread_id: "",
-        source_message_id: "",
-        stop_reason: "",
-        company_channel_name: "",
-        company_channel_id: "",
-        temperature: "varm",
-        pipeline_value: ({ platinum: 65000, gold: 50000, silver: 30000, standard: 20000 } as Record<string, number>)[selectedPackage.mapped_package ?? ""] ?? 0,
-      },
-      { onConflict: "lead_id" }
-    )
-  ).catch(() => undefined);
+  const companyName = parsed.data.companyName.trim();
+  const contactName = `${parsed.data.contactFirstName} ${parsed.data.contactLastName}`.trim();
+  const normalizedContactEmail = normalizeEmail(parsed.data.contactEmail);
+
+  await Promise.allSettled([
+    sendRegistrationNotificationEmail({
+      applicationId,
+      companyName,
+      eventName: detail.campaign.event.name,
+      packageName: selectedPackage.public_name,
+      contactName,
+      contactEmail: normalizedContactEmail,
+    }),
+    sendRegistrationConfirmationEmail({
+      applicationId,
+      companyName,
+      eventName: detail.campaign.event.name,
+      packageName: selectedPackage.public_name,
+      contactEmail: normalizedContactEmail,
+      portalEmails: parsed.data.portalEmails.map((email) => normalizeEmail(email)),
+    }),
+  ]);
 
   return { id: applicationId };
 }
@@ -544,6 +724,53 @@ export async function getAdminRegistrationApplicationDetail(applicationId: strin
     supabase.from("company_portal_invites").select("*").eq("application_id", typedApplication.id).order("created_at", { ascending: true }),
   ]);
 
+  const typedCampaign = campaign as unknown as RegistrationCampaign & { event: Event };
+  const typedRequestedPackage = (requestedPackage ?? null) as RegistrationPackage | null;
+  const typedApprovedPackage = (approvedPackage ?? null) as RegistrationPackage | null;
+  const expectedGroupName = buildRegistrationPackageGroupName(
+    typedCampaign.email_group_prefix,
+    typedApprovedPackage?.mapped_package ?? typedRequestedPackage?.mapped_package ?? null,
+  );
+
+  const [registrationNotificationLog, registrationConfirmationLog, crmEntries, packageGroup] = await Promise.all([
+    supabase
+      .from("email_logs")
+      .select("*")
+      .eq("type", "registration_notification")
+      .contains("payload", { applicationId: typedApplication.id })
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("email_logs")
+      .select("*")
+      .eq("type", "registration_confirmation")
+      .contains("payload", { applicationId: typedApplication.id })
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    listCompanyEventCrmEntries(typedApplication.company_name, typedCampaign.event.name),
+    expectedGroupName
+      ? supabase.from("email_groups").select("*").eq("name", expectedGroupName).limit(1).maybeSingle()
+      : Promise.resolve({ data: null, error: null }),
+  ]);
+
+  if (registrationNotificationLog.error) throw registrationNotificationLog.error;
+  if (registrationConfirmationLog.error) throw registrationConfirmationLog.error;
+  if (packageGroup.error) throw packageGroup.error;
+
+  let packageGroupMembership: EmailGroupMember | null = null;
+  if (typedApplication.company_id && packageGroup.data?.id) {
+    const { data } = await supabase
+      .from("email_group_members")
+      .select("*")
+      .eq("group_id", packageGroup.data.id)
+      .eq("company_id", typedApplication.company_id)
+      .limit(1)
+      .maybeSingle();
+    packageGroupMembership = (data ?? null) as EmailGroupMember | null;
+  }
+
   let logoUrl: string | null = null;
   if (typedApplication.logo_path) {
     const signed = await supabase.storage.from(LOGO_BUCKET).createSignedUrl(typedApplication.logo_path, 60 * 60);
@@ -554,14 +781,23 @@ export async function getAdminRegistrationApplicationDetail(applicationId: strin
 
   return {
     application: typedApplication,
-    campaign: campaign as unknown as RegistrationCampaign & { event: Event },
+    campaign: typedCampaign,
     packages: (packages ?? []) as RegistrationPackage[],
-    requestedPackage: (requestedPackage ?? null) as RegistrationPackage | null,
-    approvedPackage: (approvedPackage ?? null) as RegistrationPackage | null,
+    requestedPackage: typedRequestedPackage,
+    approvedPackage: typedApprovedPackage,
     stands: (stands ?? []) as RegistrationStand[],
     portalEmails: (portalEmails ?? []) as RegistrationPortalEmail[],
     invites: (invites ?? []) as CompanyPortalInvite[],
     logoUrl,
+    automationStatus: {
+      crmEntries: crmEntries as CrmPipelineEntry[],
+      registrationLeadId: buildRegistrationLeadId(typedApplication.id),
+      registrationNotificationLog: (registrationNotificationLog.data ?? null) as EmailLog | null,
+      registrationConfirmationLog: (registrationConfirmationLog.data ?? null) as EmailLog | null,
+      packageGroupName: expectedGroupName,
+      packageGroup: (packageGroup.data ?? null) as EmailGroup | null,
+      packageGroupMembership,
+    },
   };
 }
 
@@ -573,6 +809,7 @@ export async function upsertRegistrationCampaign(input: {
   publicSubtitle?: string | null;
   publicDescription?: string | null;
   floorplanImagePath?: string | null;
+  emailGroupPrefix?: string | null;
   opensAt?: string | null;
   closesAt?: string | null;
   isPublished: boolean;
@@ -585,6 +822,7 @@ export async function upsertRegistrationCampaign(input: {
     public_subtitle: input.publicSubtitle || null,
     public_description: input.publicDescription || null,
     floorplan_image_path: input.floorplanImagePath || null,
+    email_group_prefix: input.emailGroupPrefix || null,
     opens_at: input.opensAt || null,
     closes_at: input.closesAt || null,
     is_published: input.isPublished,
@@ -724,7 +962,7 @@ export async function approveRegistrationApplication(input: {
     throw new Error("Only pending applications can be approved.");
   }
 
-  const [{ data: approvedPackage, error: packageError }, { error: campaignError }] = await Promise.all([
+  const [{ data: approvedPackage, error: packageError }, { data: campaign, error: campaignError }] = await Promise.all([
     supabase.from("event_registration_packages").select("*").eq("id", input.approvedPackageId).single(),
     supabase.from("event_registration_campaigns").select("*").eq("id", typedApplication.campaign_id).single(),
   ]);
@@ -733,6 +971,7 @@ export async function approveRegistrationApplication(input: {
   if (campaignError) throw campaignError;
 
   const typedPackage = approvedPackage as RegistrationPackage;
+  const typedCampaign = campaign as RegistrationCampaign;
   if (typedPackage.campaign_id !== typedApplication.campaign_id) {
     throw new Error("The selected package does not belong to this campaign.");
   }
@@ -754,6 +993,7 @@ export async function approveRegistrationApplication(input: {
   }
 
   let claimedStand: RegistrationStand | null = null;
+  let shouldReleaseClaimedStand = false;
   if (input.approvedStandId) {
     const { data: stand, error: standError } = await supabase
       .from("event_registration_stands")
@@ -770,24 +1010,29 @@ export async function approveRegistrationApplication(input: {
       throw new Error("The selected stand does not match the approved package.");
     }
 
-    const { data: claimed, error: claimError } = await supabase
-      .from("event_registration_stands")
-      .update({
-        status: "assigned",
-        assigned_application_id: typedApplication.id,
-        updated_at: now,
-      })
-      .eq("id", typedStand.id)
-      .eq("status", "available")
-      .is("assigned_application_id", null)
-      .select("*")
-      .single();
+    if (typedStand.assigned_application_id === typedApplication.id && typedStand.status === "assigned") {
+      claimedStand = typedStand;
+    } else {
+      const { data: claimed, error: claimError } = await supabase
+        .from("event_registration_stands")
+        .update({
+          status: "assigned",
+          assigned_application_id: typedApplication.id,
+          updated_at: now,
+        })
+        .eq("id", typedStand.id)
+        .eq("status", "available")
+        .is("assigned_application_id", null)
+        .select("*")
+        .single();
 
-    if (claimError) {
-      throw new Error("The selected stand is no longer available. Refresh and choose another stand.");
+      if (claimError) {
+        throw new Error("The selected stand is no longer available. Refresh and choose another stand.");
+      }
+
+      claimedStand = claimed as RegistrationStand;
+      shouldReleaseClaimedStand = true;
     }
-
-    claimedStand = claimed as RegistrationStand;
   }
 
   try {
@@ -828,6 +1073,14 @@ export async function approveRegistrationApplication(input: {
       company = createdCompany as Company;
     }
 
+    await ensurePackageEmailGroupMembership({
+      campaign: typedCampaign,
+      packageTier: typedPackage.mapped_package,
+      company,
+      companyName: typedApplication.company_name,
+      contactEmail: typedApplication.contact_email,
+    });
+
     const standCode = claimedStand?.stand_code ?? null;
     const { data: eventCompany, error: eventCompanyError } = await supabase
       .from("event_companies")
@@ -866,6 +1119,10 @@ export async function approveRegistrationApplication(input: {
       .eq("id", typedApplication.id);
 
     if (applicationUpdateError) throw applicationUpdateError;
+
+    if (typedApplication.requested_stand_id && typedApplication.requested_stand_id !== claimedStand?.id) {
+      await releaseStandReservation(typedApplication.requested_stand_id);
+    }
 
     const { data: portalEmails, error: portalEmailError } = await supabase
       .from("event_registration_portal_emails")
@@ -920,7 +1177,7 @@ export async function approveRegistrationApplication(input: {
       eventCompanyId: (eventCompany as EventCompany).id,
     };
   } catch (error) {
-    if (claimedStand) {
+    if (claimedStand && shouldReleaseClaimedStand) {
       await supabase
         .from("event_registration_stands")
         .update({
@@ -942,15 +1199,41 @@ export async function rejectRegistrationApplication(input: {
   const supabase = createAdminSupabaseClient();
   const { data: application, error } = await supabase
     .from("event_registration_applications")
-    .select("id, status")
+    .select("*")
     .eq("id", input.applicationId)
     .single();
   if (error) throw error;
-  if (application.status !== "pending") {
+  const typedApplication = application as RegistrationApplication;
+  if (typedApplication.status !== "pending") {
     throw new Error("Only pending applications can be rejected.");
   }
 
   const now = new Date().toISOString();
+  const { data: campaign, error: campaignError } = await supabase
+    .from("event_registration_campaigns")
+    .select("*, event:events(*)")
+    .eq("id", typedApplication.campaign_id)
+    .single();
+
+  if (campaignError) throw campaignError;
+
+  const typedCampaign = campaign as RegistrationCampaign & { event: Event };
+
+  await syncCrmLeadEntry({
+    leadId: buildRegistrationLeadId(typedApplication.id),
+    fields: {
+      company: typedApplication.company_name,
+      contactName: `${typedApplication.contact_first_name} ${typedApplication.contact_last_name}`.trim(),
+      contactEmail: typedApplication.contact_email,
+      subject: "Registrering avslått",
+      companyStatus: "Tapt",
+      leadStatus: "registration_rejected",
+      stopReason: "registration_rejected",
+      eventName: typedCampaign.event.name,
+    },
+  });
+  await syncCompanyEventPipelineStage(typedApplication.company_name, typedCampaign.event.name, "Tapt");
+
   const { error: updateError } = await supabase
     .from("event_registration_applications")
     .update({
@@ -963,6 +1246,7 @@ export async function rejectRegistrationApplication(input: {
     .eq("id", input.applicationId);
 
   if (updateError) throw updateError;
+  await releaseStandReservation(typedApplication.requested_stand_id);
 }
 
 export async function resendCompanyPortalInvite(inviteId: string) {
