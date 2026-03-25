@@ -49,6 +49,12 @@ export default async function EmailPage() {
         actions={
           <div className="flex gap-2">
             <Link
+              href="/admin/email/contact-overview"
+              className="inline-flex items-center justify-center rounded-xl border border-primary/20 bg-primary/5 px-4 py-2 text-xs font-semibold text-primary transition hover:border-secondary hover:bg-secondary/10 hover:text-secondary"
+            >
+              Kontaktoversikt
+            </Link>
+            <Link
               href="/admin/email/templates"
               className="inline-flex items-center justify-center rounded-xl border border-primary/20 bg-primary/5 px-4 py-2 text-xs font-semibold text-primary transition hover:border-secondary hover:bg-secondary/10 hover:text-secondary"
             >

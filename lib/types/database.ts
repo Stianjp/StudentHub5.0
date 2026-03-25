@@ -1011,6 +1011,225 @@ export type Database = {
         };
         Relationships: [];
       };
+      email_contact_companies: {
+        Row: {
+          id: string;
+          linked_company_id: string | null;
+          display_name: string;
+          primary_domain: string;
+          primary_email: string | null;
+          archived_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          linked_company_id?: string | null;
+          display_name: string;
+          primary_domain: string;
+          primary_email?: string | null;
+          archived_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          linked_company_id?: string | null;
+          display_name?: string;
+          primary_domain?: string;
+          primary_email?: string | null;
+          archived_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      email_contact_cases: {
+        Row: {
+          id: string;
+          contact_company_id: string;
+          event_id: string | null;
+          case_number: string;
+          title: string;
+          status: "unsorted" | "open" | "closed" | "archived";
+          contact_name: string | null;
+          contact_email: string | null;
+          latest_message_at: string | null;
+          merged_into_case_id: string | null;
+          archived_at: string | null;
+          closed_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          contact_company_id: string;
+          event_id?: string | null;
+          case_number: string;
+          title: string;
+          status?: "unsorted" | "open" | "closed" | "archived";
+          contact_name?: string | null;
+          contact_email?: string | null;
+          latest_message_at?: string | null;
+          merged_into_case_id?: string | null;
+          archived_at?: string | null;
+          closed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          contact_company_id?: string;
+          event_id?: string | null;
+          case_number?: string;
+          title?: string;
+          status?: "unsorted" | "open" | "closed" | "archived";
+          contact_name?: string | null;
+          contact_email?: string | null;
+          latest_message_at?: string | null;
+          merged_into_case_id?: string | null;
+          archived_at?: string | null;
+          closed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      email_contact_case_messages: {
+        Row: {
+          id: string;
+          case_id: string;
+          direction: "inbound" | "outbound" | "internal_note";
+          source: string;
+          gmail_message_id: string | null;
+          gmail_thread_id: string | null;
+          internet_message_id: string | null;
+          in_reply_to_message_id: string | null;
+          from_email: string;
+          from_name: string | null;
+          to_emails: string[];
+          cc_emails: string[];
+          subject: string;
+          body_text: string | null;
+          body_html: string | null;
+          sent_at: string | null;
+          received_at: string | null;
+          raw_headers: Json;
+          moved_from_case_id: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          case_id: string;
+          direction: "inbound" | "outbound" | "internal_note";
+          source?: string;
+          gmail_message_id?: string | null;
+          gmail_thread_id?: string | null;
+          internet_message_id?: string | null;
+          in_reply_to_message_id?: string | null;
+          from_email?: string;
+          from_name?: string | null;
+          to_emails?: string[];
+          cc_emails?: string[];
+          subject?: string;
+          body_text?: string | null;
+          body_html?: string | null;
+          sent_at?: string | null;
+          received_at?: string | null;
+          raw_headers?: Json;
+          moved_from_case_id?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          case_id?: string;
+          direction?: "inbound" | "outbound" | "internal_note";
+          source?: string;
+          gmail_message_id?: string | null;
+          gmail_thread_id?: string | null;
+          internet_message_id?: string | null;
+          in_reply_to_message_id?: string | null;
+          from_email?: string;
+          from_name?: string | null;
+          to_emails?: string[];
+          cc_emails?: string[];
+          subject?: string;
+          body_text?: string | null;
+          body_html?: string | null;
+          sent_at?: string | null;
+          received_at?: string | null;
+          raw_headers?: Json;
+          moved_from_case_id?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      email_contact_case_checklist_items: {
+        Row: {
+          id: string;
+          case_id: string;
+          item_key: "logo" | "tables_chairs" | "reply" | "contract" | "payment";
+          label: string;
+          is_completed: boolean;
+          completed_at: string | null;
+          completed_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          case_id: string;
+          item_key: "logo" | "tables_chairs" | "reply" | "contract" | "payment";
+          label: string;
+          is_completed?: boolean;
+          completed_at?: string | null;
+          completed_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          case_id?: string;
+          item_key?: "logo" | "tables_chairs" | "reply" | "contract" | "payment";
+          label?: string;
+          is_completed?: boolean;
+          completed_at?: string | null;
+          completed_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      email_contact_mailbox_sync_state: {
+        Row: {
+          mailbox_email: string;
+          last_synced_at: string | null;
+          last_error: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          mailbox_email: string;
+          last_synced_at?: string | null;
+          last_error?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          mailbox_email?: string;
+          last_synced_at?: string | null;
+          last_error?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       crm_pipeline_entries: {
         Row: {
           id: string;
@@ -1180,6 +1399,10 @@ export type Database = {
         Args: { uid: string };
         Returns: boolean;
       };
+      next_email_contact_case_number: {
+        Args: Record<string, never>;
+        Returns: string;
+      };
       has_platinum_access: {
         Args: { uid: string; event_uuid: string; company_uuid: string };
         Returns: boolean;
@@ -1190,6 +1413,9 @@ export type Database = {
       package_tier: "standard" | "silver" | "gold" | "platinum";
       visit_source: "qr" | "kiosk";
       crm_pipeline_stage: "Kontaktet" | "Venter svar" | "Dialog" | "Tapt" | "Påmeldt" | "Venter kontrakt" | "Venter faktura" | "Betalt";
+      email_contact_case_status: "unsorted" | "open" | "closed" | "archived";
+      email_contact_message_direction: "inbound" | "outbound" | "internal_note";
+      email_contact_checklist_key: "logo" | "tables_chairs" | "reply" | "contract" | "payment";
       email_group_member_type: "company" | "student";
     };
     CompositeTypes: Record<string, never>;
