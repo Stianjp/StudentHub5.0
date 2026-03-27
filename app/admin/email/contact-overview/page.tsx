@@ -55,12 +55,12 @@ export default async function ContactOverviewPage({ searchParams }: PageProps) {
   const unreadCompanyCount = typedItems.filter((item) => item.unreadCount > 0).length;
 
   return (
-    <div className="rounded-[36px] border border-white/40 bg-[#FFF4E0] p-6 text-[#2D1C63] shadow-[0_30px_80px_rgba(20,2,73,0.18)] md:p-8">
-      <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-8">
         <SectionHeader
           eyebrow="E-post"
           title="Kontaktoversikt"
           description="Fordel kontaktbedrifter på eier, se uleste meldinger og følg opp bedriftene i én bred oversikt."
+          tone="light"
           actions={
             <>
               <Link
@@ -240,7 +240,6 @@ export default async function ContactOverviewPage({ searchParams }: PageProps) {
             </div>
           )}
         </Card>
-      </div>
     </div>
   );
 }

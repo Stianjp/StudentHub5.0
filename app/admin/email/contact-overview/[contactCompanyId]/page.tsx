@@ -61,17 +61,17 @@ export default async function ContactOverviewCompanyPage({ params, searchParams 
   const defaultTo = detail.activeCase?.contact_email ?? detail.company.primary_email ?? "";
 
   return (
-    <div className="rounded-[36px] border border-white/40 bg-[#FFF4E0] p-6 text-[#2D1C63] shadow-[0_30px_80px_rgba(20,2,73,0.18)] md:p-8">
-      <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-8">
         <SectionHeader
           eyebrow="E-post / Kontaktoversikt"
           title={detail.company.display_name}
           description={`${detail.company.primary_domain}${detail.company.primary_email ? ` · ${detail.company.primary_email}` : ""}`}
+          tone="light"
           actions={
             <>
               <Link
                 href="/admin/email/contact-overview"
-                className="inline-flex items-center justify-center rounded-xl border border-primary/20 bg-primary/5 px-4 py-2 text-xs font-semibold text-primary transition hover:border-secondary hover:bg-secondary/10 hover:text-secondary"
+                className="inline-flex items-center justify-center rounded-xl border border-white/25 bg-white/10 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/15"
               >
                 Tilbake til oversikt
               </Link>
@@ -478,7 +478,6 @@ export default async function ContactOverviewCompanyPage({ params, searchParams 
             )}
           </div>
         </div>
-      </div>
     </div>
   );
 }
