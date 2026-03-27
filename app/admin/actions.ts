@@ -10,11 +10,14 @@ import {
   createCompanySchema,
   companyDomainSchema,
   approveCompanyAccessSchema,
+  deleteCompanySchema,
 } from "@/lib/validation/admin";
 import {
   addCompanyDomain,
   approveCompanyAccess,
   createCompany,
+  deleteCompany,
+  getCompanyWithDetails,
   inviteCompanyToEvent,
   registerCompanyForEvent,
   setPackageForCompany,
@@ -242,6 +245,43 @@ export async function createCompanyAction(formData: FormData) {
     if (typeof returnTo === "string" && returnTo.startsWith("/")) {
       const message = getErrorMessage(error);
       redirect(`${returnTo}?error=${encodeURIComponent(message)}`);
+    }
+    throw error;
+  }
+}
+
+export async function deleteCompanyAction(formData: FormData) {
+  await requireRole("admin");
+  try {
+    const parsed = deleteCompanySchema.safeParse({
+      companyId: getFormValue(formData, "companyId"),
+      confirmationName: getFormValue(formData, "confirmationName"),
+    });
+
+    if (!parsed.success) {
+      throw new Error(parsed.error.issues.map((issue) => issue.message).join(", "));
+    }
+
+    const company = await getCompanyWithDetails(parsed.data.companyId);
+    if (company.name.trim().toLowerCase() !== parsed.data.confirmationName.trim().toLowerCase()) {
+      throw new Error("Bedriftsnavnet må skrives inn nøyaktig for å slette bedriften.");
+    }
+
+    await deleteCompany(parsed.data.companyId);
+
+    revalidatePath("/admin");
+    revalidatePath("/admin/companies");
+    revalidatePath("/admin/companies/overview");
+    revalidatePath("/admin/events");
+    revalidatePath("/admin/company-packages");
+    revalidatePath("/admin/email/contact-overview");
+    redirect("/admin/companies/overview?deleted=1");
+  } catch (error) {
+    if (isNextRedirectError(error)) throw error;
+    const companyId = String(getFormValue(formData, "companyId") ?? "").trim();
+    const message = getErrorMessage(error);
+    if (isUuid(companyId)) {
+      redirect(`/admin/companies/${companyId}?error=${encodeURIComponent(message)}`);
     }
     throw error;
   }

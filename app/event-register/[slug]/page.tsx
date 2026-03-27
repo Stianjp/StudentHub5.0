@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PublicRegistrationForm } from "@/components/event-register/public-registration-form";
+import { getPublicRegistrationCopy } from "@/lib/event-registration-copy";
 import { getPublicRegistrationCampaignBySlug } from "@/lib/event-registration";
 import { resolvePublicRegistrationLandingHref } from "@/lib/event-registration-links";
 
@@ -18,6 +19,14 @@ export default async function EventRegisterCampaignPage({ params }: PageProps) {
     notFound();
   }
   const backHref = resolvePublicRegistrationLandingHref(detail.campaign.event.registration_form_url);
+  const copy = getPublicRegistrationCopy({
+    slug: detail.campaign.slug,
+    publicTitle: detail.campaign.public_title,
+    publicSubtitle: detail.campaign.public_subtitle,
+    publicDescription: detail.campaign.public_description,
+    eventName: detail.campaign.event.name,
+    eventSlug: detail.campaign.event.slug,
+  });
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-[#f0ebff] via-[#fdf4ef] to-white px-4 py-8 md:px-8">
@@ -30,10 +39,10 @@ export default async function EventRegisterCampaignPage({ params }: PageProps) {
               OSH Event Register
             </p>
             <h1 className="text-4xl font-extrabold text-[#140249] md:text-5xl">
-              {detail.campaign.public_title}
+              {copy.title}
             </h1>
             <p className="max-w-2xl text-base leading-relaxed text-[#1A1626]">
-              {detail.campaign.public_description ??
+              {copy.description ??
                 "Complete the registration to request a package, a stand and company portal access for your team."}
             </p>
           </div>
@@ -65,9 +74,9 @@ export default async function EventRegisterCampaignPage({ params }: PageProps) {
         <PublicRegistrationForm
           slug={slug}
           campaign={{
-            publicTitle: detail.campaign.public_title,
-            publicSubtitle: detail.campaign.public_subtitle,
-            publicDescription: detail.campaign.public_description,
+            publicTitle: copy.title,
+            publicSubtitle: copy.subtitle,
+            publicDescription: copy.description,
             floorplanImagePath: detail.campaign.floorplan_image_path,
             eventName: detail.campaign.event.name,
           }}

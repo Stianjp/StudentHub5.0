@@ -37,6 +37,7 @@ const nav = [
     children: [
       { href: "/admin/email", label: "Send e-post" },
       { href: "/admin/email/contact-overview", label: "Kontaktoversikt" },
+      { href: "/admin/email/contact-overview/new", label: "Opprett ny bedriftsprofil" },
       { href: "/admin/email/groups", label: "Grupper" },
       { href: "/admin/email/templates", label: "Maler" },
     ],

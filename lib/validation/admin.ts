@@ -60,3 +60,8 @@ export const approveCompanyAccessSchema = z.object({
   orgNumber: z.string().regex(/^\d{9}$/).optional().or(z.literal("")),
   email: z.string().email().optional().or(z.literal("")),
 });
+
+export const deleteCompanySchema = z.object({
+  companyId: z.string().uuid(),
+  confirmationName: z.string().min(1, "Skriv inn bedriftsnavnet for å bekrefte sletting."),
+});

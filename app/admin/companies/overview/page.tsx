@@ -17,6 +17,8 @@ export default async function AdminCompaniesOverviewPage({ searchParams }: PageP
   const query = typeof params.q === "string" ? params.q.toLowerCase() : "";
   const sort = typeof params.sort === "string" ? params.sort : "name";
   const dir = params.dir === "asc" ? "asc" : "desc";
+  const deleted = params.deleted === "1";
+  const errorMessage = typeof params.error === "string" ? params.error : "";
   const page = Math.max(1, Number(params.page ?? "1"));
   const pageSize = 20;
 
@@ -41,6 +43,17 @@ export default async function AdminCompaniesOverviewPage({ searchParams }: PageP
         description="Alle bedrifter, med søk og sortering."
         actions={<Link className="button-link text-xs" href="/admin/companies/register">Registrer bedrift</Link>}
       />
+
+      {deleted ? (
+        <Card className="border border-success/30 bg-success/10 text-sm text-success">
+          Bedriften er slettet.
+        </Card>
+      ) : null}
+      {errorMessage ? (
+        <Card className="border border-error/30 bg-error/10 text-sm text-error">
+          {decodeURIComponent(errorMessage)}
+        </Card>
+      ) : null}
 
       <Card className="flex flex-col gap-3">
         <h3 className="text-lg font-bold text-primary">Søk i bedrifter</h3>

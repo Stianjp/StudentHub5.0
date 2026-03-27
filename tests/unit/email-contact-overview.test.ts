@@ -122,4 +122,14 @@ describe("summarizeMessageBody", () => {
       ),
     ).toContain("Hei Vi venter på logo.");
   });
+
+  it("viser ikke hele sitert tråd når body_text allerede er trimmet", () => {
+    expect(
+      summarizeMessageBody(
+        makeMessage({
+          body_text: "Hei, vi sender logo i morgen.\n\nOn Mon, someone wrote:\nTidligere melding",
+        }),
+      ),
+    ).toBe("Hei, vi sender logo i morgen.");
+  });
 });

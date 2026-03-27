@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getPublicRegistrationCopy } from "@/lib/event-registration-copy";
 import { listPublicRegistrationCampaigns } from "@/lib/event-registration";
 import { resolvePublicRegistrationCampaignHref } from "@/lib/event-registration-links";
 
@@ -17,10 +18,10 @@ export default async function EventRegisterLandingPage() {
             OSH Event Register
           </p>
           <h1 className="mt-4 max-w-3xl text-4xl font-extrabold md:text-5xl">
-            Public registration for career fairs and partner events.
+            Register your company for Oslo Student Hub events.
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-relaxed text-white/80">
-            Choose an open registration below to request a stand, package and company portal access.
+            Choose an open registration below to join Student Connect 2026 or another Oslo Student Hub event.
             All registrations are reviewed by OSH before approval.
           </p>
         </div>
@@ -36,7 +37,17 @@ export default async function EventRegisterLandingPage() {
             </div>
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
-              {campaigns.map((campaign) => (
+              {campaigns.map((campaign) => {
+                const copy = getPublicRegistrationCopy({
+                  slug: campaign.slug,
+                  publicTitle: campaign.public_title,
+                  publicSubtitle: campaign.public_subtitle,
+                  publicDescription: campaign.public_description,
+                  eventName: campaign.event.name,
+                  eventSlug: campaign.event.slug,
+                });
+
+                return (
                 <Link
                   key={campaign.id}
                   href={resolvePublicRegistrationCampaignHref(campaign.event.registration_form_url, campaign.slug)}
@@ -48,13 +59,13 @@ export default async function EventRegisterLandingPage() {
                         <p className="text-xs font-bold uppercase tracking-widest text-[#6d28d9]">
                           {campaign.event.name}
                         </p>
-                        <h2 className="mt-1 text-2xl font-extrabold text-[#140249]">{campaign.public_title}</h2>
-                        {campaign.public_subtitle ? (
-                          <p className="mt-1 text-sm font-semibold text-[#140249]/80">{campaign.public_subtitle}</p>
+                        <h2 className="mt-1 text-2xl font-extrabold text-[#140249]">{copy.title}</h2>
+                        {copy.subtitle ? (
+                          <p className="mt-1 text-sm font-semibold text-[#140249]/80">{copy.subtitle}</p>
                         ) : null}
                       </div>
                       <p className="text-sm leading-relaxed text-[#1A1626]/80">
-                        {campaign.public_description ?? "Open the registration and complete the application."}
+                        {copy.description ?? "Open the registration and complete the application."}
                       </p>
                       <div className="flex items-center justify-between gap-3 text-xs font-semibold text-[#140249]/70">
                         <span>
@@ -67,7 +78,8 @@ export default async function EventRegisterLandingPage() {
                     </div>
                   </div>
                 </Link>
-              ))}
+                );
+              })}
             </div>
           )}
         </section>

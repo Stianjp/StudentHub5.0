@@ -14,6 +14,7 @@ import {
   syncContactOverviewMailbox,
   toggleContactCaseChecklistItem,
   updateContactCase,
+  updateContactCompanyOwner,
 } from "@/lib/email-contact-overview";
 
 function isNextRedirectError(error: unknown) {
@@ -52,6 +53,7 @@ const createCompanySchema = z.object({
   primaryDomain: z.string().min(3, "Domene er påkrevd."),
   primaryEmail: z.string().email("Ugyldig e-post.").optional().or(z.literal("")),
   eventId: z.string().uuid().optional().or(z.literal("")),
+  ownerProfileId: z.string().uuid().optional().or(z.literal("")),
 });
 
 const createCaseSchema = z.object({
@@ -91,6 +93,11 @@ const archiveCompanySchema = z.object({
   contactCompanyId: z.string().uuid(),
 });
 
+const updateOwnerSchema = z.object({
+  contactCompanyId: z.string().uuid(),
+  ownerProfileId: z.string().uuid().optional().or(z.literal("")),
+});
+
 const sendCaseMailSchema = z.object({
   caseId: z.string().uuid(),
   to: z.string().min(3, "Mottaker er påkrevd."),
@@ -126,6 +133,7 @@ export async function createContactCompanyAction(formData: FormData) {
       primaryDomain: getFormValue(formData, "primaryDomain"),
       primaryEmail: getFormValue(formData, "primaryEmail"),
       eventId: getFormValue(formData, "eventId"),
+      ownerProfileId: getFormValue(formData, "ownerProfileId"),
     });
 
     const company = await createManualContactCompany({
@@ -133,13 +141,14 @@ export async function createContactCompanyAction(formData: FormData) {
       primaryDomain: parsed.primaryDomain,
       primaryEmail: parsed.primaryEmail || null,
       eventId: parsed.eventId || null,
+      ownerProfileId: parsed.ownerProfileId || null,
     });
 
     revalidatePath("/admin/email/contact-overview");
     redirect(`/admin/email/contact-overview/${company.id}?saved=1`);
   } catch (error) {
     if (isNextRedirectError(error)) throw error;
-    redirect(appendQuery("/admin/email/contact-overview", "error", getErrorMessage(error)));
+    redirect(appendQuery("/admin/email/contact-overview/new", "error", getErrorMessage(error)));
   }
 }
 
@@ -272,6 +281,26 @@ export async function archiveContactCompanyAction(formData: FormData) {
   } catch (error) {
     if (isNextRedirectError(error)) throw error;
     redirect(appendQuery("/admin/email/contact-overview", "error", getErrorMessage(error)));
+  }
+}
+
+export async function updateContactCompanyOwnerAction(formData: FormData) {
+  await requireRole("admin");
+  const returnTo = getFormValue(formData, "returnTo") || "/admin/email/contact-overview";
+  try {
+    const parsed = updateOwnerSchema.parse({
+      contactCompanyId: getFormValue(formData, "contactCompanyId"),
+      ownerProfileId: getFormValue(formData, "ownerProfileId"),
+    });
+    await updateContactCompanyOwner({
+      contactCompanyId: parsed.contactCompanyId,
+      ownerProfileId: parsed.ownerProfileId || null,
+    });
+    revalidatePath("/admin/email/contact-overview");
+    redirect(appendQuery(returnTo, "saved", "1"));
+  } catch (error) {
+    if (isNextRedirectError(error)) throw error;
+    redirect(appendQuery(returnTo, "error", getErrorMessage(error)));
   }
 }
 

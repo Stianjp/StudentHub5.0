@@ -12,6 +12,7 @@ type ContactCase = TableRow<"email_contact_cases">;
 type ContactMessage = TableRow<"email_contact_case_messages">;
 type ChecklistItem = TableRow<"email_contact_case_checklist_items">;
 type SyncState = TableRow<"email_contact_mailbox_sync_state">;
+type Profile = TableRow<"profiles">;
 type Company = TableRow<"companies">;
 type CompanyDomain = TableRow<"company_domains">;
 type Event = TableRow<"events">;
@@ -67,6 +68,8 @@ export type ContactOverviewListItem = {
   openCaseCount: number;
   checklistCompleted: number;
   checklistTotal: number;
+  unreadCount: number;
+  owner: Profile | null;
 };
 
 export type ContactOverviewCompanyDetail = {
@@ -78,7 +81,13 @@ export type ContactOverviewCompanyDetail = {
   activeCaseChecklist: ChecklistItem[];
   eventOptions: Event[];
   relatedCases: ContactCase[];
+  owners: Profile[];
+  owner: Profile | null;
+  unreadCount: number;
+  caseUnreadCounts: Record<string, number>;
 };
+
+export type ContactOverviewOwnerFilter = "all" | "mine" | "team" | "unassigned";
 
 export type ContactOverviewMailboxSummary = {
   delegatedUser: string | null;
@@ -195,6 +204,44 @@ function stripHtmlTags(value: string) {
     .trim();
 }
 
+function trimQuotedReply(value: string) {
+  const normalized = value.replace(/\r\n/g, "\n").trim();
+  if (!normalized) return "";
+
+  const markers = [
+    /^On .+wrote:$/m,
+    /^Den .+skrev .+:$/m,
+    /^Fra:.+$/m,
+    /^From:.+$/m,
+    /^Sendt:.+$/m,
+    /^Sent:.+$/m,
+    /^>.+$/m,
+    /^-+Original Message-+$/m,
+    /^_{5,}$/m,
+  ];
+
+  let cutIndex = normalized.length;
+  for (const marker of markers) {
+    const match = normalized.match(marker);
+    if (!match || typeof match.index !== "number") continue;
+    cutIndex = Math.min(cutIndex, match.index);
+  }
+
+  return normalized
+    .slice(0, cutIndex)
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+function getProfileLabel(profile: Profile | null | undefined) {
+  return profile?.full_name?.trim() || "Uten navn";
+}
+
+function filterVisibleCases(cases: ContactCase[]) {
+  const visible = cases.filter((caseRow) => !caseRow.merged_into_case_id && caseRow.status !== "archived");
+  return visible.length > 0 ? visible : cases;
+}
+
 function decodeBase64Url(value: string | undefined) {
   if (!value) return "";
   const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
@@ -267,8 +314,8 @@ function formatDateTime(value: string | null | undefined) {
 }
 
 function toPlainBody(text: string, html: string) {
-  if (text.trim()) return text.trim();
-  if (html.trim()) return stripHtmlTags(html);
+  if (text.trim()) return trimQuotedReply(text.trim());
+  if (html.trim()) return trimQuotedReply(stripHtmlTags(html));
   return "";
 }
 
@@ -606,6 +653,9 @@ async function storeMessageForCase(input: {
     received_at: input.receivedAt ?? null,
     raw_headers: input.rawHeaders ?? {},
     moved_from_case_id: input.movedFromCaseId ?? null,
+    is_read: input.direction !== "inbound",
+    read_at: input.direction !== "inbound" ? (input.sentAt ?? input.receivedAt ?? now) : null,
+    read_by: input.direction !== "inbound" ? (input.createdBy ?? null) : null,
     created_by: input.createdBy ?? null,
     created_at: now,
     updated_at: now,
@@ -913,44 +963,117 @@ export async function sendContactCaseEmail(input: {
   };
 }
 
+export async function listContactOverviewOwners() {
+  const supabase = createAdminSupabaseClient();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("role", "admin")
+    .order("full_name", { ascending: true });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as Profile[];
+}
+
+export async function countContactOverviewCompaniesForOwner(ownerProfileId: string) {
+  const supabase = createAdminSupabaseClient();
+  const { count, error } = await supabase
+    .from("email_contact_companies")
+    .select("id", { count: "exact", head: true })
+    .eq("owner_profile_id", ownerProfileId)
+    .is("archived_at", null);
+  if (error) throw new Error(error.message);
+  return count ?? 0;
+}
+
+export async function updateContactCompanyOwner(input: {
+  contactCompanyId: string;
+  ownerProfileId?: string | null;
+}) {
+  const supabase = createAdminSupabaseClient();
+  const { error } = await supabase
+    .from("email_contact_companies")
+    .update({
+      owner_profile_id: input.ownerProfileId ?? null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", input.contactCompanyId);
+  if (error) throw new Error(error.message);
+}
+
+async function markCaseMessagesRead(caseId: string, readBy: string) {
+  const supabase = createAdminSupabaseClient();
+  const now = new Date().toISOString();
+  const { error } = await supabase
+    .from("email_contact_case_messages")
+    .update({
+      is_read: true,
+      read_at: now,
+      read_by: readBy,
+      updated_at: now,
+    })
+    .eq("case_id", caseId)
+    .eq("direction", "inbound")
+    .eq("is_read", false);
+  if (error) throw new Error(error.message);
+}
+
 export async function listContactOverviewCompanies(options?: {
   query?: string;
   includeArchived?: boolean;
+  ownerScope?: ContactOverviewOwnerFilter;
+  currentProfileId?: string | null;
 }): Promise<ContactOverviewListItem[]> {
   const supabase = createAdminSupabaseClient();
   const query = normalizeWhitespace(options?.query ?? "").toLowerCase();
   const includeArchived = options?.includeArchived ?? false;
+  const ownerScope = options?.ownerScope ?? "all";
 
-  const [{ data: companies }, { data: cases }, { data: checklist }, { data: events }] = await Promise.all([
+  const [{ data: companies }, { data: cases }, { data: checklist }, { data: events }, { data: messages }, owners] = await Promise.all([
     supabase.from("email_contact_companies").select("*").order("updated_at", { ascending: false }),
     supabase.from("email_contact_cases").select("*"),
     supabase.from("email_contact_case_checklist_items").select("*"),
     supabase.from("events").select("id, name"),
+    supabase.from("email_contact_case_messages").select("case_id, direction, is_read"),
+    listContactOverviewOwners(),
   ]);
 
   const typedCompanies = (companies ?? []) as ContactCompany[];
   const typedCases = (cases ?? []) as ContactCase[];
   const typedChecklist = (checklist ?? []) as ChecklistItem[];
+  const typedMessages = (messages ?? []) as Array<Pick<ContactMessage, "case_id" | "direction" | "is_read">>;
+  const typedOwners = owners as Profile[];
   const eventNameById = new Map(((events ?? []) as Event[]).map((event) => [event.id, event.name]));
+  const ownerById = new Map(typedOwners.map((owner) => [owner.id, owner]));
 
   return typedCompanies
     .filter((company) => (includeArchived ? true : !company.archived_at))
     .filter((company) => {
+      if (ownerScope === "mine") return company.owner_profile_id === options?.currentProfileId;
+      if (ownerScope === "team") return Boolean(company.owner_profile_id);
+      if (ownerScope === "unassigned") return !company.owner_profile_id;
+      return true;
+    })
+    .filter((company) => {
       if (!query) return true;
-      return [company.display_name, company.primary_domain, company.primary_email ?? ""]
+      const ownerName = getProfileLabel(ownerById.get(company.owner_profile_id ?? ""));
+      return [company.display_name, company.primary_domain, company.primary_email ?? "", ownerName]
         .join(" ")
         .toLowerCase()
         .includes(query);
     })
     .map((company) => {
-      const companyCases = typedCases
+      const companyCases = filterVisibleCases(
+        typedCases
         .filter((caseRow) => caseRow.contact_company_id === company.id)
-        .sort(sortCasesNewestFirst);
+      ).sort(sortCasesNewestFirst);
       const activeCase =
         companyCases.find((caseRow) => caseRow.status === "open" || caseRow.status === "unsorted") ??
         companyCases[0] ??
         null;
       const activeChecklist = typedChecklist.filter((item) => item.case_id === activeCase?.id);
+      const unreadCount = companyCases.reduce((count, caseRow) => {
+        return count + typedMessages.filter((message) => message.case_id === caseRow.id && message.direction === "inbound" && !message.is_read).length;
+      }, 0);
       return {
         company,
         activeCase,
@@ -959,6 +1082,8 @@ export async function listContactOverviewCompanies(options?: {
         openCaseCount: companyCases.filter((caseRow) => caseRow.status === "open" || caseRow.status === "unsorted").length,
         checklistCompleted: activeChecklist.filter((item) => item.is_completed).length,
         checklistTotal: activeChecklist.length,
+        unreadCount,
+        owner: ownerById.get(company.owner_profile_id ?? "") ?? null,
       } satisfies ContactOverviewListItem;
     })
     .sort((a, b) => {
@@ -985,45 +1110,74 @@ export async function getContactOverviewMailboxSummary(): Promise<ContactOvervie
 export async function getContactOverviewCompanyDetail(
   contactCompanyId: string,
   selectedCaseId?: string | null,
+  viewerProfileId?: string | null,
 ): Promise<ContactOverviewCompanyDetail | null> {
   const supabase = createAdminSupabaseClient();
-  const [{ data: company }, { data: cases }, { data: events }] = await Promise.all([
+  const [{ data: company }, { data: cases }, { data: events }, owners] = await Promise.all([
     supabase.from("email_contact_companies").select("*").eq("id", contactCompanyId).maybeSingle(),
     supabase.from("email_contact_cases").select("*").eq("contact_company_id", contactCompanyId),
     supabase.from("events").select("id, name").order("starts_at", { ascending: false }),
+    listContactOverviewOwners(),
   ]);
 
   const typedCompany = company as ContactCompany | null;
   if (!typedCompany) return null;
 
-  const typedCases = ((cases ?? []) as ContactCase[]).sort(sortCasesNewestFirst);
+  const typedCases = filterVisibleCases((cases ?? []) as ContactCase[]).sort(sortCasesNewestFirst);
   const activeCase =
     typedCases.find((caseRow) => caseRow.id === selectedCaseId) ??
     typedCases.find((caseRow) => caseRow.status === "open" || caseRow.status === "unsorted") ??
     typedCases[0] ??
     null;
 
-  const [{ data: linkedCompany }, { data: messages }, { data: checklist }] = await Promise.all([
+  if (activeCase && viewerProfileId) {
+    await markCaseMessagesRead(activeCase.id, viewerProfileId);
+  }
+
+  const visibleCaseIds = typedCases.map((caseRow) => caseRow.id);
+
+  const [{ data: linkedCompany }, { data: messages }, { data: checklist }, { data: unreadMessages }] = await Promise.all([
     typedCompany.linked_company_id
       ? supabase.from("companies").select("*").eq("id", typedCompany.linked_company_id).maybeSingle()
       : Promise.resolve({ data: null }),
     activeCase
-      ? supabase.from("email_contact_case_messages").select("*").eq("case_id", activeCase.id).order("created_at", { ascending: true })
+      ? supabase.from("email_contact_case_messages").select("*").eq("case_id", activeCase.id).order("created_at", { ascending: false })
       : Promise.resolve({ data: [] }),
     activeCase
       ? supabase.from("email_contact_case_checklist_items").select("*").eq("case_id", activeCase.id).order("created_at", { ascending: true })
       : Promise.resolve({ data: [] }),
+    visibleCaseIds.length > 0
+      ? supabase
+          .from("email_contact_case_messages")
+          .select("case_id, direction, is_read")
+          .in("case_id", visibleCaseIds)
+      : Promise.resolve({ data: [] }),
   ]);
+
+  const typedMessages = (messages ?? []) as ContactMessage[];
+  const typedOwners = owners as Profile[];
+  const owner = typedOwners.find((profile) => profile.id === typedCompany.owner_profile_id) ?? null;
+  const caseUnreadCounts = ((unreadMessages ?? []) as Array<Pick<ContactMessage, "case_id" | "direction" | "is_read">>)
+    .filter((message) => message.direction === "inbound" && !message.is_read)
+    .reduce<Record<string, number>>((counts, message) => {
+      counts[message.case_id] = (counts[message.case_id] ?? 0) + 1;
+      return counts;
+    }, {});
+  const unreadCount = Object.values(caseUnreadCounts).reduce((sum, count) => sum + count, 0);
 
   return {
     company: typedCompany,
     linkedCompany: (linkedCompany as Company | null) ?? null,
     cases: typedCases,
     activeCase,
-    activeCaseMessages: (messages ?? []) as ContactMessage[],
+    activeCaseMessages: typedMessages,
     activeCaseChecklist: (checklist ?? []) as ChecklistItem[],
     eventOptions: (events ?? []) as Event[],
     relatedCases: typedCases.filter((caseRow) => caseRow.id !== activeCase?.id),
+    owners: typedOwners,
+    owner,
+    unreadCount,
+    caseUnreadCounts,
   } satisfies ContactOverviewCompanyDetail;
 }
 
@@ -1033,6 +1187,7 @@ export async function createManualContactCompany(input: {
   primaryEmail?: string | null;
   eventId?: string | null;
   linkedCompanyId?: string | null;
+  ownerProfileId?: string | null;
 }) {
   const supabase = createAdminSupabaseClient();
   const now = new Date().toISOString();
@@ -1060,6 +1215,7 @@ export async function createManualContactCompany(input: {
     primary_domain: normalizedDomain,
     primary_email: normalizedEmail,
     linked_company_id: linkedCompanyId,
+    owner_profile_id: input.ownerProfileId ?? null,
     created_at: now,
     updated_at: now,
   };
@@ -1251,7 +1407,11 @@ export function getChecklistLabel(itemKey: ChecklistKey) {
 }
 
 export function summarizeMessageBody(message: ContactMessage) {
-  return message.body_text?.trim() || stripHtmlTags(message.body_html ?? "") || "Ingen tekst tilgjengelig.";
+  return (
+    trimQuotedReply(message.body_text?.trim() ?? "") ||
+    trimQuotedReply(stripHtmlTags(message.body_html ?? "")) ||
+    "Ingen tekst tilgjengelig."
+  );
 }
 
 export function caseStatusLabel(status: CaseStatus) {

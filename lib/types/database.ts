@@ -1015,6 +1015,7 @@ export type Database = {
         Row: {
           id: string;
           linked_company_id: string | null;
+          owner_profile_id: string | null;
           display_name: string;
           primary_domain: string;
           primary_email: string | null;
@@ -1025,6 +1026,7 @@ export type Database = {
         Insert: {
           id?: string;
           linked_company_id?: string | null;
+          owner_profile_id?: string | null;
           display_name: string;
           primary_domain: string;
           primary_email?: string | null;
@@ -1035,6 +1037,7 @@ export type Database = {
         Update: {
           id?: string;
           linked_company_id?: string | null;
+          owner_profile_id?: string | null;
           display_name?: string;
           primary_domain?: string;
           primary_email?: string | null;
@@ -1116,6 +1119,9 @@ export type Database = {
           received_at: string | null;
           raw_headers: Json;
           moved_from_case_id: string | null;
+          is_read: boolean;
+          read_at: string | null;
+          read_by: string | null;
           created_by: string | null;
           created_at: string;
           updated_at: string;
@@ -1140,6 +1146,9 @@ export type Database = {
           received_at?: string | null;
           raw_headers?: Json;
           moved_from_case_id?: string | null;
+          is_read?: boolean;
+          read_at?: string | null;
+          read_by?: string | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -1164,6 +1173,9 @@ export type Database = {
           received_at?: string | null;
           raw_headers?: Json;
           moved_from_case_id?: string | null;
+          is_read?: boolean;
+          read_at?: string | null;
+          read_by?: string | null;
           created_by?: string | null;
           created_at?: string;
           updated_at?: string;

@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { SectionHeader } from "@/components/ui/section-header";
+import { deleteCompanyAction } from "@/app/admin/actions";
 import { requireRole } from "@/lib/auth";
 import {
   getCompanyWithDetails,
@@ -18,11 +21,19 @@ const packageLabel: Record<string, string> = {
 
 type PageProps = {
   params: Promise<{ companyId: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
-export default async function AdminCompanyDetailPage({ params }: PageProps) {
+function firstValue(value: string | string[] | undefined) {
+  if (Array.isArray(value)) return value[0] ?? "";
+  return value ?? "";
+}
+
+export default async function AdminCompanyDetailPage({ params, searchParams }: PageProps) {
   await requireRole("admin");
   const { companyId } = await params;
+  const resolvedSearchParams = await searchParams;
+  const errorMessage = firstValue(resolvedSearchParams.error);
 
   const [company, registrations, leads] = await Promise.all([
     getCompanyWithDetails(companyId),
@@ -56,6 +67,12 @@ export default async function AdminCompanyDetailPage({ params }: PageProps) {
           </Link>
         }
       />
+
+      {errorMessage ? (
+        <Card className="border border-error/30 bg-error/10 text-sm text-error">
+          {decodeURIComponent(errorMessage)}
+        </Card>
+      ) : null}
 
       <Card className="grid gap-3 text-sm text-ink/80 md:grid-cols-2">
         <div>
@@ -158,6 +175,36 @@ export default async function AdminCompanyDetailPage({ params }: PageProps) {
             </table>
           </div>
         )}
+      </Card>
+
+      <Card className="flex flex-col gap-4 border border-error/20 bg-error/5">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-error/70">Faresone</p>
+          <h3 className="text-lg font-bold text-error">Slett bedrift</h3>
+          <p className="mt-2 text-sm text-ink/80">
+            Dette sletter bedriften permanent. Relaterte rader som peker til bedriften blir slettet eller satt til tom verdi av databasen.
+          </p>
+          <p className="mt-1 text-sm text-ink/80">
+            For å bekrefte, skriv inn <span className="font-semibold text-error">{company.name}</span>.
+          </p>
+        </div>
+
+        <form action={deleteCompanyAction} className="flex flex-col gap-3 md:max-w-xl">
+          <input type="hidden" name="companyId" value={company.id} />
+          <label className="text-sm font-semibold text-error">
+            Bekreft bedriftsnavn
+            <Input
+              name="confirmationName"
+              placeholder={company.name}
+              className="border-error/30 bg-white"
+            />
+          </label>
+          <div>
+            <Button type="submit" variant="danger">
+              Slett bedrift permanent
+            </Button>
+          </div>
+        </form>
       </Card>
     </div>
   );

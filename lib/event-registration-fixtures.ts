@@ -44,9 +44,10 @@ const FIXTURE_CAMPAIGN: PreviewRegistrationCampaign = {
   id: FIXTURE_CAMPAIGN_ID,
   event_id: FIXTURE_EVENT_ID,
   slug: "student-connect-2026",
-  public_title: "Registration for Student Hub 2026",
-  public_subtitle: "Pick your package and stand request directly on the floor plan.",
-  public_description: "Complete the registration to request a package, stand placement and company portal access for your team.",
+  public_title: "Student Connect 2026",
+  public_subtitle: "Organized by Oslo Student Hub",
+  public_description:
+    "Register your company for Student Connect 2026 by Oslo Student Hub. Choose your package, request your stand and add the team members who need portal access.",
   floorplan_image_path: STUDENT_CONNECT_2026_FLOORPLAN.imagePath,
   email_group_prefix: "SC26",
   is_published: true,

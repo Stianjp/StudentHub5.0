@@ -197,6 +197,26 @@ export async function getCompanyWithDetails(companyId: string) {
   return data as Company;
 }
 
+export async function deleteCompany(companyId: string) {
+  const supabase = createAdminSupabaseClient();
+
+  const { data: company, error: companyError } = await supabase
+    .from("companies")
+    .select("*")
+    .eq("id", companyId)
+    .maybeSingle();
+
+  if (companyError) throw companyError;
+  if (!company) {
+    throw new Error("Fant ikke bedriften som skulle slettes.");
+  }
+
+  const { error: deleteError } = await supabase.from("companies").delete().eq("id", companyId);
+  if (deleteError) throw deleteError;
+
+  return company as Company;
+}
+
 export async function listCompanyLeads(companyId: string) {
   let supabase = await createServerSupabaseClient();
   try {

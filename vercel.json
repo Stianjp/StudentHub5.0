@@ -1,8 +1,0 @@
-{
-  "crons": [
-    {
-      "path": "/api/admin/email/contact-overview/sync",
-      "schedule": "*/15 * * * *"
-    }
-  ]
-}

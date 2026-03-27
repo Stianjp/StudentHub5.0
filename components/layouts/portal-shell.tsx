@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import {
   BarChart3,
   BriefcaseBusiness,
@@ -11,6 +12,8 @@ import {
   ClipboardList,
   LayoutDashboard,
   Package,
+  PanelLeftClose,
+  PanelLeftOpen,
   Settings,
   Ticket,
   Users,
@@ -66,8 +69,16 @@ export function PortalShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname() ?? "/";
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const rolePrefix = `/${roleKey}`;
   const basePrefix = pathname.startsWith(rolePrefix) ? rolePrefix : "";
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem("portal-shell-collapsed");
+    if (stored === "1") {
+      setIsCollapsed(true);
+    }
+  }, []);
 
   function normalizeHref(href: string) {
     if (!basePrefix && href.startsWith(rolePrefix)) {
@@ -75,6 +86,14 @@ export function PortalShell({
       return stripped.length === 0 ? "/" : stripped;
     }
     return href;
+  }
+
+  function toggleSidebar() {
+    setIsCollapsed((current) => {
+      const next = !current;
+      window.localStorage.setItem("portal-shell-collapsed", next ? "1" : "0");
+      return next;
+    });
   }
 
   return (
@@ -87,22 +106,42 @@ export function PortalShell({
       </a>
       <SessionGuard />
       <div className="flex min-h-screen">
-        <aside className="w-72 shrink-0 border-r border-white/10 bg-[#140249] p-8 text-[#EDE8F5] shadow-2xl shadow-black/30">
-          <div className="rounded-2xl border border-white/10 bg-[#0B0130] px-4 py-3">
-            <Image
-              src="/brand/Logo_OSH_Gradient_whitetext.svg"
-              alt="Oslo Student Hub"
-              width={260}
-              height={64}
-              className="h-auto w-full object-contain"
-              priority
-            />
+        <aside className={cn(
+          "shrink-0 border-r border-white/10 bg-[#140249] text-[#EDE8F5] shadow-2xl shadow-black/30 transition-[width,padding] duration-200",
+          isCollapsed ? "w-24 p-4" : "w-72 p-8",
+        )}>
+          <div className={cn("flex items-center gap-3", isCollapsed ? "justify-center" : "justify-between")}>
+            <div className={cn("rounded-2xl border border-white/10 bg-[#0B0130]", isCollapsed ? "px-3 py-4" : "px-4 py-3")}>
+              {isCollapsed ? (
+                <span className="block text-center text-xs font-black tracking-[0.35em] text-[#EDE8F5]">OSH</span>
+              ) : (
+                <Image
+                  src="/brand/Logo_OSH_Gradient_whitetext.svg"
+                  alt="Oslo Student Hub"
+                  width={260}
+                  height={64}
+                  className="h-auto w-full object-contain"
+                  priority
+                />
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={toggleSidebar}
+              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-[#0B0130] text-[#EDE8F5] transition hover:border-[#FE9A70]/60 hover:text-[#FE9A70]"
+              title={isCollapsed ? "Utvid meny" : "Komprimer meny"}
+              aria-label={isCollapsed ? "Utvid meny" : "Komprimer meny"}
+            >
+              {isCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+            </button>
           </div>
 
           <nav className="mt-12">
-            <p className="mb-6 px-4 text-[11px] font-black uppercase tracking-widest text-[#EDE8F5]/55">
-              Navigasjon
-            </p>
+            {!isCollapsed ? (
+              <p className="mb-6 px-4 text-[11px] font-black uppercase tracking-widest text-[#EDE8F5]/55">
+                Navigasjon
+              </p>
+            ) : null}
             {nav.map((item) => {
               const Icon = resolveIcon(item);
               const itemHref = normalizeHref(item.href);
@@ -118,8 +157,10 @@ export function PortalShell({
                 <div key={item.href} className="mb-2">
                   <Link
                     href={itemHref}
+                    title={item.label}
                     className={cn(
-                      "flex w-full items-center justify-between rounded-2xl border border-transparent p-4 text-sm font-bold transition-[background-color,border-color,color,box-shadow,transform] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70] focus-visible:ring-offset-2 focus-visible:ring-offset-[#140249]",
+                      "flex w-full items-center rounded-2xl border border-transparent p-4 text-sm font-bold transition-[background-color,border-color,color,box-shadow,transform] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70] focus-visible:ring-offset-2 focus-visible:ring-offset-[#140249]",
+                      isCollapsed ? "justify-center" : "justify-between",
                       isActive
                         ? "border-[#F2A786] bg-[#F3A17B] text-[#140249]"
                         : "text-[#EDE8F5] hover:border-[#FE9A70]/70 hover:bg-[#1E0B62] hover:text-white",
@@ -127,16 +168,16 @@ export function PortalShell({
                   >
                     <span className="flex items-center space-x-3">
                       <Icon size={20} aria-hidden="true" />
-                      <span>{item.label}</span>
+                      {!isCollapsed ? <span>{item.label}</span> : null}
                     </span>
-                    {children.length > 0 ? (
+                    {!isCollapsed && children.length > 0 ? (
                       <span className={cn("rounded-full px-2 py-1 text-[10px] font-black", isActive ? "bg-[#140249]/12" : "bg-[#FE9A70]/15")}>
                         {children.length}
                       </span>
                     ) : null}
                   </Link>
 
-                  {children.length > 0 ? (
+                  {!isCollapsed && children.length > 0 ? (
                     <div className="ml-7 mt-2 grid gap-1">
                       {children.map((child) => {
                         const childIsActive = isActivePath(pathname, child.href);
@@ -165,9 +206,12 @@ export function PortalShell({
           <div className="mt-10 border-t border-white/10 pt-6">
             <LogoutButton
               role={roleKey}
-              className="flex w-full items-center justify-start rounded-xl border border-white/20 px-4 py-2 text-sm font-bold text-[#EDE8F5]/70 transition-colors hover:text-[#FE9A70]"
+              className={cn(
+                "flex w-full items-center rounded-xl border border-white/20 px-4 py-2 text-sm font-bold text-[#EDE8F5]/70 transition-colors hover:text-[#FE9A70]",
+                isCollapsed ? "justify-center" : "justify-start",
+              )}
             >
-              <span>Logg ut</span>
+              {!isCollapsed ? <span>Logg ut</span> : <span title="Logg ut">↩</span>}
             </LogoutButton>
           </div>
         </aside>
