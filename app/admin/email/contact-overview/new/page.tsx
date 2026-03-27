@@ -31,7 +31,7 @@ export default async function NewContactOverviewCompanyPage({ searchParams }: Pa
   const typedEvents = (events ?? []) as Array<{ id: string; name: string }>;
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="contact-overview-page flex flex-col gap-8">
         <SectionHeader
           eyebrow="E-post / Kontaktoversikt"
           title="Opprett ny bedriftsprofil"
@@ -53,7 +53,7 @@ export default async function NewContactOverviewCompanyPage({ searchParams }: Pa
           </Card>
         ) : null}
 
-        <Card className="mx-auto flex w-full max-w-3xl flex-col gap-5 border border-[#D46839]/15 bg-white/85">
+        <Card className="mx-auto flex w-full max-w-3xl flex-col gap-5 border border-[#D46839]/15 bg-white">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wide text-[#6E4DB0]">Ny kontaktbedrift</p>
             <h3 className="text-xl font-bold text-[#2D1C63]">Opprett bedriftsprofil</h3>

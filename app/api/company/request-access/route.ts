@@ -45,52 +45,79 @@ export async function POST(request: Request) {
       );
     }
 
-    const { data: existingRequest } = await supabase
-      .from("company_user_requests")
+    const { data: existingMembership } = await supabase
+      .from("company_users")
       .select("id")
       .eq("user_id", userId)
       .maybeSingle();
 
-    if (existingRequest) {
+    if (existingMembership) {
       return NextResponse.json({ ok: true });
     }
 
     let companyId: string | null = null;
-    const { data: domainMatch } = await supabase
-      .from("company_domains")
+    const { data: portalInvite } = await supabase
+      .from("company_portal_invites")
       .select("company_id")
-      .eq("domain", domain)
+      .eq("email", normalizedEmail)
+      .in("status", ["pending", "invited"])
+      .order("updated_at", { ascending: false })
+      .limit(1)
       .maybeSingle();
 
-    if (domainMatch?.company_id) {
-      companyId = domainMatch.company_id;
+    if (portalInvite?.company_id) {
+      companyId = portalInvite.company_id;
     } else {
-      const { data: company, error: companyError } = await supabase
-        .from("companies")
-        .select("id")
-        .eq("org_number", orgNumber)
+      const { data: domainMatch } = await supabase
+        .from("company_domains")
+        .select("company_id")
+        .eq("domain", domain)
         .maybeSingle();
 
-      if (companyError) {
-        return NextResponse.json({ error: "Kunne ikke slå opp bedrift." }, { status: 500 });
-      }
+      if (domainMatch?.company_id) {
+        companyId = domainMatch.company_id;
+      } else {
+        const { data: company, error: companyError } = await supabase
+          .from("companies")
+          .select("id")
+          .eq("org_number", orgNumber)
+          .maybeSingle();
 
-      if (company?.id) {
-        companyId = company.id;
+        if (companyError) {
+          return NextResponse.json({ error: "Kunne ikke slå opp bedrift." }, { status: 500 });
+        }
+
+        if (company?.id) {
+          companyId = company.id;
+        }
       }
     }
 
-    const { error: insertError } = await supabase.from("company_user_requests").insert({
-      user_id: userId,
-      email: normalizedEmail,
-      domain,
-      company_id: companyId,
-      org_number: orgNumber,
-    });
+    const { error: insertError } = await supabase
+      .from("company_user_requests")
+      .upsert(
+        {
+          user_id: userId,
+          email: normalizedEmail,
+          domain,
+          company_id: companyId,
+          org_number: orgNumber,
+        },
+        { onConflict: "user_id" },
+      );
 
     if (insertError) {
       return NextResponse.json({ error: insertError.message }, { status: 500 });
     }
+
+    await supabase
+      .from("company_portal_invites")
+      .update({
+        user_id: userId,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("email", normalizedEmail)
+      .in("status", ["pending", "invited"]);
 
     return NextResponse.json({ ok: true });
   } catch (error) {

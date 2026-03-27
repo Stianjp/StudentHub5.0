@@ -55,7 +55,7 @@ export default async function ContactOverviewPage({ searchParams }: PageProps) {
   const unreadCompanyCount = typedItems.filter((item) => item.unreadCount > 0).length;
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="contact-overview-page flex flex-col gap-8">
         <SectionHeader
           eyebrow="E-post"
           title="Kontaktoversikt"
@@ -102,56 +102,56 @@ export default async function ContactOverviewPage({ searchParams }: PageProps) {
         ) : null}
 
         <div className="grid gap-4 xl:grid-cols-4">
-          <Card className="flex flex-col gap-2 border border-[#D46839]/15 bg-white/80">
-            <p className="text-xs font-semibold uppercase tracking-wide text-[#6E4DB0]">Antall kontaktbedrifter på meg</p>
-            <p className="text-3xl font-bold text-[#2D1C63]">{myCompanyCount}</p>
-            <p className="text-sm text-[#2D1C63]/70">{profile.full_name ?? "Din bruker"} er satt som ansvarlig.</p>
+          <Card className="flex flex-col gap-2 border border-[#D46839]/15 bg-white">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[#4B367A]">Antall kontaktbedrifter på meg</p>
+            <p className="text-3xl font-bold text-[#140249]">{myCompanyCount}</p>
+            <p className="text-sm text-[#4A3D6A]">{profile.full_name ?? "Din bruker"} er satt som ansvarlig.</p>
           </Card>
-          <Card className="flex flex-col gap-2 border border-[#D46839]/15 bg-white/80">
-            <p className="text-xs font-semibold uppercase tracking-wide text-[#6E4DB0]">Totale kontaktbedrifter</p>
-            <p className="text-3xl font-bold text-[#2D1C63]">{typedItems.length}</p>
-            <p className="text-sm text-[#2D1C63]/70">Filtrert etter valgt visning.</p>
+          <Card className="flex flex-col gap-2 border border-[#D46839]/15 bg-white">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[#4B367A]">Totale kontaktbedrifter</p>
+            <p className="text-3xl font-bold text-[#140249]">{typedItems.length}</p>
+            <p className="text-sm text-[#4A3D6A]">Filtrert etter valgt visning.</p>
           </Card>
-          <Card className="flex flex-col gap-2 border border-[#D46839]/15 bg-white/80">
-            <p className="text-xs font-semibold uppercase tracking-wide text-[#6E4DB0]">Uleste bedrifter</p>
+          <Card className="flex flex-col gap-2 border border-[#D46839]/15 bg-white">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[#4B367A]">Uleste bedrifter</p>
             <p className="text-3xl font-bold text-[#D46839]">{unreadCompanyCount}</p>
-            <p className="text-sm text-[#2D1C63]/70">Har minst én ulest innkommende melding.</p>
+            <p className="text-sm text-[#4A3D6A]">Har minst én ulest innkommende melding.</p>
           </Card>
-          <Card className="flex flex-col gap-2 border border-[#D46839]/15 bg-white/80">
-            <p className="text-xs font-semibold uppercase tracking-wide text-[#6E4DB0]">Bedrifter uten eier</p>
-            <p className="text-3xl font-bold text-[#2D1C63]">{unassignedCount}</p>
-            <p className="text-sm text-[#2D1C63]/70">
+          <Card className="flex flex-col gap-2 border border-[#D46839]/15 bg-white">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[#4B367A]">Bedrifter uten eier</p>
+            <p className="text-3xl font-bold text-[#140249]">{unassignedCount}</p>
+            <p className="text-sm text-[#4A3D6A]">
               Mailbox: {mailboxSummary.delegatedUser ?? "Ikke satt"}
             </p>
           </Card>
         </div>
 
-        <Card className="flex flex-col gap-6 border border-[#D46839]/15 bg-white/85">
+        <Card className="flex flex-col gap-6 border border-[#D46839]/15 bg-white">
           <form
             method="get"
             className="grid gap-3 lg:grid-cols-[minmax(0,1.5fr)_16rem_12rem_10rem] lg:items-end"
           >
-            <label className="text-sm font-semibold text-[#2D1C63]">
+            <label className="text-sm font-semibold text-[#140249]">
               Søk bedrift eller domene
               <Input
                 name="q"
                 defaultValue={query}
                 placeholder="f.eks. studenthub.no eller Equinor"
-                className="border-[#6E4DB0]/20 bg-white"
+                className="border-[#5A458B]/30 bg-white text-[#1A1626] placeholder:text-[#5D527B]"
               />
             </label>
-            <label className="text-sm font-semibold text-[#2D1C63]">
+            <label className="text-sm font-semibold text-[#140249]">
               Ansvarsfilter
-              <Select name="ownerScope" defaultValue={ownerScope} className="border-[#6E4DB0]/25 bg-white">
+              <Select name="ownerScope" defaultValue={ownerScope} className="border-[#5A458B]/30 bg-white text-[#1A1626]">
                 <option value="all">Alle bedrifter</option>
                 <option value="mine">Mine bedrifter</option>
                 <option value="team">Teamets bedrifter</option>
                 <option value="unassigned">Bedrifter uten eier</option>
               </Select>
             </label>
-            <label className="text-sm font-semibold text-[#2D1C63]">
+            <label className="text-sm font-semibold text-[#140249]">
               Visning
-              <Select name="archived" defaultValue={includeArchived ? "1" : "0"} className="border-[#6E4DB0]/25 bg-white">
+              <Select name="archived" defaultValue={includeArchived ? "1" : "0"} className="border-[#5A458B]/30 bg-white text-[#1A1626]">
                 <option value="0">Aktive</option>
                 <option value="1">Også arkiverte</option>
               </Select>
@@ -162,14 +162,14 @@ export default async function ContactOverviewPage({ searchParams }: PageProps) {
           </form>
 
           {typedItems.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-[#6E4DB0]/25 bg-[#F7EFE2] p-8 text-sm text-[#2D1C63]/70">
+            <div className="rounded-2xl border border-dashed border-[#5A458B]/25 bg-[#FCF6EC] p-8 text-sm text-[#4A3D6A]">
               Ingen kontaktbedrifter funnet for dette filteret.
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-[#6E4DB0]/10 text-sm">
+              <table className="min-w-full divide-y divide-[#5A458B]/10 text-sm">
                 <thead>
-                  <tr className="text-left text-xs font-semibold uppercase tracking-wide text-[#6E4DB0]">
+                  <tr className="text-left text-xs font-semibold uppercase tracking-wide text-[#4B367A]">
                     <th className="px-4 py-3">Varsel</th>
                     <th className="px-4 py-3">Bedrift</th>
                     <th className="px-4 py-3">Sakseier</th>
@@ -181,11 +181,11 @@ export default async function ContactOverviewPage({ searchParams }: PageProps) {
                     <th className="px-4 py-3">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#6E4DB0]/8">
+                <tbody className="divide-y divide-[#5A458B]/10">
                   {typedItems.map((item) => (
                     <tr
                       key={item.company.id}
-                      className={`align-top ${item.unreadCount > 0 ? "bg-[#FFF0D7]" : "bg-transparent"}`}
+                      className={`contact-overview-row align-top ${item.unreadCount > 0 ? "contact-overview-row--unread bg-[#FFF6E8]" : "bg-white"}`}
                     >
                       <td className="px-4 py-4">
                         {item.unreadCount > 0 ? (
@@ -200,32 +200,32 @@ export default async function ContactOverviewPage({ searchParams }: PageProps) {
                       <td className="px-4 py-4">
                         <Link
                           href={`/admin/email/contact-overview/${item.company.id}${item.activeCase ? `?case=${item.activeCase.id}` : ""}`}
-                          className="block hover:underline"
+                          className="block"
                         >
-                          <span className="font-semibold text-[#2D1C63]">{item.company.display_name}</span>
-                          <span className="mt-1 block text-xs text-[#2D1C63]/60">
+                          <span className="font-semibold text-[#140249]">{item.company.display_name}</span>
+                          <span className="mt-1 block text-xs text-[#5B5078]">
                             {item.company.primary_domain}
                             {item.company.primary_email ? ` · ${item.company.primary_email}` : ""}
                           </span>
                         </Link>
                       </td>
-                      <td className="px-4 py-4 text-[#2D1C63]/80">
+                      <td className="px-4 py-4 text-[#30224F]">
                         {item.owner ? item.owner.full_name ?? "Admin" : "Utdelt"}
                       </td>
-                      <td className="px-4 py-4 text-[#2D1C63]/80">
+                      <td className="px-4 py-4 text-[#30224F]">
                         {item.activeCase ? (
                           <>
-                            <p className="font-medium text-[#2D1C63]">{item.activeCase.title}</p>
-                            <p className="mt-1 text-xs text-[#2D1C63]/55">{item.activeCase.case_number}</p>
+                            <p className="font-medium text-[#140249]">{item.activeCase.title}</p>
+                            <p className="mt-1 text-xs text-[#5B5078]">{item.activeCase.case_number}</p>
                           </>
                         ) : (
                           "Ingen saker"
                         )}
                       </td>
-                      <td className="px-4 py-4 text-[#2D1C63]/80">{item.eventName ?? "Uten event"}</td>
-                      <td className="px-4 py-4 text-[#2D1C63]/80">{formatContactOverviewTimestamp(item.latestMessageAt)}</td>
-                      <td className="px-4 py-4 text-[#2D1C63]/80">{item.openCaseCount}</td>
-                      <td className="px-4 py-4 text-[#2D1C63]/80">
+                      <td className="px-4 py-4 text-[#30224F]">{item.eventName ?? "Uten event"}</td>
+                      <td className="px-4 py-4 text-[#30224F]">{formatContactOverviewTimestamp(item.latestMessageAt)}</td>
+                      <td className="px-4 py-4 font-semibold text-[#140249]">{item.openCaseCount}</td>
+                      <td className="px-4 py-4 font-semibold text-[#30224F]">
                         {item.checklistTotal > 0 ? `${item.checklistCompleted}/${item.checklistTotal}` : "Ingen punkter"}
                       </td>
                       <td className="px-4 py-4">

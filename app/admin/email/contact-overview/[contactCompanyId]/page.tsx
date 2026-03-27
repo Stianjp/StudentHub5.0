@@ -39,9 +39,15 @@ function firstValue(value: string | string[] | undefined) {
 }
 
 function messageTone(direction: "inbound" | "outbound" | "internal_note") {
-  if (direction === "inbound") return "border-[#D46839]/20 bg-[#FFF0D7]";
-  if (direction === "outbound") return "border-success/20 bg-success/5";
-  return "border-primary/10 bg-primary/5";
+  if (direction === "inbound") return "border-[#D46839]/25 bg-white";
+  if (direction === "outbound") return "border-success/25 bg-white";
+  return "border-primary/15 bg-white";
+}
+
+function messageBodyTone(direction: "inbound" | "outbound" | "internal_note") {
+  if (direction === "inbound") return "bg-[#FFF8F0]";
+  if (direction === "outbound") return "bg-[#F4FBF6]";
+  return "bg-[#F7F3FF]";
 }
 
 export default async function ContactOverviewCompanyPage({ params, searchParams }: PageProps) {
@@ -61,7 +67,7 @@ export default async function ContactOverviewCompanyPage({ params, searchParams 
   const defaultTo = detail.activeCase?.contact_email ?? detail.company.primary_email ?? "";
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="contact-overview-page contact-overview-detail flex flex-col gap-8">
         <SectionHeader
           eyebrow="E-post / Kontaktoversikt"
           title={detail.company.display_name}
@@ -103,12 +109,12 @@ export default async function ContactOverviewCompanyPage({ params, searchParams 
 
         <div className="grid gap-6 xl:grid-cols-[18rem_minmax(0,1fr)_22rem]">
           <div className="flex flex-col gap-6">
-            <Card className="flex flex-col gap-4 border border-[#D46839]/15 bg-white/85">
+            <Card className="flex flex-col gap-4 border border-[#D46839]/15 bg-white">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wide text-[#6E4DB0]">Kontaktprofil</p>
                 <h3 className="text-lg font-bold text-[#2D1C63]">{detail.company.display_name}</h3>
               </div>
-              <div className="grid gap-2 text-sm text-[#2D1C63]/80">
+              <div className="grid gap-2 text-sm text-[#30224F]">
                 <p>
                   <span className="font-semibold text-[#2D1C63]">Domene:</span> {detail.company.primary_domain}
                 </p>
@@ -119,7 +125,7 @@ export default async function ContactOverviewCompanyPage({ params, searchParams 
                 <p>
                   <span className="font-semibold text-[#2D1C63]">Linked company:</span>{" "}
                   {detail.linkedCompany ? (
-                    <Link href={`/admin/companies/${detail.linkedCompany.id}`} className="underline">
+                    <Link href={`/admin/companies/${detail.linkedCompany.id}`} className="font-semibold text-[#140249] underline underline-offset-2">
                       {detail.linkedCompany.name}
                     </Link>
                   ) : (
@@ -151,7 +157,7 @@ export default async function ContactOverviewCompanyPage({ params, searchParams 
               </form>
             </Card>
 
-            <Card className="flex flex-col gap-4 border border-[#D46839]/15 bg-white/85">
+            <Card className="flex flex-col gap-4 border border-[#D46839]/15 bg-white">
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-[#6E4DB0]">Saker</p>
@@ -176,16 +182,16 @@ export default async function ContactOverviewCompanyPage({ params, searchParams 
                       <Link
                         key={caseRow.id}
                         href={href}
-                        className={`rounded-2xl border px-4 py-3 transition ${
+                        className={`contact-overview-case-link rounded-2xl border px-4 py-3 ${
                           isActive
                             ? "border-[#D46839]/30 bg-[#FFF0D7] text-[#2D1C63]"
-                            : "border-[#6E4DB0]/10 bg-[#FBF7EF] text-[#2D1C63]/80 hover:border-[#D46839]/40"
+                            : "border-[#6E4DB0]/10 bg-white text-[#30224F]"
                         }`}
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div>
-                            <p className="font-semibold">{caseRow.title}</p>
-                            <p className="mt-1 text-xs opacity-70">{caseRow.case_number}</p>
+                            <p className="font-semibold text-[#140249]">{caseRow.title}</p>
+                            <p className="mt-1 text-xs text-[#5B5078]">{caseRow.case_number}</p>
                           </div>
                           <div className="flex items-center gap-2">
                             {unreadForCase > 0 ? (
@@ -207,7 +213,7 @@ export default async function ContactOverviewCompanyPage({ params, searchParams 
 
           <div className="flex flex-col gap-6">
             {detail.activeCase ? (
-              <Card className="flex flex-col gap-4 border border-[#D46839]/15 bg-white/85">
+              <Card className="flex flex-col gap-4 border border-[#D46839]/15 bg-white">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-[#6E4DB0]">Skriv e-post</p>
                   <h3 className="text-lg font-bold text-[#2D1C63]">Send fra stian@oslostudenthub.no</h3>
@@ -242,7 +248,7 @@ export default async function ContactOverviewCompanyPage({ params, searchParams 
               </Card>
             ) : null}
 
-            <Card className="flex flex-col gap-5 border border-[#D46839]/15 bg-white/85">
+            <Card className="flex flex-col gap-5 border border-[#D46839]/15 bg-white">
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-[#6E4DB0]">Tidslinje</p>
@@ -291,7 +297,7 @@ export default async function ContactOverviewCompanyPage({ params, searchParams 
                         </div>
                       </div>
 
-                      <div className="mt-4 rounded-2xl bg-white/80 p-4 text-sm text-[#2D1C63]/85">
+                      <div className={`mt-4 rounded-2xl p-4 text-sm text-[#1A1626] ${messageBodyTone(message.direction)}`}>
                         <p className="whitespace-pre-wrap">{summarizeMessageBody(message)}</p>
                       </div>
 
@@ -324,7 +330,7 @@ export default async function ContactOverviewCompanyPage({ params, searchParams 
           <div className="flex flex-col gap-6">
             {detail.activeCase ? (
               <>
-                <Card className="flex flex-col gap-4 border border-[#D46839]/15 bg-white/85">
+                <Card className="flex flex-col gap-4 border border-[#D46839]/15 bg-white">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wide text-[#6E4DB0]">Saksdetaljer</p>
                     <h3 className="text-lg font-bold text-[#2D1C63]">Rediger sak</h3>
@@ -370,14 +376,14 @@ export default async function ContactOverviewCompanyPage({ params, searchParams 
                   </form>
                 </Card>
 
-                <Card className="flex flex-col gap-4 border border-[#D46839]/15 bg-white/85">
+                <Card className="flex flex-col gap-4 border border-[#D46839]/15 bg-white">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wide text-[#6E4DB0]">Tjenestemål</p>
                     <h3 className="text-lg font-bold text-[#2D1C63]">Sjekkliste</h3>
                   </div>
                   <div className="flex flex-col gap-3">
                     {detail.activeCaseChecklist.map((item) => (
-                      <div key={item.id} className="rounded-2xl border border-[#6E4DB0]/10 bg-[#FBF7EF] p-4">
+                      <div key={item.id} className="rounded-2xl border border-[#6E4DB0]/10 bg-[#FCFAFF] p-4">
                         <div className="flex items-start justify-between gap-3">
                           <div>
                             <p className="font-semibold text-[#2D1C63]">{getChecklistLabel(item.item_key)}</p>
@@ -401,7 +407,7 @@ export default async function ContactOverviewCompanyPage({ params, searchParams 
                   </div>
                 </Card>
 
-                <Card className="flex flex-col gap-4 border border-[#D46839]/15 bg-white/85">
+                <Card className="flex flex-col gap-4 border border-[#D46839]/15 bg-white">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wide text-[#6E4DB0]">Ny sak</p>
                     <h3 className="text-lg font-bold text-[#2D1C63]">Opprett ekstra sak</h3>
@@ -436,7 +442,7 @@ export default async function ContactOverviewCompanyPage({ params, searchParams 
                   </form>
                 </Card>
 
-                <Card className="flex flex-col gap-4 border border-[#D46839]/15 bg-white/85">
+                <Card className="flex flex-col gap-4 border border-[#D46839]/15 bg-white">
                   <div>
                     <p className="text-xs font-semibold uppercase tracking-wide text-[#6E4DB0]">Sakshåndtering</p>
                     <h3 className="text-lg font-bold text-[#2D1C63]">Merge og arkiv</h3>
@@ -474,7 +480,7 @@ export default async function ContactOverviewCompanyPage({ params, searchParams 
                 </Card>
               </>
             ) : (
-              <Card className="text-sm text-[#2D1C63]/70">Opprett en sak for å få opp sjekkliste og status.</Card>
+              <Card className="bg-white text-sm text-[#4A3D6A]">Opprett en sak for å få opp sjekkliste og status.</Card>
             )}
           </div>
         </div>

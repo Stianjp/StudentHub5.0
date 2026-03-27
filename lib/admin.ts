@@ -151,6 +151,14 @@ export async function listCompanyAccessRequests() {
 export async function approveCompanyAccess(input: { requestId: string; companyId: string; userId: string }) {
   const supabase = createAdminSupabaseClient();
   const now = new Date().toISOString();
+  const { data: request, error: requestError } = await supabase
+    .from("company_user_requests")
+    .select("*")
+    .eq("id", input.requestId)
+    .single();
+
+  if (requestError) throw requestError;
+
   const { error: insertError } = await supabase.from("company_users").upsert(
     {
       company_id: input.companyId,
@@ -160,6 +168,21 @@ export async function approveCompanyAccess(input: { requestId: string; companyId
     { onConflict: "company_id,user_id" },
   );
   if (insertError) throw insertError;
+
+  const typedRequest = request as CompanyUserRequest;
+  const { error: inviteUpdateError } = await supabase
+    .from("company_portal_invites")
+    .update({
+      status: "accepted",
+      accepted_at: now,
+      user_id: input.userId,
+      updated_at: now,
+    })
+    .eq("company_id", input.companyId)
+    .eq("email", typedRequest.email.toLowerCase().trim())
+    .in("status", ["pending", "invited"]);
+
+  if (inviteUpdateError) throw inviteUpdateError;
 
   const { error: deleteError } = await supabase
     .from("company_user_requests")

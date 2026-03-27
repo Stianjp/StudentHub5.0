@@ -45,7 +45,7 @@ export default async function AdminRegisterCompanyPage({ searchParams }: PagePro
       <SectionHeader
         eyebrow="Bedrifter"
         title="Registrer en bedrift"
-        description="Opprett bedrift, legg til domene og godkjenn tilgangsforespørsler."
+        description="Opprett bedrift, legg til domene og godkjenn tilgangsforespørsler, også fra event-registreringer."
       />
 
       {saved ? (

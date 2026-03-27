@@ -1,6 +1,6 @@
 import { randomUUID } from "crypto";
 import { unstable_cache } from "next/cache";
-import type { Json, TableRow } from "@/lib/types/database";
+import type { TableRow } from "@/lib/types/database";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { createPublicSupabaseClient } from "@/lib/supabase/public";
@@ -151,23 +151,6 @@ const loadPublicRegistrationCampaignDetail = unstable_cache(
 function inferStandTypeFromPackage(packageTier: RegistrationPackage["mapped_package"]) {
   if (packageTier === "gold" || packageTier === "platinum") return "Premium";
   return "Standard";
-}
-
-async function logEmailEvent(input: {
-  to: string;
-  subject: string;
-  type: string;
-  payload?: Json;
-}) {
-  const supabase = createAdminSupabaseClient();
-  await supabase.from("email_logs").insert({
-    to_email: input.to,
-    subject: input.subject,
-    type: input.type,
-    payload: input.payload ?? {},
-    sent_at: new Date().toISOString(),
-    created_at: new Date().toISOString(),
-  });
 }
 
 async function releaseStandReservation(standId: string | null | undefined) {
@@ -323,6 +306,37 @@ async function findAuthUserByEmail(email: string) {
   return null;
 }
 
+async function ensureCompanyPortalAccessRequest(input: {
+  userId: string;
+  email: string;
+  company: Company;
+  application: RegistrationApplication;
+}) {
+  const supabase = createAdminSupabaseClient();
+  const normalizedEmail = normalizeEmail(input.email);
+  const domain = normalizedEmail.split("@")[1] ?? "";
+
+  if (!domain) return;
+
+  const { error } = await supabase
+    .from("company_user_requests")
+    .upsert(
+      {
+        user_id: input.userId,
+        email: normalizedEmail,
+        domain,
+        company_id: input.company.id,
+        org_number:
+          normalizeOrgNumber(input.company.org_number ?? "") ||
+          normalizeOrgNumber(input.application.org_number ?? "") ||
+          null,
+      },
+      { onConflict: "user_id" },
+    );
+
+  if (error) throw error;
+}
+
 async function sendCompanyPortalInvite(input: {
   invite: CompanyPortalInvite;
   company: Company;
@@ -332,9 +346,10 @@ async function sendCompanyPortalInvite(input: {
   const companyPortalUrl = getBaseUrlForRole("company", COMPANY_PORTAL_FALLBACK_URL) || COMPANY_PORTAL_FALLBACK_URL;
   const normalizedEmail = normalizeEmail(input.invite.email);
   const now = new Date().toISOString();
-  const subject = `Access to ${input.company.name} on OSH StudentHub`;
+  const subject = `Company portal setup for ${input.company.name}`;
   const loginUrl = `${companyPortalUrl}/auth/sign-in?role=company&next=%2Fcompany`;
   const existingUser = await findAuthUserByEmail(normalizedEmail);
+  let authUserId = existingUser?.id ?? null;
   const { data: event } = await supabase
     .from("events")
     .select("name")
@@ -344,43 +359,59 @@ async function sendCompanyPortalInvite(input: {
 
   if (!existingUser) {
     const redirectTo = `${companyPortalUrl}/auth/callback?role=company&mode=verify&next=%2Fcompany`;
-    const { error } = await supabase.auth.admin.inviteUserByEmail(normalizedEmail, {
+    const inviteResponse = await supabase.auth.admin.inviteUserByEmail(normalizedEmail, {
       redirectTo,
     });
-    if (error) throw error;
+    if (inviteResponse.error) throw inviteResponse.error;
 
-    await logEmailEvent({
-      to: normalizedEmail,
-      subject,
-      type: "company_portal_invite",
-      payload: {
-        companyId: input.company.id,
-        applicationId: input.application.id,
-        delivery: "supabase_invite",
-      },
-    });
+    const invitedUserId =
+      (inviteResponse.data as { user?: { id?: string | null } } | null)?.user?.id ?? null;
+    const matchedUserId = (await findAuthUserByEmail(normalizedEmail))?.id ?? null;
+    authUserId = invitedUserId || matchedUserId || null;
   } else {
-    await sendTransactionalEmail({
-      to: normalizedEmail,
-      subject,
-      type: "company_portal_invite",
-      html: `<p>Hello,</p>
-<p>OSH has approved ${input.company.name} for ${eventName}.</p>
-<p>You now have access to the company portal. Sign in here: <a href="${loginUrl}">${loginUrl}</a></p>`,
-      payload: {
-        companyId: input.company.id,
-        applicationId: input.application.id,
-        delivery: "login_notice",
-      },
-      supabase,
+    authUserId = existingUser.id;
+  }
+
+  if (authUserId) {
+    await ensureCompanyPortalAccessRequest({
+      userId: authUserId,
+      email: normalizedEmail,
+      company: input.company,
+      application: input.application,
     });
   }
+
+  const inviteCopy = existingUser
+    ? `<p>Hello,</p>
+<p>OSH has approved ${input.company.name} for ${eventName}.</p>
+<p>This email is now registered for the company portal. Your access request is waiting for manual approval from an OSH admin under access requests.</p>
+<p>You can sign in with this email here: <a href="${loginUrl}">${loginUrl}</a></p>`
+    : `<p>Hello,</p>
+<p>OSH has approved ${input.company.name} for ${eventName}.</p>
+<p>We have sent you an account invitation so you can create your company portal user.</p>
+<p>After account setup, the access request remains pending until an OSH admin approves it manually under access requests.</p>
+<p>After that approval, you can sign in here: <a href="${loginUrl}">${loginUrl}</a></p>`;
+
+  await sendTransactionalEmail({
+    to: normalizedEmail,
+    subject,
+    type: "company_portal_invite",
+    html: inviteCopy,
+    payload: {
+      companyId: input.company.id,
+      applicationId: input.application.id,
+      delivery: existingUser ? "login_notice_pending_approval" : "supabase_invite_pending_approval",
+      accessRequestCreated: Boolean(authUserId),
+    },
+    supabase,
+  });
 
   const { error: updateError } = await supabase
     .from("company_portal_invites")
     .update({
       status: "invited",
       invited_at: now,
+      user_id: authUserId ?? input.invite.user_id ?? null,
       updated_at: now,
     })
     .eq("id", input.invite.id);
@@ -1302,7 +1333,6 @@ export async function reconcileApprovedCompanyPortalInvites(userId: string, emai
   if (!email) return 0;
   const normalizedEmail = normalizeEmail(email);
   const supabase = createAdminSupabaseClient();
-  const now = new Date().toISOString();
 
   const { data: invites, error } = await supabase
     .from("company_portal_invites")
@@ -1314,27 +1344,27 @@ export async function reconcileApprovedCompanyPortalInvites(userId: string, emai
   if (!invites || invites.length === 0) return 0;
 
   for (const invite of invites as CompanyPortalInvite[]) {
-    const { error: membershipError } = await supabase
-      .from("company_users")
-      .upsert(
-        {
-          company_id: invite.company_id,
-          user_id: userId,
-          role: invite.role || "member",
-          approved_at: now,
-        },
-        { onConflict: "company_id,user_id" },
-      );
+    const [{ data: company }, { data: application }] = await Promise.all([
+      supabase.from("companies").select("*").eq("id", invite.company_id).maybeSingle(),
+      invite.application_id
+        ? supabase.from("event_registration_applications").select("*").eq("id", invite.application_id).maybeSingle()
+        : Promise.resolve({ data: null }),
+    ]);
 
-    if (membershipError) throw membershipError;
+    if (company && application) {
+      await ensureCompanyPortalAccessRequest({
+        userId,
+        email: normalizedEmail,
+        company: company as Company,
+        application: application as RegistrationApplication,
+      });
+    }
 
     const { error: inviteUpdateError } = await supabase
       .from("company_portal_invites")
       .update({
-        status: "accepted",
-        accepted_at: now,
         user_id: userId,
-        updated_at: now,
+        updated_at: new Date().toISOString(),
       })
       .eq("id", invite.id);
 
