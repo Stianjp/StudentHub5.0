@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Bell, Briefcase, Calendar, Check, ChevronRight, Heart, Users } from "lucide-react";
@@ -5,6 +6,7 @@ import { getOrCreateStudentForUser } from "@/lib/student";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { listActiveEvents } from "@/lib/events";
 import { computeMatch } from "@/lib/matching";
+import { getLatestCompanyRegistrationLogos } from "@/lib/company";
 
 const PACKAGE_PRIORITY = {
   platinum: 4,
@@ -101,6 +103,17 @@ function summarizeCompany(card: RecommendedCompanyCard) {
   return details.join(" • ") || "Relevant match for din profil.";
 }
 
+function getCompanyInitials(name: string) {
+  const parts = name
+    .split(/\s+/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .slice(0, 2);
+
+  if (parts.length === 0) return "BD";
+  return parts.map((part) => part.slice(0, 1)).join("").toUpperCase();
+}
+
 export default async function StudentDashboardPage() {
   const supabase = await createServerSupabaseClient();
   const {
@@ -169,6 +182,9 @@ export default async function StudentDashboardPage() {
   }
 
   const recommendedCompanies = Array.from(recommendedCompaniesById.values()).sort(compareRecommendations).slice(0, 4);
+  const recommendedCompanyLogos = await getLatestCompanyRegistrationLogos(
+    recommendedCompanies.map((company) => company.company.id),
+  );
 
   const nextEvent = events[0];
   const eventDate = nextEvent?.starts_at
@@ -267,15 +283,30 @@ export default async function StudentDashboardPage() {
 
           <div className="space-y-6">
             {recommendedCompanies.length > 0 ? (
-              recommendedCompanies.map((company) => (
-                <Link
-                  key={company.company.id}
+              recommendedCompanies.map((company) => {
+                const logoUrl = recommendedCompanyLogos[company.company.id] ?? null;
+
+                return (
+                  <Link
+                    key={company.company.id}
                   href={`/student/companies?q=${encodeURIComponent(company.company.name)}`}
                   className="group flex items-center justify-between rounded-3xl border border-white/10 bg-[#1B0858] p-6 shadow-sm transition-[background-color,border-color,color,box-shadow] hover:border-[#FE9A70]/40 hover:bg-[#220C6C] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70] focus-visible:ring-offset-2 focus-visible:ring-offset-[#140249]"
                 >
                   <div className="flex items-center space-x-5">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/15 bg-[#140249] text-[11px] font-black text-white/75">
-                      {PACKAGE_LABEL[company.packageTier].slice(0, 2).toUpperCase()}
+                    <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border border-white/15 bg-white/95 p-2 shadow-inner">
+                      {logoUrl ? (
+                        <Image
+                          src={logoUrl}
+                          alt={`Logo for ${company.company.name}`}
+                          width={56}
+                          height={56}
+                          className="h-full w-full object-contain"
+                        />
+                      ) : (
+                        <span className="text-[11px] font-black text-[#140249]">
+                          {getCompanyInitials(company.company.name)}
+                        </span>
+                      )}
                     </div>
                     <div className="space-y-1.5">
                       <div className="flex flex-wrap items-center gap-2">
@@ -299,7 +330,8 @@ export default async function StudentDashboardPage() {
                   </div>
                   <ChevronRight size={18} className="text-white/50 group-hover:text-[#FE9A70]" aria-hidden="true" />
                 </Link>
-              ))
+                );
+              })
             ) : (
               <div className="rounded-3xl border border-white/10 bg-[#1B0858] p-6 text-sm font-medium text-white/72">
                 Vi fant ingen tydelige bedriftsmatcher akkurat nå. Oppdater studieprogram, interesser eller jobbtyper for bedre anbefalinger.

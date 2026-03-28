@@ -188,6 +188,44 @@ export async function getLatestCompanyRegistrationLogo(companyId: string) {
   };
 }
 
+export async function getLatestCompanyRegistrationLogos(companyIds: string[]) {
+  const uniqueCompanyIds = Array.from(new Set(companyIds.map((companyId) => companyId.trim()).filter(Boolean)));
+  if (uniqueCompanyIds.length === 0) return {} as Record<string, string | null>;
+
+  let supabase = await createServerSupabaseClient();
+  try {
+    supabase = createAdminSupabaseClient() as unknown as typeof supabase;
+  } catch {
+    // fallback
+  }
+
+  const { data: applications, error } = await supabase
+    .from("event_registration_applications")
+    .select("company_id, logo_path, created_at")
+    .in("company_id", uniqueCompanyIds)
+    .not("logo_path", "is", null)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+
+  const latestByCompany = new Map<string, { logo_path: string }>();
+  for (const application of applications ?? []) {
+    if (!application.company_id || !application.logo_path || latestByCompany.has(application.company_id)) continue;
+    latestByCompany.set(application.company_id, { logo_path: application.logo_path });
+  }
+
+  const signedEntries = await Promise.all(
+    Array.from(latestByCompany.entries()).map(async ([companyId, application]) => {
+      const { data: signed } = await supabase.storage
+        .from(REGISTRATION_LOGO_BUCKET)
+        .createSignedUrl(application.logo_path, 60 * 60);
+      return [companyId, signed?.signedUrl ?? null] as const;
+    }),
+  );
+
+  return Object.fromEntries(signedEntries) as Record<string, string | null>;
+}
+
 export async function getCompanyAttendeeCountByEvent(companyId: string) {
   let supabase = await createServerSupabaseClient();
   try {
