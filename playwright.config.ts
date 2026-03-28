@@ -1,10 +1,14 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const isCI = Boolean(process.env.CI);
+
 export default defineConfig({
   testDir: "./tests/e2e",
   timeout: 30_000,
-  retries: process.env.CI ? 2 : 0,
-  reporter: [["list"], ["html", { open: "never" }]],
+  retries: isCI ? 2 : 0,
+  forbidOnly: isCI,
+  workers: isCI ? 2 : undefined,
+  reporter: isCI ? [["github"], ["html", { open: "never" }]] : [["list"], ["html", { open: "never" }]],
 
   use: {
     baseURL: process.env.E2E_BASE_URL ?? "http://localhost:3000",
@@ -23,9 +27,9 @@ export default defineConfig({
   webServer: process.env.E2E_SKIP_WEBSERVER
     ? undefined
     : {
-        command: "npm run dev",
+        command: isCI ? "npm run start" : "npm run dev",
         port: 3000,
-        reuseExistingServer: true,
-        timeout: 60_000,
+        reuseExistingServer: !isCI,
+        timeout: 120_000,
       },
 });

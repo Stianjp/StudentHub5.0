@@ -25,7 +25,7 @@ test("Student Connect 2026 registreringsside laster", async ({ page }) => {
   await page.goto("/event-register/student-connect-2026");
 
   // Skal vise registration-tittelen
-  await expect(page.locator("h1")).toContainText(/Student Hub 2026|Registration/i);
+  await expect(page.locator("h1")).toContainText(/Student Connect 2026|Registration/i);
 
   // Skjemaet skal ha Contact-steget synlig
   await expect(page.getByText(/First let us know who you are/i)).toBeVisible();

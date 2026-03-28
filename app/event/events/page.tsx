@@ -3,6 +3,8 @@ import { Card } from "@/components/ui/card";
 import { SectionHeader } from "@/components/ui/section-header";
 import { listActiveEvents } from "@/lib/events";
 
+export const revalidate = 300;
+
 export default async function EventListPage() {
   const events = await listActiveEvents();
 

@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import {
   BarChart3,
   BriefcaseBusiness,
@@ -22,6 +22,8 @@ import { LogoutButton } from "@/components/navigation/logout-button";
 import { SessionGuard } from "@/components/supabase/session-guard";
 
 type NavItem = { href: string; label: string; exact?: boolean; children?: { href: string; label: string }[] };
+const SIDEBAR_COLLAPSED_KEY = "portal-shell-collapsed";
+const SIDEBAR_COLLAPSED_EVENT = "portal-shell-collapsed-change";
 
 function isActivePath(currentPath: string, href: string, exact = false) {
   if (href === "/") return currentPath === "/";
@@ -55,6 +57,34 @@ function CollapsedTooltip({ label }: { label: string }) {
   );
 }
 
+function subscribeToCollapsedSidebar(onStoreChange: () => void) {
+  if (typeof window === "undefined") {
+    return () => undefined;
+  }
+
+  const handleStorage = (event: Event) => {
+    if (!(event instanceof StorageEvent) || event.key === SIDEBAR_COLLAPSED_KEY || event.type === SIDEBAR_COLLAPSED_EVENT) {
+      onStoreChange();
+    }
+  };
+
+  window.addEventListener("storage", handleStorage);
+  window.addEventListener(SIDEBAR_COLLAPSED_EVENT, handleStorage);
+
+  return () => {
+    window.removeEventListener("storage", handleStorage);
+    window.removeEventListener(SIDEBAR_COLLAPSED_EVENT, handleStorage);
+  };
+}
+
+function getCollapsedSidebarSnapshot() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return window.localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === "1";
+}
+
 export function PortalShell({
   roleLabel,
   title,
@@ -75,16 +105,13 @@ export function PortalShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname() ?? "/";
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const isCollapsed = useSyncExternalStore(
+    subscribeToCollapsedSidebar,
+    getCollapsedSidebarSnapshot,
+    () => false,
+  );
   const rolePrefix = `/${roleKey}`;
   const basePrefix = pathname.startsWith(rolePrefix) ? rolePrefix : "";
-
-  useEffect(() => {
-    const stored = window.localStorage.getItem("portal-shell-collapsed");
-    if (stored === "1") {
-      setIsCollapsed(true);
-    }
-  }, []);
 
   function normalizeHref(href: string) {
     if (!basePrefix && href.startsWith(rolePrefix)) {
@@ -95,11 +122,9 @@ export function PortalShell({
   }
 
   function toggleSidebar() {
-    setIsCollapsed((current) => {
-      const next = !current;
-      window.localStorage.setItem("portal-shell-collapsed", next ? "1" : "0");
-      return next;
-    });
+    const next = !isCollapsed;
+    window.localStorage.setItem(SIDEBAR_COLLAPSED_KEY, next ? "1" : "0");
+    window.dispatchEvent(new Event(SIDEBAR_COLLAPSED_EVENT));
   }
 
   return (

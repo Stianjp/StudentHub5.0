@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const remotePatterns: NonNullable<NextConfig["images"]>["remotePatterns"] = [];
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const isProd = process.env.NODE_ENV === "production";
 
 if (supabaseUrl) {
   try {
@@ -20,6 +21,7 @@ if (supabaseUrl) {
 const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: process.env.SKIP_TYPECHECK === "1",
+    tsconfigPath: isProd ? "tsconfig.build.json" : "tsconfig.json",
   },
   images: {
     remotePatterns,

@@ -6,6 +6,8 @@ type PageProps = {
   params: Promise<{ eventId: string }>;
 };
 
+export const revalidate = 300;
+
 export default async function EventKioskPage({ params }: PageProps) {
   const { eventId } = await params;
   const [event, registrations] = await Promise.all([getEvent(eventId), getEventCompanies(eventId)]);

@@ -41,9 +41,9 @@ for (const page of PROTECTED_PAGES) {
 
 const PROTECTED_APIS = [
   { method: "GET", path: "/api/admin/crm/leads", label: "CRM leads API" },
-  { method: "POST", path: "/api/admin/tickets/export", label: "Billett-eksport API" },
+  { method: "GET", path: "/api/admin/tickets/export?eventId=test", label: "Billett-eksport API" },
   { method: "POST", path: "/api/checkin/checkin", label: "Innsjekk API" },
-  { method: "GET", path: "/api/checkin/search?q=test", label: "Søk innsjekk API" },
+  { method: "POST", path: "/api/checkin/search", label: "Søk innsjekk API" },
 ];
 
 for (const api of PROTECTED_APIS) {
@@ -52,6 +52,7 @@ for (const api of PROTECTED_APIS) {
   }) => {
     const response = await request[api.method.toLowerCase() as "get" | "post"](api.path, {
       headers: { "Content-Type": "application/json" },
+      data: api.path === "/api/checkin/search" ? { eventId: "test", query: "test" } : undefined,
     });
 
     expect([401, 403]).toContain(response.status());

@@ -1,15 +1,17 @@
 import { notFound } from "next/navigation";
 import { RegistrationForm } from "@/components/event/registration-form";
 import { SectionHeader } from "@/components/ui/section-header";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createPublicSupabaseClient } from "@/lib/supabase/public";
 
 type PageProps = {
   params: Promise<{ eventId: string; companyId: string }>;
 };
 
+export const revalidate = 300;
+
 export default async function CompanyStandRegisterPage({ params }: PageProps) {
   const { eventId, companyId } = await params;
-  const supabase = await createServerSupabaseClient();
+  const supabase = createPublicSupabaseClient();
 
   const [{ data: event, error: eventError }, { data: company, error: companyError }] =
     await Promise.all([

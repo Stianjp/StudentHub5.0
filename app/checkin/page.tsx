@@ -1,22 +1,12 @@
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { SectionHeader } from "@/components/ui/section-header";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { listAllEvents } from "@/lib/events";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export default async function CheckinHomePage() {
-  const supabase = await createServerSupabaseClient();
-  const { data: events } = await supabase
-    .from("events")
-    .select("id, name, starts_at, ends_at")
-    .order("starts_at", { ascending: false });
-  const typedEvents = (events ?? []) as Array<{
-    id: string;
-    name: string;
-    starts_at: string;
-    ends_at: string;
-  }>;
+  const typedEvents = await listAllEvents();
 
   return (
     <div className="flex flex-col gap-6">

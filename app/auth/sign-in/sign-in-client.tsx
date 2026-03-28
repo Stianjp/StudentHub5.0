@@ -40,13 +40,8 @@ export function SignInClient({
   const [status, setStatus] = useState<"idle" | "loading" | "sent" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
   const allowRegister = effectiveAllowedRole !== "admin";
+  const selectedRole = effectiveAllowedRole ?? role;
   const errorId = "auth-error";
-
-  useEffect(() => {
-    if (effectiveAllowedRole && role !== effectiveAllowedRole) {
-      setRole(effectiveAllowedRole);
-    }
-  }, [effectiveAllowedRole, role]);
 
   useEffect(() => {
     const supabase = createClient();
@@ -64,14 +59,14 @@ export function SignInClient({
     supabase.auth.getSession().then(({ data }) => {
       if (!data.session) return;
       const host = window.location.hostname.toLowerCase();
-      let hostNext = next ?? getDefaultNextPath(role, host);
+      let hostNext = next ?? getDefaultNextPath(selectedRole, host);
       if (host.startsWith("student.")) hostNext = "/student/dashboard";
       if (host.startsWith("bedrift.")) hostNext = "/";
       if (host.startsWith("checkin.")) hostNext = "/checkin";
       if (host.startsWith("admin.")) hostNext = "/admin";
       window.location.assign(hostNext);
     });
-  }, [next, role]);
+  }, [next, selectedRole]);
 
 
   const title = useMemo(() => {
@@ -79,14 +74,14 @@ export function SignInClient({
       return "Gjenopprett passord";
     }
     if (mode === "register") {
-      if (role === "student") return "Registrer student";
-      if (role === "admin") return "Registrer admin";
+      if (selectedRole === "student") return "Registrer student";
+      if (selectedRole === "admin") return "Registrer admin";
       return "Registrer bedrift";
     }
-    if (role === "student") return "Logg inn som student";
-    if (role === "admin") return "Logg inn som admin";
+    if (selectedRole === "student") return "Logg inn som student";
+    if (selectedRole === "admin") return "Logg inn som admin";
     return "Logg inn som bedrift";
-  }, [mode, role]);
+  }, [mode, selectedRole]);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -336,7 +331,7 @@ export function SignInClient({
                 />
               </label>
             ) : null}
-            {mode === "register" && role === "company" ? (
+            {mode === "register" && selectedRole === "company" ? (
               <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
                 Organisasjonsnummer
                 <Input

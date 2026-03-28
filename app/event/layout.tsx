@@ -1,7 +1,5 @@
 import Link from "next/link";
 
-export const dynamic = "force-dynamic";
-
 export default function EventLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-mist">

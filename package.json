@@ -11,7 +11,8 @@
     "test:unit": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "playwright:mcp": "playwright-mcp"
   },
   "dependencies": {
     "@supabase/ssr": "^0.8.0",
@@ -27,6 +28,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@playwright/mcp": "^0.0.68",
     "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",

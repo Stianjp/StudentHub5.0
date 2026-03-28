@@ -1,11 +1,12 @@
+import { cache } from "react";
 import type { TableRow } from "@/lib/types/database";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createPublicSupabaseClient } from "@/lib/supabase/public";
 
 type Event = TableRow<"events">;
 type Company = TableRow<"companies">;
 
-export async function listActiveEvents() {
-  const supabase = await createServerSupabaseClient();
+export const listActiveEvents = cache(async function listActiveEvents() {
+  const supabase = createPublicSupabaseClient();
   const { data, error } = await supabase
     .from("events")
     .select("*")
@@ -14,17 +15,28 @@ export async function listActiveEvents() {
 
   if (error) throw error;
   return (data ?? []) as Event[];
-}
+});
 
-export async function getEvent(eventId: string) {
-  const supabase = await createServerSupabaseClient();
+export const listAllEvents = cache(async function listAllEvents() {
+  const supabase = createPublicSupabaseClient();
+  const { data, error } = await supabase
+    .from("events")
+    .select("id, name, starts_at, ends_at")
+    .order("starts_at", { ascending: false });
+
+  if (error) throw error;
+  return (data ?? []) as Array<Pick<Event, "id" | "name" | "starts_at" | "ends_at">>;
+});
+
+export const getEvent = cache(async function getEvent(eventId: string) {
+  const supabase = createPublicSupabaseClient();
   const { data, error } = await supabase.from("events").select("*").eq("id", eventId).single();
   if (error) throw error;
   return data as Event;
-}
+});
 
-export async function getEventCompanies(eventId: string) {
-  const supabase = await createServerSupabaseClient();
+export const getEventCompanies = cache(async function getEventCompanies(eventId: string) {
+  const supabase = createPublicSupabaseClient();
   const { data, error } = await supabase
     .from("event_companies")
     .select("*, company:companies(*)")
@@ -33,11 +45,11 @@ export async function getEventCompanies(eventId: string) {
 
   if (error) throw error;
   return (data ?? []) as unknown as Array<TableRow<"event_companies"> & { company: Company }>;
-}
+});
 
 export async function listEventCompaniesForEvents(eventIds: string[]) {
   if (eventIds.length === 0) return [];
-  const supabase = await createServerSupabaseClient();
+  const supabase = createPublicSupabaseClient();
   const { data, error } = await supabase
     .from("event_companies")
     .select("event_id, company:companies(id, name)")

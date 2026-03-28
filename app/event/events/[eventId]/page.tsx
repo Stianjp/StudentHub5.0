@@ -43,6 +43,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
     id: registration.company_id,
     name: registration.company.name,
   }));
+  const eventTime = `${new Date(event.starts_at).toLocaleString("nb-NO")} - ${new Date(event.ends_at).toLocaleString("nb-NO")}`;
 
   return (
     <div className="flex flex-col gap-8">
@@ -73,7 +74,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
           <span className="font-semibold text-primary">Sted:</span> {event.location ?? "Kommer"}
         </p>
         <p>
-          <span className="font-semibold text-primary">Tid:</span> 06.10.2026, kl 11:00-15:00
+          <span className="font-semibold text-primary">Tid:</span> {eventTime}
         </p>
       </Card>
 

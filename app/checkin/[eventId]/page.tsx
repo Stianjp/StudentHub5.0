@@ -1,19 +1,18 @@
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { SectionHeader } from "@/components/ui/section-header";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { getEvent } from "@/lib/events";
 import { CheckinClient } from "./checkin-client";
 
 type PageProps = {
   params: Promise<{ eventId: string }>;
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export default async function CheckinEventPage({ params }: PageProps) {
   const { eventId } = await params;
-  const supabase = await createServerSupabaseClient();
-  const { data: event } = await supabase.from("events").select("*").eq("id", eventId).single();
+  const event = await getEvent(eventId).catch(() => null);
 
   if (!event) {
     return (
