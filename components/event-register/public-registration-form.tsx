@@ -8,11 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { StandMap } from "@/components/event-register/stand-map";
+import { StandMap, type StandMapStand } from "@/components/event-register/stand-map";
 import { cn } from "@/lib/utils";
 
 type RegistrationPackage = TableRow<"event_registration_packages">;
-type RegistrationStand = TableRow<"event_registration_stands">;
 
 type PublicRegistrationFormProps = {
   slug: string;
@@ -24,7 +23,7 @@ type PublicRegistrationFormProps = {
     eventName: string;
   };
   packages: RegistrationPackage[];
-  stands: RegistrationStand[];
+  stands: StandMapStand[];
 };
 
 type StepKey =
@@ -562,7 +561,11 @@ export function PublicRegistrationForm({
                       >
                         <span className="block text-sm font-semibold text-primary">{stand.display_label ?? stand.stand_code}</span>
                         <span className="mt-1 block text-xs text-ink/70">
-                          {unavailable ? "Already assigned" : "Available to request"}
+                          {unavailable
+                            ? stand.bookingPreview
+                              ? `Booked by ${stand.bookingPreview.companyName}`
+                              : "Already assigned"
+                            : "Available to request"}
                         </span>
                       </button>
                     );

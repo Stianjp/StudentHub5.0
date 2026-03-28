@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Stat } from "@/components/ui/stat";
 import { requireRole } from "@/lib/auth";
-import { getCompanyLeads, getCompanyRegistrations, getOrCreateCompanyForUser } from "@/lib/company";
+import { getCompanyLeads, getCompanyRegistrations, getLatestCompanyRegistrationLogo, getOrCreateCompanyForUser } from "@/lib/company";
 import { getCompanyOnboardingStatus } from "@/lib/company-onboarding";
 import { listActiveEvents } from "@/lib/events";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -31,10 +31,11 @@ export default async function CompanyDashboardPage() {
     );
   }
 
-  const [registrations, leads, events] = await Promise.all([
+  const [registrations, leads, events, registrationLogo] = await Promise.all([
     getCompanyRegistrations(companyId),
     getCompanyLeads(companyId),
     listActiveEvents(),
+    getLatestCompanyRegistrationLogo(companyId),
   ]);
   const typedLeads = leads as Array<{ consent: { consent: boolean } | null }>;
   const consentedLeads = typedLeads.filter((lead) => lead.consent?.consent).length;
@@ -59,6 +60,32 @@ export default async function CompanyDashboardPage() {
         <Stat label="Leads med samtykke" value={consentedLeads} hint="Kun consent=true" href="/company/leads" />
         <Stat label="Aktive events" value={events.length} hint="Tilgjengelige nå" />
       </section>
+
+      {registrationLogo?.logoUrl ? (
+        <Card className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-4">
+            <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-2xl border border-primary/10 bg-white p-3">
+              <Image
+                src={registrationLogo.logoUrl}
+                alt={`Logo for ${company.name}`}
+                width={96}
+                height={96}
+                className="h-full w-full object-contain"
+              />
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-primary/60">Bedriftslogo</p>
+              <p className="text-lg font-bold text-primary">{company.name}</p>
+              <p className="text-sm text-ink/75">
+                Hentet fra siste eventregistrering{registrationLogo.eventName ? ` til ${registrationLogo.eventName}` : ""}.
+              </p>
+            </div>
+          </div>
+          <Link href="/company/events">
+            <Button variant="secondary">Se eventpåmeldinger</Button>
+          </Link>
+        </Card>
+      ) : null}
 
       <section className="grid gap-6 lg:grid-cols-2">
         <Card className="relative overflow-hidden">

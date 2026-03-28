@@ -1,13 +1,23 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import Image from "next/image";
 import type { TableRow } from "@/lib/types/database";
 import { cn } from "@/lib/utils";
 
+export type StandBookingPreview = {
+  companyName: string;
+  logoUrl: string | null;
+  candidateSummary: string | null;
+  candidateLevelLabel: string | null;
+};
+
 export type StandMapStand = Pick<
   TableRow<"event_registration_stands">,
   "id" | "stand_code" | "display_label" | "package_tier" | "x" | "y" | "width" | "height" | "status" | "assigned_application_id"
->;
+> & {
+  bookingPreview?: StandBookingPreview | null;
+};
 
 type StandMapProps = {
   floorplanImagePath: string;
@@ -27,7 +37,9 @@ function standStateClass(stand: StandMapStand, isSelected: boolean) {
     return "z-20 scale-[1.04] border-[#140249] bg-[#140249] text-white ring-2 ring-white outline outline-2 outline-[#FE9A70] shadow-[0_0_0_4px_rgba(254,154,112,0.28),0_10px_24px_rgba(20,2,73,0.34)]";
   }
   if (stand.status !== "available" || stand.assigned_application_id) {
-    return "border-primary/20 bg-primary/70 text-surface/60 cursor-not-allowed opacity-55";
+    return stand.bookingPreview
+      ? "border-primary/30 bg-primary/80 text-white/85 opacity-80"
+      : "border-primary/20 bg-primary/70 text-surface/60 opacity-55";
   }
   if (stand.package_tier === "platinum") {
     return "border-white/80 bg-[#f7b3c1]/80 text-primary";
@@ -54,6 +66,11 @@ export function StandMap({
   testId,
 }: StandMapProps) {
   const isInteractive = typeof onSelectStand === "function";
+  const [activeBookedStandId, setActiveBookedStandId] = useState<string | null>(null);
+  const activeBookedStand = useMemo(
+    () => stands.find((stand) => stand.id === activeBookedStandId && stand.bookingPreview) ?? null,
+    [activeBookedStandId, stands],
+  );
 
   return (
     <div className={cn("relative overflow-hidden rounded-[32px] border border-primary/15 bg-[#f6f0ff] p-3", className)}>
@@ -73,6 +90,7 @@ export function StandMap({
         {stands.map((stand) => {
           const unavailable = stand.status !== "available" || Boolean(stand.assigned_application_id);
           const isSelected = selectedStandId === stand.id;
+          const isBooked = unavailable && Boolean(stand.bookingPreview);
 
           return (
             <button
@@ -81,11 +99,27 @@ export function StandMap({
               onClick={() => {
                 if (!unavailable) {
                   onSelectStand?.(stand.id);
+                  return;
+                }
+                if (isBooked) {
+                  setActiveBookedStandId(stand.id);
                 }
               }}
-              disabled={unavailable}
+              onMouseEnter={() => {
+                if (isBooked) setActiveBookedStandId(stand.id);
+              }}
+              onMouseLeave={() => {
+                if (isBooked) setActiveBookedStandId((current) => (current === stand.id ? null : current));
+              }}
+              onFocus={() => {
+                if (isBooked) setActiveBookedStandId(stand.id);
+              }}
+              onBlur={() => {
+                if (isBooked) setActiveBookedStandId((current) => (current === stand.id ? null : current));
+              }}
               aria-label={stand.display_label ?? stand.stand_code}
               aria-pressed={isSelected}
+              aria-disabled={unavailable}
               data-testid={`stand-map-stand-${stand.id}`}
               style={{
                 left: `${stand.x}%`,
@@ -99,6 +133,7 @@ export function StandMap({
                 isInteractive && !unavailable ? "hover:scale-[1.02] focus-visible:scale-[1.02]" : undefined,
                 isInteractive ? "focus-visible:ring-2 focus-visible:ring-[#FE9A70] focus-visible:ring-offset-0 focus-visible:outline-none" : undefined,
                 !isInteractive ? "pointer-events-none" : undefined,
+                unavailable && !isBooked ? "cursor-not-allowed" : undefined,
               )}
             >
               {isSelected ? (
@@ -112,6 +147,50 @@ export function StandMap({
           );
         })}
       </div>
+      {activeBookedStand?.bookingPreview ? (
+        <div className="mx-auto mt-3 max-w-[620px] rounded-[28px] border border-primary/15 bg-white/95 p-4 shadow-soft">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+            <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-primary/10 bg-[#f6f0ff]">
+              {activeBookedStand.bookingPreview.logoUrl ? (
+                <Image
+                  src={activeBookedStand.bookingPreview.logoUrl}
+                  alt={`Logo for ${activeBookedStand.bookingPreview.companyName}`}
+                  width={80}
+                  height={80}
+                  className="h-full w-full object-contain p-2"
+                />
+              ) : (
+                <span className="px-3 text-center text-xs font-bold uppercase tracking-wider text-primary/55">
+                  {activeBookedStand.bookingPreview.companyName}
+                </span>
+              )}
+            </div>
+            <div className="grid gap-1">
+              <p className="text-xs font-bold uppercase tracking-widest text-[#6d28d9]">
+                Booket stand
+              </p>
+              <h3 className="text-lg font-bold text-primary">
+                {activeBookedStand.bookingPreview.companyName}
+              </h3>
+              <p className="text-sm text-ink/75">
+                {activeBookedStand.display_label ?? activeBookedStand.stand_code}
+              </p>
+              {activeBookedStand.bookingPreview.candidateSummary ? (
+                <p className="text-sm text-ink/80">
+                  <span className="font-semibold text-primary">Interessert i:</span>{" "}
+                  {activeBookedStand.bookingPreview.candidateSummary}
+                </p>
+              ) : null}
+              {activeBookedStand.bookingPreview.candidateLevelLabel ? (
+                <p className="text-sm text-ink/80">
+                  <span className="font-semibold text-primary">Studienivå:</span>{" "}
+                  {activeBookedStand.bookingPreview.candidateLevelLabel}
+                </p>
+              ) : null}
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

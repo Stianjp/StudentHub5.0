@@ -37,10 +37,19 @@ type CrmPipelineEntry = TableRow<"crm_pipeline_entries">;
 
 type PublicEventSummary = Pick<Event, "id" | "name" | "slug" | "starts_at" | "ends_at" | "location" | "registration_form_url">;
 type PublicCampaign = RegistrationCampaign & { event: PublicEventSummary };
+export type PublicStandBookingPreview = {
+  companyName: string;
+  logoUrl: string | null;
+  candidateSummary: string | null;
+  candidateLevelLabel: string | null;
+};
+export type PublicRegistrationStand = RegistrationStand & {
+  bookingPreview?: PublicStandBookingPreview | null;
+};
 type PublicCampaignDetail = {
   campaign: PublicCampaign;
   packages: RegistrationPackage[];
-  stands: RegistrationStand[];
+  stands: PublicRegistrationStand[];
 };
 
 const LOGO_BUCKET = "event-registration-assets";
@@ -84,6 +93,74 @@ function slugifyFileName(value: string) {
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "")
     .toLowerCase();
+}
+
+function candidateLevelLabel(value: RegistrationApplication["candidate_level"]) {
+  if (value === "bachelor") return "Bachelor";
+  if (value === "master") return "Master";
+  return "Bachelor og master";
+}
+
+function buildCandidateSummary(application: Pick<RegistrationApplication, "candidate_fields" | "candidate_fields_other">) {
+  const fields = [...application.candidate_fields];
+  if (application.candidate_fields_other) {
+    fields.push(application.candidate_fields_other);
+  }
+  if (fields.length === 0) return null;
+  return fields.slice(0, 4).join(", ");
+}
+
+async function attachStandBookingPreviews(stands: RegistrationStand[]) {
+  const assignedApplicationIds = [...new Set(stands.map((stand) => stand.assigned_application_id).filter(Boolean))];
+  if (assignedApplicationIds.length === 0) {
+    return stands.map((stand) => ({ ...stand, bookingPreview: null })) as PublicRegistrationStand[];
+  }
+
+  const supabase = createAdminSupabaseClient();
+  const { data: applications, error } = await supabase
+    .from("event_registration_applications")
+    .select("id, company_name, candidate_level, candidate_fields, candidate_fields_other, logo_path")
+    .in("id", assignedApplicationIds);
+
+  if (error) throw error;
+
+  const typedApplications = (applications ?? []) as Array<
+    Pick<
+      RegistrationApplication,
+      "id" | "company_name" | "candidate_level" | "candidate_fields" | "candidate_fields_other" | "logo_path"
+    >
+  >;
+
+  const logoUrlMap = new Map<string, string | null>();
+  await Promise.all(
+    typedApplications.map(async (application) => {
+      if (!application.logo_path) {
+        logoUrlMap.set(application.id, null);
+        return;
+      }
+      const { data: signed } = await supabase.storage.from(LOGO_BUCKET).createSignedUrl(application.logo_path, 60 * 60);
+      logoUrlMap.set(application.id, signed?.signedUrl ?? null);
+    }),
+  );
+
+  const applicationMap = new Map(typedApplications.map((application) => [application.id, application]));
+
+  return stands.map((stand) => {
+    const application = stand.assigned_application_id ? applicationMap.get(stand.assigned_application_id) : null;
+    if (!application) {
+      return { ...stand, bookingPreview: null };
+    }
+
+    return {
+      ...stand,
+      bookingPreview: {
+        companyName: application.company_name,
+        logoUrl: logoUrlMap.get(application.id) ?? null,
+        candidateSummary: buildCandidateSummary(application),
+        candidateLevelLabel: candidateLevelLabel(application.candidate_level),
+      },
+    };
+  }) as PublicRegistrationStand[];
 }
 
 function isCampaignOpen(campaign: RegistrationCampaign) {
@@ -150,10 +227,12 @@ const loadPublicRegistrationCampaignDetail = unstable_cache(
     if (packagesError) throw packagesError;
     if (standsError) throw standsError;
 
+    const typedStands = (stands ?? []) as RegistrationStand[];
+
     return {
       campaign: typedCampaign,
       packages: (packages ?? []) as RegistrationPackage[],
-      stands: (stands ?? []) as RegistrationStand[],
+      stands: await attachStandBookingPreviews(typedStands),
     };
   },
   ["event-registration-public-campaign-detail"],

@@ -14,6 +14,7 @@ type StudentPublic = TableRow<"student_public_profiles">;
 type Consent = TableRow<"consents">;
 type StandVisit = TableRow<"stand_visits">;
 type Lead = TableRow<"leads">;
+const REGISTRATION_LOGO_BUCKET = "event-registration-assets";
 
 type EventRegistration = EventCompany & { event: Event };
 
@@ -154,6 +155,37 @@ export async function getCompanyRegistrations(companyId: string) {
 
   if (error) throw error;
   return (data ?? []) as unknown as EventRegistration[];
+}
+
+export async function getLatestCompanyRegistrationLogo(companyId: string) {
+  let supabase = await createServerSupabaseClient();
+  try {
+    supabase = createAdminSupabaseClient() as unknown as typeof supabase;
+  } catch {
+    // fallback
+  }
+
+  const { data: application, error } = await supabase
+    .from("event_registration_applications")
+    .select("logo_path, event_id")
+    .eq("company_id", companyId)
+    .not("logo_path", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!application?.logo_path) return null;
+
+  const [{ data: signed }, { data: event }] = await Promise.all([
+    supabase.storage.from(REGISTRATION_LOGO_BUCKET).createSignedUrl(application.logo_path, 60 * 60),
+    supabase.from("events").select("name").eq("id", application.event_id).maybeSingle(),
+  ]);
+
+  return {
+    logoUrl: signed?.signedUrl ?? null,
+    eventName: event?.name ?? null,
+  };
 }
 
 export async function getCompanyAttendeeCountByEvent(companyId: string) {

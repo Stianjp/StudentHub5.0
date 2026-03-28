@@ -1,4 +1,5 @@
 import type { TableRow } from "@/lib/types/database";
+import type { PublicRegistrationStand } from "@/lib/event-registration";
 
 type EventRow = TableRow<"events">;
 type RegistrationCampaign = TableRow<"event_registration_campaigns">;
@@ -14,7 +15,7 @@ export type PreviewRegistrationCampaign = RegistrationCampaign & {
 export type PreviewRegistrationDetail = {
   campaign: PreviewRegistrationCampaign;
   packages: RegistrationPackage[];
-  stands: RegistrationStand[];
+  stands: PublicRegistrationStand[];
 };
 
 export const STUDENT_CONNECT_2026_FLOORPLAN = {
@@ -194,6 +195,6 @@ export function getPreviewRegistrationDetail(slug: string): PreviewRegistrationD
   return {
     campaign: { ...FIXTURE_CAMPAIGN, event: { ...FIXTURE_EVENT } },
     packages: FIXTURE_PACKAGES.map((pkg) => ({ ...pkg })),
-    stands: FIXTURE_STANDS.map((stand) => ({ ...stand })),
+    stands: FIXTURE_STANDS.map((stand) => ({ ...stand, bookingPreview: null })),
   };
 }
