@@ -1320,6 +1320,10 @@ export type Database = {
           name: string;
           description: string | null;
           member_type: "company" | "student";
+          sync_mode: "manual" | "dynamic_registration";
+          dynamic_registration_campaign_id: string | null;
+          dynamic_package_tier: "standard" | "silver" | "gold" | "platinum" | null;
+          dynamic_pipeline_stage: "Kontaktet" | "Venter svar" | "Dialog" | "Tapt" | "Påmeldt" | "Venter kontrakt" | "Venter faktura" | "Betalt" | null;
           created_at: string;
           updated_at: string;
         };
@@ -1328,6 +1332,10 @@ export type Database = {
           name: string;
           description?: string | null;
           member_type: "company" | "student";
+          sync_mode?: "manual" | "dynamic_registration";
+          dynamic_registration_campaign_id?: string | null;
+          dynamic_package_tier?: "standard" | "silver" | "gold" | "platinum" | null;
+          dynamic_pipeline_stage?: "Kontaktet" | "Venter svar" | "Dialog" | "Tapt" | "Påmeldt" | "Venter kontrakt" | "Venter faktura" | "Betalt" | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -1336,6 +1344,10 @@ export type Database = {
           name?: string;
           description?: string | null;
           member_type?: "company" | "student";
+          sync_mode?: "manual" | "dynamic_registration";
+          dynamic_registration_campaign_id?: string | null;
+          dynamic_package_tier?: "standard" | "silver" | "gold" | "platinum" | null;
+          dynamic_pipeline_stage?: "Kontaktet" | "Venter svar" | "Dialog" | "Tapt" | "Påmeldt" | "Venter kontrakt" | "Venter faktura" | "Betalt" | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -1349,6 +1361,7 @@ export type Database = {
           student_id: string | null;
           email: string;
           display_name: string | null;
+          source: "manual" | "dynamic_registration" | "registration_auto";
           created_at: string;
         };
         Insert: {
@@ -1358,6 +1371,7 @@ export type Database = {
           student_id?: string | null;
           email: string;
           display_name?: string | null;
+          source?: "manual" | "dynamic_registration" | "registration_auto";
           created_at?: string;
         };
         Update: {
@@ -1367,6 +1381,7 @@ export type Database = {
           student_id?: string | null;
           email?: string;
           display_name?: string | null;
+          source?: "manual" | "dynamic_registration" | "registration_auto";
           created_at?: string;
         };
         Relationships: [];
@@ -1429,6 +1444,8 @@ export type Database = {
       email_contact_message_direction: "inbound" | "outbound" | "internal_note";
       email_contact_checklist_key: "logo" | "tables_chairs" | "reply" | "contract" | "payment";
       email_group_member_type: "company" | "student";
+      email_group_sync_mode: "manual" | "dynamic_registration";
+      email_group_member_source: "manual" | "dynamic_registration" | "registration_auto";
     };
     CompositeTypes: Record<string, never>;
   };

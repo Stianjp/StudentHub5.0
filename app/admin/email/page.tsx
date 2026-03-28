@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { SectionHeader } from "@/components/ui/section-header";
 import { requireRole } from "@/lib/auth";
+import { syncDynamicEmailGroups } from "@/lib/email-groups";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { EmailComposeForm } from "./email-compose-form";
 
 export default async function EmailPage() {
   await requireRole("admin");
+  await syncDynamicEmailGroups();
 
   const supabase = createAdminSupabaseClient();
 
@@ -27,6 +29,7 @@ export default async function EmailPage() {
     name: string;
     description: string | null;
     member_type: "company" | "student";
+    sync_mode: "manual" | "dynamic_registration";
   }>;
   const typedMembers = (members ?? []) as Array<{ group_id: string }>;
 

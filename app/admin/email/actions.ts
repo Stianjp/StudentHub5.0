@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth";
+import { syncDynamicEmailGroups } from "@/lib/email-groups";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { renderTemplate, sendBulkEmail } from "@/lib/resend";
 
@@ -48,17 +49,22 @@ export async function sendEmailAction(
   if (!htmlBody) throw new Error("Innhold er påkrevd.");
 
   const recipients: Recipient[] = [];
+  const seenEmails = new Set<string>();
 
   if (recipientMode === "group" && groupId) {
+    await syncDynamicEmailGroups({ groupIds: [groupId] });
+
     const { data: members } = await supabase
       .from("email_group_members")
       .select("email, display_name")
       .eq("group_id", groupId);
 
     for (const m of members ?? []) {
-      if (m.email) {
+      const normalizedEmail = m.email?.trim().toLowerCase();
+      if (normalizedEmail && !seenEmails.has(normalizedEmail)) {
+        seenEmails.add(normalizedEmail);
         recipients.push({
-          email: m.email,
+          email: normalizedEmail,
           variables: { displayName: m.display_name ?? "" },
         });
       }
@@ -70,7 +76,11 @@ export async function sendEmailAction(
       .filter((e) => e.includes("@"));
 
     for (const email of emails) {
-      recipients.push({ email });
+      const normalizedEmail = email.toLowerCase();
+      if (!seenEmails.has(normalizedEmail)) {
+        seenEmails.add(normalizedEmail);
+        recipients.push({ email: normalizedEmail });
+      }
     }
   }
 

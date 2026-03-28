@@ -6,13 +6,36 @@ import {
   caseStatusVariant,
   deriveCompanyNameFromDomain,
   extractDomainFromEmail,
+  filterOverviewCasesByStatus,
+  isAutoArchivedContactSender,
   normalizeDomain,
   parseCaseNumberFromSubject,
   summarizeMessageBody,
 } from "@/lib/email-contact-overview";
 import type { TableRow } from "@/lib/types/database";
 
+type ContactCase = TableRow<"email_contact_cases">;
 type ContactMessage = TableRow<"email_contact_case_messages">;
+
+function makeCase(overrides: Partial<ContactCase> = {}): ContactCase {
+  return {
+    id: crypto.randomUUID(),
+    contact_company_id: crypto.randomUUID(),
+    event_id: null,
+    case_number: "OSH-000001",
+    title: "Eksempelsak",
+    status: "open",
+    contact_name: null,
+    contact_email: null,
+    latest_message_at: new Date().toISOString(),
+    merged_into_case_id: null,
+    archived_at: null,
+    closed_at: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    ...overrides,
+  };
+}
 
 function makeMessage(overrides: Partial<ContactMessage> = {}): ContactMessage {
   return {
@@ -79,6 +102,11 @@ describe("domenehjelpere", () => {
   it("deriverer lesbart bedriftsnavn fra domene", () => {
     expect(deriveCompanyNameFromDomain("norsk-hydrogen.no")).toBe("Norsk Hydrogen");
   });
+
+  it("matcher autoarkiverte avsendere på e-post", () => {
+    expect(isAutoArchivedContactSender("DMARCReport@Microsoft.com")).toBe(true);
+    expect(isAutoArchivedContactSender("kontakt@microsoft.com")).toBe(false);
+  });
 });
 
 describe("buildDefaultCaseTitle", () => {
@@ -102,6 +130,35 @@ describe("case status", () => {
     expect(caseStatusVariant("open")).toBe("info");
     expect(caseStatusVariant("closed")).toBe("success");
     expect(caseStatusVariant("archived")).toBe("default");
+  });
+});
+
+describe("filterOverviewCasesByStatus", () => {
+  const cases = [
+    makeCase({ status: "unsorted", case_number: "OSH-000001" }),
+    makeCase({ status: "open", case_number: "OSH-000002" }),
+    makeCase({ status: "closed", case_number: "OSH-000003", closed_at: new Date().toISOString() }),
+    makeCase({ status: "archived", case_number: "OSH-000004", archived_at: new Date().toISOString() }),
+    makeCase({ status: "open", case_number: "OSH-000005", merged_into_case_id: crypto.randomUUID() }),
+  ];
+
+  it("viser bare åpne og usorterte i aktiv visning", () => {
+    expect(filterOverviewCasesByStatus(cases, "active").map((caseRow) => caseRow.case_number)).toEqual([
+      "OSH-000001",
+      "OSH-000002",
+    ]);
+  });
+
+  it("viser bare lukkede i lukket visning", () => {
+    expect(filterOverviewCasesByStatus(cases, "closed").map((caseRow) => caseRow.case_number)).toEqual([
+      "OSH-000003",
+    ]);
+  });
+
+  it("viser bare arkiverte i arkivvisning", () => {
+    expect(filterOverviewCasesByStatus(cases, "archived").map((caseRow) => caseRow.case_number)).toEqual([
+      "OSH-000004",
+    ]);
   });
 });
 
@@ -131,5 +188,27 @@ describe("summarizeMessageBody", () => {
         }),
       ),
     ).toBe("Hei, vi sender logo i morgen.");
+  });
+
+  it("fjerner markedsføringsfooter og sporingslenker fra sammendraget", () => {
+    expect(
+      summarizeMessageBody(
+        makeMessage({
+          body_text:
+            "Hei, her er oppdateringen du trenger.\n\nLinkedIn (https://www.checkinevent.com/e3t/Ctc/S+superlang-sporingslenke-som-ikke-bor-vises-1234567890123456789012345678901234567890)\nInstagram (https://www.checkinevent.com/e3t/Ctc/S+enda-en-superlang-sporingslenke-1234567890123456789012345678901234567890)\nAvslutt abonnement (https://www.checkinevent.com/hs/preferences-center/en/direct?lang=nb&tracking=123456789012345678901234567890)",
+        }),
+      ),
+    ).toBe("Hei, her er oppdateringen du trenger.");
+  });
+
+  it("beholder legitime lenker i sammendraget slik at UI kan gjøre dem klikkbare", () => {
+    expect(
+      summarizeMessageBody(
+        makeMessage({
+          body_text:
+            "Se dokumentet her: https://example.com/veldig/lang/url/som/fortsetter/i/det/uendelige/med/mange/parametere/og/tegn/1234567890123456789012345678901234567890",
+        }),
+      ),
+    ).toContain("https://example.com/");
   });
 });

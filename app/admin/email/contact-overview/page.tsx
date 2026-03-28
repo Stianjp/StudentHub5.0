@@ -9,12 +9,12 @@ import { requireRole } from "@/lib/auth";
 import {
   caseStatusLabel,
   caseStatusVariant,
-  countContactOverviewCompaniesForOwner,
   formatContactOverviewTimestamp,
   getContactOverviewMailboxSummary,
   listContactOverviewCompanies,
   type ContactOverviewListItem,
   type ContactOverviewOwnerFilter,
+  type ContactOverviewStatusFilter,
 } from "@/lib/email-contact-overview";
 import { syncContactOverviewAction } from "./actions";
 
@@ -32,25 +32,32 @@ export default async function ContactOverviewPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const query = firstValue(params.q);
   const ownerScope = (firstValue(params.ownerScope) || "all") as ContactOverviewOwnerFilter;
-  const includeArchived = firstValue(params.archived) === "1";
+  const legacyArchived = firstValue(params.archived) === "1";
+  const statusFilter = ((firstValue(params.status) || (legacyArchived ? "all" : "active")) ||
+    "active") as ContactOverviewStatusFilter;
   const saved = firstValue(params.saved) === "1";
   const sent = firstValue(params.sent) === "1";
   const error = firstValue(params.error);
   const synced = firstValue(params.synced);
   const created = firstValue(params.created);
 
-  const [items, mailboxSummary, myCompanyCount] = await Promise.all([
+  const [items, mailboxSummary, myItems] = await Promise.all([
     listContactOverviewCompanies({
       query,
-      includeArchived,
       ownerScope,
+      statusFilter,
       currentProfileId: profile.id,
     }),
     getContactOverviewMailboxSummary(),
-    countContactOverviewCompaniesForOwner(profile.id),
+    listContactOverviewCompanies({
+      ownerScope: "mine",
+      statusFilter,
+      currentProfileId: profile.id,
+    }),
   ]);
 
   const typedItems = items as ContactOverviewListItem[];
+  const myCompanyCount = (myItems as ContactOverviewListItem[]).length;
   const unassignedCount = typedItems.filter((item) => !item.owner).length;
   const unreadCompanyCount = typedItems.filter((item) => item.unreadCount > 0).length;
 
@@ -129,7 +136,7 @@ export default async function ContactOverviewPage({ searchParams }: PageProps) {
         <Card className="flex flex-col gap-6 border border-[#D46839]/15 bg-white">
           <form
             method="get"
-            className="grid gap-3 lg:grid-cols-[minmax(0,1.5fr)_16rem_12rem_10rem] lg:items-end"
+            className="grid gap-3 lg:grid-cols-[minmax(0,1.5fr)_16rem_14rem_10rem] lg:items-end"
           >
             <label className="text-sm font-semibold text-[#140249]">
               Søk bedrift eller domene
@@ -151,9 +158,11 @@ export default async function ContactOverviewPage({ searchParams }: PageProps) {
             </label>
             <label className="text-sm font-semibold text-[#140249]">
               Visning
-              <Select name="archived" defaultValue={includeArchived ? "1" : "0"} className="border-[#5A458B]/30 bg-white text-[#1A1626]">
-                <option value="0">Aktive</option>
-                <option value="1">Også arkiverte</option>
+              <Select name="status" defaultValue={statusFilter} className="border-[#5A458B]/30 bg-white text-[#1A1626]">
+                <option value="active">Åpne og usorterte</option>
+                <option value="closed">Lukkede</option>
+                <option value="archived">Arkiverte</option>
+                <option value="all">Alle</option>
               </Select>
             </label>
             <Button type="submit" variant="secondary" className="rounded-xl">
@@ -176,7 +185,7 @@ export default async function ContactOverviewPage({ searchParams }: PageProps) {
                     <th className="px-4 py-3">Aktiv sak</th>
                     <th className="px-4 py-3">Event</th>
                     <th className="px-4 py-3">Siste aktivitet</th>
-                    <th className="px-4 py-3">Åpne saker</th>
+                    <th className="px-4 py-3">Saker</th>
                     <th className="px-4 py-3">Checklist</th>
                     <th className="px-4 py-3">Status</th>
                   </tr>

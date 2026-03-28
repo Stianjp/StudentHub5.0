@@ -22,6 +22,7 @@ type ChecklistKey = ChecklistItem["item_key"];
 const INTERNAL_DOMAIN = "oslostudenthub.no";
 const DEFAULT_MAILBOX = "stian@oslostudenthub.no";
 const CASE_NUMBER_PATTERN = /\[(OSH-\d{6})\]|(OSH-\d{6})/i;
+const AUTO_ARCHIVE_CONTACT_SENDERS = new Set(["dmarcreport@microsoft.com"]);
 const CHECKLIST_LABELS: Record<ChecklistKey, string> = {
   logo: "Venter på logo",
   tables_chairs: "Venter på bord/stoler",
@@ -88,6 +89,7 @@ export type ContactOverviewCompanyDetail = {
 };
 
 export type ContactOverviewOwnerFilter = "all" | "mine" | "team" | "unassigned";
+export type ContactOverviewStatusFilter = "active" | "closed" | "archived" | "all";
 
 export type ContactOverviewMailboxSummary = {
   delegatedUser: string | null;
@@ -106,6 +108,10 @@ export type MailboxSyncResult = {
 
 function normalizeWhitespace(value: string) {
   return value.replace(/\s+/g, " ").trim();
+}
+
+function normalizeEmailAddress(value: string | null | undefined) {
+  return value?.trim().toLowerCase() ?? "";
 }
 
 export function normalizeDomain(value: string) {
@@ -233,6 +239,47 @@ function trimQuotedReply(value: string) {
     .trim();
 }
 
+function trimEmailFooter(value: string) {
+  const normalized = value.replace(/\r\n/g, "\n").trim();
+  if (!normalized) return "";
+
+  const footerMarkers = [
+    /^LinkedIn\s*\(/im,
+    /^Instagram\s*\(/im,
+    /^Facebook\s*\(/im,
+    /^Twitter\s*\(/im,
+    /^X\s*\(/im,
+    /^Avslutt abonnement/im,
+    /^Administrer preferanser/im,
+    /^Manage preferences/im,
+    /^Unsubscribe/im,
+    /^View in browser/im,
+  ];
+
+  let cutIndex = normalized.length;
+  for (const marker of footerMarkers) {
+    const match = normalized.match(marker);
+    if (!match || typeof match.index !== "number") continue;
+    cutIndex = Math.min(cutIndex, match.index);
+  }
+
+  return normalized.slice(0, cutIndex).trim();
+}
+
+function sanitizeMessageSummary(value: string) {
+  const withoutFooter = trimEmailFooter(value);
+  const cleanedLines = withoutFooter
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => {
+      if (!line) return false;
+      return true;
+    });
+
+  const normalized = cleanedLines.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+  return normalized || "";
+}
+
 function getProfileLabel(profile: Profile | null | undefined) {
   return profile?.full_name?.trim() || "Uten navn";
 }
@@ -240,6 +287,31 @@ function getProfileLabel(profile: Profile | null | undefined) {
 function filterVisibleCases(cases: ContactCase[]) {
   const visible = cases.filter((caseRow) => !caseRow.merged_into_case_id && caseRow.status !== "archived");
   return visible.length > 0 ? visible : cases;
+}
+
+export function filterOverviewCasesByStatus(
+  cases: ContactCase[],
+  statusFilter: ContactOverviewStatusFilter,
+) {
+  return cases.filter((caseRow) => {
+    if (caseRow.merged_into_case_id) return false;
+    if (statusFilter === "active") {
+      return caseRow.status === "open" || caseRow.status === "unsorted";
+    }
+    if (statusFilter === "closed") {
+      return caseRow.status === "closed";
+    }
+    if (statusFilter === "archived") {
+      return caseRow.status === "archived";
+    }
+    return true;
+  });
+}
+
+export function isAutoArchivedContactSender(email: string | null | undefined) {
+  const normalized = normalizeEmailAddress(email);
+  if (!normalized) return false;
+  return AUTO_ARCHIVE_CONTACT_SENDERS.has(normalized);
 }
 
 function decodeBase64Url(value: string | undefined) {
@@ -377,6 +449,29 @@ async function loadMatchingContext() {
     companies: (companies ?? []) as Company[],
     companyDomains: (companyDomains ?? []) as CompanyDomain[],
   } satisfies MatchingContext;
+}
+
+async function archiveSuppressedSenderCompany(context: MatchingContext, email: string) {
+  const normalizedEmail = normalizeEmailAddress(email);
+  if (!normalizedEmail) return;
+
+  const exactMatch = context.contactCompanies.find(
+    (company) => normalizeEmailAddress(company.primary_email) === normalizedEmail,
+  );
+  const domainMatch = matchContactCompanyByDomain(context, extractDomainFromEmail(normalizedEmail));
+  const match = exactMatch ?? domainMatch;
+  if (!match || match.archived_at) return;
+
+  await archiveContactCompany(match.id);
+  const now = new Date().toISOString();
+  const index = context.contactCompanies.findIndex((company) => company.id === match.id);
+  if (index >= 0) {
+    context.contactCompanies[index] = {
+      ...match,
+      archived_at: now,
+      updated_at: now,
+    };
+  }
 }
 
 function matchContactCompanyByDomain(context: MatchingContext, domain: string) {
@@ -807,6 +902,16 @@ export async function syncContactOverviewMailbox(): Promise<MailboxSyncResult> {
       const subject = getHeaderValue(headers, "Subject");
       const participants = resolveParticipants(message, config.delegatedUser);
       if (!participants.primaryExternalEmail || !participants.primaryExternalDomain) continue;
+      if (
+        isAutoArchivedContactSender(participants.fromEmail) ||
+        isAutoArchivedContactSender(participants.primaryExternalEmail)
+      ) {
+        await archiveSuppressedSenderCompany(
+          context,
+          participants.primaryExternalEmail || participants.fromEmail,
+        );
+        continue;
+      }
 
       const { text, html } = readPayloadBody(message.payload);
       const bodyText = toPlainBody(text, html);
@@ -1019,14 +1124,14 @@ async function markCaseMessagesRead(caseId: string, readBy: string) {
 
 export async function listContactOverviewCompanies(options?: {
   query?: string;
-  includeArchived?: boolean;
   ownerScope?: ContactOverviewOwnerFilter;
+  statusFilter?: ContactOverviewStatusFilter;
   currentProfileId?: string | null;
 }): Promise<ContactOverviewListItem[]> {
   const supabase = createAdminSupabaseClient();
   const query = normalizeWhitespace(options?.query ?? "").toLowerCase();
-  const includeArchived = options?.includeArchived ?? false;
   const ownerScope = options?.ownerScope ?? "all";
+  const statusFilter = options?.statusFilter ?? "active";
 
   const [{ data: companies }, { data: cases }, { data: checklist }, { data: events }, { data: messages }, owners] = await Promise.all([
     supabase.from("email_contact_companies").select("*").order("updated_at", { ascending: false }),
@@ -1046,7 +1151,8 @@ export async function listContactOverviewCompanies(options?: {
   const ownerById = new Map(typedOwners.map((owner) => [owner.id, owner]));
 
   return typedCompanies
-    .filter((company) => (includeArchived ? true : !company.archived_at))
+    .filter((company) => !isAutoArchivedContactSender(company.primary_email))
+    .filter((company) => (statusFilter === "archived" || statusFilter === "all" ? true : !company.archived_at))
     .filter((company) => {
       if (ownerScope === "mine") return company.owner_profile_id === options?.currentProfileId;
       if (ownerScope === "team") return Boolean(company.owner_profile_id);
@@ -1062,14 +1168,11 @@ export async function listContactOverviewCompanies(options?: {
         .includes(query);
     })
     .map((company) => {
-      const companyCases = filterVisibleCases(
-        typedCases
-        .filter((caseRow) => caseRow.contact_company_id === company.id)
+      const companyCases = filterOverviewCasesByStatus(
+        typedCases.filter((caseRow) => caseRow.contact_company_id === company.id),
+        statusFilter,
       ).sort(sortCasesNewestFirst);
-      const activeCase =
-        companyCases.find((caseRow) => caseRow.status === "open" || caseRow.status === "unsorted") ??
-        companyCases[0] ??
-        null;
+      const activeCase = companyCases[0] ?? null;
       const activeChecklist = typedChecklist.filter((item) => item.case_id === activeCase?.id);
       const unreadCount = companyCases.reduce((count, caseRow) => {
         return count + typedMessages.filter((message) => message.case_id === caseRow.id && message.direction === "inbound" && !message.is_read).length;
@@ -1079,13 +1182,14 @@ export async function listContactOverviewCompanies(options?: {
         activeCase,
         eventName: activeCase?.event_id ? eventNameById.get(activeCase.event_id) ?? null : null,
         latestMessageAt: activeCase?.latest_message_at ?? null,
-        openCaseCount: companyCases.filter((caseRow) => caseRow.status === "open" || caseRow.status === "unsorted").length,
+        openCaseCount: companyCases.length,
         checklistCompleted: activeChecklist.filter((item) => item.is_completed).length,
         checklistTotal: activeChecklist.length,
         unreadCount,
         owner: ownerById.get(company.owner_profile_id ?? "") ?? null,
       } satisfies ContactOverviewListItem;
     })
+    .filter((item) => item.activeCase !== null)
     .sort((a, b) => {
       const aTime = a.latestMessageAt ?? a.company.updated_at ?? a.company.created_at;
       const bTime = b.latestMessageAt ?? b.company.updated_at ?? b.company.created_at;
@@ -1407,11 +1511,13 @@ export function getChecklistLabel(itemKey: ChecklistKey) {
 }
 
 export function summarizeMessageBody(message: ContactMessage) {
-  return (
-    trimQuotedReply(message.body_text?.trim() ?? "") ||
-    trimQuotedReply(stripHtmlTags(message.body_html ?? "")) ||
-    "Ingen tekst tilgjengelig."
-  );
+  const textBody = sanitizeMessageSummary(trimQuotedReply(message.body_text?.trim() ?? ""));
+  if (textBody) return textBody;
+
+  const htmlBody = sanitizeMessageSummary(trimQuotedReply(stripHtmlTags(message.body_html ?? "")));
+  if (htmlBody) return htmlBody;
+
+  return "Ingen tekst tilgjengelig.";
 }
 
 export function caseStatusLabel(status: CaseStatus) {

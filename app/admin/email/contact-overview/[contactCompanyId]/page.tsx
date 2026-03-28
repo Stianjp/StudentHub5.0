@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -48,6 +49,66 @@ function messageBodyTone(direction: "inbound" | "outbound" | "internal_note") {
   if (direction === "inbound") return "bg-[#FFF8F0]";
   if (direction === "outbound") return "bg-[#F4FBF6]";
   return "bg-[#F7F3FF]";
+}
+
+const URL_PATTERN = /(https?:\/\/[^\s)]+)/gi;
+
+function getLinkLabel(url: string) {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace(/^www\./, "");
+    return host || "Åpne lenke";
+  } catch {
+    return "Åpne lenke";
+  }
+}
+
+function renderMessageSummary(text: string) {
+  const lines = text.split("\n");
+
+  return lines.map((line, lineIndex) => {
+    const matches = [...line.matchAll(URL_PATTERN)];
+    if (matches.length === 0) {
+      return (
+        <p key={`line-${lineIndex}`} className="whitespace-pre-wrap break-words">
+          {line}
+        </p>
+      );
+    }
+
+    const parts: ReactNode[] = [];
+    let cursor = 0;
+
+    for (const match of matches) {
+      const url = match[0];
+      const index = match.index ?? 0;
+      if (index > cursor) {
+        parts.push(line.slice(cursor, index));
+      }
+      parts.push(
+        <a
+          key={`${lineIndex}-${index}-${url}`}
+          href={url}
+          target="_blank"
+          rel="noreferrer"
+          className="font-semibold text-[#140249] underline underline-offset-2"
+        >
+          {getLinkLabel(url)}
+        </a>,
+      );
+      cursor = index + url.length;
+    }
+
+    if (cursor < line.length) {
+      parts.push(line.slice(cursor));
+    }
+
+    return (
+      <p key={`line-${lineIndex}`} className="whitespace-pre-wrap break-words">
+        {parts}
+      </p>
+    );
+  });
 }
 
 export default async function ContactOverviewCompanyPage({ params, searchParams }: PageProps) {
@@ -107,7 +168,7 @@ export default async function ContactOverviewCompanyPage({ params, searchParams 
           </Card>
         ) : null}
 
-        <div className="grid gap-6 xl:grid-cols-[18rem_minmax(0,1fr)_22rem]">
+        <div className="grid gap-6 xl:grid-cols-[18rem_minmax(0,1.35fr)_18rem]">
           <div className="flex flex-col gap-6">
             <Card className="flex flex-col gap-4 border border-[#D46839]/15 bg-white">
               <div>
@@ -156,6 +217,39 @@ export default async function ContactOverviewCompanyPage({ params, searchParams 
                 </Button>
               </form>
             </Card>
+
+            {detail.activeCase ? (
+              <Card className="flex flex-col gap-4 border border-[#D46839]/15 bg-white">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[#6E4DB0]">Tjenestemål</p>
+                  <h3 className="text-lg font-bold text-[#2D1C63]">Sjekkliste</h3>
+                </div>
+                <div className="flex flex-col gap-3">
+                  {detail.activeCaseChecklist.map((item) => (
+                    <div key={item.id} className="rounded-2xl border border-[#6E4DB0]/10 bg-[#FCFAFF] p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="font-semibold text-[#2D1C63]">{getChecklistLabel(item.item_key)}</p>
+                          <p className="mt-1 text-xs text-[#2D1C63]/70">
+                            {item.is_completed
+                              ? `Fullført ${formatContactOverviewTimestamp(item.completed_at)}`
+                              : "Ikke fullført ennå"}
+                          </p>
+                        </div>
+                        <form action={toggleChecklistItemAction}>
+                          <input type="hidden" name="itemId" value={item.id} />
+                          <input type="hidden" name="completed" value={item.is_completed ? "0" : "1"} />
+                          <input type="hidden" name="returnTo" value={caseReturnTo} />
+                          <Button type="submit" variant={item.is_completed ? "ghost" : "secondary"} className="rounded-xl px-4 py-2 text-xs">
+                            {item.is_completed ? "Åpne igjen" : "Marker fullført"}
+                          </Button>
+                        </form>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            ) : null}
 
             <Card className="flex flex-col gap-4 border border-[#D46839]/15 bg-white">
               <div className="flex items-center justify-between gap-3">
@@ -298,7 +392,7 @@ export default async function ContactOverviewCompanyPage({ params, searchParams 
                       </div>
 
                       <div className={`mt-4 rounded-2xl p-4 text-sm text-[#1A1626] ${messageBodyTone(message.direction)}`}>
-                        <p className="whitespace-pre-wrap">{summarizeMessageBody(message)}</p>
+                        <div className="flex flex-col gap-3">{renderMessageSummary(summarizeMessageBody(message))}</div>
                       </div>
 
                       {detail.relatedCases.length > 0 ? (
@@ -374,37 +468,6 @@ export default async function ContactOverviewCompanyPage({ params, searchParams 
                       Lagre saksdetaljer
                     </Button>
                   </form>
-                </Card>
-
-                <Card className="flex flex-col gap-4 border border-[#D46839]/15 bg-white">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wide text-[#6E4DB0]">Tjenestemål</p>
-                    <h3 className="text-lg font-bold text-[#2D1C63]">Sjekkliste</h3>
-                  </div>
-                  <div className="flex flex-col gap-3">
-                    {detail.activeCaseChecklist.map((item) => (
-                      <div key={item.id} className="rounded-2xl border border-[#6E4DB0]/10 bg-[#FCFAFF] p-4">
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <p className="font-semibold text-[#2D1C63]">{getChecklistLabel(item.item_key)}</p>
-                            <p className="mt-1 text-xs text-[#2D1C63]/70">
-                              {item.is_completed
-                                ? `Fullført ${formatContactOverviewTimestamp(item.completed_at)}`
-                                : "Ikke fullført ennå"}
-                            </p>
-                          </div>
-                          <form action={toggleChecklistItemAction}>
-                            <input type="hidden" name="itemId" value={item.id} />
-                            <input type="hidden" name="completed" value={item.is_completed ? "0" : "1"} />
-                            <input type="hidden" name="returnTo" value={caseReturnTo} />
-                            <Button type="submit" variant={item.is_completed ? "ghost" : "secondary"} className="rounded-xl px-4 py-2 text-xs">
-                              {item.is_completed ? "Åpne igjen" : "Marker fullført"}
-                            </Button>
-                          </form>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
                 </Card>
 
                 <Card className="flex flex-col gap-4 border border-[#D46839]/15 bg-white">

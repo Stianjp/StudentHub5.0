@@ -19,6 +19,7 @@ import {
   syncCompanyEventPipelineStage,
   syncCrmLeadEntry,
 } from "@/lib/crm-supabase";
+import { syncDynamicEmailGroups } from "@/lib/email-groups";
 
 type RegistrationCampaign = TableRow<"event_registration_campaigns">;
 type RegistrationPackage = TableRow<"event_registration_packages">;
@@ -276,6 +277,7 @@ async function ensurePackageEmailGroupMembership(input: {
         company_id: input.company.id,
         email: normalizeEmail(input.contactEmail),
         display_name: input.companyName,
+        source: "registration_auto",
       },
       { onConflict: "group_id,company_id" },
     );
@@ -1176,6 +1178,12 @@ export async function approveRegistrationApplication(input: {
       await releaseStandReservation(typedApplication.requested_stand_id);
     }
 
+    try {
+      await syncDynamicEmailGroups({ campaignId: typedApplication.campaign_id });
+    } catch (syncError) {
+      console.error("Dynamic email group sync failed after approval", syncError);
+    }
+
     const { data: portalEmails, error: portalEmailError } = await supabase
       .from("event_registration_portal_emails")
       .select("*")
@@ -1299,6 +1307,11 @@ export async function rejectRegistrationApplication(input: {
 
   if (updateError) throw updateError;
   await releaseStandReservation(typedApplication.requested_stand_id);
+  try {
+    await syncDynamicEmailGroups({ campaignId: typedApplication.campaign_id });
+  } catch (syncError) {
+    console.error("Dynamic email group sync failed after rejection", syncError);
+  }
 }
 
 export async function resendCompanyPortalInvite(inviteId: string) {
