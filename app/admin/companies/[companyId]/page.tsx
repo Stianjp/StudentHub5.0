@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { SectionHeader } from "@/components/ui/section-header";
-import { deleteCompanyAction } from "@/app/admin/actions";
+import { deleteCompanyAction, removeCompanyFromEventAction } from "@/app/admin/actions";
 import { requireRole } from "@/lib/auth";
 import {
   getCompanyWithDetails,
@@ -34,6 +34,7 @@ export default async function AdminCompanyDetailPage({ params, searchParams }: P
   const { companyId } = await params;
   const resolvedSearchParams = await searchParams;
   const errorMessage = firstValue(resolvedSearchParams.error);
+  const removed = firstValue(resolvedSearchParams.removed) === "1";
 
   const [company, registrations, leads] = await Promise.all([
     getCompanyWithDetails(companyId),
@@ -43,9 +44,11 @@ export default async function AdminCompanyDetailPage({ params, searchParams }: P
 
   const typedRegistrations = registrations as unknown as Array<{
     id: string;
+    event_id: string;
+    stand_code: string | null;
     stand_type: string | null;
     package: string;
-    event?: { name?: string };
+    event?: { id?: string; name?: string };
   }>;
 
   const typedLeads = leads as unknown as Array<{
@@ -71,6 +74,11 @@ export default async function AdminCompanyDetailPage({ params, searchParams }: P
       {errorMessage ? (
         <Card className="border border-error/30 bg-error/10 text-sm text-error">
           {decodeURIComponent(errorMessage)}
+        </Card>
+      ) : null}
+      {removed ? (
+        <Card className="border border-success/30 bg-success/10 text-sm text-success">
+          Bedriften er fjernet fra arrangementet, og eventuell reservert stand er frigjort.
         </Card>
       ) : null}
 
@@ -105,14 +113,26 @@ export default async function AdminCompanyDetailPage({ params, searchParams }: P
         ) : (
           <ul className="grid gap-2 text-sm text-ink/80">
             {typedRegistrations.map((reg) => (
-              <li key={reg.id} className="flex items-center justify-between rounded-xl bg-primary/5 px-3 py-2">
-                <div>
-                  <p className="font-semibold text-primary">{reg.event?.name ?? "Event"}</p>
-                  <p className="text-xs text-ink/70">Standnivå fra pakke: {reg.stand_type ?? "—"}</p>
+              <li key={reg.id} className="rounded-xl bg-primary/5 px-3 py-3">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <p className="font-semibold text-primary">{reg.event?.name ?? "Event"}</p>
+                    <p className="text-xs text-ink/70">Standnivå fra pakke: {reg.stand_type ?? "—"}</p>
+                    <p className="text-xs text-ink/70">Standkode: {reg.stand_code ?? "—"}</p>
+                  </div>
+                  <div className="flex flex-col items-start gap-2 md:items-end">
+                    <Badge variant={reg.package === "platinum" ? "success" : "default"}>
+                      {packageLabel[reg.package] ?? reg.package}
+                    </Badge>
+                    <form action={removeCompanyFromEventAction}>
+                      <input type="hidden" name="registrationId" value={reg.id} />
+                      <input type="hidden" name="returnTo" value={`/admin/companies/${companyId}`} />
+                      <Button type="submit" variant="danger" className="min-h-9 px-4 py-2 text-xs">
+                        Fjern fra event
+                      </Button>
+                    </form>
+                  </div>
                 </div>
-                <Badge variant={reg.package === "platinum" ? "success" : "default"}>
-                  {packageLabel[reg.package] ?? reg.package}
-                </Badge>
               </li>
             ))}
           </ul>

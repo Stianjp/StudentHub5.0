@@ -65,3 +65,7 @@ export const deleteCompanySchema = z.object({
   companyId: z.string().uuid(),
   confirmationName: z.string().min(1, "Skriv inn bedriftsnavnet for å bekrefte sletting."),
 });
+
+export const removeEventCompanySchema = z.object({
+  registrationId: z.string().uuid(),
+});

@@ -11,6 +11,7 @@ import {
   companyDomainSchema,
   approveCompanyAccessSchema,
   deleteCompanySchema,
+  removeEventCompanySchema,
 } from "@/lib/validation/admin";
 import {
   addCompanyDomain,
@@ -19,6 +20,7 @@ import {
   deleteCompany,
   getCompanyWithDetails,
   inviteCompanyToEvent,
+  removeCompanyFromEvent,
   registerCompanyForEvent,
   setPackageForCompany,
   updateEventCompanyPackageSettings,
@@ -289,6 +291,53 @@ export async function deleteCompanyAction(formData: FormData) {
     const message = getErrorMessage(error);
     if (isUuid(companyId)) {
       redirect(`/admin/companies/${companyId}?error=${encodeURIComponent(message)}`);
+    }
+    throw error;
+  }
+}
+
+export async function removeCompanyFromEventAction(formData: FormData) {
+  await requireRole("admin");
+  const returnTo = formData.get("returnTo");
+
+  try {
+    const parsed = removeEventCompanySchema.safeParse({
+      registrationId: getFormValue(formData, "registrationId"),
+    });
+
+    if (!parsed.success) {
+      throw new Error(parsed.error.issues.map((issue) => issue.message).join(", "));
+    }
+
+    const result = await removeCompanyFromEvent(parsed.data.registrationId);
+
+    revalidatePath("/admin");
+    revalidatePath("/admin/events");
+    revalidatePath("/admin/events/overview");
+    revalidatePath(`/admin/events/${result.eventId}`);
+    revalidatePath(`/admin/events/${result.eventId}/registration`);
+    revalidatePath("/admin/company-packages");
+    revalidatePath("/admin/companies");
+    revalidatePath(`/admin/companies/${result.companyId}`);
+    revalidatePath("/company/events");
+    revalidatePath("/event-register");
+    for (const campaignId of result.campaignIds) {
+      revalidatePath(`/admin/events/${result.eventId}/registration/${campaignId}`);
+    }
+    for (const slug of result.campaignSlugs) {
+      revalidatePath(`/event-register/${slug}`);
+    }
+
+    if (typeof returnTo === "string" && returnTo.startsWith("/")) {
+      redirect(`${returnTo}${returnTo.includes("?") ? "&" : "?"}removed=1`);
+    }
+
+    redirect(`/admin/events/${result.eventId}?removed=1`);
+  } catch (error) {
+    if (isNextRedirectError(error)) throw error;
+    const message = getErrorMessage(error);
+    if (typeof returnTo === "string" && returnTo.startsWith("/")) {
+      redirect(`${returnTo}${returnTo.includes("?") ? "&" : "?"}error=${encodeURIComponent(message)}`);
     }
     throw error;
   }

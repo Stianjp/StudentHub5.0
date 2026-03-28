@@ -10,6 +10,7 @@ import { getEventWithRegistrations, listCompanies } from "@/lib/admin";
 import {
   registerCompaniesBulk,
   registerCompany,
+  removeCompanyFromEventAction,
   saveEvent,
 } from "@/app/admin/actions";
 
@@ -42,6 +43,7 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
   const { eventId } = await params;
   const paramsData = (await (searchParams ?? Promise.resolve({}))) as Record<string, string | string[] | undefined>;
   const saved = paramsData.saved === "1";
+  const removed = paramsData.removed === "1";
   const errorMessage = typeof paramsData.error === "string" ? paramsData.error : "";
   const error = Boolean(errorMessage) && errorMessage !== "1";
 
@@ -53,6 +55,7 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
   const registrations = eventData.registrations as unknown as Array<{
     id: string;
     stand_type: string | null;
+    stand_code: string | null;
     package: string;
     company?: { id?: string; name?: string };
   }>;
@@ -83,6 +86,11 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
       {saved ? (
         <Card className="border border-success/30 bg-success/10 text-sm text-success">
           Oppdatering lagret.
+        </Card>
+      ) : null}
+      {removed ? (
+        <Card className="border border-success/30 bg-success/10 text-sm text-success">
+          Bedriften er fjernet fra arrangementet, og eventuell reservert stand er frigjort.
         </Card>
       ) : null}
       {error ? (
@@ -276,10 +284,20 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
                   <div>
                     <p className="font-semibold text-primary">{reg.company?.name ?? "Bedrift"}</p>
                     <p className="text-xs text-ink/70">Standnivå fra pakke: {reg.stand_type ?? "-"}</p>
+                    <p className="text-xs text-ink/70">Standkode: {reg.stand_code ?? "Ikke satt"}</p>
                   </div>
-                  <span className="text-xs font-semibold text-primary/70">
-                    {packageLabel[reg.package] ?? reg.package}
-                  </span>
+                  <div className="flex flex-col items-start gap-2 md:items-end">
+                    <span className="text-xs font-semibold text-primary/70">
+                      {packageLabel[reg.package] ?? reg.package}
+                    </span>
+                    <form action={removeCompanyFromEventAction}>
+                      <input type="hidden" name="registrationId" value={reg.id} />
+                      <input type="hidden" name="returnTo" value={`/admin/events/${eventId}`} />
+                      <Button type="submit" variant="danger" className="min-h-9 px-4 py-2 text-xs">
+                        Fjern fra event
+                      </Button>
+                    </form>
+                  </div>
                 </div>
               </li>
             ))}

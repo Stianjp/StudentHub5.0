@@ -3,6 +3,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { sendTransactionalEmail } from "@/lib/resend";
 import { getBaseUrlForRole } from "@/lib/auth-urls";
+import { syncDynamicEmailGroups } from "@/lib/email-groups";
 
 type Event = TableRow<"events">;
 type Company = TableRow<"companies">;
@@ -11,6 +12,8 @@ type CompanyDomain = TableRow<"company_domains">;
 type CompanyUserRequest = TableRow<"company_user_requests">;
 type Lead = TableRow<"leads">;
 type Consent = TableRow<"consents">;
+type RegistrationApplication = TableRow<"event_registration_applications">;
+type RegistrationStand = TableRow<"event_registration_stands">;
 const COMPANY_PORTAL_FALLBACK_URL = "https://bedrift.oslostudenthub.no";
 
 type EventWithStats = Event & {
@@ -621,4 +624,147 @@ export async function updateEventCompanyPackageSettings(input: {
 
   if (error) throw error;
   return data;
+}
+
+export async function removeCompanyFromEvent(registrationId: string) {
+  const supabase = createAdminSupabaseClient();
+  const now = new Date().toISOString();
+
+  const { data: registration, error: registrationError } = await supabase
+    .from("event_companies")
+    .select("*")
+    .eq("id", registrationId)
+    .single();
+
+  if (registrationError) throw registrationError;
+
+  const typedRegistration = registration as EventCompany;
+
+  const [{ data: campaigns, error: campaignsError }, { data: applications, error: applicationsError }] =
+    await Promise.all([
+      supabase
+        .from("event_registration_campaigns")
+        .select("id, slug")
+        .eq("event_id", typedRegistration.event_id),
+      supabase
+        .from("event_registration_applications")
+        .select("id, campaign_id, requested_stand_id, approved_stand_id")
+        .eq("event_id", typedRegistration.event_id)
+        .eq("company_id", typedRegistration.company_id),
+    ]);
+
+  if (campaignsError) throw campaignsError;
+  if (applicationsError) throw applicationsError;
+
+  const typedCampaigns = (campaigns ?? []) as Array<{ id: string; slug: string }>;
+  const typedApplications = (applications ?? []) as Array<
+    Pick<RegistrationApplication, "id" | "campaign_id" | "requested_stand_id" | "approved_stand_id">
+  >;
+
+  const applicationIds = typedApplications.map((application) => application.id);
+  const campaignIds = typedCampaigns.map((campaign) => campaign.id);
+  const releasedStandIds = new Set<string>();
+
+  typedApplications.forEach((application) => {
+    if (application.requested_stand_id) releasedStandIds.add(application.requested_stand_id);
+    if (application.approved_stand_id) releasedStandIds.add(application.approved_stand_id);
+  });
+
+  if (applicationIds.length > 0) {
+    const { data: assignedStands, error: assignedStandsError } = await supabase
+      .from("event_registration_stands")
+      .select("id")
+      .in("assigned_application_id", applicationIds);
+
+    if (assignedStandsError) throw assignedStandsError;
+
+    for (const stand of (assignedStands ?? []) as Array<Pick<RegistrationStand, "id">>) {
+      releasedStandIds.add(stand.id);
+    }
+  }
+
+  if (typedRegistration.stand_code && campaignIds.length > 0) {
+    const { data: standMatches, error: standMatchesError } = await supabase
+      .from("event_registration_stands")
+      .select("id")
+      .in("campaign_id", campaignIds)
+      .eq("stand_code", typedRegistration.stand_code);
+
+    if (standMatchesError) throw standMatchesError;
+
+    for (const stand of (standMatches ?? []) as Array<Pick<RegistrationStand, "id">>) {
+      releasedStandIds.add(stand.id);
+    }
+  }
+
+  if (releasedStandIds.size > 0) {
+    const { error: releaseStandError } = await supabase
+      .from("event_registration_stands")
+      .update({
+        status: "available",
+        assigned_application_id: null,
+        updated_at: now,
+      })
+      .in("id", [...releasedStandIds]);
+
+    if (releaseStandError) throw releaseStandError;
+  }
+
+  if (applicationIds.length > 0) {
+    const { error: updateApplicationsError } = await supabase
+      .from("event_registration_applications")
+      .update({
+        approved_stand_id: null,
+        updated_at: now,
+      })
+      .in("id", applicationIds);
+
+    if (updateApplicationsError) throw updateApplicationsError;
+
+    const { error: revokeInvitesError } = await supabase
+      .from("company_portal_invites")
+      .update({
+        status: "revoked",
+        updated_at: now,
+      })
+      .eq("company_id", typedRegistration.company_id)
+      .in("application_id", applicationIds)
+      .in("status", ["pending", "invited"]);
+
+    if (revokeInvitesError) throw revokeInvitesError;
+  }
+
+  const { error: deleteTicketsError } = await supabase
+    .from("event_tickets")
+    .delete()
+    .eq("event_id", typedRegistration.event_id)
+    .eq("company_id", typedRegistration.company_id);
+
+  if (deleteTicketsError) throw deleteTicketsError;
+
+  const { error: deleteRegistrationError } = await supabase
+    .from("event_companies")
+    .delete()
+    .eq("id", registrationId);
+
+  if (deleteRegistrationError) throw deleteRegistrationError;
+
+  if (campaignIds.length > 0) {
+    await Promise.all(
+      campaignIds.map(async (campaignId) => {
+        try {
+          await syncDynamicEmailGroups({ campaignId });
+        } catch (syncError) {
+          console.error("Dynamic email group sync failed after event company removal", syncError);
+        }
+      }),
+    );
+  }
+
+  return {
+    eventId: typedRegistration.event_id,
+    companyId: typedRegistration.company_id,
+    campaignIds,
+    campaignSlugs: typedCampaigns.map((campaign) => campaign.slug).filter(Boolean),
+  };
 }
