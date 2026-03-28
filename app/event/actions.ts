@@ -9,7 +9,12 @@ import {
   recordStandVisit,
   submitKioskSurvey,
 } from "@/lib/student";
-import { createLead, upsertConsentForStudent } from "@/lib/lead";
+import {
+  createLead,
+  ensureCompanyExists,
+  filterExistingCompanyIds,
+  upsertConsentForStudent,
+} from "@/lib/lead";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { sendTransactionalEmail } from "@/lib/resend";
@@ -45,6 +50,8 @@ export async function submitStandFlow(formData: FormData) {
   if (!parsed.data.eventId) {
     throw new Error("Event mangler.");
   }
+
+  await ensureCompanyExists(parsed.data.companyId);
 
   await recordStandVisit({
     eventId: parsed.data.eventId,
@@ -244,6 +251,10 @@ export async function registerStudentForEvent(formData: FormData) {
   const resolvedName = fullName || student.full_name || null;
   const resolvedEmail = emailInput || student.email || user.email || null;
   const resolvedPhone = phone || student.phone || null;
+  const validCompanyIds = await filterExistingCompanyIds(companyIds);
+  if (requireCompany && validCompanyIds.length === 0) {
+    throw new Error("Den valgte bedriften finnes ikke lenger. Oppdater siden og prøv igjen.");
+  }
 
   await ensureCapacity(admin, eventId);
   const ticket = await createTicket(admin, {
@@ -277,7 +288,7 @@ export async function registerStudentForEvent(formData: FormData) {
     });
   }
 
-  if (companyIds.length > 0) {
+  if (validCompanyIds.length > 0) {
     const leadStudent = {
       ...student,
       full_name: resolvedName,
@@ -286,7 +297,7 @@ export async function registerStudentForEvent(formData: FormData) {
     };
 
     await Promise.all(
-      companyIds.map(async (companyId) => {
+      validCompanyIds.map(async (companyId) => {
         await upsertConsentForStudent({
           studentId: student.id,
           companyId,
@@ -378,6 +389,10 @@ export async function registerAttendeeForEvent(formData: FormData) {
   }
 
   const now = new Date().toISOString();
+  const validCompanyIds = await filterExistingCompanyIds(companyIds);
+  if (requireCompany && validCompanyIds.length === 0) {
+    throw new Error("Den valgte bedriften finnes ikke lenger. Oppdater siden og prøv igjen.");
+  }
 
   const { data: matchedStudent } = await supabase
     .from("students")
@@ -421,9 +436,9 @@ export async function registerAttendeeForEvent(formData: FormData) {
       })
       .eq("id", matchedStudent.id);
 
-    if (companyIds.length > 0 && leadStudent) {
+    if (validCompanyIds.length > 0 && leadStudent) {
       await Promise.all(
-        companyIds.map(async (companyId) => {
+        validCompanyIds.map(async (companyId) => {
           await upsertConsentForStudent({
             studentId: matchedStudent.id,
             companyId,

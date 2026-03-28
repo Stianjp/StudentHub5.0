@@ -4,6 +4,28 @@ import { Bell, Briefcase, Calendar, Check, ChevronRight, Heart, Users } from "lu
 import { getOrCreateStudentForUser } from "@/lib/student";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { listActiveEvents } from "@/lib/events";
+import { computeMatch } from "@/lib/matching";
+
+const PACKAGE_PRIORITY = {
+  platinum: 4,
+  gold: 3,
+  silver: 2,
+  standard: 1,
+} as const;
+
+const PACKAGE_LABEL = {
+  platinum: "Platinum",
+  gold: "Gold",
+  silver: "Silver",
+  standard: "Standard",
+} as const;
+
+const PACKAGE_STYLES = {
+  platinum: "border-[#F6A6BD]/40 bg-[#F6A6BD]/15 text-[#FDE9F0]",
+  gold: "border-[#F4C95D]/40 bg-[#F4C95D]/15 text-[#FFF2C8]",
+  silver: "border-[#80D4F6]/40 bg-[#80D4F6]/15 text-[#E5F8FF]",
+  standard: "border-[#70C08E]/40 bg-[#70C08E]/15 text-[#E7F7EC]",
+} as const;
 
 type StudentCompletionFields = {
   full_name?: string | null;
@@ -35,6 +57,50 @@ function calcProfileCompletion(student: StudentCompletionFields) {
   return Math.round((filled / fields.length) * 100);
 }
 
+type RecommendedCompanyCard = {
+  company: {
+    id: string;
+    name: string;
+    location: string | null;
+    recruitment_fields: string[];
+    recruitment_job_types: string[];
+    branding_message: string | null;
+  };
+  eventName: string | null;
+  packageTier: keyof typeof PACKAGE_PRIORITY;
+  matchScore: number;
+  studyFieldScore: number;
+  jobTypeScore: number;
+  levelScore: number;
+  likedScore: number;
+};
+
+function compareRecommendations(a: RecommendedCompanyCard, b: RecommendedCompanyCard) {
+  return (
+    PACKAGE_PRIORITY[b.packageTier] - PACKAGE_PRIORITY[a.packageTier] ||
+    b.studyFieldScore - a.studyFieldScore ||
+    b.levelScore - a.levelScore ||
+    b.jobTypeScore - a.jobTypeScore ||
+    b.matchScore - a.matchScore ||
+    b.likedScore - a.likedScore ||
+    a.company.name.localeCompare(b.company.name, "nb-NO")
+  );
+}
+
+function summarizeCompany(card: RecommendedCompanyCard) {
+  if (card.company.branding_message?.trim()) {
+    return card.company.branding_message.trim().slice(0, 96);
+  }
+
+  const details = [
+    card.company.recruitment_fields.slice(0, 2).join(", "),
+    card.company.recruitment_job_types[0] ?? "",
+    card.company.location ?? "",
+  ].filter(Boolean);
+
+  return details.join(" • ") || "Relevant match for din profil.";
+}
+
 export default async function StudentDashboardPage() {
   const supabase = await createServerSupabaseClient();
   const {
@@ -48,17 +114,61 @@ export default async function StudentDashboardPage() {
   const student = await getOrCreateStudentForUser(user.id, user.email);
   const completion = calcProfileCompletion(student);
   const needsOnboarding = !student.full_name || !student.phone || !student.study_program || !student.study_level || !student.study_year;
+  const events = await listActiveEvents();
+  const eventIds = events.map((event) => event.id);
 
-  const [events, likedCompanies] = await Promise.all([
-    listActiveEvents(),
+  const [likedCompanies, recommendedRows] = await Promise.all([
     (async () => {
       const likedIds = student.liked_company_ids ?? [];
       if (likedIds.length === 0) return [];
       const { data } = await supabase.from("companies").select("id, name").in("id", likedIds).order("name");
       return data ?? [];
     })(),
+    (async () => {
+      if (eventIds.length === 0) return [];
+      const { data, error } = await supabase
+        .from("event_companies")
+        .select(
+          "event_id, package, registered_at, company:companies(id, name, location, recruitment_fields, recruitment_job_types, branding_message)",
+        )
+        .in("event_id", eventIds)
+        .not("registered_at", "is", null);
+      if (error) throw error;
+      return (data ?? []) as Array<{
+        event_id: string;
+        package: keyof typeof PACKAGE_PRIORITY;
+        registered_at: string | null;
+        company: RecommendedCompanyCard["company"] | null;
+      }>;
+    })(),
   ]);
   const typedLikedCompanies = likedCompanies as Array<{ id: string; name: string }>;
+  const eventNameById = new Map(events.map((event) => [event.id, event.name]));
+  const recommendedCompaniesById = new Map<string, RecommendedCompanyCard>();
+
+  for (const row of recommendedRows) {
+    if (!row.company) continue;
+    const match = computeMatch(student, row.company);
+    if (!match.signals.relevant) continue;
+
+    const candidate: RecommendedCompanyCard = {
+      company: row.company,
+      eventName: eventNameById.get(row.event_id) ?? null,
+      packageTier: row.package,
+      matchScore: match.score,
+      studyFieldScore: match.signals.studyFieldScore,
+      jobTypeScore: match.signals.jobTypeScore,
+      levelScore: match.signals.levelScore,
+      likedScore: match.signals.likedScore,
+    };
+
+    const existing = recommendedCompaniesById.get(row.company.id);
+    if (!existing || compareRecommendations(candidate, existing) < 0) {
+      recommendedCompaniesById.set(row.company.id, candidate);
+    }
+  }
+
+  const recommendedCompanies = Array.from(recommendedCompaniesById.values()).sort(compareRecommendations).slice(0, 4);
 
   const nextEvent = events[0];
   const eventDate = nextEvent?.starts_at
@@ -148,39 +258,53 @@ export default async function StudentDashboardPage() {
               <div className="rounded-2xl bg-[#FE9A70] p-3 text-[#140249] shadow-lg shadow-[#FE9A70]/20">
                 <Briefcase size={24} aria-hidden="true" />
               </div>
-              <h4 className="text-xl font-black text-white">Anbefalte stillinger</h4>
+              <h4 className="text-xl font-black text-white">Anbefalte bedrifter</h4>
             </div>
-            <Link href="/student/events" className="text-xs font-black uppercase tracking-wider text-[#FE9A70] hover:underline">
+            <Link href="/student/companies" className="text-xs font-black uppercase tracking-wider text-[#FE9A70] hover:underline">
               Se alle
             </Link>
           </div>
 
           <div className="space-y-6">
-            {[
-              { role: "Cyber Security Intern", company: "Deloitte" },
-              { role: "Graduate 2026", company: "Equinor" },
-              { role: "Business Analyst", company: "KPMG" },
-            ].map((job) => (
-              <div
-                key={job.role}
-                className="group flex items-center justify-between rounded-3xl border border-white/10 bg-[#1B0858] p-6 shadow-sm transition-[background-color,border-color,color,box-shadow] hover:border-[#FE9A70]/40 hover:bg-[#220C6C]"
-              >
-                <div className="flex items-center space-x-5">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/15 bg-[#140249] text-[10px] font-black text-white/45">
-                    LOGO
+            {recommendedCompanies.length > 0 ? (
+              recommendedCompanies.map((company) => (
+                <Link
+                  key={company.company.id}
+                  href={`/student/companies?q=${encodeURIComponent(company.company.name)}`}
+                  className="group flex items-center justify-between rounded-3xl border border-white/10 bg-[#1B0858] p-6 shadow-sm transition-[background-color,border-color,color,box-shadow] hover:border-[#FE9A70]/40 hover:bg-[#220C6C] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70] focus-visible:ring-offset-2 focus-visible:ring-offset-[#140249]"
+                >
+                  <div className="flex items-center space-x-5">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-white/15 bg-[#140249] text-[11px] font-black text-white/75">
+                      {PACKAGE_LABEL[company.packageTier].slice(0, 2).toUpperCase()}
+                    </div>
+                    <div className="space-y-1.5">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-black text-white transition-colors group-hover:text-[#FE9A70]">
+                          {company.company.name}
+                        </p>
+                        <span
+                          className={`rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-wider ${PACKAGE_STYLES[company.packageTier]}`}
+                        >
+                          {PACKAGE_LABEL[company.packageTier]}
+                        </span>
+                      </div>
+                      <p className="text-xs font-bold uppercase tracking-tight text-white/55">
+                        {company.eventName ?? "Aktivt event"}
+                        {company.company.location ? ` • ${company.company.location}` : ""}
+                      </p>
+                      <p className="max-w-md text-sm font-medium text-white/72">
+                        {summarizeCompany(company)}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-black text-white transition-colors group-hover:text-[#FE9A70]">
-                      {job.role}
-                    </p>
-                    <p className="text-xs font-bold uppercase tracking-tight text-white/55">
-                      {job.company} • Oslo
-                    </p>
-                  </div>
-                </div>
-                <ChevronRight size={18} className="text-white/50 group-hover:text-[#FE9A70]" aria-hidden="true" />
+                  <ChevronRight size={18} className="text-white/50 group-hover:text-[#FE9A70]" aria-hidden="true" />
+                </Link>
+              ))
+            ) : (
+              <div className="rounded-3xl border border-white/10 bg-[#1B0858] p-6 text-sm font-medium text-white/72">
+                Vi fant ingen tydelige bedriftsmatcher akkurat nå. Oppdater studieprogram, interesser eller jobbtyper for bedre anbefalinger.
               </div>
-            ))}
+            )}
           </div>
         </div>
 

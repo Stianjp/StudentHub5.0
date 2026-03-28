@@ -266,6 +266,26 @@ export async function deleteCompany(companyId: string) {
     throw new Error("Fant ikke bedriften som skulle slettes.");
   }
 
+  const { data: affectedStudents, error: studentsError } = await supabase
+    .from("students")
+    .select("id, liked_company_ids")
+    .contains("liked_company_ids", [companyId]);
+  if (studentsError) throw studentsError;
+
+  for (const student of affectedStudents ?? []) {
+    const nextLikedCompanyIds = ((student.liked_company_ids ?? []) as string[]).filter(
+      (likedCompanyId) => likedCompanyId !== companyId,
+    );
+    const { error: updateStudentError } = await supabase
+      .from("students")
+      .update({
+        liked_company_ids: nextLikedCompanyIds,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", student.id);
+    if (updateStudentError) throw updateStudentError;
+  }
+
   const { error: deleteError } = await supabase.from("companies").delete().eq("id", companyId);
   if (deleteError) throw deleteError;
 

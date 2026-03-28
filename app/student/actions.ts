@@ -6,7 +6,7 @@ import { requireRole } from "@/lib/auth";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { studentProfileSchema } from "@/lib/validation/student";
 import { getOrCreateStudentForUser } from "@/lib/student";
-import { createLead, upsertConsentForStudent } from "@/lib/lead";
+import { createLead, filterExistingCompanyIds, upsertConsentForStudent } from "@/lib/lead";
 
 function parseMultiValue(formData: FormData, key: string) {
   return formData
@@ -26,7 +26,7 @@ async function syncFavoriteConsentAndLeads({
   previousLikedCompanyIds: string[];
   nextLikedCompanyIds: string[];
 }) {
-  const uniqueNextLikedCompanyIds = Array.from(new Set(nextLikedCompanyIds));
+  const uniqueNextLikedCompanyIds = await filterExistingCompanyIds(nextLikedCompanyIds);
   const nextSet = new Set(uniqueNextLikedCompanyIds);
   const removedCompanyIds = previousLikedCompanyIds.filter((companyId) => !nextSet.has(companyId));
 
@@ -104,6 +104,8 @@ export async function saveStudentProfile(formData: FormData) {
     throw new Error(parsed.error.issues.map((issue) => issue.message).join(", "));
   }
 
+  const likedCompanyIds = await filterExistingCompanyIds(parsed.data.likedCompanyIds);
+
   const now = new Date().toISOString();
 
   const { error } = await supabase
@@ -120,7 +122,7 @@ export async function saveStudentProfile(formData: FormData) {
       values: parsed.data.values,
       preferred_locations: parsed.data.preferredLocations,
       willing_to_relocate: parsed.data.willingToRelocate,
-      liked_company_ids: parsed.data.likedCompanyIds,
+      liked_company_ids: likedCompanyIds,
       about: parsed.data.about || null,
       work_style: parsed.data.workStyle || null,
       social_profile: parsed.data.socialProfile || null,
@@ -145,14 +147,14 @@ export async function saveStudentProfile(formData: FormData) {
       values: parsed.data.values,
       preferred_locations: parsed.data.preferredLocations,
       willing_to_relocate: parsed.data.willingToRelocate,
-      liked_company_ids: parsed.data.likedCompanyIds,
+      liked_company_ids: likedCompanyIds,
       about: parsed.data.about || null,
       work_style: parsed.data.workStyle || null,
       social_profile: parsed.data.socialProfile || null,
       team_size: parsed.data.teamSize || null,
     },
     previousLikedCompanyIds,
-    nextLikedCompanyIds: parsed.data.likedCompanyIds,
+    nextLikedCompanyIds: likedCompanyIds,
   });
 
   revalidatePath("/student");
@@ -175,7 +177,7 @@ export async function saveLikedCompanies(formData: FormData) {
   }
 
   const student = await getOrCreateStudentForUser(profile.id, user.email);
-  const likedCompanyIds = Array.from(new Set(parseMultiValue(formData, "likedCompanyIds")));
+  const likedCompanyIds = await filterExistingCompanyIds(parseMultiValue(formData, "likedCompanyIds"));
   const previousLikedCompanyIds = student.liked_company_ids ?? [];
 
   const { error } = await supabase

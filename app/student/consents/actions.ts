@@ -38,12 +38,16 @@ export async function giveConsentToCompany(formData: FormData) {
     throw new Error("Bedrift må være valgt.");
   }
 
-  await upsertConsentForStudent({
+  const consent = await upsertConsentForStudent({
     studentId: student.id,
     companyId,
     consentGiven: true,
     source: "student_portal",
   });
+
+  if (!consent) {
+    throw new Error("Bedriften finnes ikke lenger.");
+  }
 
   await createLead({
     student,
@@ -76,12 +80,15 @@ export async function withdrawConsent(formData: FormData) {
     throw new Error("Bedrift må være valgt.");
   }
 
-  await upsertConsentForStudent({
+  const consent = await upsertConsentForStudent({
     studentId: student.id,
     companyId,
     consentGiven: false,
     source: "student_portal",
   });
+  if (!consent) {
+    throw new Error("Bedriften finnes ikke lenger.");
+  }
   revalidatePath("/student/consents");
 }
 

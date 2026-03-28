@@ -2,6 +2,7 @@ import { cache } from "react";
 import type { TableRow } from "@/lib/types/database";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { getCompanyIfExists } from "@/lib/lead";
 
 type Student = TableRow<"students">;
 type Consent = TableRow<"consents">;
@@ -167,6 +168,9 @@ export async function listStudentConsents(studentId: string) {
 }
 
 export async function submitConsent(input: ConsentInput) {
+  const company = await getCompanyIfExists(input.companyId);
+  if (!company) return null;
+
   const supabase = await createServerSupabaseClient();
   const now = new Date().toISOString();
 
@@ -175,7 +179,7 @@ export async function submitConsent(input: ConsentInput) {
     .upsert(
       {
         event_id: input.eventId ?? null,
-        company_id: input.companyId,
+        company_id: company.id,
         student_id: input.studentId,
         consent: input.consent,
         scope: input.scope,
@@ -192,7 +196,7 @@ export async function submitConsent(input: ConsentInput) {
   if (input.eventId && input.answers && Object.keys(input.answers).length > 0) {
     const { error: surveyError } = await supabase.from("survey_responses").insert({
       event_id: input.eventId,
-      company_id: input.companyId,
+      company_id: company.id,
       student_id: input.studentId,
       answers: input.answers,
       created_at: now,
@@ -211,10 +215,13 @@ export async function recordStandVisit(input: {
   source: "qr" | "kiosk";
   metadata?: Record<string, string | number | boolean | null>;
 }) {
+  const companyId = input.companyId ? (await getCompanyIfExists(input.companyId))?.id ?? null : null;
+  if (input.companyId && !companyId) return;
+
   const supabase = await createServerSupabaseClient();
   const { error } = await supabase.from("stand_visits").insert({
     event_id: input.eventId,
-    company_id: input.companyId ?? null,
+    company_id: companyId,
     student_id: input.studentId ?? null,
     source: input.source,
     metadata: input.metadata ?? {},

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getOrCreateStudentForUser } from "@/lib/student";
-import { upsertConsentForStudent } from "@/lib/lead";
+import { ensureCompanyExists, upsertConsentForStudent } from "@/lib/lead";
 
 type RouteParams = {
   params: Promise<{ companyId: string }>;
@@ -29,6 +29,12 @@ export async function PUT(request: Request, { params }: RouteParams) {
     return NextResponse.json({ error: "Ugyldig payload." }, { status: 400 });
   }
 
+  try {
+    await ensureCompanyExists(companyId);
+  } catch {
+    return NextResponse.json({ error: "Bedriften finnes ikke lenger." }, { status: 404 });
+  }
+
   const student = await getOrCreateStudentForUser(user.id, user.email ?? "");
   const consent = await upsertConsentForStudent({
     studentId: student.id,
@@ -36,6 +42,10 @@ export async function PUT(request: Request, { params }: RouteParams) {
     consentGiven: parsed.data.consentGiven,
     source: "student_portal",
   });
+
+  if (!consent) {
+    return NextResponse.json({ error: "Bedriften finnes ikke lenger." }, { status: 404 });
+  }
 
   return NextResponse.json({ consentGiven: consent.consent }, { status: 200 });
 }

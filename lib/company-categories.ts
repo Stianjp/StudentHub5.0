@@ -45,6 +45,7 @@ function mapSingleCategory(rawValue: string): string[] {
   if (legacyMatch) return legacyMatch;
 
   if (token.includes("DATA") || token.includes("IT")) return ["Data/IT"];
+  if (token.includes("INFORMAT") || token.includes("SOFTWARE") || token.includes("PROGRAM")) return ["Data/IT"];
   if (token.includes("ØKONOMI") && token.includes("LEDELSE")) return ["Økonomi", "Ledelse"];
   if (token.includes("ØKONOMI")) return ["Økonomi"];
   if (token.includes("LEDELSE")) return ["Ledelse"];

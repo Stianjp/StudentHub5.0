@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import { RegistrationForm } from "@/components/event/registration-form";
 import { SectionHeader } from "@/components/ui/section-header";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -12,12 +13,13 @@ export default async function CompanyStandRegisterPage({ params }: PageProps) {
 
   const [{ data: event, error: eventError }, { data: company, error: companyError }] =
     await Promise.all([
-      supabase.from("events").select("*").eq("id", eventId).single(),
-      supabase.from("companies").select("*").eq("id", companyId).single(),
+      supabase.from("events").select("*").eq("id", eventId).maybeSingle(),
+      supabase.from("companies").select("*").eq("id", companyId).maybeSingle(),
     ]);
 
-  if (eventError || !event) throw eventError ?? new Error("Event not found");
-  if (companyError || !company) throw companyError ?? new Error("Company not found");
+  if (eventError) throw eventError;
+  if (companyError) throw companyError;
+  if (!event || !company) notFound();
 
   return (
     <div className="flex flex-col gap-6">

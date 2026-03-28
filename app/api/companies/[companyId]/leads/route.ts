@@ -4,7 +4,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { leadUpsertSchema } from "@/lib/validation/lead";
 import { getOrCreateStudentByEmail, getOrCreateStudentForUser } from "@/lib/student";
-import { createLead, upsertConsentForStudent } from "@/lib/lead";
+import { createLead, ensureCompanyExists, upsertConsentForStudent } from "@/lib/lead";
 import { recordStandVisit } from "@/lib/student";
 
 type RouteParams = {
@@ -34,6 +34,12 @@ export async function POST(request: Request, { params }: RouteParams) {
   const email = parsed.data.email ?? user?.email ?? "";
   if (!email) {
     return NextResponse.json({ error: "E-post mangler." }, { status: 400 });
+  }
+
+  try {
+    await ensureCompanyExists(companyId);
+  } catch {
+    return NextResponse.json({ error: "Bedriften finnes ikke lenger." }, { status: 404 });
   }
 
   const student = user
@@ -70,6 +76,10 @@ export async function POST(request: Request, { params }: RouteParams) {
       source: "qr",
       metadata: { flow: "stand" },
     });
+  }
+
+  if (!consent || !lead) {
+    return NextResponse.json({ error: "Bedriften finnes ikke lenger." }, { status: 404 });
   }
 
   return NextResponse.json(

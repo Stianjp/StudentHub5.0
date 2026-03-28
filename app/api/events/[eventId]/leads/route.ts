@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { getOrCreateStudentByEmail } from "@/lib/student";
-import { createLead, upsertConsentForStudent } from "@/lib/lead";
+import { createLead, filterExistingCompanyIds, upsertConsentForStudent } from "@/lib/lead";
 
 const payloadSchema = z.object({
   email: z.string().email(),
@@ -37,9 +37,14 @@ export async function POST(
   const student = await getOrCreateStudentByEmail(parsed.data.email);
   const supabase = createAdminSupabaseClient();
   const now = new Date().toISOString();
+  const validCompanyIds = await filterExistingCompanyIds(parsed.data.companyIds);
 
-  const leadPromises = parsed.data.companyIds.map(async (companyId) => {
-    await upsertConsentForStudent({
+  if (validCompanyIds.length === 0) {
+    return NextResponse.json({ error: "Bedriften finnes ikke lenger." }, { status: 404 });
+  }
+
+  const leadPromises = validCompanyIds.map(async (companyId) => {
+    const consent = await upsertConsentForStudent({
       studentId: student.id,
       companyId,
       eventId,
@@ -48,7 +53,7 @@ export async function POST(
       consentTextVersion: "v1",
     });
 
-    await createLead({
+    const lead = await createLead({
       student,
       companyId,
       eventId,
@@ -61,6 +66,10 @@ export async function POST(
       source: "stand",
     });
 
+    if (!consent || !lead) {
+      return;
+    }
+
     await supabase.from("stand_visits").insert({
       event_id: eventId,
       company_id: companyId,
@@ -72,5 +81,5 @@ export async function POST(
 
   await Promise.all(leadPromises);
 
-  return NextResponse.json({ ok: true, companies: parsed.data.companyIds.length }, { status: 201 });
+  return NextResponse.json({ ok: true, companies: validCompanyIds.length }, { status: 201 });
 }
