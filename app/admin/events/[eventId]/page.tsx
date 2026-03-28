@@ -54,6 +54,8 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
 
   const registrations = eventData.registrations as unknown as Array<{
     id: string;
+    application_id: string | null;
+    application_campaign_id: string | null;
     stand_type: string | null;
     stand_code: string | null;
     package: string;
@@ -290,6 +292,14 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
                     <span className="text-xs font-semibold text-primary/70">
                       {packageLabel[reg.package] ?? reg.package}
                     </span>
+                    {reg.application_id && reg.application_campaign_id ? (
+                      <Link
+                        className="button-link text-xs"
+                        href={`/admin/events/${eventId}/registration/${reg.application_campaign_id}/applications/${reg.application_id}`}
+                      >
+                        Oppdater standplass
+                      </Link>
+                    ) : null}
                     <form action={removeCompanyFromEventAction}>
                       <input type="hidden" name="registrationId" value={reg.id} />
                       <input type="hidden" name="returnTo" value={`/admin/events/${eventId}`} />

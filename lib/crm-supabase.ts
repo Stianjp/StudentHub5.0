@@ -321,3 +321,19 @@ export async function syncCompanyEventPipelineStage(
 export async function listCompanyEventCrmEntries(company: string, eventName: string) {
   return listMatchingCompanyEventEntries(company, eventName);
 }
+
+export async function deleteCrmEntriesForCompanyEvent(company: string, eventName: string) {
+  const supabase = createAdminSupabaseClient();
+  const matchingEntries = await listMatchingCompanyEventEntries(company, eventName);
+
+  if (matchingEntries.length === 0) return 0;
+
+  const leadIds = matchingEntries.map((row) => row.lead_id);
+  const { error } = await supabase
+    .from("crm_pipeline_entries")
+    .delete()
+    .in("lead_id", leadIds);
+
+  if (error) throw new Error(`CRM delete failed: ${error.message}`);
+  return leadIds.length;
+}

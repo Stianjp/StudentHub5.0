@@ -45,6 +45,8 @@ export default async function AdminCompanyDetailPage({ params, searchParams }: P
   const typedRegistrations = registrations as unknown as Array<{
     id: string;
     event_id: string;
+    application_id: string | null;
+    application_campaign_id: string | null;
     stand_code: string | null;
     stand_type: string | null;
     package: string;
@@ -124,6 +126,14 @@ export default async function AdminCompanyDetailPage({ params, searchParams }: P
                     <Badge variant={reg.package === "platinum" ? "success" : "default"}>
                       {packageLabel[reg.package] ?? reg.package}
                     </Badge>
+                    {reg.application_id && reg.application_campaign_id ? (
+                      <Link
+                        className="button-link text-xs"
+                        href={`/admin/events/${reg.event_id}/registration/${reg.application_campaign_id}/applications/${reg.application_id}`}
+                      >
+                        Oppdater standplass
+                      </Link>
+                    ) : null}
                     <form action={removeCompanyFromEventAction}>
                       <input type="hidden" name="registrationId" value={reg.id} />
                       <input type="hidden" name="returnTo" value={`/admin/companies/${companyId}`} />

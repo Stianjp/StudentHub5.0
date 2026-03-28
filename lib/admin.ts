@@ -4,6 +4,7 @@ import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { sendTransactionalEmail } from "@/lib/resend";
 import { getBaseUrlForRole } from "@/lib/auth-urls";
 import { syncDynamicEmailGroups } from "@/lib/email-groups";
+import { deleteCrmEntriesForCompanyEvent } from "@/lib/crm-supabase";
 
 type Event = TableRow<"events">;
 type Company = TableRow<"companies">;
@@ -289,6 +290,8 @@ export async function deleteCompany(companyId: string) {
     if (updateStudentError) throw updateStudentError;
   }
 
+  await deleteCrmEntriesForCompanyEvent(company.name, "");
+
   const { error: deleteError } = await supabase.from("companies").delete().eq("id", companyId);
   if (deleteError) throw deleteError;
 
@@ -344,7 +347,37 @@ export async function listCompanyRegistrations(companyId: string) {
     .order("created_at", { ascending: false });
 
   if (error) throw error;
-  return data ?? [];
+
+  const typedRegistrations = (data ?? []) as EventCompany[];
+  const registrationIds = typedRegistrations.map((row) => row.id);
+  const applicationMap = new Map<string, { id: string; campaign_id: string }>();
+
+  if (registrationIds.length > 0) {
+    const { data: applications, error: applicationsError } = await supabase
+      .from("event_registration_applications")
+      .select("id, event_company_id, campaign_id, created_at")
+      .in("event_company_id", registrationIds)
+      .order("created_at", { ascending: false });
+
+    if (applicationsError) throw applicationsError;
+
+    for (const application of (applications ?? []) as Array<
+      Pick<RegistrationApplication, "id" | "event_company_id" | "campaign_id" | "created_at">
+    >) {
+      if (application.event_company_id && !applicationMap.has(application.event_company_id)) {
+        applicationMap.set(application.event_company_id, {
+          id: application.id,
+          campaign_id: application.campaign_id,
+        });
+      }
+    }
+  }
+
+  return typedRegistrations.map((registration) => ({
+    ...registration,
+    application_id: applicationMap.get(registration.id)?.id ?? null,
+    application_campaign_id: applicationMap.get(registration.id)?.campaign_id ?? null,
+  }));
 }
 
 export async function getEventWithRegistrations(eventId: string) {
@@ -362,9 +395,38 @@ export async function getEventWithRegistrations(eventId: string) {
   if (eventError) throw eventError;
   if (regError) throw regError;
 
+  const typedRegistrations = (registrations ?? []) as Array<EventCompany & { company: Company }>;
+  const registrationIds = typedRegistrations.map((row) => row.id);
+  const applicationMap = new Map<string, { id: string; campaign_id: string }>();
+
+  if (registrationIds.length > 0) {
+    const { data: applications, error: applicationsError } = await supabase
+      .from("event_registration_applications")
+      .select("id, event_company_id, campaign_id, created_at")
+      .in("event_company_id", registrationIds)
+      .order("created_at", { ascending: false });
+
+    if (applicationsError) throw applicationsError;
+
+    for (const application of (applications ?? []) as Array<
+      Pick<RegistrationApplication, "id" | "event_company_id" | "campaign_id" | "created_at">
+    >) {
+      if (application.event_company_id && !applicationMap.has(application.event_company_id)) {
+        applicationMap.set(application.event_company_id, {
+          id: application.id,
+          campaign_id: application.campaign_id,
+        });
+      }
+    }
+  }
+
   return {
     event: event as Event,
-    registrations: (registrations ?? []) as unknown as Array<EventCompany & { company: Company }>,
+    registrations: typedRegistrations.map((registration) => ({
+      ...registration,
+      application_id: applicationMap.get(registration.id)?.id ?? null,
+      application_campaign_id: applicationMap.get(registration.id)?.campaign_id ?? null,
+    })),
   };
 }
 

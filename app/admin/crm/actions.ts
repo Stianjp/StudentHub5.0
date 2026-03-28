@@ -1,9 +1,21 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth";
 import { normalizePipelineStage } from "@/lib/crm";
-import { updateCrmLeadFields, updateCompanyPipelineStage, upsertCrmEntry } from "@/lib/crm-supabase";
+import {
+  deleteCrmEntriesForCompanyEvent,
+  updateCrmLeadFields,
+  updateCompanyPipelineStage,
+  upsertCrmEntry,
+} from "@/lib/crm-supabase";
+
+function isNextRedirectError(error: unknown) {
+  const digest = (error as { digest?: string })?.digest;
+  const message = (error as { message?: string })?.message;
+  return digest === "NEXT_REDIRECT" || message === "NEXT_REDIRECT";
+}
 
 function normalizeTextValue(value: FormDataEntryValue | null) {
   return String(value ?? "").trim();
@@ -75,4 +87,28 @@ export async function createCrmEntry(formData: FormData) {
   });
 
   revalidatePath("/admin/crm");
+}
+
+export async function deleteCrmCompanyEntries(formData: FormData) {
+  await requireRole("admin");
+
+  const company = normalizeTextValue(formData.get("company"));
+  const eventName = normalizeTextValue(formData.get("eventName"));
+  const returnTo = normalizeTextValue(formData.get("returnTo")) || "/admin/crm";
+
+  if (!company) {
+    throw new Error("Bedrift mangler for CRM-sletting.");
+  }
+
+  const separator = returnTo.includes("?") ? "&" : "?";
+
+  try {
+    const deletedCount = await deleteCrmEntriesForCompanyEvent(company, eventName);
+    revalidatePath("/admin/crm");
+    redirect(`${returnTo}${separator}deleted=${deletedCount}`);
+  } catch (error) {
+    if (isNextRedirectError(error)) throw error;
+    const message = error instanceof Error ? error.message : "Kunne ikke slette CRM-oppføringen.";
+    redirect(`${returnTo}${separator}error=${encodeURIComponent(message)}`);
+  }
 }

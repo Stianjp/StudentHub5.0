@@ -20,7 +20,7 @@ import {
   type CrmPipelineStage,
 } from "@/lib/crm";
 import { loadCrmEntriesFromSupabase } from "@/lib/crm-supabase";
-import { updateCrmCompanyPipeline, updateCrmLead } from "./actions";
+import { deleteCrmCompanyEntries, updateCrmCompanyPipeline, updateCrmLead } from "./actions";
 import { CrmRefreshControls } from "./refresh-controls";
 
 type PageProps = {
@@ -99,10 +99,11 @@ type PipelineBoardProps = {
   stages: CrmPipelineStage[];
   companyCards: ReturnType<typeof buildCrmCompanyCards>;
   updateAction: (formData: FormData) => Promise<void>;
+  deleteAction: (formData: FormData) => Promise<void>;
   highlight?: boolean;
 };
 
-function PipelineBoard({ title, description, stages, companyCards, updateAction, highlight }: PipelineBoardProps) {
+function PipelineBoard({ title, description, stages, companyCards, updateAction, deleteAction, highlight }: PipelineBoardProps) {
   return (
     <Card className={`flex flex-col gap-5 ${highlight ? "border-secondary/30" : ""}`}>
       <div>
@@ -166,6 +167,14 @@ function PipelineBoard({ title, description, stages, companyCards, updateAction,
                           Flytt
                         </Button>
                       </form>
+                      <form action={deleteAction} className="flex flex-col gap-2">
+                        <input type="hidden" name="company" value={card.company} />
+                        <input type="hidden" name="eventName" value={card.eventName} />
+                        <input type="hidden" name="returnTo" value="/admin/crm" />
+                        <Button variant="danger" type="submit" className="rounded-xl px-4 py-2 text-xs">
+                          Slett fra CRM
+                        </Button>
+                      </form>
                     </Card>
                   ))
                 )}
@@ -190,6 +199,8 @@ export default async function AdminCrmPage({ searchParams }: PageProps) {
   const temperature = firstValue(params.temperature).trim();
   const stopReason = firstValue(params.stopReason).trim();
   const sequenceStep = firstValue(params.sequenceStep).trim();
+  const deletedCount = Number.parseInt(firstValue(params.deleted), 10);
+  const actionError = firstValue(params.error).trim();
 
   let datasetError = "";
   let dataset: CrmDataset | null = null;
@@ -271,6 +282,18 @@ export default async function AdminCrmPage({ searchParams }: PageProps) {
           </>
         }
       />
+
+      {Number.isFinite(deletedCount) && deletedCount > 0 ? (
+        <Card className="border border-success/30 bg-success/10 text-sm text-success">
+          Slettet {deletedCount} CRM-rad{deletedCount === 1 ? "" : "er"}.
+        </Card>
+      ) : null}
+
+      {actionError ? (
+        <Card className="border border-error/30 bg-error/10 text-sm text-error">
+          {actionError}
+        </Card>
+      ) : null}
 
 
       <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-6">
@@ -364,6 +387,7 @@ export default async function AdminCrmPage({ searchParams }: PageProps) {
         stages={[...CRM_OUTREACH_STAGES]}
         companyCards={companyCards}
         updateAction={updateCrmCompanyPipeline}
+        deleteAction={deleteCrmCompanyEntries}
       />
 
       <PipelineBoard
@@ -372,6 +396,7 @@ export default async function AdminCrmPage({ searchParams }: PageProps) {
         stages={[...CRM_REGISTRATION_STAGES]}
         companyCards={companyCards}
         updateAction={updateCrmCompanyPipeline}
+        deleteAction={deleteCrmCompanyEntries}
         highlight
       />
 

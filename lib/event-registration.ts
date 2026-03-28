@@ -1,7 +1,6 @@
 import { randomUUID } from "crypto";
 import { unstable_cache } from "next/cache";
 import type { TableRow } from "@/lib/types/database";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { createPublicSupabaseClient } from "@/lib/supabase/public";
 import { publicRegistrationApplicationSchema } from "@/lib/validation/event-registration";
@@ -1516,6 +1515,133 @@ export async function approveRegistrationApplication(input: {
       applicationId: typedApplication.id,
       companyId: company.id,
       eventCompanyId: (eventCompany as EventCompany).id,
+    };
+  } catch (error) {
+    if (claimedStand && shouldReleaseClaimedStand) {
+      await supabase
+        .from("event_registration_stands")
+        .update({
+          status: "available",
+          assigned_application_id: null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", claimedStand.id);
+    }
+    throw error;
+  }
+}
+
+export async function updateApprovedRegistrationApplicationStand(input: {
+  applicationId: string;
+  approvedStandId?: string | null;
+}) {
+  const supabase = createAdminSupabaseClient();
+  const now = new Date().toISOString();
+  const { data: application, error: applicationError } = await supabase
+    .from("event_registration_applications")
+    .select("*")
+    .eq("id", input.applicationId)
+    .single();
+
+  if (applicationError) throw applicationError;
+
+  const typedApplication = application as RegistrationApplication;
+  if (typedApplication.status !== "approved") {
+    throw new Error("Bare godkjente søknader kan få oppdatert standplass.");
+  }
+  if (!typedApplication.approved_package_id) {
+    throw new Error("Søknaden mangler godkjent pakke.");
+  }
+
+  const { data: approvedPackage, error: packageError } = await supabase
+    .from("event_registration_packages")
+    .select("*")
+    .eq("id", typedApplication.approved_package_id)
+    .single();
+
+  if (packageError) throw packageError;
+
+  const typedPackage = approvedPackage as RegistrationPackage;
+  if (!typedPackage.mapped_package) {
+    throw new Error("Godkjent pakke må være koblet til Standard, Silver, Gold eller Platinum.");
+  }
+
+  const previousApprovedStandId = typedApplication.approved_stand_id;
+  let claimedStand: RegistrationStand | null = null;
+  let shouldReleaseClaimedStand = false;
+
+  if (input.approvedStandId) {
+    const { data: stand, error: standError } = await supabase
+      .from("event_registration_stands")
+      .select("*")
+      .eq("id", input.approvedStandId)
+      .single();
+
+    if (standError) throw standError;
+
+    const typedStand = stand as RegistrationStand;
+    if (typedStand.campaign_id !== typedApplication.campaign_id) {
+      throw new Error("Valgt stand tilhører en annen registreringskampanje.");
+    }
+    if (typedStand.package_tier !== typedPackage.mapped_package) {
+      throw new Error("Valgt stand matcher ikke godkjent pakke.");
+    }
+
+    if (typedStand.assigned_application_id === typedApplication.id && typedStand.status === "assigned") {
+      claimedStand = typedStand;
+    } else {
+      const { data: claimed, error: claimError } = await supabase
+        .from("event_registration_stands")
+        .update({
+          status: "assigned",
+          assigned_application_id: typedApplication.id,
+          updated_at: now,
+        })
+        .eq("id", typedStand.id)
+        .eq("status", "available")
+        .is("assigned_application_id", null)
+        .select("*")
+        .single();
+
+      if (claimError) {
+        throw new Error("Standplassen er ikke lenger ledig. Oppdater siden og prøv igjen.");
+      }
+
+      claimedStand = claimed as RegistrationStand;
+      shouldReleaseClaimedStand = true;
+    }
+  }
+
+  try {
+    const { company } = await ensureCompanyFromApplication({ application: typedApplication });
+    const eventCompany = await ensureEventCompanyFromApplication({
+      application: typedApplication,
+      company,
+      packageTier: typedPackage.mapped_package,
+      standCode: claimedStand?.stand_code ?? null,
+    });
+
+    const { error: updateError } = await supabase
+      .from("event_registration_applications")
+      .update({
+        company_id: company.id,
+        event_company_id: eventCompany.id,
+        approved_stand_id: claimedStand?.id ?? null,
+        updated_at: now,
+      })
+      .eq("id", typedApplication.id);
+
+    if (updateError) throw updateError;
+
+    if (previousApprovedStandId && previousApprovedStandId !== claimedStand?.id) {
+      await releaseStandReservation(previousApprovedStandId);
+    }
+
+    return {
+      applicationId: typedApplication.id,
+      companyId: company.id,
+      eventId: typedApplication.event_id,
+      campaignId: typedApplication.campaign_id,
     };
   } catch (error) {
     if (claimedStand && shouldReleaseClaimedStand) {

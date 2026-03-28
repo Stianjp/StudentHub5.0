@@ -284,6 +284,7 @@ export async function deleteCompanyAction(formData: FormData) {
     revalidatePath("/admin/events");
     revalidatePath("/admin/company-packages");
     revalidatePath("/admin/email/contact-overview");
+    revalidatePath("/admin/crm");
     redirect("/admin/companies/overview?deleted=1");
   } catch (error) {
     if (isNextRedirectError(error)) throw error;
