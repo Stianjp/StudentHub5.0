@@ -275,7 +275,7 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <div>
                     <p className="font-semibold text-primary">{reg.company?.name ?? "Bedrift"}</p>
-                    <p className="text-xs text-ink/70">Nåværende standtype: {reg.stand_type ?? "-"}</p>
+                    <p className="text-xs text-ink/70">Standnivå fra pakke: {reg.stand_type ?? "-"}</p>
                   </div>
                   <span className="text-xs font-semibold text-primary/70">
                     {packageLabel[reg.package] ?? reg.package}

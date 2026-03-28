@@ -98,7 +98,7 @@ export default async function AdminCompanyPackagesPage({ searchParams }: PagePro
       <SectionHeader
         eyebrow="Bedriftspakker"
         title="Styr pakke og tilgang per event"
-        description="Dette er hovedstedet for standtype, pakke og ekstra tilgang (ROI/Leads)."
+        description="Dette er hovedstedet for pakke og ekstra tilgang. Standnivå følger pakken automatisk."
         actions={<Link className="button-link text-xs" href="/admin/events/overview">Eventoversikt</Link>}
       />
 
@@ -158,6 +158,9 @@ export default async function AdminCompanyPackagesPage({ searchParams }: PagePro
                         Pakke: {packageLabel(row.package)}
                       </span>
                       <span className="rounded-full bg-primary/10 px-3 py-1 text-primary">
+                        Standnivå: {row.stand_type ?? packageLabel(row.package)}
+                      </span>
+                      <span className="rounded-full bg-primary/10 px-3 py-1 text-primary">
                         ROI: {hasRoiAccess ? "Ja" : "Nei"}
                       </span>
                       <span className="rounded-full bg-primary/10 px-3 py-1 text-primary">
@@ -183,13 +186,14 @@ export default async function AdminCompanyPackagesPage({ searchParams }: PagePro
                       </Select>
                     </label>
 
-                    <label className="text-sm font-semibold text-primary">
-                      Standtype
-                      <Select name="standType" defaultValue={row.stand_type ?? "Standard"}>
-                        <option value="Standard">Standard</option>
-                        <option value="Premium">Premium</option>
-                      </Select>
-                    </label>
+                    <div className="rounded-xl border border-primary/10 bg-primary/5 px-4 py-3 text-sm text-ink/80">
+                      <p className="font-semibold text-primary">Standnivå følger pakken</p>
+                      <p className="mt-1">
+                        Denne registreringen bruker{" "}
+                        <span className="font-semibold text-primary">{row.stand_type ?? packageLabel(row.package)}</span>.
+                        Endrer du pakke, oppdateres standnivå automatisk til Standard, Silver, Gold eller Platinum.
+                      </p>
+                    </div>
 
                     <div className="grid gap-2">
                       <label className="flex items-center gap-2 rounded-xl border border-primary/10 bg-surface px-3 py-2 text-sm font-semibold text-primary">

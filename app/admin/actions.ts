@@ -29,8 +29,15 @@ import { isUuid } from "@/lib/utils";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { sendTransactionalEmail } from "@/lib/resend";
 
-const STAND_TYPE_VALUES = ["Standard", "Premium"] as const;
+const STAND_TYPE_VALUES = ["Standard", "Silver", "Gold", "Platinum"] as const;
 const PACKAGE_VALUES = ["standard", "silver", "gold", "platinum"] as const;
+
+function standTypeForPackage(packageTier: (typeof PACKAGE_VALUES)[number]) {
+  if (packageTier === "silver") return "Silver";
+  if (packageTier === "gold") return "Gold";
+  if (packageTier === "platinum") return "Platinum";
+  return "Standard";
+}
 
 function isNextRedirectError(error: unknown) {
   const digest = (error as { digest?: string })?.digest;
@@ -527,7 +534,6 @@ export async function updateCompanyPackageSettings(formData: FormData) {
   try {
     const registrationId = String(getFormValue(formData, "registrationId") ?? "").trim();
     const packageTier = String(getFormValue(formData, "package") ?? "").trim();
-    const standType = String(getFormValue(formData, "standType") ?? "").trim();
     const extraAttendeeTicketsRaw = String(getFormValue(formData, "extraAttendeeTickets") ?? "0").trim();
     const accessFrom = String(getFormValue(formData, "accessFrom") ?? "").trim();
     const accessUntil = String(getFormValue(formData, "accessUntil") ?? "").trim();
@@ -541,17 +547,16 @@ export async function updateCompanyPackageSettings(formData: FormData) {
     if (!PACKAGE_VALUES.includes(packageTier as (typeof PACKAGE_VALUES)[number])) {
       throw new Error("Ugyldig pakke.");
     }
-    if (!STAND_TYPE_VALUES.includes(standType as (typeof STAND_TYPE_VALUES)[number])) {
-      throw new Error("Ugyldig standtype.");
-    }
     if (!Number.isInteger(extraAttendeeTickets) || extraAttendeeTickets < 0) {
       throw new Error("Ekstra ansattbilletter må være et heltall lik eller større enn 0.");
     }
 
+    const normalizedPackage = packageTier as (typeof PACKAGE_VALUES)[number];
+
     await updateEventCompanyPackageSettings({
       registrationId,
-      package: packageTier as (typeof PACKAGE_VALUES)[number],
-      standType: standType as (typeof STAND_TYPE_VALUES)[number],
+      package: normalizedPackage,
+      standType: standTypeForPackage(normalizedPackage),
       extraAttendeeTickets,
       accessFrom: accessFrom || null,
       accessUntil: accessUntil || null,
@@ -595,7 +600,7 @@ export async function updateRegisteredCompanyStandType(formData: FormData) {
     }
 
     if (!STAND_TYPE_VALUES.includes(standType as (typeof STAND_TYPE_VALUES)[number])) {
-      throw new Error("Ugyldig standtype. Velg Standard eller Premium.");
+      throw new Error("Ugyldig standnivå. Velg Standard, Silver, Gold eller Platinum.");
     }
 
     await updateEventCompanyStandType({

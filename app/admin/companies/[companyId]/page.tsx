@@ -108,7 +108,7 @@ export default async function AdminCompanyDetailPage({ params, searchParams }: P
               <li key={reg.id} className="flex items-center justify-between rounded-xl bg-primary/5 px-3 py-2">
                 <div>
                   <p className="font-semibold text-primary">{reg.event?.name ?? "Event"}</p>
-                  <p className="text-xs text-ink/70">Standtype: {reg.stand_type ?? "—"}</p>
+                  <p className="text-xs text-ink/70">Standnivå fra pakke: {reg.stand_type ?? "—"}</p>
                 </div>
                 <Badge variant={reg.package === "platinum" ? "success" : "default"}>
                   {packageLabel[reg.package] ?? reg.package}

@@ -29,7 +29,9 @@ type ApplicationSyncCandidate = Pick<
   | "company_id"
   | "company_name"
   | "contact_email"
+  | "requested_package_id"
   | "approved_package_id"
+  | "status"
   | "approved_at"
   | "updated_at"
   | "created_at"
@@ -137,7 +139,8 @@ export function filterApplicationsForDynamicGroup(
     if (!application.company_id) return false;
 
     if (group.dynamic_package_tier) {
-      const packageTier = packageTierById.get(application.approved_package_id ?? "") ?? null;
+      const packageTier =
+        packageTierById.get(application.approved_package_id ?? application.requested_package_id ?? "") ?? null;
       if (packageTier !== group.dynamic_package_tier) return false;
     }
 
@@ -261,9 +264,9 @@ async function loadCampaignContexts(groups: SyncableEmailGroup[]) {
       .in("id", campaignIds),
     supabase
       .from("event_registration_applications")
-      .select("id, campaign_id, company_id, company_name, contact_email, approved_package_id, approved_at, updated_at, created_at")
+      .select("id, campaign_id, company_id, company_name, contact_email, requested_package_id, approved_package_id, status, approved_at, updated_at, created_at")
       .in("campaign_id", campaignIds)
-      .eq("status", "approved"),
+      .in("status", ["pending", "approved"]),
     supabase
       .from("event_registration_packages")
       .select("id, campaign_id, mapped_package")

@@ -541,7 +541,7 @@ export async function updateEventCompanyStandType(input: {
 export async function updateEventCompanyPackageSettings(input: {
   registrationId: string;
   package: "standard" | "silver" | "gold" | "platinum";
-  standType: "Standard" | "Premium";
+  standType: "Standard" | "Silver" | "Gold" | "Platinum";
   extraAttendeeTickets: number;
   accessFrom?: string | null;
   accessUntil?: string | null;

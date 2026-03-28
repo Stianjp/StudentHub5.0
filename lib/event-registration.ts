@@ -45,6 +45,17 @@ type PublicCampaignDetail = {
 
 const LOGO_BUCKET = "event-registration-assets";
 const COMPANY_PORTAL_FALLBACK_URL = "https://bedrift.oslostudenthub.no";
+const PERSONAL_EMAIL_DOMAINS = new Set([
+  "gmail.com",
+  "hotmail.com",
+  "outlook.com",
+  "live.com",
+  "icloud.com",
+  "me.com",
+  "yahoo.com",
+  "proton.me",
+  "protonmail.com",
+]);
 
 function buildRegistrationLeadId(applicationId: string) {
   return `reg-${applicationId}`;
@@ -150,7 +161,9 @@ const loadPublicRegistrationCampaignDetail = unstable_cache(
 );
 
 function inferStandTypeFromPackage(packageTier: RegistrationPackage["mapped_package"]) {
-  if (packageTier === "gold" || packageTier === "platinum") return "Premium";
+  if (packageTier === "silver") return "Silver";
+  if (packageTier === "gold") return "Gold";
+  if (packageTier === "platinum") return "Platinum";
   return "Standard";
 }
 
@@ -334,6 +347,166 @@ async function ensureCompanyPortalAccessRequest(input: {
           null,
       },
       { onConflict: "user_id" },
+    );
+
+  if (error) throw error;
+}
+
+async function ensureCompanyDomainForEmail(companyId: string, email: string) {
+  const supabase = createAdminSupabaseClient();
+  const normalizedEmail = normalizeEmail(email);
+  const domain = normalizedEmail.split("@")[1] ?? "";
+
+  if (!domain || PERSONAL_EMAIL_DOMAINS.has(domain)) return;
+
+  const { data: existing, error: existingError } = await supabase
+    .from("company_domains")
+    .select("company_id")
+    .eq("domain", domain)
+    .maybeSingle();
+
+  if (existingError) throw existingError;
+  if (existing?.company_id) return;
+
+  const { error } = await supabase
+    .from("company_domains")
+    .insert({
+      company_id: companyId,
+      domain,
+    });
+
+  if (error && !error.message.toLowerCase().includes("duplicate")) {
+    throw error;
+  }
+}
+
+async function ensureCompanyFromApplication(input: {
+  application: RegistrationApplication;
+}) {
+  const supabase = createAdminSupabaseClient();
+  const normalizedOrgNumber = normalizeOrgNumber(input.application.org_number);
+  const now = new Date().toISOString();
+
+  const existingCompany =
+    input.application.company_id
+      ? await supabase.from("companies").select("*").eq("id", input.application.company_id).maybeSingle()
+      : await supabase.from("companies").select("*").eq("org_number", normalizedOrgNumber).maybeSingle();
+
+  if (existingCompany.error) throw existingCompany.error;
+
+  if (existingCompany.data) {
+    const { data, error } = await supabase
+      .from("companies")
+      .update({
+        name: input.application.company_name,
+        org_number: normalizedOrgNumber,
+        location: `${input.application.city}, ${input.application.country}`,
+        updated_at: now,
+      })
+      .eq("id", existingCompany.data.id)
+      .select("*")
+      .single();
+
+    if (error) throw error;
+    return { company: data as Company, created: false };
+  }
+
+  const { data, error } = await supabase
+    .from("companies")
+    .insert({
+      name: input.application.company_name,
+      org_number: normalizedOrgNumber,
+      location: `${input.application.city}, ${input.application.country}`,
+      created_at: now,
+      updated_at: now,
+    })
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return { company: data as Company, created: true };
+}
+
+async function ensureEventCompanyFromApplication(input: {
+  application: RegistrationApplication;
+  company: Company;
+  packageTier: RegistrationPackage["mapped_package"];
+  standCode?: string | null;
+}) {
+  const supabase = createAdminSupabaseClient();
+  const now = new Date().toISOString();
+
+  const { data, error } = await supabase
+    .from("event_companies")
+    .upsert(
+      {
+        id: input.application.event_company_id ?? undefined,
+        event_id: input.application.event_id,
+        company_id: input.company.id,
+        package: input.packageTier ?? "standard",
+        stand_type: inferStandTypeFromPackage(input.packageTier),
+        stand_code: input.standCode ?? null,
+        registered_at: now,
+        updated_at: now,
+      },
+      { onConflict: "event_id,company_id" },
+    )
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return data as EventCompany;
+}
+
+async function ensurePendingPortalAccessForEmail(input: {
+  company: Company;
+  application: RegistrationApplication;
+  email: string;
+}) {
+  const supabase = createAdminSupabaseClient();
+  const normalizedEmail = normalizeEmail(input.email);
+  const now = new Date().toISOString();
+
+  const existingUser = await findAuthUserByEmail(normalizedEmail);
+  let authUserId = existingUser?.id ?? null;
+
+  if (!authUserId) {
+    const companyPortalUrl = getBaseUrlForRole("company", COMPANY_PORTAL_FALLBACK_URL) || COMPANY_PORTAL_FALLBACK_URL;
+    const redirectTo = `${companyPortalUrl}/auth/callback?role=company&mode=verify&next=%2Fcompany`;
+    const inviteResponse = await supabase.auth.admin.inviteUserByEmail(normalizedEmail, {
+      redirectTo,
+    });
+    if (inviteResponse.error) throw inviteResponse.error;
+
+    authUserId =
+      (inviteResponse.data as { user?: { id?: string | null } } | null)?.user?.id ??
+      (await findAuthUserByEmail(normalizedEmail))?.id ??
+      null;
+  }
+
+  if (authUserId) {
+    await ensureCompanyPortalAccessRequest({
+      userId: authUserId,
+      email: normalizedEmail,
+      company: input.company,
+      application: input.application,
+    });
+  }
+
+  const { error } = await supabase
+    .from("company_portal_invites")
+    .upsert(
+      {
+        company_id: input.company.id,
+        application_id: input.application.id,
+        email: normalizedEmail,
+        role: "member",
+        status: authUserId ? "invited" : "pending",
+        invited_at: authUserId ? now : null,
+        user_id: authUserId,
+        updated_at: now,
+      },
+      { onConflict: "company_id,email" },
     );
 
   if (error) throw error;
@@ -607,6 +780,68 @@ export async function submitPublicRegistrationApplication(input: {
   }
 
   try {
+    const typedApplication = {
+      ...payload,
+      company_id: null,
+      event_company_id: null,
+      approved_package_id: null,
+      approved_stand_id: null,
+      approved_at: null,
+      approved_by: null,
+      rejected_at: null,
+      rejected_by: null,
+      rejection_reason: null,
+    } as RegistrationApplication;
+    const { company } = await ensureCompanyFromApplication({ application: typedApplication });
+    const allRelevantEmails = [...new Set([
+      normalizeEmail(parsed.data.contactEmail),
+      ...parsed.data.portalEmails.map((email) => normalizeEmail(email)),
+    ])];
+
+    for (const email of allRelevantEmails) {
+      await ensureCompanyDomainForEmail(company.id, email);
+    }
+
+    const eventCompany = await ensureEventCompanyFromApplication({
+      application: typedApplication,
+      company,
+      packageTier: selectedPackage.mapped_package,
+      standCode: selectedStand?.stand_code ?? null,
+    });
+
+    const { error: applicationLinkError } = await supabase
+      .from("event_registration_applications")
+      .update({
+        company_id: company.id,
+        event_company_id: eventCompany.id,
+        updated_at: now,
+      })
+      .eq("id", applicationId);
+
+    if (applicationLinkError) throw applicationLinkError;
+
+    if (selectedPackage.mapped_package) {
+      await ensurePackageEmailGroupMembership({
+        campaign: detail.campaign,
+        packageTier: selectedPackage.mapped_package,
+        company,
+        companyName: parsed.data.companyName.trim(),
+        contactEmail: normalizeEmail(parsed.data.contactEmail),
+      });
+    }
+
+    for (const portalEmail of [...new Set(parsed.data.portalEmails.map((email) => normalizeEmail(email)))]) {
+      await ensurePendingPortalAccessForEmail({
+        company,
+        application: {
+          ...typedApplication,
+          company_id: company.id,
+          event_company_id: eventCompany.id,
+        },
+        email: portalEmail,
+      });
+    }
+
     const contactName = `${parsed.data.contactFirstName} ${parsed.data.contactLastName}`.trim();
     const normalizedContactEmail = normalizeEmail(parsed.data.contactEmail);
     const crmLeadId = buildRegistrationLeadId(applicationId);
@@ -636,6 +871,7 @@ export async function submitPublicRegistrationApplication(input: {
     });
 
     await syncCompanyEventPipelineStage(parsed.data.companyName.trim(), detail.campaign.event.name, "Påmeldt");
+    await syncDynamicEmailGroups({ campaignId: detail.campaign.id });
   } catch (error) {
     try {
       await supabase.from("event_registration_portal_emails").delete().eq("application_id", applicationId);
@@ -1090,42 +1326,7 @@ export async function approveRegistrationApplication(input: {
   }
 
   try {
-    const { data: existingCompany } = await supabase
-      .from("companies")
-      .select("*")
-      .eq("org_number", normalizeOrgNumber(typedApplication.org_number))
-      .maybeSingle();
-
-    let company: Company;
-    if (existingCompany) {
-      const { data: updatedCompany, error: updateCompanyError } = await supabase
-        .from("companies")
-        .update({
-          name: typedApplication.company_name,
-          org_number: normalizeOrgNumber(typedApplication.org_number),
-          location: `${typedApplication.city}, ${typedApplication.country}`,
-          updated_at: now,
-        })
-        .eq("id", existingCompany.id)
-        .select("*")
-        .single();
-      if (updateCompanyError) throw updateCompanyError;
-      company = updatedCompany as Company;
-    } else {
-      const { data: createdCompany, error: createCompanyError } = await supabase
-        .from("companies")
-        .insert({
-          name: typedApplication.company_name,
-          org_number: normalizeOrgNumber(typedApplication.org_number),
-          location: `${typedApplication.city}, ${typedApplication.country}`,
-          created_at: now,
-          updated_at: now,
-        })
-        .select("*")
-        .single();
-      if (createCompanyError) throw createCompanyError;
-      company = createdCompany as Company;
-    }
+    const { company } = await ensureCompanyFromApplication({ application: typedApplication });
 
     await ensurePackageEmailGroupMembership({
       campaign: typedCampaign,
@@ -1136,24 +1337,12 @@ export async function approveRegistrationApplication(input: {
     });
 
     const standCode = claimedStand?.stand_code ?? null;
-    const { data: eventCompany, error: eventCompanyError } = await supabase
-      .from("event_companies")
-      .upsert(
-        {
-          event_id: typedApplication.event_id,
-          company_id: company.id,
-          package: typedPackage.mapped_package,
-          stand_type: inferStandTypeFromPackage(typedPackage.mapped_package),
-          stand_code: standCode,
-          registered_at: now,
-          updated_at: now,
-        },
-        { onConflict: "event_id,company_id" },
-      )
-      .select("*")
-      .single();
-
-    if (eventCompanyError) throw eventCompanyError;
+    const eventCompany = await ensureEventCompanyFromApplication({
+      application: typedApplication,
+      company,
+      packageTier: typedPackage.mapped_package,
+      standCode,
+    });
 
     const { error: applicationUpdateError } = await supabase
       .from("event_registration_applications")
@@ -1203,6 +1392,19 @@ export async function approveRegistrationApplication(input: {
 
       if (existingInviteError) throw existingInviteError;
       if (existingInvite?.status === "accepted" && existingInvite.user_id) {
+        continue;
+      }
+      if (existingInvite?.status === "invited" || (existingInvite?.status === "pending" && existingInvite.user_id)) {
+        const { error: updateExistingInviteError } = await supabase
+          .from("company_portal_invites")
+          .update({
+            application_id: typedApplication.id,
+            company_id: company.id,
+            updated_at: now,
+          })
+          .eq("id", existingInvite.id);
+
+        if (updateExistingInviteError) throw updateExistingInviteError;
         continue;
       }
 

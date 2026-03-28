@@ -127,7 +127,7 @@ export default async function CompanyEventsPage() {
                         {packageLabel(registration.package)}
                       </Badge>
                       {registration.stand_type ? (
-                        <Badge variant="default">{registration.stand_type}</Badge>
+                        <Badge variant="default">Standnivå: {registration.stand_type}</Badge>
                       ) : null}
                       {isExternalHttpUrl(registration.event.registration_form_url) ? (
                         <a
