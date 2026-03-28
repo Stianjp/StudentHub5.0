@@ -2,6 +2,7 @@ import type { TableRow } from "@/lib/types/database";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { sendTransactionalEmail } from "@/lib/resend";
+import { getBaseUrlForRole } from "@/lib/auth-urls";
 
 type Event = TableRow<"events">;
 type Company = TableRow<"companies">;
@@ -10,6 +11,7 @@ type CompanyDomain = TableRow<"company_domains">;
 type CompanyUserRequest = TableRow<"company_user_requests">;
 type Lead = TableRow<"leads">;
 type Consent = TableRow<"consents">;
+const COMPANY_PORTAL_FALLBACK_URL = "https://bedrift.oslostudenthub.no";
 
 type EventWithStats = Event & {
   companyCount: number;
@@ -170,6 +172,14 @@ export async function approveCompanyAccess(input: { requestId: string; companyId
   if (insertError) throw insertError;
 
   const typedRequest = request as CompanyUserRequest;
+  const { data: company, error: companyError } = await supabase
+    .from("companies")
+    .select("*")
+    .eq("id", input.companyId)
+    .single();
+
+  if (companyError) throw companyError;
+
   const { error: inviteUpdateError } = await supabase
     .from("company_portal_invites")
     .update({
@@ -189,6 +199,28 @@ export async function approveCompanyAccess(input: { requestId: string; companyId
     .delete()
     .eq("id", input.requestId);
   if (deleteError) throw deleteError;
+
+  const companyPortalUrl = getBaseUrlForRole("company", COMPANY_PORTAL_FALLBACK_URL) || COMPANY_PORTAL_FALLBACK_URL;
+  const signInUrl = `${companyPortalUrl}/auth/sign-in?role=company&next=%2Fcompany`;
+
+  await sendTransactionalEmail({
+    to: typedRequest.email,
+    subject: `Tilgangen din til ${company.name} er godkjent`,
+    type: "company_access_approved",
+    html: `<p>Hei,</p>
+<p>Tilgangen din til <strong>${company.name}</strong> er nå godkjent av Oslo Student Hub.</p>
+<p>Du kan logge inn på bedriftsportalen her:</p>
+<p><a href="${signInUrl}">${signInUrl}</a></p>
+<p>Når du logger inn med <strong>${typedRequest.email}</strong>, får du tilgang til bedriftssiden.</p>`,
+    payload: {
+      companyId: input.companyId,
+      requestId: input.requestId,
+      userId: input.userId,
+      approvedAt: now,
+      signInUrl,
+    },
+    supabase,
+  });
 }
 
 export async function listEventCompanies(eventId: string) {

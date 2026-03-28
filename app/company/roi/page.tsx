@@ -18,6 +18,9 @@ type RoiPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
+const UPGRADE_CONTACT_COPY =
+  "Ta kontakt med stian@oslostudenthub.no eller amruta@oslostudenthub.no for å få kjøpe og aktivere tilleggspakkene: ROI og/eller Leads.";
+
 export default async function CompanyRoiPage({ searchParams }: RoiPageProps) {
   const params = await searchParams;
   const profile = await requireRole("company");
@@ -115,7 +118,8 @@ export default async function CompanyRoiPage({ searchParams }: RoiPageProps) {
 
         {!hasRoiAccess ? (
           <div className="rounded-xl border border-warning/30 bg-warning/10 p-4 text-sm text-ink/90">
-            ROI er ikke tilgjengelig. Be OSH-admin om Gull- eller Platinum-tilgang for dette eventet.
+            <p>ROI er ikke tilgjengelig for denne pakken.</p>
+            <p className="mt-2 font-semibold">{UPGRADE_CONTACT_COPY}</p>
           </div>
         ) : null}
       </Card>

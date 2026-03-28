@@ -18,6 +18,9 @@ function sourceLabel(source: string) {
   return "Studentportal";
 }
 
+const UPGRADE_CONTACT_COPY =
+  "Ta kontakt med stian@oslostudenthub.no eller amruta@oslostudenthub.no for å få kjøpe og aktivere tilleggspakkene: ROI og/eller Leads.";
+
 export default async function CompanyLeadsPage() {
   const profile = await requireRole("company");
   const supabase = await createServerSupabaseClient();
@@ -85,7 +88,7 @@ export default async function CompanyLeadsPage() {
         description={
           hasAnyDetailedLeadAccess
             ? "Full lead-visning på events med Gull/Platinum eller ekstra Leads-tilgang. Andre events vises anonymisert."
-            : "Standard/Sølv: Du ser antall leads og anonymisert innsikt (studie, år og interesser)."
+            : "Standard/Sølv: Du ser kun antall interesserte studenter per event."
         }
         actions={
           hasAnyDetailedLeadAccess ? (
@@ -103,7 +106,8 @@ export default async function CompanyLeadsPage() {
 
       {!hasAnyDetailedLeadAccess ? (
         <Card className="border border-warning/30 bg-warning/10 text-sm text-ink/90">
-          Denne pakken gir ikke tilgang til navn eller kontaktinfo. Oppgrader til Gull/Platinum, eller aktiver ekstra tilgang i Bedriftspakker.
+          <p>Denne pakken gir ikke tilgang til navn, kontaktinfo eller enkeltrad-visning av leads.</p>
+          <p className="mt-2 font-semibold">{UPGRADE_CONTACT_COPY}</p>
         </Card>
       ) : null}
 
@@ -123,9 +127,19 @@ export default async function CompanyLeadsPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-semibold text-primary">{eventName}</p>
-                  <p className="text-xs text-ink/60">{rows.length} leads</p>
+                  <p className="text-xs text-ink/60">{rows.length} interesserte studenter</p>
                 </div>
               </div>
+              {!hasDetailedLeadAccessForGroup ? (
+                <div className="rounded-xl border border-primary/10 bg-primary/5 px-4 py-4">
+                  <p className="text-sm font-semibold text-primary">Antall interesserte studenter</p>
+                  <p className="mt-2 text-3xl font-bold text-primary">{rows.length}</p>
+                  <p className="mt-2 text-sm text-ink/70">
+                    Detaljerte leads for dette eventet er skjult i Standard/Sølv.
+                  </p>
+                  <p className="mt-2 text-sm font-semibold text-ink/90">{UPGRADE_CONTACT_COPY}</p>
+                </div>
+              ) : (
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-primary/10 text-sm">
                   <thead>
@@ -197,6 +211,7 @@ export default async function CompanyLeadsPage() {
                   </tbody>
                 </table>
               </div>
+              )}
             </Card>
           );
         })

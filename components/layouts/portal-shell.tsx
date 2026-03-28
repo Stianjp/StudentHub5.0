@@ -12,8 +12,6 @@ import {
   ClipboardList,
   LayoutDashboard,
   Package,
-  PanelLeftClose,
-  PanelLeftOpen,
   Settings,
   Ticket,
   Users,
@@ -47,6 +45,14 @@ function resolveIcon(item: NavItem): LucideIcon {
   if (href === "/company") return BriefcaseBusiness;
   if (href === "/checkin") return ClipboardList;
   return LayoutDashboard;
+}
+
+function CollapsedTooltip({ label }: { label: string }) {
+  return (
+    <span className="pointer-events-none absolute left-full top-1/2 z-30 ml-3 -translate-y-1/2 rounded-xl border border-white/15 bg-[#0B0130] px-3 py-2 text-xs font-semibold text-white opacity-0 shadow-xl transition duration-150 group-hover:opacity-100 group-focus-visible:opacity-100">
+      {label}
+    </span>
+  );
 }
 
 export function PortalShell({
@@ -110,8 +116,18 @@ export function PortalShell({
           "shrink-0 border-r border-white/10 bg-[#140249] text-[#EDE8F5] shadow-2xl shadow-black/30 transition-[width,padding] duration-200",
           isCollapsed ? "w-24 p-4" : "w-72 p-8",
         )}>
-          <div className={cn("flex items-center gap-3", isCollapsed ? "justify-center" : "justify-between")}>
-            <div className={cn("rounded-2xl border border-white/10 bg-[#0B0130]", isCollapsed ? "px-3 py-4" : "px-4 py-3")}>
+          <div className={cn("flex", isCollapsed ? "justify-center" : "justify-start")}>
+            <button
+              type="button"
+              onClick={toggleSidebar}
+              className={cn(
+                "group relative inline-flex items-center rounded-2xl border border-white/10 bg-[#0B0130] text-[#EDE8F5] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70] focus-visible:ring-offset-2 focus-visible:ring-offset-[#140249]",
+                "hover:border-[#FE9A70]/70 hover:bg-[#1A074E]",
+                isCollapsed ? "justify-center px-3 py-4" : "w-full justify-start px-4 py-3",
+              )}
+              title={isCollapsed ? "Maksimer sidebar" : "Minimer sidebar"}
+              aria-label={isCollapsed ? "Maksimer sidebar" : "Minimer sidebar"}
+            >
               {isCollapsed ? (
                 <span className="block text-center text-xs font-black tracking-[0.35em] text-[#EDE8F5]">OSH</span>
               ) : (
@@ -124,15 +140,7 @@ export function PortalShell({
                   priority
                 />
               )}
-            </div>
-            <button
-              type="button"
-              onClick={toggleSidebar}
-              className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-[#0B0130] text-[#EDE8F5] transition hover:border-[#FE9A70]/60 hover:text-[#FE9A70]"
-              title={isCollapsed ? "Utvid meny" : "Komprimer meny"}
-              aria-label={isCollapsed ? "Utvid meny" : "Komprimer meny"}
-            >
-              {isCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+              {isCollapsed ? <CollapsedTooltip label={isCollapsed ? "Maksimer sidebar" : "Minimer sidebar"} /> : null}
             </button>
           </div>
 
@@ -159,7 +167,7 @@ export function PortalShell({
                     href={itemHref}
                     title={item.label}
                     className={cn(
-                      "flex w-full items-center rounded-2xl border border-transparent p-4 text-sm font-bold transition-[background-color,border-color,color,box-shadow,transform] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70] focus-visible:ring-offset-2 focus-visible:ring-offset-[#140249]",
+                      "group relative flex w-full items-center rounded-2xl border border-transparent p-4 text-sm font-bold transition-[background-color,border-color,color,box-shadow,transform] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70] focus-visible:ring-offset-2 focus-visible:ring-offset-[#140249]",
                       isCollapsed ? "justify-center" : "justify-between",
                       isActive
                         ? "border-[#F2A786] bg-[#F3A17B] text-[#140249]"
@@ -170,6 +178,7 @@ export function PortalShell({
                       <Icon size={20} aria-hidden="true" />
                       {!isCollapsed ? <span>{item.label}</span> : null}
                     </span>
+                    {isCollapsed ? <CollapsedTooltip label={item.label} /> : null}
                     {!isCollapsed && children.length > 0 ? (
                       <span className={cn("rounded-full px-2 py-1 text-[10px] font-black", isActive ? "bg-[#140249]/12" : "bg-[#FE9A70]/15")}>
                         {children.length}
@@ -207,11 +216,12 @@ export function PortalShell({
             <LogoutButton
               role={roleKey}
               className={cn(
-                "flex w-full items-center rounded-xl border border-white/20 px-4 py-2 text-sm font-bold text-[#EDE8F5]/70 transition-colors hover:text-[#FE9A70]",
+                "group relative flex w-full items-center rounded-xl border border-white/20 px-4 py-2 text-sm font-bold text-[#EDE8F5]/70 transition-colors hover:text-[#FE9A70]",
                 isCollapsed ? "justify-center" : "justify-start",
               )}
             >
-              {!isCollapsed ? <span>Logg ut</span> : <span title="Logg ut">↩</span>}
+              {!isCollapsed ? <span>Logg ut</span> : <span>↩</span>}
+              {isCollapsed ? <CollapsedTooltip label="Logg ut" /> : null}
             </LogoutButton>
           </div>
         </aside>
