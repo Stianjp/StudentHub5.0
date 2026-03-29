@@ -54,20 +54,6 @@ export function SignInClient({
     });
   }, []);
 
-  useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) return;
-      const host = window.location.hostname.toLowerCase();
-      let hostNext = next ?? getDefaultNextPath(selectedRole, host);
-      if (host.startsWith("student.")) hostNext = "/student/dashboard";
-      if (host.startsWith("bedrift.")) hostNext = "/company";
-      if (host.startsWith("checkin.")) hostNext = "/checkin";
-      if (host.startsWith("admin.")) hostNext = "/admin";
-      window.location.assign(hostNext);
-    });
-  }, [next, selectedRole]);
-
 
   const title = useMemo(() => {
     if (mode === "reset") {

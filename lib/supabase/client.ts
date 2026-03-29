@@ -19,7 +19,7 @@ function isBrowser() {
 }
 
 function buildCookieString(name: string, value: string, options: CookieOptions) {
-  const parts = [`${name}=${value}`];
+  const parts = [`${name}=${encodeURIComponent(value)}`];
   parts.push(`Path=${options.path ?? "/"}`);
   if (options.maxAge !== undefined) {
     parts.push(`Max-Age=${options.maxAge}`);
@@ -78,7 +78,7 @@ export function createClient() {
             expires: options?.expires,
             sameSite: options?.sameSite,
             secure: options?.secure,
-            domain: undefined,
+            domain,
           });
           document.cookie = cookieString;
         });
