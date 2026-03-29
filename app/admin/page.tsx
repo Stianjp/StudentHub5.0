@@ -127,7 +127,9 @@ export default async function AdminOverviewPage() {
           </label>
           <Button variant="secondary" type="submit">Send invitasjon</Button>
         </form>
-        <p className="text-xs text-ink/70">Kun eksisterende admin kan invitere nye admin-brukere.</p>
+        <p className="text-xs text-ink/70">
+          Kun eksisterende admin kan invitere nye admin-brukere, og adressen må være @oslostudenthub.no.
+        </p>
       </Card>
     </div>
   );

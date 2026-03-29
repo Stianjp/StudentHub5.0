@@ -2,17 +2,51 @@
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { createClient } from "@/lib/supabase/client";
-import { getBaseUrlForRole, getDefaultNextPath } from "@/lib/auth-urls";
+import { getDefaultNextPath } from "@/lib/auth-urls";
 import { roleFromHost } from "@/lib/host";
-import Image from "next/image";
+import {
+  isOshAdminEmail,
+  STUDENT_JOB_TYPE_OPTIONS,
+  validatePasswordStrength,
+} from "@/lib/auth-registration";
+import { STUDY_CATEGORIES } from "@/components/event/study-categories";
 
 type Role = "student" | "company" | "admin";
 type Mode = "login" | "register" | "reset";
+
+const STUDY_YEAR_OPTIONS = Array.from({ length: 8 }, (_, index) => index + 1);
+
+function getRoleTitle(mode: Mode, role: Role) {
+  if (mode === "reset") return "Gjenopprett passord";
+  if (mode === "register") {
+    return role === "student" ? "Registrer student" : "Registrer bedrift";
+  }
+  if (role === "student") return "Logg inn som student";
+  if (role === "admin") return "Logg inn som admin";
+  return "Logg inn som bedrift";
+}
+
+function getRoleDescription(mode: Mode, role: Role) {
+  if (mode === "reset") {
+    return "Få tilsendt lenke for å sette nytt passord.";
+  }
+  if (mode === "register") {
+    if (role === "student") {
+      return "Opprett studentkonto med studiested, studieretning og jobbpreferanser.";
+    }
+    return "Opprett bedriftskonto. Tilgang til portalen godkjennes manuelt av OSH.";
+  }
+  if (role === "admin") {
+    return "Kun @oslostudenthub.no-brukere kan logge inn her.";
+  }
+  return "Logg inn med e-post og passord.";
+}
 
 export function SignInClient({
   allowedRole,
@@ -26,48 +60,39 @@ export function SignInClient({
     [],
   );
   const effectiveAllowedRole = allowedRole ?? detectedRole;
-  const initialRole = effectiveAllowedRole ?? (paramRole === "admin" ? "company" : paramRole ?? "company");
+  const initialRole =
+    effectiveAllowedRole ?? (paramRole === "student" || paramRole === "company" ? paramRole : "company");
+  const defaultMode = (params.get("mode") as Mode | null) ?? "login";
   const next = params.get("next");
   const reason = params.get("reason");
   const deleted = params.get("deleted") === "1";
-  const defaultMode = (params.get("mode") as Mode | null) ?? "login";
+  const allowRegister = effectiveAllowedRole !== "admin";
+  const allowPasswordReset = effectiveAllowedRole !== "admin";
+  const initialMode =
+    effectiveAllowedRole === "admin" && (defaultMode === "register" || defaultMode === "reset")
+      ? "login"
+      : defaultMode;
 
   const [role, setRole] = useState<Role>(initialRole);
-  const [mode, setMode] = useState<Mode>(defaultMode);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [orgNumber, setOrgNumber] = useState("");
+  const [mode, setMode] = useState<Mode>(initialMode);
   const [status, setStatus] = useState<"idle" | "loading" | "sent" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
-  const allowRegister = effectiveAllowedRole !== "admin";
-  const selectedRole = effectiveAllowedRole ?? role;
   const errorId = "auth-error";
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getSession().then(({ error }) => {
-      const message = error?.message?.toLowerCase() ?? "";
-      const code = (error as { code?: string })?.code;
+    supabase.auth.getSession().then(({ error: sessionError }) => {
+      const message = sessionError?.message?.toLowerCase() ?? "";
+      const code = (sessionError as { code?: string })?.code;
       if (code === "refresh_token_not_found" || message.includes("refresh token")) {
         void supabase.auth.signOut();
       }
     });
   }, []);
 
-
-  const title = useMemo(() => {
-    if (mode === "reset") {
-      return "Gjenopprett passord";
-    }
-    if (mode === "register") {
-      if (selectedRole === "student") return "Registrer student";
-      if (selectedRole === "admin") return "Registrer admin";
-      return "Registrer bedrift";
-    }
-    if (selectedRole === "student") return "Logg inn som student";
-    if (selectedRole === "admin") return "Logg inn som admin";
-    return "Logg inn som bedrift";
-  }, [mode, selectedRole]);
+  const selectedRole = effectiveAllowedRole ?? role;
+  const title = getRoleTitle(mode, selectedRole);
+  const description = getRoleDescription(mode, selectedRole);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -75,8 +100,10 @@ export function SignInClient({
     setError(null);
 
     const formData = new FormData(event.currentTarget);
-    const emailValue = String(formData.get("email") ?? "").trim();
     const roleValue = (effectiveAllowedRole ?? String(formData.get("role") ?? role)) as Role;
+    const emailValue = String(formData.get("email") ?? "").trim();
+    const passwordValue = String(formData.get("password") ?? "");
+    const confirmPasswordValue = String(formData.get("confirmPassword") ?? "");
 
     if (!emailValue) {
       setStatus("error");
@@ -87,8 +114,6 @@ export function SignInClient({
     const supabase = createClient();
     const nextPath =
       typeof next === "string" ? next : getDefaultNextPath(roleValue, window.location.hostname);
-    const baseUrl = getBaseUrlForRole(roleValue, window.location.origin);
-    const redirectBase = baseUrl || window.location.origin;
 
     if (mode === "reset") {
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(emailValue, {
@@ -104,12 +129,6 @@ export function SignInClient({
       return;
     }
 
-    if (password.length < 8) {
-      setStatus("error");
-      setError("Passord må være minst 8 tegn.");
-      return;
-    }
-
     if (mode === "register") {
       if (roleValue === "admin") {
         setStatus("error");
@@ -117,61 +136,74 @@ export function SignInClient({
         return;
       }
 
-      if (roleValue === "company") {
-        const normalizedOrg = orgNumber.replace(/\s+/g, "");
-        if (!/^\d{9}$/.test(normalizedOrg)) {
-          setStatus("error");
-          setError("Organisasjonsnummer må være 9 siffer.");
-          return;
-        }
-      }
-
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email: emailValue,
-        password,
-        options: {
-          emailRedirectTo: `${redirectBase}/auth/callback?role=${roleValue}&mode=verify`,
-        },
-      });
-
-      if (signUpError) {
+      const passwordError = validatePasswordStrength(passwordValue, confirmPasswordValue);
+      if (passwordError) {
         setStatus("error");
-        const message = signUpError.message.toLowerCase();
-        if (message.includes("row level security") || message.includes("policy")) {
-          setError("Registrering mottatt. Bekreft e-posten din før du kan logge inn. Sjekk søppelpost.");
-        } else {
-          setError("Kunne ikke opprette konto. Sjekk e-post og prøv igjen.");
-        }
+        setError(passwordError);
         return;
       }
 
-      if (roleValue === "company" && data.user?.id) {
-        const requestResponse = await fetch("/api/company/request-access", {
+      if (roleValue === "student") {
+        const response = await fetch("/api/auth/register/student", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            userId: data.user.id,
             email: emailValue,
-            orgNumber: orgNumber.replace(/\s+/g, ""),
+            fullName: String(formData.get("fullName") ?? ""),
+            school: String(formData.get("school") ?? ""),
+            studyProgram: String(formData.get("studyProgram") ?? ""),
+            studyYear: Number(formData.get("studyYear") ?? 0),
+            jobTypes: formData.getAll("jobTypes").map((value) => String(value)),
+            password: passwordValue,
+            confirmPassword: confirmPasswordValue,
           }),
         });
 
-        if (!requestResponse.ok) {
-          const payload = await requestResponse.json().catch(() => null);
+        const payload = await response.json().catch(() => null);
+        if (!response.ok) {
           setStatus("error");
-          setError(payload?.error ?? "Kunne ikke sende forespørsel. Kontakt OSH-admin.");
+          setError(payload?.error ?? "Kunne ikke opprette studentkonto.");
           return;
         }
+
+        setStatus("sent");
+        setError("Registrering OK. Bekreft e-posten din før du kan logge inn. Sjekk søppelpost.");
+        return;
+      }
+
+      const requestBody = new FormData();
+      for (const [key, value] of formData.entries()) {
+        requestBody.append(key, value);
+      }
+
+      const response = await fetch("/api/auth/register/company", {
+        method: "POST",
+        body: requestBody,
+      });
+
+      const payload = await response.json().catch(() => null);
+      if (!response.ok) {
+        setStatus("error");
+        setError(payload?.error ?? "Kunne ikke opprette bedriftskonto.");
+        return;
       }
 
       setStatus("sent");
-      setError("Registrering OK. Bekreft e-posten din før du kan logge inn. Sjekk søppelpost.");
+      setError(
+        "Registrering OK. Bekreft e-posten din. Når e-posten er verifisert, havner tilgangen i admin sin godkjenningsliste.",
+      );
+      return;
+    }
+
+    if (roleValue === "admin" && !isOshAdminEmail(emailValue)) {
+      setStatus("error");
+      setError("Admin-innlogging krever en @oslostudenthub.no-adresse.");
       return;
     }
 
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email: emailValue,
-      password,
+      password: passwordValue,
     });
 
     if (signInError) {
@@ -191,12 +223,17 @@ export function SignInClient({
     }
 
     if (effectiveAllowedRole) {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       const { data: profile } = await supabase
         .from("profiles")
         .select("id, role")
-        .eq("id" as never, ((await supabase.auth.getUser()).data.user?.id ?? "") as never)
+        .eq("id" as never, (user?.id ?? "") as never)
         .maybeSingle();
       const typedProfile = profile as { role?: string } | null;
+
       if (
         typedProfile?.role &&
         typedProfile.role !== effectiveAllowedRole &&
@@ -220,16 +257,18 @@ export function SignInClient({
     } else if (host.startsWith("admin.")) {
       hostNext = "/admin";
     }
+
     if (/^https?:\/\//i.test(hostNext)) {
       window.location.assign(hostNext);
       return;
     }
+
     window.location.assign(hostNext);
   }
 
   return (
     <main className="min-h-screen w-full bg-[linear-gradient(180deg,#140249_0%,#6D367F_52%,#FF7282_100%)] px-6 py-16">
-      <div className="mx-auto flex min-h-[calc(100vh-8rem)] w-full max-w-md flex-col justify-center">
+      <div className="mx-auto flex min-h-[calc(100vh-8rem)] w-full max-w-2xl flex-col justify-center">
         <Card
           className="flex flex-col gap-6 border border-white/75 !bg-[#140249] text-surface shadow-none ring-0"
           style={{ backgroundColor: "#140249" }}
@@ -244,31 +283,24 @@ export function SignInClient({
               priority
             />
             <h1 className="mt-2 text-2xl font-bold text-surface">{title}</h1>
-            <p className="mt-1 text-sm text-surface/85">
-              {mode === "reset"
-                ? "Få tilsendt lenke for å sette nytt passord."
-                : mode === "register"
-                ? "Opprett konto med e-post og passord."
-                : "Logg inn med e-post og passord."}
-            </p>
+            <p className="mt-1 max-w-xl text-sm text-surface/85">{description}</p>
             {deleted ? (
-              <p className="mt-1 text-xs font-semibold text-success">
-                Profilen din er slettet.
-              </p>
+              <p className="mt-1 text-xs font-semibold text-success">Profilen din er slettet.</p>
             ) : null}
           </div>
+
           <form className="flex flex-col gap-4" onSubmit={onSubmit}>
-            <div className={`grid gap-2 ${allowRegister ? "grid-cols-2" : "grid-cols-1"}`}>
-              <button
-                type="button"
-                onClick={() => setMode("login")}
-                className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
-                  mode === "login" ? "bg-secondary text-primary" : "bg-surface/10 text-surface"
-                }`}
-              >
-                Logg inn
-              </button>
-              {allowRegister ? (
+            {allowRegister ? (
+              <div className="grid gap-2 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => setMode("login")}
+                  className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
+                    mode === "login" ? "bg-secondary text-primary" : "bg-surface/10 text-surface"
+                  }`}
+                >
+                  Logg inn
+                </button>
                 <button
                   type="button"
                   onClick={() => setMode("register")}
@@ -278,30 +310,31 @@ export function SignInClient({
                 >
                   Registrer deg
                 </button>
-              ) : null}
-            </div>
-            {allowedRole ? null : (
+              </div>
+            ) : null}
+
+            {effectiveAllowedRole ? null : (
               <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
                 Rolle
-                <Select name="role" value={role} onChange={(e) => setRole(e.target.value as Role)}>
+                <Select name="role" value={role} onChange={(currentEvent) => setRole(currentEvent.target.value as Role)}>
                   <option value="company">Bedrift</option>
                   <option value="student">Student</option>
                 </Select>
               </label>
             )}
+
             <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
               E-post
               <Input
                 name="email"
                 required
                 type="email"
-                placeholder="navn@bedrift.no"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                placeholder={selectedRole === "student" ? "navn@student.no" : "navn@bedrift.no"}
                 aria-invalid={status === "error"}
                 aria-describedby={status === "error" ? errorId : undefined}
               />
             </label>
+
             {mode !== "reset" ? (
               <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
                 Passord
@@ -310,31 +343,167 @@ export function SignInClient({
                   required
                   type="password"
                   placeholder="Minst 8 tegn"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
                   aria-invalid={status === "error"}
                   aria-describedby={status === "error" ? errorId : undefined}
                 />
               </label>
             ) : null}
+
+            {mode === "register" && selectedRole === "student" ? (
+              <>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
+                    Fullt navn
+                    <Input name="fullName" required placeholder="Fornavn Etternavn" />
+                  </label>
+                  <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
+                    Studiested
+                    <Input name="school" required placeholder="F.eks. NTNU" />
+                  </label>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
+                    Studieretning
+                    <Input name="studyProgram" required placeholder="F.eks. Informatikk" />
+                  </label>
+                  <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
+                    År
+                    <Select name="studyYear" required defaultValue="">
+                      <option value="">Velg år</option>
+                      {STUDY_YEAR_OPTIONS.map((year) => (
+                        <option key={year} value={year}>
+                          {year}. år
+                        </option>
+                      ))}
+                    </Select>
+                  </label>
+                </div>
+
+                <fieldset className="grid gap-3 rounded-2xl border border-white/15 bg-surface/5 p-4">
+                  <legend className="px-1 text-sm font-semibold text-surface">Jeg er interessert i</legend>
+                  <div className="grid gap-2 md:grid-cols-2">
+                    {STUDENT_JOB_TYPE_OPTIONS.map((option) => (
+                      <label
+                        key={option.value}
+                        className="flex min-h-11 items-center gap-3 rounded-2xl border border-white/15 bg-surface/10 px-4 py-3 text-sm font-medium text-surface"
+                      >
+                        <input
+                          type="checkbox"
+                          name="jobTypes"
+                          value={option.value}
+                          className="h-4 w-4 rounded border-white/40 text-secondary focus:ring-secondary"
+                        />
+                        <span>{option.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <p className="text-xs text-surface/70">
+                    Du kan velge flere alternativer eller la alle stå tomme.
+                  </p>
+                </fieldset>
+
+                <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
+                  Bekreft passord
+                  <Input
+                    name="confirmPassword"
+                    required
+                    type="password"
+                    placeholder="Skriv passordet igjen"
+                    aria-invalid={status === "error"}
+                    aria-describedby={status === "error" ? errorId : undefined}
+                  />
+                </label>
+              </>
+            ) : null}
+
             {mode === "register" && selectedRole === "company" ? (
-              <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
-                Organisasjonsnummer
-                <Input
-                  name="orgNumber"
-                  required
-                  inputMode="numeric"
-                  pattern="[0-9]{9}"
-                  placeholder="9 siffer"
-                  value={orgNumber}
-                  onChange={(e) => setOrgNumber(e.target.value)}
-                  aria-invalid={status === "error"}
-                  aria-describedby={status === "error" ? errorId : undefined}
-                />
-              </label>
+              <>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
+                    Firmanavn
+                    <Input name="companyName" required placeholder="F.eks. Equinor" />
+                  </label>
+                  <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
+                    Organisasjonsnummer
+                    <Input
+                      name="orgNumber"
+                      required
+                      inputMode="numeric"
+                      pattern="[0-9]{9}"
+                      placeholder="9 siffer"
+                    />
+                  </label>
+                </div>
+
+                <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
+                  Adresse
+                  <Input name="address" required placeholder="Gateadresse" />
+                </label>
+
+                <div className="grid gap-4 md:grid-cols-3">
+                  <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
+                    Postnummer
+                    <Input name="postalCode" required placeholder="0000" />
+                  </label>
+                  <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
+                    By
+                    <Input name="city" required placeholder="Oslo" />
+                  </label>
+                  <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
+                    Land
+                    <Input name="country" required placeholder="Norge" />
+                  </label>
+                </div>
+
+                <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
+                  Logo
+                  <input
+                    name="logo"
+                    type="file"
+                    accept="image/*"
+                    className="min-h-11 w-full rounded-2xl border border-white/20 bg-surface px-4 py-3 text-sm font-medium text-ink file:mr-4 file:rounded-full file:border-0 file:bg-secondary file:px-4 file:py-2 file:text-xs file:font-bold file:text-primary"
+                  />
+                </label>
+
+                <fieldset className="grid gap-3 rounded-2xl border border-white/15 bg-surface/5 p-4">
+                  <legend className="px-1 text-sm font-semibold text-surface">
+                    Hvilke studieretninger er dere ute etter?
+                  </legend>
+                  <div className="grid gap-2 md:grid-cols-2">
+                    {STUDY_CATEGORIES.map((category) => (
+                      <label
+                        key={category}
+                        className="flex min-h-11 items-center gap-3 rounded-2xl border border-white/15 bg-surface/10 px-4 py-3 text-sm font-medium text-surface"
+                      >
+                        <input
+                          type="checkbox"
+                          name="recruitmentFields"
+                          value={category}
+                          className="h-4 w-4 rounded border-white/40 text-secondary focus:ring-secondary"
+                        />
+                        <span>{category}</span>
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+
+                <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
+                  Bekreft passord
+                  <Input
+                    name="confirmPassword"
+                    required
+                    type="password"
+                    placeholder="Skriv passordet igjen"
+                    aria-invalid={status === "error"}
+                    aria-describedby={status === "error" ? errorId : undefined}
+                  />
+                </label>
+              </>
             ) : null}
+
             <div className="flex flex-col gap-2">
-              <Button disabled={status === "loading" || email.length < 3} type="submit">
+              <Button disabled={status === "loading"} type="submit">
                 {status === "loading"
                   ? "Jobber…"
                   : mode === "register"
@@ -343,12 +512,14 @@ export function SignInClient({
                       ? "Send lenke"
                       : "Logg inn"}
               </Button>
+
               {mode === "register" ? (
                 <p className="text-xs text-surface/75">
-                  Du får en bekreftelses-epost. Sjekk også søppelpost om du ikke ser den.
+                  Du får en bekreftelses-e-post. Sjekk også søppelpost hvis du ikke ser den med en gang.
                 </p>
               ) : null}
-              {mode === "login" ? (
+
+              {mode === "login" && allowPasswordReset ? (
                 <button
                   type="button"
                   className="text-xs font-semibold text-surface/75 hover:text-surface"
@@ -357,6 +528,7 @@ export function SignInClient({
                   Glemt passord?
                 </button>
               ) : null}
+
               {mode === "reset" ? (
                 <button
                   type="button"
@@ -368,11 +540,16 @@ export function SignInClient({
               ) : null}
             </div>
           </form>
+
           {status === "sent" ? (
-            <div className="rounded-xl bg-success/15 px-4 py-3 text-sm font-medium text-success" aria-live="polite">
+            <div
+              className="rounded-xl bg-success/15 px-4 py-3 text-sm font-medium text-success"
+              aria-live="polite"
+            >
               {error ?? "Ferdig."}
             </div>
           ) : null}
+
           {status === "error" ? (
             <div
               id={errorId}
@@ -382,10 +559,17 @@ export function SignInClient({
               {error}
             </div>
           ) : null}
+
           {reason === "admin-required" ? (
             <div className="rounded-xl bg-warning/15 px-4 py-3 text-xs font-semibold text-warning">
               Admin-tilgang må settes manuelt i Supabase (
               <code className="rounded bg-warning/20 px-1 py-0.5 text-warning">profiles.role=&apos;admin&apos;</code>).
+            </div>
+          ) : null}
+
+          {reason === "admin-domain" ? (
+            <div className="rounded-xl bg-warning/15 px-4 py-3 text-xs font-semibold text-warning">
+              Admin-domenet tillater bare innlogging med @oslostudenthub.no.
             </div>
           ) : null}
         </Card>

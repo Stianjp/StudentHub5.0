@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { magicLinkSchema } from "@/lib/validation/company";
 import { createRouteSupabaseClient } from "@/lib/supabase/route";
 import { getBaseUrlForRole, getDefaultNextPath } from "@/lib/auth-urls";
+import { validateMagicLinkRoleForHost } from "@/lib/auth-registration";
 
 export async function POST(request: Request) {
   const supabase = createRouteSupabaseClient();
@@ -17,6 +18,12 @@ export async function POST(request: Request) {
   if (role === "admin") {
     return NextResponse.json({ error: "Admin-tilgang opprettes kun av OSH." }, { status: 403 });
   }
+
+  const hostValidationError = validateMagicLinkRoleForHost(request.headers.get("host"), role);
+  if (hostValidationError) {
+    return NextResponse.json({ error: hostValidationError }, { status: 403 });
+  }
+
   const url = new URL(request.url);
   const nextPath =
     typeof next === "string" && next.startsWith("/") ? next : getDefaultNextPath(role);

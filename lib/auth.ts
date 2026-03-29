@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import type { TableRow } from "@/lib/types/database";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { defaultPathForRole, roleFromHost, type AppRole } from "@/lib/host";
+import { isOshAdminEmail } from "@/lib/auth-registration";
 
 type Profile = TableRow<"profiles">;
 
@@ -72,6 +73,11 @@ export const ensureProfile = cache(async function ensureProfile(role: Profile["r
 
   const hostContext = await resolveHostContext();
   const hostRole = hostContext.role;
+  const normalizedUserEmail = user.email?.toLowerCase() ?? "";
+
+  if (hostRole === "admin" && !isOshAdminEmail(normalizedUserEmail)) {
+    redirect("/auth/sign-in?role=admin&reason=admin-domain&next=%2Fadmin");
+  }
 
   const supabase = await createServerSupabaseClient();
   const now = new Date().toISOString();

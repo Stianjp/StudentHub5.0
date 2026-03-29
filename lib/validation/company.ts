@@ -48,7 +48,10 @@ export const companyInfoSchema = z.object({
   industry: z.string().optional().or(z.literal("")),
   industryCategories: stringArray.optional(),
   size: z.string().optional().or(z.literal("")),
-  location: z.string().optional().or(z.literal("")),
+  address: z.string().optional().or(z.literal("")),
+  postalCode: z.string().optional().or(z.literal("")),
+  city: z.string().optional().or(z.literal("")),
+  country: z.string().optional().or(z.literal("")),
   website: z.preprocess(
     (value) => {
       if (typeof value !== "string") return value;

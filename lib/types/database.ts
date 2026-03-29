@@ -42,7 +42,12 @@ export type Database = {
           industry: string | null;
           size: string | null;
           location: string | null;
+          address: string | null;
+          postal_code: string | null;
+          city: string | null;
+          country: string | null;
           website: string | null;
+          logo_path: string | null;
           recruitment_roles: string[];
           recruitment_fields: string[];
           recruitment_levels: string[];
@@ -66,7 +71,12 @@ export type Database = {
           industry?: string | null;
           size?: string | null;
           location?: string | null;
+          address?: string | null;
+          postal_code?: string | null;
+          city?: string | null;
+          country?: string | null;
           website?: string | null;
+          logo_path?: string | null;
           recruitment_roles?: string[];
           recruitment_fields?: string[];
           recruitment_levels?: string[];
@@ -90,7 +100,12 @@ export type Database = {
           industry?: string | null;
           size?: string | null;
           location?: string | null;
+          address?: string | null;
+          postal_code?: string | null;
+          city?: string | null;
+          country?: string | null;
           website?: string | null;
+          logo_path?: string | null;
           recruitment_roles?: string[];
           recruitment_fields?: string[];
           recruitment_levels?: string[];
@@ -194,6 +209,7 @@ export type Database = {
           email: string | null;
           phone: string | null;
           about: string | null;
+          school: string | null;
           study_program: string | null;
           study_level: string | null;
           graduation_year: number | null;
@@ -217,6 +233,7 @@ export type Database = {
           email?: string | null;
           phone?: string | null;
           about?: string | null;
+          school?: string | null;
           study_program?: string | null;
           study_level?: string | null;
           graduation_year?: number | null;
@@ -240,6 +257,7 @@ export type Database = {
           email?: string | null;
           phone?: string | null;
           about?: string | null;
+          school?: string | null;
           study_program?: string | null;
           study_level?: string | null;
           graduation_year?: number | null;

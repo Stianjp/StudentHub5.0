@@ -15,6 +15,7 @@ export function CallbackClient() {
   const studentPortalUrl = process.env.NEXT_PUBLIC_STUDENT_PORTAL_URL ?? "/student/dashboard";
   const defaultNext = role === "student" ? studentPortalUrl : "/company";
   const nextPath = params.get("next") ?? defaultNext;
+  const successDestination = mode === "verify" ? `/auth/sign-in?role=${role}` : nextPath;
   const shouldAutoRedirect = params.get("next") !== null && mode !== "verify";
   const [message, setMessage] = useState(() => "Fullfører innlogging…");
   const [successLink, setSuccessLink] = useState<string | null>(null);
@@ -51,7 +52,7 @@ export function CallbackClient() {
           return;
         }
         setMessage("Din konto er nå verifisert. Du kan logge inn her:");
-        setSuccessLink(nextPath);
+        setSuccessLink(successDestination);
         return;
       }
 
@@ -70,7 +71,7 @@ export function CallbackClient() {
           return;
         }
         setMessage("Din konto er nå verifisert. Du kan logge inn her:");
-        setSuccessLink(nextPath);
+        setSuccessLink(successDestination);
         return;
       }
 
@@ -80,7 +81,7 @@ export function CallbackClient() {
     void completeAuth().catch((error) => {
       setMessage(error instanceof Error ? error.message : "Ukjent feil under innlogging.");
     });
-  }, [code, nextPath, router, shouldAutoRedirect]);
+  }, [code, router, shouldAutoRedirect, successDestination, nextPath]);
 
   return (
     <main className="min-h-screen w-full bg-[linear-gradient(180deg,#140249_0%,#6D367F_52%,#FF7282_100%)] px-6 py-16">

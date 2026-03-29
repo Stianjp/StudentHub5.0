@@ -29,6 +29,7 @@ export const studentProfileSchema = z.object({
   fullName: z.string().min(2, "Navn er påkrevd"),
   email: z.string().email("Ugyldig e-post"),
   phone: z.string().optional().or(z.literal("")),
+  school: z.string().min(2, "Studiested er påkrevd"),
   studyProgram: z.string().min(2, "Studie/program er påkrevd"),
   studyLevel: z.string().min(2, "Nivå er påkrevd"),
   studyYear: z.coerce.number().int().min(1).max(5),

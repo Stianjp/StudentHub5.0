@@ -1,11 +1,17 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { createAdminSupabaseClient } from "@/lib/supabase/admin";
+import { ensureCompanyAccessRequest } from "@/lib/company-access";
 
 const schema = z.object({
   userId: z.string().uuid(),
   email: z.string().email(),
-  orgNumber: z.string().regex(/^\d{9}$/),
+  orgNumber: z.string().regex(/^\d{9}$/).optional(),
+  companyName: z.string().optional(),
+  address: z.string().optional(),
+  postalCode: z.string().optional(),
+  city: z.string().optional(),
+  country: z.string().optional(),
+  recruitmentFields: z.array(z.string()).optional(),
 });
 
 export async function POST(request: Request) {
@@ -14,110 +20,22 @@ export async function POST(request: Request) {
     const parsed = schema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
-        { error: "Ugyldig data. Sjekk e-post og organisasjonsnummer." },
+        { error: "Ugyldig data. Sjekk e-post og bedriftsinformasjon." },
         { status: 400 },
       );
     }
 
-    const { email, orgNumber } = parsed.data;
-    const normalizedEmail = email.toLowerCase().trim();
-    const domain = normalizedEmail.split("@")[1] ?? "";
-
-    if (!domain) {
-      return NextResponse.json({ error: "E-post må inneholde domene." }, { status: 400 });
-    }
-
-    const supabase = createAdminSupabaseClient();
-
-    const { data: users, error: usersError } = await supabase.auth.admin.listUsers({
-      page: 1,
-      perPage: 200,
+    await ensureCompanyAccessRequest({
+      userId: parsed.data.userId,
+      email: parsed.data.email,
+      orgNumber: parsed.data.orgNumber,
+      companyName: parsed.data.companyName,
+      address: parsed.data.address,
+      postalCode: parsed.data.postalCode,
+      city: parsed.data.city,
+      country: parsed.data.country,
+      recruitmentFields: parsed.data.recruitmentFields,
     });
-    if (usersError) {
-      return NextResponse.json({ error: usersError.message }, { status: 500 });
-    }
-    const userId =
-      users?.users.find((user) => user.email?.toLowerCase() === normalizedEmail)?.id ?? null;
-    if (!userId) {
-      return NextResponse.json(
-        { error: "Fant ikke bruker i Auth ennå. Bekreft e-posten og prøv igjen." },
-        { status: 404 },
-      );
-    }
-
-    const { data: existingMembership } = await supabase
-      .from("company_users")
-      .select("id")
-      .eq("user_id", userId)
-      .maybeSingle();
-
-    if (existingMembership) {
-      return NextResponse.json({ ok: true });
-    }
-
-    let companyId: string | null = null;
-    const { data: portalInvite } = await supabase
-      .from("company_portal_invites")
-      .select("company_id")
-      .eq("email", normalizedEmail)
-      .in("status", ["pending", "invited"])
-      .order("updated_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (portalInvite?.company_id) {
-      companyId = portalInvite.company_id;
-    } else {
-      const { data: domainMatch } = await supabase
-        .from("company_domains")
-        .select("company_id")
-        .eq("domain", domain)
-        .maybeSingle();
-
-      if (domainMatch?.company_id) {
-        companyId = domainMatch.company_id;
-      } else {
-        const { data: company, error: companyError } = await supabase
-          .from("companies")
-          .select("id")
-          .eq("org_number", orgNumber)
-          .maybeSingle();
-
-        if (companyError) {
-          return NextResponse.json({ error: "Kunne ikke slå opp bedrift." }, { status: 500 });
-        }
-
-        if (company?.id) {
-          companyId = company.id;
-        }
-      }
-    }
-
-    const { error: insertError } = await supabase
-      .from("company_user_requests")
-      .upsert(
-        {
-          user_id: userId,
-          email: normalizedEmail,
-          domain,
-          company_id: companyId,
-          org_number: orgNumber,
-        },
-        { onConflict: "user_id" },
-      );
-
-    if (insertError) {
-      return NextResponse.json({ error: insertError.message }, { status: 500 });
-    }
-
-    await supabase
-      .from("company_portal_invites")
-      .update({
-        user_id: userId,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("email", normalizedEmail)
-      .in("status", ["pending", "invited"]);
 
     return NextResponse.json({ ok: true });
   } catch (error) {

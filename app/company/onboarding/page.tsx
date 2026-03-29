@@ -105,8 +105,22 @@ export default async function CompanyOnboardingInfoPage({ searchParams }: PagePr
               <Input name="size" defaultValue={company.size ?? ""} placeholder="f.eks. 50-200" />
             </label>
             <label className="text-sm font-semibold text-primary">
-              Lokasjon
-              <Input name="location" defaultValue={company.location ?? ""} placeholder="Oslo" />
+              Adresse
+              <Input name="address" defaultValue={company.address ?? ""} placeholder="Gateadresse" />
+            </label>
+          </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            <label className="text-sm font-semibold text-primary">
+              Postnummer
+              <Input name="postalCode" defaultValue={company.postal_code ?? ""} placeholder="0000" />
+            </label>
+            <label className="text-sm font-semibold text-primary">
+              By
+              <Input name="city" defaultValue={company.city ?? ""} placeholder="Oslo" />
+            </label>
+            <label className="text-sm font-semibold text-primary">
+              Land
+              <Input name="country" defaultValue={company.country ?? ""} placeholder="Norge" />
             </label>
           </div>
           <label className="text-sm font-semibold text-primary">

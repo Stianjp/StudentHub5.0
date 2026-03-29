@@ -89,7 +89,10 @@ export async function saveCompanyInfo(formData: FormData) {
     industry: String(formData.get("industry") ?? ""),
     industryCategories: formData.getAll("industryCategories"),
     size: String(formData.get("size") ?? ""),
-    location: String(formData.get("location") ?? ""),
+    address: String(formData.get("address") ?? ""),
+    postalCode: String(formData.get("postalCode") ?? ""),
+    city: String(formData.get("city") ?? ""),
+    country: String(formData.get("country") ?? ""),
     website: String(formData.get("website") ?? ""),
   });
 
@@ -103,13 +106,21 @@ export async function saveCompanyInfo(formData: FormData) {
 
   const selectedCategories = normalizeStudyCategories(parsed.data.industryCategories ?? []);
   const primaryIndustry = selectedCategories[0] ?? parsed.data.industry ?? null;
+  const location = [parsed.data.city, parsed.data.country]
+    .map((value) => (value ?? "").trim())
+    .filter(Boolean)
+    .join(", ");
   const companyUpdate: TableUpdate<"companies"> = {
     name: parsed.data.name,
     org_number: parsed.data.orgNumber || null,
     industry: primaryIndustry || null,
     recruitment_fields: selectedCategories,
     size: parsed.data.size || null,
-    location: parsed.data.location || null,
+    address: parsed.data.address || null,
+    postal_code: parsed.data.postalCode || null,
+    city: parsed.data.city || null,
+    country: parsed.data.country || null,
+    location: location || null,
     website: parsed.data.website ? parsed.data.website : null,
     updated_at: now,
   };

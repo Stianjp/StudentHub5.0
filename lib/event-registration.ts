@@ -482,7 +482,16 @@ async function ensureCompanyFromApplication(input: {
       .update({
         name: input.application.company_name,
         org_number: normalizedOrgNumber,
+        address: input.application.address,
+        postal_code: input.application.postal_code,
+        city: input.application.city,
+        country: input.application.country,
         location: `${input.application.city}, ${input.application.country}`,
+        logo_path: input.application.logo_path ?? existingCompany.data.logo_path ?? null,
+        recruitment_fields:
+          input.application.candidate_fields.length > 0
+            ? input.application.candidate_fields
+            : existingCompany.data.recruitment_fields,
         updated_at: now,
       })
       .eq("id", existingCompany.data.id)
@@ -498,7 +507,13 @@ async function ensureCompanyFromApplication(input: {
     .insert({
       name: input.application.company_name,
       org_number: normalizedOrgNumber,
+      address: input.application.address,
+      postal_code: input.application.postal_code,
+      city: input.application.city,
+      country: input.application.country,
       location: `${input.application.city}, ${input.application.country}`,
+      logo_path: input.application.logo_path,
+      recruitment_fields: input.application.candidate_fields,
       created_at: now,
       updated_at: now,
     })

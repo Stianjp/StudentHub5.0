@@ -59,6 +59,7 @@ export default async function StudentProfilePage({ searchParams }: PageProps) {
     full_name: string | null;
     email: string | null;
     phone: string | null;
+    school: string | null;
     study_program: string | null;
     study_level: string | null;
     study_year: number | null;
@@ -130,6 +131,15 @@ export default async function StudentProfilePage({ searchParams }: PageProps) {
               autoComplete="tel"
               defaultValue={student.phone ?? ""}
               placeholder="Telefonnummer"
+            />
+          </label>
+          <label className="text-sm font-semibold text-primary">
+            Studiested
+            <Input
+              name="school"
+              required
+              defaultValue={typedStudent.school ?? ""}
+              placeholder="F.eks. NTNU"
             />
           </label>
           <label className="text-sm font-semibold text-primary">

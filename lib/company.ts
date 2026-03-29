@@ -165,6 +165,23 @@ export async function getLatestCompanyRegistrationLogo(companyId: string) {
     // fallback
   }
 
+  const { data: company, error: companyError } = await supabase
+    .from("companies")
+    .select("logo_path")
+    .eq("id", companyId)
+    .maybeSingle();
+
+  if (companyError) throw companyError;
+  if (company?.logo_path) {
+    const { data: signed } = await supabase.storage
+      .from(REGISTRATION_LOGO_BUCKET)
+      .createSignedUrl(company.logo_path, 60 * 60);
+    return {
+      logoUrl: signed?.signedUrl ?? null,
+      eventName: null,
+    };
+  }
+
   const { data: application, error } = await supabase
     .from("event_registration_applications")
     .select("logo_path, event_id")
@@ -199,10 +216,39 @@ export async function getLatestCompanyRegistrationLogos(companyIds: string[]) {
     // fallback
   }
 
+  const { data: companies, error: companyError } = await supabase
+    .from("companies")
+    .select("id, logo_path")
+    .in("id", uniqueCompanyIds);
+
+  if (companyError) throw companyError;
+  const typedCompanies = (companies ?? []) as Array<Pick<Company, "id" | "logo_path">>;
+
+  const directLogoPaths = new Map(
+    typedCompanies
+      .filter((company) => company.id && company.logo_path)
+      .map((company) => [company.id as string, company.logo_path as string]),
+  );
+
+  const signedDirectEntries = await Promise.all(
+    Array.from(directLogoPaths.entries()).map(async ([companyId, logoPath]) => {
+      const { data: signed } = await supabase.storage
+        .from(REGISTRATION_LOGO_BUCKET)
+        .createSignedUrl(logoPath, 60 * 60);
+      return [companyId, signed?.signedUrl ?? null] as const;
+    }),
+  );
+
+  const signedLogoMap = new Map<string, string | null>(signedDirectEntries);
+  const remainingCompanyIds = uniqueCompanyIds.filter((companyId) => !signedLogoMap.has(companyId));
+  if (remainingCompanyIds.length === 0) {
+    return Object.fromEntries(signedLogoMap.entries()) as Record<string, string | null>;
+  }
+
   const { data: applications, error } = await supabase
     .from("event_registration_applications")
     .select("company_id, logo_path, created_at")
-    .in("company_id", uniqueCompanyIds)
+    .in("company_id", remainingCompanyIds)
     .not("logo_path", "is", null)
     .order("created_at", { ascending: false });
 
@@ -223,7 +269,11 @@ export async function getLatestCompanyRegistrationLogos(companyIds: string[]) {
     }),
   );
 
-  return Object.fromEntries(signedEntries) as Record<string, string | null>;
+  signedEntries.forEach(([companyId, logoUrl]) => {
+    signedLogoMap.set(companyId, logoUrl);
+  });
+
+  return Object.fromEntries(signedLogoMap.entries()) as Record<string, string | null>;
 }
 
 export async function getCompanyAttendeeCountByEvent(companyId: string) {
