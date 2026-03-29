@@ -11,16 +11,18 @@ import { createClient } from "@/lib/supabase/client";
 import { getDefaultNextPath } from "@/lib/auth-urls";
 import { roleFromHost } from "@/lib/host";
 import {
+  getStudentJobTypeOptions,
+  getPasswordStrengthSummary,
+  getStudyYearOptions,
   isOshAdminEmail,
-  STUDENT_JOB_TYPE_OPTIONS,
+  STUDY_LEVEL_OPTIONS,
+  type StudyLevel,
   validatePasswordStrength,
 } from "@/lib/auth-registration";
 import { STUDY_CATEGORIES } from "@/components/event/study-categories";
 
 type Role = "student" | "company" | "admin";
 type Mode = "login" | "register" | "reset";
-
-const STUDY_YEAR_OPTIONS = Array.from({ length: 8 }, (_, index) => index + 1);
 
 function getRoleTitle(mode: Mode, role: Role) {
   if (mode === "reset") return "Gjenopprett passord";
@@ -77,7 +79,12 @@ export function SignInClient({
   const [mode, setMode] = useState<Mode>(initialMode);
   const [status, setStatus] = useState<"idle" | "loading" | "sent" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
+  const [passwordInput, setPasswordInput] = useState("");
+  const [confirmPasswordInput, setConfirmPasswordInput] = useState("");
+  const [studentStudyLevel, setStudentStudyLevel] = useState<StudyLevel | "">("");
+  const [studentStudyYear, setStudentStudyYear] = useState("");
   const errorId = "auth-error";
+  const passwordHelpId = "password-help";
 
   useEffect(() => {
     const supabase = createClient();
@@ -93,6 +100,28 @@ export function SignInClient({
   const selectedRole = effectiveAllowedRole ?? role;
   const title = getRoleTitle(mode, selectedRole);
   const description = getRoleDescription(mode, selectedRole);
+  const studentStudyYearOptions = useMemo(
+    () => getStudyYearOptions(studentStudyLevel),
+    [studentStudyLevel],
+  );
+  const studentJobTypeOptions = useMemo(
+    () => getStudentJobTypeOptions(studentStudyLevel),
+    [studentStudyLevel],
+  );
+  const passwordSummary = useMemo(
+    () => getPasswordStrengthSummary(passwordInput, confirmPasswordInput),
+    [passwordInput, confirmPasswordInput],
+  );
+
+  function switchMode(nextMode: Mode) {
+    setMode(nextMode);
+    setStatus("idle");
+    setError(null);
+    setPasswordInput("");
+    setConfirmPasswordInput("");
+    setStudentStudyLevel("");
+    setStudentStudyYear("");
+  }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -102,8 +131,9 @@ export function SignInClient({
     const formData = new FormData(event.currentTarget);
     const roleValue = (effectiveAllowedRole ?? String(formData.get("role") ?? role)) as Role;
     const emailValue = String(formData.get("email") ?? "").trim();
-    const passwordValue = String(formData.get("password") ?? "");
-    const confirmPasswordValue = String(formData.get("confirmPassword") ?? "");
+    const passwordValue = mode === "register" ? passwordInput : String(formData.get("password") ?? "");
+    const confirmPasswordValue =
+      mode === "register" ? confirmPasswordInput : String(formData.get("confirmPassword") ?? "");
 
     if (!emailValue) {
       setStatus("error");
@@ -152,6 +182,7 @@ export function SignInClient({
             fullName: String(formData.get("fullName") ?? ""),
             school: String(formData.get("school") ?? ""),
             studyProgram: String(formData.get("studyProgram") ?? ""),
+            studyLevel: String(formData.get("studyLevel") ?? ""),
             studyYear: Number(formData.get("studyYear") ?? 0),
             jobTypes: formData.getAll("jobTypes").map((value) => String(value)),
             password: passwordValue,
@@ -294,7 +325,7 @@ export function SignInClient({
               <div className="grid gap-2 sm:grid-cols-2">
                 <button
                   type="button"
-                  onClick={() => setMode("login")}
+                  onClick={() => switchMode("login")}
                   className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
                     mode === "login" ? "bg-secondary text-primary" : "bg-surface/10 text-surface"
                   }`}
@@ -303,7 +334,7 @@ export function SignInClient({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setMode("register")}
+                  onClick={() => switchMode("register")}
                   className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
                     mode === "register" ? "bg-secondary text-primary" : "bg-surface/10 text-surface"
                   }`}
@@ -335,7 +366,7 @@ export function SignInClient({
               />
             </label>
 
-            {mode !== "reset" ? (
+            {mode === "login" ? (
               <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
                 Passord
                 <Input
@@ -343,6 +374,8 @@ export function SignInClient({
                   required
                   type="password"
                   placeholder="Minst 8 tegn"
+                  value={passwordInput}
+                  onChange={(currentEvent) => setPasswordInput(currentEvent.target.value)}
                   aria-invalid={status === "error"}
                   aria-describedby={status === "error" ? errorId : undefined}
                 />
@@ -365,25 +398,72 @@ export function SignInClient({
                 <div className="grid gap-4 md:grid-cols-2">
                   <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
                     Studieretning
-                    <Input name="studyProgram" required placeholder="F.eks. Informatikk" />
+                    <Select name="studyProgram" required defaultValue="">
+                      <option value="">Velg studieretning</option>
+                      {STUDY_CATEGORIES.map((category) => (
+                        <option key={category} value={category}>
+                          {category}
+                        </option>
+                      ))}
+                    </Select>
                   </label>
                   <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
-                    År
-                    <Select name="studyYear" required defaultValue="">
-                      <option value="">Velg år</option>
-                      {STUDY_YEAR_OPTIONS.map((year) => (
-                        <option key={year} value={year}>
-                          {year}. år
+                    Studenttype
+                    <Select
+                      name="studyLevel"
+                      required
+                      value={studentStudyLevel}
+                      onChange={(currentEvent) => {
+                        const nextStudyLevel = currentEvent.target.value as StudyLevel | "";
+                        setStudentStudyLevel(nextStudyLevel);
+                        if (!getStudyYearOptions(nextStudyLevel).includes(Number(studentStudyYear))) {
+                          setStudentStudyYear("");
+                        }
+                      }}
+                    >
+                      <option value="">Velg bachelor eller master</option>
+                      {STUDY_LEVEL_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
                         </option>
                       ))}
                     </Select>
                   </label>
                 </div>
 
+                <div className="grid gap-4 md:grid-cols-2">
+                  <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
+                    År
+                    <Select
+                      name="studyYear"
+                      required
+                      value={studentStudyYear}
+                      onChange={(currentEvent) => setStudentStudyYear(currentEvent.target.value)}
+                      disabled={studentStudyYearOptions.length === 0}
+                    >
+                      <option value="">
+                        {studentStudyLevel ? "Velg år" : "Velg studenttype først"}
+                      </option>
+                      {studentStudyYearOptions.map((year) => (
+                        <option key={year} value={year}>
+                          {year}. år
+                        </option>
+                      ))}
+                    </Select>
+                  </label>
+                  <div className="rounded-2xl border border-white/15 bg-surface/5 px-4 py-4 text-sm text-surface/78">
+                    <p className="font-semibold text-surface">Matching mot bedrift</p>
+                    <p className="mt-2">
+                      Studieretning bruker de samme kategoriene som bedriftene velger som bransje og
+                      rekrutteringsfelt.
+                    </p>
+                  </div>
+                </div>
+
                 <fieldset className="grid gap-3 rounded-2xl border border-white/15 bg-surface/5 p-4">
                   <legend className="px-1 text-sm font-semibold text-surface">Jeg er interessert i</legend>
                   <div className="grid gap-2 md:grid-cols-2">
-                    {STUDENT_JOB_TYPE_OPTIONS.map((option) => (
+                    {studentJobTypeOptions.map((option) => (
                       <label
                         key={option.value}
                         className="flex min-h-11 items-center gap-3 rounded-2xl border border-white/15 bg-surface/10 px-4 py-3 text-sm font-medium text-surface"
@@ -399,21 +479,10 @@ export function SignInClient({
                     ))}
                   </div>
                   <p className="text-xs text-surface/70">
-                    Du kan velge flere alternativer eller la alle stå tomme.
+                    Du kan velge flere alternativer eller la alle stå tomme. Oppgavevalg tilpasses om du er bachelor- eller masterstudent.
                   </p>
                 </fieldset>
 
-                <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
-                  Bekreft passord
-                  <Input
-                    name="confirmPassword"
-                    required
-                    type="password"
-                    placeholder="Skriv passordet igjen"
-                    aria-invalid={status === "error"}
-                    aria-describedby={status === "error" ? errorId : undefined}
-                  />
-                </label>
               </>
             ) : null}
 
@@ -488,18 +557,86 @@ export function SignInClient({
                   </div>
                 </fieldset>
 
-                <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
-                  Bekreft passord
-                  <Input
-                    name="confirmPassword"
-                    required
-                    type="password"
-                    placeholder="Skriv passordet igjen"
-                    aria-invalid={status === "error"}
-                    aria-describedby={status === "error" ? errorId : undefined}
-                  />
-                </label>
               </>
+            ) : null}
+
+            {mode === "register" ? (
+              <div className="grid gap-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
+                    Passord
+                    <Input
+                      name="password"
+                      required
+                      type="password"
+                      placeholder="Velg et passord"
+                      value={passwordInput}
+                      onChange={(currentEvent) => setPasswordInput(currentEvent.target.value)}
+                      aria-invalid={status === "error"}
+                      aria-describedby={`${passwordHelpId}${status === "error" ? ` ${errorId}` : ""}`}
+                    />
+                  </label>
+                  <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
+                    Gjenta passord
+                    <Input
+                      name="confirmPassword"
+                      required
+                      type="password"
+                      placeholder="Skriv passordet på nytt"
+                      value={confirmPasswordInput}
+                      onChange={(currentEvent) => setConfirmPasswordInput(currentEvent.target.value)}
+                      aria-invalid={status === "error"}
+                      aria-describedby={`${passwordHelpId}${status === "error" ? ` ${errorId}` : ""}`}
+                    />
+                  </label>
+                </div>
+
+                <div
+                  id={passwordHelpId}
+                  className="rounded-2xl border border-white/15 bg-surface/5 px-4 py-4"
+                  aria-live="polite"
+                >
+                  <p className="text-sm font-medium text-surface/90">
+                    Bruk minst 8 tegn med både bokstaver, tall og spesialtegn.
+                  </p>
+                  <div className="mt-4 grid grid-cols-3 gap-2" aria-hidden="true">
+                    {[1, 2, 3].map((segment) => (
+                      <span
+                        key={segment}
+                        className={`h-2 rounded-full ${
+                          passwordSummary.filledSegments >= segment ? "bg-[#18c4a4]" : "bg-white/15"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <div className="mt-3 flex items-center justify-between text-xs font-semibold text-surface/82">
+                    <span>{passwordSummary.metCount}/4 passordkrav oppfylt</span>
+                    <span>{passwordSummary.label === "Ingen" ? "Start å skrive" : passwordSummary.label}</span>
+                  </div>
+                  <div className="mt-4 grid gap-2 md:grid-cols-2">
+                    {passwordSummary.requirements.map((requirement) => (
+                      <div
+                        key={requirement.key}
+                        className={`flex min-h-11 items-center gap-3 rounded-2xl border px-3 py-2 text-sm ${
+                          requirement.met
+                            ? "border-[#18c4a4]/60 bg-[#18c4a4]/15 text-surface"
+                            : "border-white/15 bg-surface/10 text-surface/78"
+                        }`}
+                      >
+                        <span
+                          className={`inline-flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold ${
+                            requirement.met ? "bg-[#18c4a4] text-[#140249]" : "bg-white/12 text-surface/82"
+                          }`}
+                          aria-hidden="true"
+                        >
+                          {requirement.met ? "✓" : "•"}
+                        </span>
+                        <span>{requirement.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
             ) : null}
 
             <div className="flex flex-col gap-2">
@@ -523,7 +660,7 @@ export function SignInClient({
                 <button
                   type="button"
                   className="text-xs font-semibold text-surface/75 hover:text-surface"
-                  onClick={() => setMode("reset")}
+                  onClick={() => switchMode("reset")}
                 >
                   Glemt passord?
                 </button>
@@ -533,7 +670,7 @@ export function SignInClient({
                 <button
                   type="button"
                   className="text-xs font-semibold text-surface/75 hover:text-surface"
-                  onClick={() => setMode("login")}
+                  onClick={() => switchMode("login")}
                 >
                   Tilbake til innlogging
                 </button>

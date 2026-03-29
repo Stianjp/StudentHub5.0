@@ -76,6 +76,7 @@ export async function POST(request: Request) {
       email: normalizedEmail,
       school: parsed.data.school,
       study_program: parsed.data.studyProgram,
+      study_level: parsed.data.studyLevel,
       study_year: parsed.data.studyYear,
       job_types: parsed.data.jobTypes,
       updated_at: now,

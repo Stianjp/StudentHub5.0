@@ -1,4 +1,9 @@
 import { z } from "zod";
+import {
+  isValidStudyProgram,
+  mapStudentJobTypes,
+  validateStudentStudyChoices,
+} from "@/lib/auth-registration";
 
 const commaSeparated = z
   .string()
@@ -25,25 +30,58 @@ const stringArray = z.preprocess((value) => {
   return [];
 }, z.array(z.string()));
 
-export const studentProfileSchema = z.object({
-  fullName: z.string().min(2, "Navn er påkrevd"),
-  email: z.string().email("Ugyldig e-post"),
-  phone: z.string().optional().or(z.literal("")),
-  school: z.string().min(2, "Studiested er påkrevd"),
-  studyProgram: z.string().min(2, "Studie/program er påkrevd"),
-  studyLevel: z.string().min(2, "Nivå er påkrevd"),
-  studyYear: z.coerce.number().int().min(1).max(5),
-  jobTypes: commaSeparated,
-  interests: stringArray,
-  values: commaSeparated,
-  preferredLocations: commaSeparated,
-  willingToRelocate: z.coerce.boolean().default(false),
-  likedCompanyIds: commaSeparated,
-  about: z.string().max(600).optional().or(z.literal("")),
-  workStyle: z.string().optional().or(z.literal("")),
-  socialProfile: z.string().optional().or(z.literal("")),
-  teamSize: z.string().optional().or(z.literal("")),
-});
+export const studentProfileSchema = z
+  .object({
+    fullName: z.string().min(2, "Navn er påkrevd"),
+    email: z.string().email("Ugyldig e-post"),
+    phone: z.string().optional().or(z.literal("")),
+    school: z.string().min(2, "Studiested er påkrevd"),
+    studyProgram: z
+      .string()
+      .min(2, "Studie/program er påkrevd")
+      .refine((value) => isValidStudyProgram(value), "Velg en gyldig studieretning"),
+    studyLevel: z.string().min(2, "Nivå er påkrevd"),
+    studyYear: z.coerce.number().int().min(1).max(5),
+    jobTypes: commaSeparated.transform((values) => mapStudentJobTypes(values)),
+    interests: stringArray,
+    values: commaSeparated,
+    preferredLocations: commaSeparated,
+    willingToRelocate: z.coerce.boolean().default(false),
+    likedCompanyIds: commaSeparated,
+    about: z.string().max(600).optional().or(z.literal("")),
+    workStyle: z.string().optional().or(z.literal("")),
+    socialProfile: z.string().optional().or(z.literal("")),
+    teamSize: z.string().optional().or(z.literal("")),
+  })
+  .superRefine((value, ctx) => {
+    const studyError = validateStudentStudyChoices({
+      studyLevel: value.studyLevel,
+      studyYear: value.studyYear,
+      jobTypes: value.jobTypes,
+    });
+
+    if (studyError?.studyLevel) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: studyError.studyLevel,
+        path: ["studyLevel"],
+      });
+    }
+    if (studyError?.studyYear) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: studyError.studyYear,
+        path: ["studyYear"],
+      });
+    }
+    if (studyError?.jobTypes) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: studyError.jobTypes,
+        path: ["jobTypes"],
+      });
+    }
+  });
 
 export const consentSchema = z.object({
   eventId: z.string().uuid().optional().nullable(),

@@ -1,6 +1,8 @@
 import { z } from "zod";
 import {
+  isValidStudyProgram,
   mapStudentJobTypes,
+  validateStudentStudyChoices,
   validatePasswordStrength,
 } from "@/lib/auth-registration";
 import { normalizeStudyCategories } from "@/lib/company-categories";
@@ -23,8 +25,12 @@ export const studentRegistrationSchema = z
     email: z.string().email("Ugyldig e-post"),
     fullName: z.string().min(2, "Fullt navn er påkrevd."),
     school: z.string().min(2, "Studiested er påkrevd."),
-    studyProgram: z.string().min(2, "Studieretning er påkrevd."),
-    studyYear: z.coerce.number().int().min(1, "År må være minst 1.").max(8, "År må være 8 eller lavere."),
+    studyProgram: z
+      .string()
+      .min(2, "Studieretning er påkrevd.")
+      .refine((value) => isValidStudyProgram(value), "Velg en gyldig studieretning."),
+    studyLevel: z.string().min(2, "Velg bachelor eller master."),
+    studyYear: z.coerce.number().int().min(1, "År må være minst 1.").max(5, "År må være 5 eller lavere."),
     jobTypes: stringArray.transform((values) => mapStudentJobTypes(values)),
     password: z.string(),
     confirmPassword: z.string(),
@@ -36,6 +42,34 @@ export const studentRegistrationSchema = z
         code: z.ZodIssueCode.custom,
         message: passwordError,
         path: ["password"],
+      });
+    }
+
+    const studyError = validateStudentStudyChoices({
+      studyLevel: value.studyLevel,
+      studyYear: value.studyYear,
+      jobTypes: value.jobTypes,
+    });
+
+    if (studyError?.studyLevel) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: studyError.studyLevel,
+        path: ["studyLevel"],
+      });
+    }
+    if (studyError?.studyYear) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: studyError.studyYear,
+        path: ["studyYear"],
+      });
+    }
+    if (studyError?.jobTypes) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: studyError.jobTypes,
+        path: ["jobTypes"],
       });
     }
   });

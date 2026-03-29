@@ -4,6 +4,7 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { LikedCompanies } from "@/components/student/liked-companies";
+import { STUDY_CATEGORIES } from "@/components/event/study-categories";
 import { SaveProfileButton } from "@/components/student/save-profile-button";
 import { saveStudentProfile } from "@/app/student/actions";
 import { requireRole } from "@/lib/auth";
@@ -144,12 +145,14 @@ export default async function StudentProfilePage({ searchParams }: PageProps) {
           </label>
           <label className="text-sm font-semibold text-primary">
             Studieprogram
-            <Input
-              name="studyProgram"
-              required
-              defaultValue={student.study_program ?? ""}
-              placeholder="F.eks. Informatikk"
-            />
+            <Select name="studyProgram" required defaultValue={student.study_program ?? ""}>
+              <option value="">Velg studieretning</option>
+              {STUDY_CATEGORIES.map((category) => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </Select>
           </label>
           <label className="text-sm font-semibold text-primary">
             Studienivå og år

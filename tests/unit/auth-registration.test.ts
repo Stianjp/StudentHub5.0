@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  getStudentJobTypeOptions,
+  getPasswordStrengthSummary,
+  getStudyYearOptions,
   isOshAdminEmail,
   mapStudentJobTypes,
+  validateStudentStudyChoices,
   validateHostRoleLock,
   validateMagicLinkRoleForHost,
   validatePasswordStrength,
@@ -11,6 +15,7 @@ import {
   getEmailDomain,
   normalizeOrgNumber,
 } from "@/lib/company-access";
+import { studentRegistrationSchema } from "@/lib/validation/auth";
 
 describe("validatePasswordStrength", () => {
   it("godkjenner sterke passord", () => {
@@ -29,6 +34,17 @@ describe("validatePasswordStrength", () => {
 
   it("avviser ulike passord", () => {
     expect(validatePasswordStrength("Sterkt!123", "Sterkt!124")).toBe("Passordene må være like.");
+  });
+
+  it("beregner styrkenivå for UI", () => {
+    expect(getPasswordStrengthSummary("", "").label).toBe("Ingen");
+    expect(getPasswordStrengthSummary("svak", "").label).toBe("Svak");
+    expect(getPasswordStrengthSummary("Sterk123", "").label).toBe("Middels");
+    const matchRequirement = getPasswordStrengthSummary("Sterk!123", "Sterk!123").requirements.find(
+      (item) => item.key === "match",
+    );
+    expect(matchRequirement?.met).toBe(true);
+    expect(getPasswordStrengthSummary("Sterk!123", "Sterk!123").label).toBe("Sterkt");
   });
 });
 
@@ -61,6 +77,67 @@ describe("email og felt-normalisering", () => {
       "Fast jobb",
       "Sommerjobb",
     ]);
+  });
+
+  it("tilpasser år og oppgavetyper til valgt studienivå", () => {
+    expect(getStudyYearOptions("Bachelor")).toEqual([1, 2, 3]);
+    expect(getStudyYearOptions("Master")).toEqual([1, 2, 3, 4, 5]);
+    expect(getStudentJobTypeOptions("Bachelor").map((option) => option.value)).not.toContain("Masteroppgave");
+    expect(getStudentJobTypeOptions("Master").map((option) => option.value)).not.toContain("Bacheloroppgave");
+  });
+
+  it("avviser masteroppgave for bachelorstudent og ugyldig årstrinn", () => {
+    expect(
+      validateStudentStudyChoices({
+        studyLevel: "Bachelor",
+        studyYear: 4,
+        jobTypes: ["Deltidsjobb"],
+      }),
+    ).toEqual({
+      studyYear: "Bachelorstudenter kan bare velge 1.-3. år.",
+    });
+
+    expect(
+      validateStudentStudyChoices({
+        studyLevel: "Bachelor",
+        studyYear: 2,
+        jobTypes: ["Masteroppgave"],
+      }),
+    ).toEqual({
+      jobTypes: "Masteroppgave vises bare for masterstudenter.",
+    });
+  });
+
+  it("krever gyldig kategori og nivå i studentregistreringen", () => {
+    const result = studentRegistrationSchema.safeParse({
+      email: "student@example.com",
+      fullName: "Ola Nordmann",
+      school: "NTNU",
+      studyProgram: "Informatikk",
+      studyLevel: "Bachelor",
+      studyYear: 2,
+      jobTypes: ["Deltidsjobb"],
+      password: "Sterkt!123",
+      confirmPassword: "Sterkt!123",
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("godkjenner registrering med eksisterende kategorioversikt", () => {
+    const result = studentRegistrationSchema.safeParse({
+      email: "student@example.com",
+      fullName: "Ola Nordmann",
+      school: "NTNU",
+      studyProgram: "Data/IT",
+      studyLevel: "Master",
+      studyYear: 4,
+      jobTypes: ["Masteroppgave", "Sommerjobb"],
+      password: "Sterkt!123",
+      confirmPassword: "Sterkt!123",
+    });
+
+    expect(result.success).toBe(true);
   });
 
   it("normaliserer bedriftsdatahjelpere", () => {
