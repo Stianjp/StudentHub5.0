@@ -2,7 +2,7 @@ import { cache } from "react";
 import type { TableRow } from "@/lib/types/database";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
-import { getCompanyIfExists } from "@/lib/lead";
+import { filterExistingCompanyIds, getCompanyIfExists } from "@/lib/lead";
 
 type Student = TableRow<"students">;
 type Consent = TableRow<"consents">;
@@ -36,6 +36,41 @@ export const getOrCreateStudentForUser = cache(async function getOrCreateStudent
   userId: string,
   email?: string | null,
 ) {
+  async function scrubLikedCompanyIds(student: Student) {
+    const likedCompanyIds = student.liked_company_ids ?? [];
+    if (likedCompanyIds.length === 0) return student;
+
+    const validLikedCompanyIds = await filterExistingCompanyIds(likedCompanyIds);
+    if (
+      validLikedCompanyIds.length === likedCompanyIds.length &&
+      validLikedCompanyIds.every((companyId, index) => companyId === likedCompanyIds[index])
+    ) {
+      return student;
+    }
+
+    try {
+      const admin = createAdminSupabaseClient();
+      const now = new Date().toISOString();
+      const { data: cleaned, error } = await admin
+        .from("students")
+        .update({
+          liked_company_ids: validLikedCompanyIds,
+          updated_at: now,
+        })
+        .eq("id", student.id)
+        .select("*")
+        .single();
+
+      if (error) throw error;
+      return cleaned as Student;
+    } catch {
+      return {
+        ...student,
+        liked_company_ids: validLikedCompanyIds,
+      } as Student;
+    }
+  }
+
   const supabase = await createServerSupabaseClient();
   const normalizedEmail = email ? email.toLowerCase() : null;
 
@@ -48,7 +83,7 @@ export const getOrCreateStudentForUser = cache(async function getOrCreateStudent
 
   if (readError) throw readError;
   const existing = existingRows?.[0] ?? null;
-  if (existing) return existing as Student;
+  if (existing) return scrubLikedCompanyIds(existing as Student);
 
   if (normalizedEmail) {
     try {
@@ -68,7 +103,7 @@ export const getOrCreateStudentForUser = cache(async function getOrCreateStudent
             .update({ user_id: userId, updated_at: new Date().toISOString() })
             .eq("id", matched.id);
         }
-        return matched as Student;
+        return scrubLikedCompanyIds(matched as Student);
       }
     } catch {
       // Fallback to insert below if service role not available.
@@ -98,7 +133,7 @@ export const getOrCreateStudentForUser = cache(async function getOrCreateStudent
         .eq("email", normalizedEmail)
         .order("created_at", { ascending: false })
         .limit(1);
-      if (fallback?.[0]) return fallback[0] as Student;
+      if (fallback?.[0]) return scrubLikedCompanyIds(fallback[0] as Student);
     }
     throw insertError;
   }

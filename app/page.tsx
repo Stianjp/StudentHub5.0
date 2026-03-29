@@ -1,6 +1,16 @@
 import Link from "next/link";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { defaultPathForRole, roleFromHost } from "@/lib/host";
 
-export default function Home() {
+export default async function Home() {
+  const host = (await headers()).get("host");
+  const role = roleFromHost(host);
+
+  if (role) {
+    redirect(defaultPathForRole(role, host));
+  }
+
   return (
     <main className="mx-auto flex min-h-screen w-full max-w-5xl flex-col gap-8 px-6 py-16">
       <section className="rounded-2xl bg-primary px-8 py-12 text-surface shadow-soft">

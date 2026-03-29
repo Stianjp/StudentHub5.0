@@ -61,7 +61,7 @@ export function SignInClient({
       const host = window.location.hostname.toLowerCase();
       let hostNext = next ?? getDefaultNextPath(selectedRole, host);
       if (host.startsWith("student.")) hostNext = "/student/dashboard";
-      if (host.startsWith("bedrift.")) hostNext = "/";
+      if (host.startsWith("bedrift.")) hostNext = "/company";
       if (host.startsWith("checkin.")) hostNext = "/checkin";
       if (host.startsWith("admin.")) hostNext = "/admin";
       window.location.assign(hostNext);
@@ -228,7 +228,7 @@ export function SignInClient({
     if (host.startsWith("student.")) {
       hostNext = "/student/dashboard";
     } else if (host.startsWith("bedrift.")) {
-      hostNext = "/";
+      hostNext = "/company";
     } else if (host.startsWith("checkin.")) {
       hostNext = "/checkin";
     } else if (host.startsWith("admin.")) {
