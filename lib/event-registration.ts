@@ -12,7 +12,7 @@ import {
   buildRegistrationPackageGroupName,
 } from "@/lib/event-registration-automation";
 import { getPreviewRegistrationDetail, listPreviewRegistrationCampaigns } from "@/lib/event-registration-fixtures";
-import { hasSupabaseEnv, shouldBypassSupabaseInDev } from "@/lib/supabase/env";
+import { hasAdminSupabaseEnv, hasSupabaseEnv, shouldBypassSupabaseInDev } from "@/lib/supabase/env";
 import {
   listCompanyEventCrmEntries,
   syncCompanyEventPipelineStage,
@@ -112,6 +112,10 @@ function buildCandidateSummary(application: Pick<RegistrationApplication, "candi
 async function attachStandBookingPreviews(stands: RegistrationStand[]) {
   const assignedApplicationIds = [...new Set(stands.map((stand) => stand.assigned_application_id).filter(Boolean))];
   if (assignedApplicationIds.length === 0) {
+    return stands.map((stand) => ({ ...stand, bookingPreview: null })) as PublicRegistrationStand[];
+  }
+
+  if (!hasAdminSupabaseEnv()) {
     return stands.map((stand) => ({ ...stand, bookingPreview: null })) as PublicRegistrationStand[];
   }
 

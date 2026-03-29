@@ -1,9 +1,14 @@
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const cookieDomain = process.env.NEXT_PUBLIC_COOKIE_DOMAIN;
 
 export function hasSupabaseEnv() {
   return Boolean(supabaseUrl && supabaseAnonKey);
+}
+
+export function hasAdminSupabaseEnv() {
+  return Boolean(supabaseUrl && supabaseServiceRoleKey);
 }
 
 export function shouldBypassSupabaseInDev() {
