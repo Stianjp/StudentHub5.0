@@ -65,13 +65,16 @@ function locationScore(student: StudentMatchProfile, company: Company) {
   const companyLocation = company.location?.toLowerCase();
 
   if (!companyLocation) return 0;
+  if (preferred.length === 0) {
+    return student.willing_to_relocate ? 0.8 : 0.5;
+  }
   if (preferred.includes(companyLocation)) return 1;
   if (student.willing_to_relocate) return 0.6;
   return 0.1;
 }
 
 function getStudentStudyCategories(student: StudentMatchProfile) {
-  return normalizeStudyCategories([student.study_program, ...(student.interests ?? [])]);
+  return normalizeStudyCategories([student.study_program]);
 }
 
 function getCompanyStudyCategories(company: Company) {

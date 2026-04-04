@@ -97,6 +97,22 @@ export function SignInClient({
     });
   }, []);
 
+  useEffect(() => {
+    if (mode !== "register" || status !== "sent") return;
+
+    const timeout = window.setTimeout(() => {
+      setMode("login");
+      setStatus("sent");
+      setError("Registrering OK. Bekreft e-posten din før du logger inn.");
+      setPasswordInput("");
+      setConfirmPasswordInput("");
+      setStudentStudyLevel("");
+      setStudentStudyYear("");
+    }, 5000);
+
+    return () => window.clearTimeout(timeout);
+  }, [mode, status]);
+
   const selectedRole = effectiveAllowedRole ?? role;
   const title = getRoleTitle(mode, selectedRole);
   const description = getRoleDescription(mode, selectedRole);
@@ -198,7 +214,7 @@ export function SignInClient({
         }
 
         setStatus("sent");
-        setError("Registrering OK. Bekreft e-posten din før du kan logge inn. Sjekk søppelpost.");
+        setError("Registrering OK. Bekreft e-posten din før du kan logge inn. Du sendes til innlogging om 5 sekunder.");
         return;
       }
 
@@ -221,7 +237,7 @@ export function SignInClient({
 
       setStatus("sent");
       setError(
-        "Registrering OK. Bekreft e-posten din. Når e-posten er verifisert, havner tilgangen i admin sin godkjenningsliste.",
+        "Registrering OK. Bekreft e-posten din. Når e-posten er verifisert, havner tilgangen i admin sin godkjenningsliste. Du sendes til innlogging om 5 sekunder.",
       );
       return;
     }

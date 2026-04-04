@@ -80,6 +80,9 @@ export async function saveStudentProfile(formData: FormData) {
   const trackMatch = studyTrack.match(/^(Bachelor|Master)-(\d)$/);
   const studyLevel = trackMatch?.[1] ?? "";
   const studyYear = trackMatch ? Number(trackMatch[2]) : NaN;
+  const willingToRelocate = Boolean(formData.get("willingToRelocate"));
+  const preferredLocationsValue = willingToRelocate ? undefined : formData.get("preferredLocations") ?? undefined;
+  const teamSizeValue = String(formData.get("teamSize") ?? "").trim();
 
   const parsed = studentProfileSchema.safeParse({
     fullName: formData.get("fullName"),
@@ -92,13 +95,13 @@ export async function saveStudentProfile(formData: FormData) {
     jobTypes: formData.get("jobTypes") ?? undefined,
     interests: parseMultiValue(formData, "interests"),
     values: formData.get("values"),
-    preferredLocations: formData.get("preferredLocations") ?? undefined,
-    willingToRelocate: formData.get("willingToRelocate"),
+    preferredLocations: preferredLocationsValue,
+    willingToRelocate,
     likedCompanyIds: formData.get("likedCompanyIds") ?? undefined,
     about: formData.get("about"),
     workStyle: formData.get("workStyle"),
     socialProfile: formData.get("socialProfile"),
-    teamSize: formData.get("teamSize"),
+    teamSize: teamSizeValue === "__none__" ? "" : teamSizeValue,
   });
 
   if (!parsed.success) {

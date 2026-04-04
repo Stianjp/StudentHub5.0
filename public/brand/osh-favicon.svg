@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" fill="none">
+  <defs>
+    <linearGradient id="oshGradient" x1="18" y1="108" x2="108" y2="20" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF7282" />
+      <stop offset="0.52" stop-color="#FE9A70" />
+      <stop offset="1" stop-color="#F3A17B" />
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="32" fill="#140249" />
+  <path
+    d="M34 64H52M76 48L64 60M76 80L64 68M52 64C52 57.373 57.373 52 64 52C70.627 52 76 57.373 76 64C76 70.627 70.627 76 64 76C57.373 76 52 70.627 52 64Z"
+    stroke="url(#oshGradient)"
+    stroke-width="8"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <circle cx="28" cy="64" r="8" fill="#140249" stroke="url(#oshGradient)" stroke-width="8" />
+  <circle cx="84" cy="40" r="8" fill="#140249" stroke="url(#oshGradient)" stroke-width="8" />
+  <circle cx="84" cy="88" r="8" fill="#140249" stroke="url(#oshGradient)" stroke-width="8" />
+</svg>

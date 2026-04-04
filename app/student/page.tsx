@@ -212,8 +212,11 @@ export default async function StudentProfilePage({ searchParams }: PageProps) {
             <Input
               name="preferredLocations"
               defaultValue={(student.preferred_locations ?? []).join(", ")}
-              placeholder="Oslo, Trondheim, Bergen"
+              placeholder="Tomt = ingen preferanser"
             />
+            <span className="mt-1 block text-xs font-normal text-ink/65">
+              Ignoreres hvis du huker av for at du er villig til å flytte for jobb.
+            </span>
           </label>
           <label className="flex items-center gap-2 rounded-xl border border-primary/10 bg-primary/5 px-3 py-2 text-sm font-semibold text-primary md:col-span-2">
             <input
@@ -258,8 +261,8 @@ export default async function StudentProfilePage({ searchParams }: PageProps) {
           </label>
           <label className="text-sm font-semibold text-primary">
             Foretrukket teamstørrelse
-            <Select name="teamSize" defaultValue={student.team_size ?? ""}>
-              <option value="">Velg</option>
+            <Select name="teamSize" defaultValue={student.team_size ?? "__none__"}>
+              <option value="__none__">Ingen preferanser</option>
               {TEAM_SIZE_OPTIONS.map((option) => (
                 <option key={option} value={option}>
                   {option}

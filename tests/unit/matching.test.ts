@@ -65,4 +65,39 @@ describe("matching", () => {
     const relevance = isCompanyRelevantForStudent(baseStudent, company);
     expect(relevance.relevant).toBe(false);
   });
+
+  it("bruker ikke fritekstinteresser som studieretningsmatch", () => {
+    const company = createCompany({
+      recruitment_fields: ["Økonomi"],
+      recruitment_job_types: ["Sommerjobb"],
+      recruitment_levels: ["Bachelor"],
+      recruitment_years_bachelor: [2],
+    });
+
+    const result = computeMatch(
+      {
+        ...baseStudent,
+        study_program: "Data/IT",
+        interests: ["Økonomi"],
+        job_types: ["Deltidsjobb"],
+      },
+      company,
+    );
+
+    expect(result.signals.studyFieldScore).toBe(0);
+    expect(result.signals.relevant).toBe(false);
+  });
+
+  it("behandler manglende lokasjonspreferanse som nøytral når studenten er åpen", () => {
+    const result = computeMatch(
+      {
+        ...baseStudent,
+        preferred_locations: [],
+        willing_to_relocate: true,
+      },
+      createCompany({ location: "Trondheim" }),
+    );
+
+    expect(result.signals.locationScore).toBe(0.8);
+  });
 });
