@@ -86,6 +86,7 @@ export function StandMap({
           sizes="(max-width: 768px) 100vw, 620px"
           className="object-contain"
           priority
+          unoptimized
         />
         {stands.map((stand) => {
           const unavailable = stand.status !== "available" || Boolean(stand.assigned_application_id);

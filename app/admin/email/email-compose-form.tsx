@@ -39,6 +39,14 @@ type ActionState = {
   error?: string;
 } | null;
 
+const SIGNATURE_STORAGE_KEY = "admin_email_signature";
+
+type SavedSignature = {
+  title: string;
+  phone: string;
+  includeLogo: boolean;
+};
+
 export function EmailComposeForm({ templates, groups, defaultSignatureName }: Props) {
   const [state, formAction, pending] = useActionState<ActionState, FormData>(
     sendEmailAction,
@@ -48,6 +56,32 @@ export function EmailComposeForm({ templates, groups, defaultSignatureName }: Pr
   const [selectedTemplateId, setSelectedTemplateId] = React.useState("");
   const [recipientMode, setRecipientMode] = React.useState<"group" | "custom">("group");
   const [previewHtml, setPreviewHtml] = React.useState<string | null>(null);
+  const [signatureTitle, setSignatureTitle] = React.useState("");
+  const [signaturePhone, setSignaturePhone] = React.useState("");
+  const [signatureIncludeLogo, setSignatureIncludeLogo] = React.useState(true);
+
+  React.useEffect(() => {
+    try {
+      const stored = localStorage.getItem(SIGNATURE_STORAGE_KEY);
+      if (stored) {
+        const parsed: SavedSignature = JSON.parse(stored);
+        setSignatureTitle(parsed.title ?? "");
+        setSignaturePhone(parsed.phone ?? "");
+        setSignatureIncludeLogo(parsed.includeLogo ?? true);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  function saveSignature() {
+    try {
+      const saved: SavedSignature = { title: signatureTitle, phone: signaturePhone, includeLogo: signatureIncludeLogo };
+      localStorage.setItem(SIGNATURE_STORAGE_KEY, JSON.stringify(saved));
+    } catch {
+      // ignore
+    }
+  }
 
   const selectedTemplate = templates.find((t) => t.id === selectedTemplateId) ?? null;
 
@@ -79,7 +113,7 @@ export function EmailComposeForm({ templates, groups, defaultSignatureName }: Pr
         </Card>
       )}
 
-      <form action={formAction} className="flex flex-col gap-6" encType="multipart/form-data">
+      <form action={formAction} onSubmit={saveSignature} className="flex flex-col gap-6" encType="multipart/form-data">
         <Card>
           <p className="text-sm font-semibold text-primary mb-4">Velg mal</p>
           <div className="flex flex-col gap-4">
@@ -192,6 +226,8 @@ export function EmailComposeForm({ templates, groups, defaultSignatureName }: Pr
                 id="signature_title"
                 name="signature_title"
                 placeholder="F.eks. Daglig leder"
+                value={signatureTitle}
+                onChange={(e) => setSignatureTitle(e.target.value)}
               />
             </div>
             <div className="flex flex-col gap-1.5">
@@ -200,6 +236,8 @@ export function EmailComposeForm({ templates, groups, defaultSignatureName }: Pr
                 id="signature_phone"
                 name="signature_phone"
                 placeholder="F.eks. 900 00 000"
+                value={signaturePhone}
+                onChange={(e) => setSignaturePhone(e.target.value)}
               />
             </div>
             <div className="flex flex-col gap-1.5">
@@ -208,7 +246,13 @@ export function EmailComposeForm({ templates, groups, defaultSignatureName }: Pr
             </div>
           </div>
           <label className="mt-3 flex items-center gap-2 text-sm text-ink">
-            <input type="checkbox" name="signature_include_logo" defaultChecked className="h-4 w-4" />
+            <input
+              type="checkbox"
+              name="signature_include_logo"
+              className="h-4 w-4"
+              checked={signatureIncludeLogo}
+              onChange={(e) => setSignatureIncludeLogo(e.target.checked)}
+            />
             Legg ved Oslo Student Hub-logo i signaturen
           </label>
           <p className="mt-2 text-xs text-ink/60">

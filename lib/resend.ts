@@ -48,7 +48,7 @@ function getTransactionalFromAddress() {
 }
 
 function getSignatureLogoUrl() {
-  return process.env.EMAIL_SIGNATURE_LOGO_URL?.trim() || "https://www.oslostudenthub.no/brand/Logo_OSH.svg";
+  return process.env.EMAIL_SIGNATURE_LOGO_URL?.trim() || "https://www.oslostudenthub.no/brand/Logo_OSH_Gradient.svg";
 }
 
 function escapeHtml(value: string) {
