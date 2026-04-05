@@ -31,7 +31,7 @@ values
     'Registration for Student Hub 2026',
     'Register your company for the fair and request portal access for your team.',
     'Complete the registration to request a stand, package and company portal access. OSH will review and approve the application before access is granted.',
-    '/event-register/student-connect-2026-floorplan.png',
+    '/event-register/student-connect-2026-floorplan.svg',
     true,
     '2025-09-01T00:00:00+02:00',
     '2026-02-10T23:59:59+01:00'
