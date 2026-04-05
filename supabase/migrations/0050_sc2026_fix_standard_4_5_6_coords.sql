@@ -14,7 +14,7 @@ set
   end,
   y = case stand_code
     when 'Standard 4' then 24.28
-    when 'Standard 5' then 27.33
+    when 'Standard 5' then 28.15
     when 'Standard 6' then 24.72
     else y
   end,
@@ -26,8 +26,8 @@ set
   end,
   height = case stand_code
     when 'Standard 4' then 1.83
-    when 'Standard 5' then 5.61
-    when 'Standard 6' then 3.00
+    when 'Standard 5' then 5.28
+    when 'Standard 6' then 2.94
     else height
   end,
   updated_at = now()

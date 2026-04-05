@@ -33,24 +33,29 @@ type StandMapProps = {
 };
 
 function standStateClass(stand: StandMapStand, isSelected: boolean) {
-  if (isSelected) {
-    return "z-20 scale-[1.04] border-[#140249] bg-[#140249] text-white ring-2 ring-white outline outline-2 outline-[#FE9A70] shadow-[0_0_0_4px_rgba(254,154,112,0.28),0_10px_24px_rgba(20,2,73,0.34)]";
-  }
   if (stand.status !== "available" || stand.assigned_application_id) {
     return stand.bookingPreview
       ? "border-primary/30 bg-primary/80 text-white/85 opacity-80"
       : "border-primary/20 bg-primary/70 text-surface/60 opacity-55";
   }
   if (stand.package_tier === "platinum") {
-    return "border-white/80 bg-[#f7b3c1]/80 text-primary";
+    return isSelected
+      ? "z-20 border-[#140249] bg-[#f7b3c1] text-primary"
+      : "border-white/80 bg-[#f7b3c1]/80 text-primary";
   }
   if (stand.package_tier === "gold") {
-    return "border-primary/50 bg-[#ffd85a]/85 text-primary";
+    return isSelected
+      ? "z-20 border-[#140249] bg-[#ffd85a] text-primary"
+      : "border-primary/50 bg-[#ffd85a]/85 text-primary";
   }
   if (stand.package_tier === "silver") {
-    return "border-primary/40 bg-[#b7e7ff]/85 text-primary";
+    return isSelected
+      ? "z-20 border-[#140249] bg-[#b7e7ff] text-primary"
+      : "border-primary/40 bg-[#b7e7ff]/85 text-primary";
   }
-  return "border-primary/40 bg-[#c5f1bb]/85 text-primary";
+  return isSelected
+    ? "z-20 border-[#140249] bg-[#c5f1bb] text-primary"
+    : "border-primary/40 bg-[#c5f1bb]/85 text-primary";
 }
 
 export function StandMap({

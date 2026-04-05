@@ -29,8 +29,8 @@ const STUDENT_CONNECT_2026_POSITION_OVERRIDES = new Map<
   Pick<PublicStandLike, "x" | "y" | "width" | "height">
 >([
   ["Standard 4", { x: 80.05, y: 24.28, width: 5.72, height: 1.83 }],
-  ["Standard 5", { x: 91.0, y: 27.33, width: 1.83, height: 5.61 }],
-  ["Standard 6", { x: 90.47, y: 24.72, width: 3.39, height: 3.0 }],
+  ["Standard 5", { x: 91.0, y: 28.15, width: 1.83, height: 5.28 }],
+  ["Standard 6", { x: 90.47, y: 24.72, width: 3.39, height: 2.94 }],
 ]);
 
 export function applyPublicRegistrationStandOverrides<T extends PublicStandLike>(slug: string, stands: T[]): T[] {
