@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 const tierCounts = {
-  standard: 15,
+  standard: 16,
   silver: 20,
   gold: 8,
   platinum: 4,
@@ -26,7 +26,8 @@ for (const [tier, count] of Object.entries(tierCounts)) {
 test("Stand preview tier switch updates the visible stand set", async ({ page }) => {
   await page.goto("/dev/stand-preview/student-connect-2026?tier=standard");
 
-  await expect(page.getByTestId("preview-stand-count")).toContainText("15 stands");
+  await expect(page.getByTestId("preview-stand-count")).toContainText("16 stands");
+  await expect(page.getByRole("button", { name: "Standard 4", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Standard 5", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Standard 6", exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Standard 13", exact: true })).toBeVisible();

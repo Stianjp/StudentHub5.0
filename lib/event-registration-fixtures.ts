@@ -21,8 +21,8 @@ export type PreviewRegistrationDetail = {
 
 export const STUDENT_CONNECT_2026_FLOORPLAN = {
   imagePath: "/event-register/student-connect-2026-floorplan.svg",
-  width: 944,
-  height: 1800,
+  width: 344.25,
+  height: 656.25,
   alt: "Student Connect 2026 floor plan",
 } as const;
 

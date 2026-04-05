@@ -17,7 +17,6 @@ const STUDENT_CONNECT_2026_HIDDEN_STANDS = new Set([
   "Standard 1",
   "Standard 2",
   "Standard 3",
-  "Standard 4",
   "Standard 7",
 ]);
 
