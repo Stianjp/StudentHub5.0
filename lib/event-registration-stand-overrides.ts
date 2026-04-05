@@ -35,11 +35,12 @@ function svgRectToPercent(rect: SvgRect): StandGeometry {
 }
 
 // These three rectangles come directly from the original Student Connect 2026 floorplan SVG.
-// They are the visible stand surfaces beneath Innovation room, not the small green box inside the room.
+// Use the outer booth border geometry, not the inner fill, so the clickable footprint hugs the
+// drawn stand edge as closely as possible beneath Innovation room.
 export const STUDENT_CONNECT_2026_STANDARD_TOP_RIGHT_OVERRIDES = {
-  "Standard 4": svgRectToPercent({ x: 282.17, y: 185.81, width: 12.45, height: 20.12 }),
-  "Standard 5": svgRectToPercent({ x: 308.24, y: 194.9, width: 20.12, height: 12.46 }),
-  "Standard 6": svgRectToPercent({ x: 307.94, y: 215.71, width: 20.12, height: 12.46 }),
+  "Standard 4": svgRectToPercent({ x: 282.26, y: 185.26, width: 12.27, height: 20.12 }),
+  "Standard 5": svgRectToPercent({ x: 308.19, y: 194.86, width: 20.12, height: 12.56 }),
+  "Standard 6": svgRectToPercent({ x: 308.04, y: 215.8, width: 20.12, height: 12.28 }),
 } satisfies Record<string, StandGeometry>;
 
 const STUDENT_CONNECT_2026_HIDDEN_STANDS = new Set([

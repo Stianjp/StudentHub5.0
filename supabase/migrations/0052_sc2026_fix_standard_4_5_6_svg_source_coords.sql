@@ -8,27 +8,27 @@ update public.event_registration_stands
 set
   status = 'available',
   x = case stand_code
-    when 'Standard 4' then 81.97
-    when 'Standard 5' then 89.54
-    when 'Standard 6' then 89.45
+    when 'Standard 4' then 81.99
+    when 'Standard 5' then 89.53
+    when 'Standard 6' then 89.48
     else x
   end,
   y = case stand_code
-    when 'Standard 4' then 28.31
-    when 'Standard 5' then 29.70
-    when 'Standard 6' then 32.87
+    when 'Standard 4' then 28.23
+    when 'Standard 5' then 29.69
+    when 'Standard 6' then 32.88
     else y
   end,
   width = case stand_code
-    when 'Standard 4' then 3.62
+    when 'Standard 4' then 3.56
     when 'Standard 5' then 5.84
     when 'Standard 6' then 5.84
     else width
   end,
   height = case stand_code
     when 'Standard 4' then 3.07
-    when 'Standard 5' then 1.90
-    when 'Standard 6' then 1.90
+    when 'Standard 5' then 1.91
+    when 'Standard 6' then 1.87
     else height
   end,
   updated_at = now()

@@ -134,7 +134,7 @@ export function StandMap({
                 height: `${stand.height}%`,
               }}
               className={cn(
-                "absolute flex items-center justify-center overflow-hidden rounded-md border px-1 text-center text-[9px] font-bold leading-none transition duration-150 md:text-[10px]",
+                "absolute flex items-center justify-center overflow-hidden rounded-[4px] border px-0.5 text-center text-[8px] font-bold leading-none tracking-tight transition duration-150 md:text-[9px]",
                 standStateClass(stand, isSelected),
                 isInteractive && !unavailable ? "hover:brightness-[0.98]" : undefined,
                 isInteractive ? "focus-visible:ring-2 focus-visible:ring-[#FE9A70] focus-visible:ring-offset-0 focus-visible:outline-none" : undefined,
