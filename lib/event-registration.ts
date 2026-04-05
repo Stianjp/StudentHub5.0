@@ -101,6 +101,12 @@ function candidateLevelLabel(value: RegistrationApplication["candidate_level"]) 
   return "Bachelor og master";
 }
 
+function candidateLevelToRecruitmentLevels(value: RegistrationApplication["candidate_level"]) {
+  if (value === "bachelor") return ["Bachelor"];
+  if (value === "master") return ["Master"];
+  return ["Bachelor", "Master"];
+}
+
 function buildCandidateSummary(application: Pick<RegistrationApplication, "candidate_fields" | "candidate_fields_other">) {
   const fields = [...application.candidate_fields];
   if (application.candidate_fields_other) {
@@ -504,6 +510,7 @@ async function ensureCompanyFromApplication(input: {
           input.application.candidate_fields.length > 0
             ? input.application.candidate_fields
             : existingCompany.data.recruitment_fields,
+        recruitment_levels: candidateLevelToRecruitmentLevels(input.application.candidate_level),
         updated_at: now,
       })
       .eq("id", existingCompany.data.id)
@@ -526,6 +533,7 @@ async function ensureCompanyFromApplication(input: {
       location: `${input.application.city}, ${input.application.country}`,
       logo_path: input.application.logo_path,
       recruitment_fields: input.application.candidate_fields,
+      recruitment_levels: candidateLevelToRecruitmentLevels(input.application.candidate_level),
       created_at: now,
       updated_at: now,
     })

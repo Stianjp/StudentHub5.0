@@ -10,6 +10,7 @@ import {
   getCompanyPortalAccessOverview,
   getCompanyWithDetails,
   listCompanyLeads,
+  listCompanyRegistrationApplications,
   listCompanyRegistrations,
 } from "@/lib/admin";
 
@@ -43,6 +44,37 @@ function formatDateTime(value: string | null | undefined) {
   });
 }
 
+function joinValues(values: string[] | null | undefined) {
+  const filtered = (values ?? []).map((value) => value.trim()).filter(Boolean);
+  return filtered.length > 0 ? filtered.join(", ") : "—";
+}
+
+function candidateLevelLabel(value: "bachelor" | "master" | "both" | null | undefined) {
+  if (value === "bachelor") return "Bachelor";
+  if (value === "master") return "Master";
+  if (value === "both") return "Bachelor og master";
+  return "—";
+}
+
+function candidateLevelValues(value: "bachelor" | "master" | "both" | null | undefined) {
+  if (value === "bachelor") return ["Bachelor"];
+  if (value === "master") return ["Master"];
+  if (value === "both") return ["Bachelor", "Master"];
+  return [];
+}
+
+function invoiceDeliveryLabel(value: "ehf" | "email" | null | undefined) {
+  if (value === "ehf") return "EHF";
+  if (value === "email") return "E-post";
+  return "—";
+}
+
+function applicationStatusMeta(status: "pending" | "approved" | "rejected") {
+  if (status === "approved") return { label: "Godkjent", variant: "success" as const };
+  if (status === "rejected") return { label: "Avslått", variant: "warning" as const };
+  return { label: "Til behandling", variant: "info" as const };
+}
+
 export default async function AdminCompanyDetailPage({ params, searchParams }: PageProps) {
   await requireRole("admin");
   const { companyId } = await params;
@@ -50,11 +82,12 @@ export default async function AdminCompanyDetailPage({ params, searchParams }: P
   const errorMessage = firstValue(resolvedSearchParams.error);
   const removed = firstValue(resolvedSearchParams.removed) === "1";
 
-  const [company, registrations, leads, portalAccess] = await Promise.all([
+  const [company, registrations, leads, portalAccess, registrationApplications] = await Promise.all([
     getCompanyWithDetails(companyId),
     listCompanyRegistrations(companyId),
     listCompanyLeads(companyId),
     getCompanyPortalAccessOverview(companyId),
+    listCompanyRegistrationApplications(companyId),
   ]);
 
   const typedRegistrations = registrations as unknown as Array<{
@@ -74,6 +107,14 @@ export default async function AdminCompanyDetailPage({ params, searchParams }: P
     student?: { full_name?: string; study_program?: string; email?: string; phone?: string };
     event?: { name?: string };
   }>;
+
+  const typedRegistrationApplications = registrationApplications as Awaited<
+    ReturnType<typeof listCompanyRegistrationApplications>
+  >;
+  const recruitmentLevels =
+    company.recruitment_levels.length > 0
+      ? company.recruitment_levels
+      : candidateLevelValues(typedRegistrationApplications[0]?.application.candidate_level);
 
   return (
     <div className="flex flex-col gap-8">
@@ -112,7 +153,7 @@ export default async function AdminCompanyDetailPage({ params, searchParams }: P
           <p className="text-xs font-semibold uppercase tracking-wide text-primary/60">Rekruttering</p>
           <p>Roller: {company.recruitment_roles.join(", ") || "—"}</p>
           <p>Studieretninger: {company.recruitment_fields.join(", ") || "—"}</p>
-          <p>Nivå: {company.recruitment_levels.join(", ") || "—"}</p>
+          <p>Nivå: {joinValues(recruitmentLevels)}</p>
           <p>Jobbtyper: {company.recruitment_job_types.join(", ") || "—"}</p>
         </div>
         <div className="md:col-span-2">
@@ -121,6 +162,126 @@ export default async function AdminCompanyDetailPage({ params, searchParams }: P
           <p>EVP: {company.branding_evp ?? "—"}</p>
           <p>Budskap: {company.branding_message ?? "—"}</p>
         </div>
+      </Card>
+
+      <Card className="flex flex-col gap-5">
+        <div className="flex flex-col gap-1">
+          <h3 className="text-lg font-bold text-primary">Påmeldingsgrunnlag</h3>
+          <p className="text-sm text-ink/70">
+            Her ligger all informasjon som er sendt inn i påmeldingen, slik at du kan lage kontrakt, faktura og intern oppfølging direkte fra bedriftsoversikten.
+          </p>
+        </div>
+
+        {typedRegistrationApplications.length === 0 ? (
+          <p className="text-sm text-ink/70">Ingen eventpåmeldinger funnet for denne bedriften ennå.</p>
+        ) : (
+          <div className="flex flex-col gap-4">
+            {typedRegistrationApplications.map((entry) => {
+              const statusMeta = applicationStatusMeta(entry.application.status);
+              const applicationLink =
+                entry.campaign?.id && entry.event?.id
+                  ? `/admin/events/${entry.event.id}/registration/${entry.campaign.id}/applications/${entry.application.id}`
+                  : null;
+
+              return (
+                <div key={entry.application.id} className="rounded-2xl border border-primary/10 bg-primary/5 p-5">
+                  <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                    <div className="space-y-1">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-primary/60">Påmelding</p>
+                      <h4 className="text-base font-bold text-primary">
+                        {entry.event?.name ?? entry.campaign?.public_title ?? entry.application.company_name}
+                      </h4>
+                      <p className="text-sm text-ink/70">
+                        Sendt inn {formatDateTime(entry.application.created_at)}
+                        {entry.application.approved_at ? ` · godkjent ${formatDateTime(entry.application.approved_at)}` : ""}
+                        {entry.application.rejected_at ? ` · avslått ${formatDateTime(entry.application.rejected_at)}` : ""}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge variant={statusMeta.variant}>{statusMeta.label}</Badge>
+                      {applicationLink ? (
+                        <Link className="button-link text-xs" href={applicationLink}>
+                          Åpne søknad
+                        </Link>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  <div className="mt-4 grid gap-4 xl:grid-cols-2">
+                    <div className="rounded-2xl border border-primary/10 bg-white p-4 text-sm text-ink/80 shadow-sm">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-primary/60">Kontakt og firma</p>
+                      <div className="mt-3 grid gap-1.5">
+                        <p><span className="font-semibold text-primary">Kontaktperson:</span> {entry.application.contact_first_name} {entry.application.contact_last_name}</p>
+                        <p><span className="font-semibold text-primary">Stilling:</span> {entry.application.contact_job_title ?? "—"}</p>
+                        <p><span className="font-semibold text-primary">Kontakt e-post:</span> {entry.application.contact_email}</p>
+                        <p><span className="font-semibold text-primary">Telefon:</span> {entry.application.contact_phone}</p>
+                        <p><span className="font-semibold text-primary">Org.nr:</span> {entry.application.org_number}</p>
+                        <p><span className="font-semibold text-primary">Adresse:</span> {entry.application.address}, {entry.application.postal_code} {entry.application.city}, {entry.application.country}</p>
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-primary/10 bg-white p-4 text-sm text-ink/80 shadow-sm">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-primary/60">Fakturagrunnlag</p>
+                      <div className="mt-3 grid gap-1.5">
+                        <p><span className="font-semibold text-primary">Fakturamåte:</span> {invoiceDeliveryLabel(entry.application.invoice_delivery_method)}</p>
+                        <p><span className="font-semibold text-primary">Faktura e-post:</span> {entry.application.invoice_email ?? "—"}</p>
+                        <p><span className="font-semibold text-primary">Fakturareferanse:</span> {entry.application.invoice_reference ?? "—"}</p>
+                        <p><span className="font-semibold text-primary">Ønsket pakke:</span> {entry.requestedPackage?.public_name ?? entry.requestedPackage?.mapped_package ?? "—"}</p>
+                        <p><span className="font-semibold text-primary">Godkjent pakke:</span> {entry.approvedPackage?.public_name ?? entry.approvedPackage?.mapped_package ?? "—"}</p>
+                        <p><span className="font-semibold text-primary">Ønsket stand:</span> {entry.requestedStand?.stand_code ?? "—"}</p>
+                        <p><span className="font-semibold text-primary">Godkjent stand:</span> {entry.approvedStand?.stand_code ?? "—"}</p>
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-primary/10 bg-white p-4 text-sm text-ink/80 shadow-sm">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-primary/60">Rekruttering fra påmelding</p>
+                      <div className="mt-3 grid gap-1.5">
+                        <p><span className="font-semibold text-primary">Nivå:</span> {candidateLevelLabel(entry.application.candidate_level)}</p>
+                        <p><span className="font-semibold text-primary">Studieretninger:</span> {joinValues(entry.application.candidate_fields)}</p>
+                        <p><span className="font-semibold text-primary">Andre studieretninger:</span> {entry.application.candidate_fields_other ?? "—"}</p>
+                        <p><span className="font-semibold text-primary">Standbehov:</span> {joinValues(entry.application.stand_needs)}</p>
+                        <p><span className="font-semibold text-primary">Andre standbehov:</span> {entry.application.stand_needs_other ?? "—"}</p>
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-primary/10 bg-white p-4 text-sm text-ink/80 shadow-sm">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-primary/60">Portal og vedlegg</p>
+                      <div className="mt-3 grid gap-2">
+                        <div>
+                          <p className="font-semibold text-primary">Portal e-poster</p>
+                          {entry.portalEmails.length === 0 ? (
+                            <p className="mt-1 text-sm text-ink/60">Ingen registrerte portaladresser.</p>
+                          ) : (
+                            <ul className="mt-2 grid gap-2">
+                              {entry.portalEmails.map((portalEmail) => (
+                                <li key={portalEmail.id} className="rounded-xl border border-primary/10 bg-primary/5 px-3 py-2 text-sm text-ink/80">
+                                  {portalEmail.email}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                        <p><span className="font-semibold text-primary">Logo:</span> {entry.logoUrl ? <a className="font-semibold text-primary underline underline-offset-2" href={entry.logoUrl} target="_blank" rel="noreferrer">Åpne opplastet logo</a> : "Ingen logo lastet opp"}</p>
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-primary/10 bg-white p-4 text-sm text-ink/80 shadow-sm xl:col-span-2">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-primary/60">Notater fra påmeldingen</p>
+                      <p className="mt-3 whitespace-pre-wrap leading-6 text-ink/80">
+                        {entry.application.notes ?? "Ingen notater sendt inn."}
+                      </p>
+                      {entry.application.rejection_reason ? (
+                        <p className="mt-3 rounded-xl border border-warning/30 bg-warning/10 px-3 py-2 text-sm text-warning">
+                          <span className="font-semibold">Avslagsgrunn:</span> {entry.application.rejection_reason}
+                        </p>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </Card>
 
       <Card className="flex flex-col gap-5">

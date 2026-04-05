@@ -37,9 +37,9 @@ function svgRectToPercent(rect: SvgRect): StandGeometry {
 // The original SVG is still the placement source of truth, but these three top-right standard
 // booths are normalized to the same small booth shape as the right-hand standard column.
 export const STUDENT_CONNECT_2026_STANDARD_TOP_RIGHT_OVERRIDES = {
-  "Standard 4": { x: 81.99, y: 28.23, width: 3.5, height: 2.94 },
-  "Standard 5": { x: 90.15, y: 29.69, width: 3.5, height: 2.94 },
-  "Standard 6": { x: 90.15, y: 32.88, width: 3.5, height: 2.94 },
+  "Standard 4": { x: 81.78, y: 28.7, width: 4.4, height: 2.18 },
+  "Standard 5": { x: 90.55, y: 29.28, width: 3.5, height: 2.94 },
+  "Standard 6": { x: 90.55, y: 32.47, width: 3.5, height: 2.94 },
 } satisfies Record<string, StandGeometry>;
 
 const STUDENT_CONNECT_2026_HIDDEN_STANDS = new Set([

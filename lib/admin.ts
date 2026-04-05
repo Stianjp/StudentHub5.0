@@ -17,8 +17,12 @@ type Profile = TableRow<"profiles">;
 type Lead = TableRow<"leads">;
 type Consent = TableRow<"consents">;
 type RegistrationApplication = TableRow<"event_registration_applications">;
+type RegistrationCampaign = TableRow<"event_registration_campaigns">;
+type RegistrationPackage = TableRow<"event_registration_packages">;
+type RegistrationPortalEmail = TableRow<"event_registration_portal_emails">;
 type RegistrationStand = TableRow<"event_registration_stands">;
 const COMPANY_PORTAL_FALLBACK_URL = "https://bedrift.oslostudenthub.no";
+const REGISTRATION_LOGO_BUCKET = "event-registration-assets";
 
 type EventWithStats = Event & {
   companyCount: number;
@@ -44,6 +48,22 @@ export type CompanyPortalAccessOverview = {
   pendingRequests: CompanyPortalAccessRequest[];
   portalInvites: CompanyPortalAccessInviteSummary[];
 };
+
+export type CompanyRegistrationApplicationOverview = {
+  application: RegistrationApplication;
+  campaign: (RegistrationCampaign & { event?: Event | null }) | null;
+  event: Event | null;
+  requestedPackage: RegistrationPackage | null;
+  approvedPackage: RegistrationPackage | null;
+  requestedStand: RegistrationStand | null;
+  approvedStand: RegistrationStand | null;
+  portalEmails: RegistrationPortalEmail[];
+  logoUrl: string | null;
+};
+
+function normalizeOrgNumber(value: string | null | undefined) {
+  return value?.replace(/\s+/g, "") ?? "";
+}
 
 async function getAuthEmailByUserId(supabase: ReturnType<typeof createAdminSupabaseClient>, userId: string) {
   const { data, error } = await supabase.auth.admin.getUserById(userId);
@@ -282,6 +302,110 @@ export async function getCompanyWithDetails(companyId: string) {
   const { data, error } = await supabase.from("companies").select("*").eq("id", companyId).single();
   if (error) throw error;
   return data as Company;
+}
+
+export async function listCompanyRegistrationApplications(companyId: string): Promise<CompanyRegistrationApplicationOverview[]> {
+  const supabase = createAdminSupabaseClient();
+
+  const { data: company, error: companyError } = await supabase
+    .from("companies")
+    .select("id, org_number")
+    .eq("id", companyId)
+    .single();
+
+  if (companyError) throw companyError;
+
+  const normalizedOrgNumber = normalizeOrgNumber(company.org_number);
+  let applicationQuery = supabase
+    .from("event_registration_applications")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (normalizedOrgNumber) {
+    applicationQuery = applicationQuery.or(`company_id.eq.${companyId},org_number.eq.${normalizedOrgNumber}`);
+  } else {
+    applicationQuery = applicationQuery.eq("company_id", companyId);
+  }
+
+  const { data: applications, error: applicationsError } = await applicationQuery;
+  if (applicationsError) throw applicationsError;
+
+  const typedApplications = (applications ?? []) as RegistrationApplication[];
+  if (typedApplications.length === 0) return [];
+
+  const campaignIds = [...new Set(typedApplications.map((application) => application.campaign_id).filter(Boolean))];
+  const packageIds = [
+    ...new Set(
+      typedApplications
+        .flatMap((application) => [application.requested_package_id, application.approved_package_id])
+        .filter((packageId): packageId is string => Boolean(packageId)),
+    ),
+  ];
+  const standIds = [
+    ...new Set(
+      typedApplications
+        .flatMap((application) => [application.requested_stand_id, application.approved_stand_id])
+        .filter((standId): standId is string => Boolean(standId)),
+    ),
+  ];
+  const applicationIds = typedApplications.map((application) => application.id);
+
+  const [{ data: campaigns, error: campaignsError }, { data: packages, error: packagesError }, { data: stands, error: standsError }, { data: portalEmails, error: portalEmailsError }] = await Promise.all([
+    supabase.from("event_registration_campaigns").select("*, event:events(*)").in("id", campaignIds),
+    packageIds.length > 0
+      ? supabase.from("event_registration_packages").select("*").in("id", packageIds)
+      : Promise.resolve({ data: [], error: null }),
+    standIds.length > 0
+      ? supabase.from("event_registration_stands").select("*").in("id", standIds)
+      : Promise.resolve({ data: [], error: null }),
+    supabase
+      .from("event_registration_portal_emails")
+      .select("*")
+      .in("application_id", applicationIds)
+      .order("created_at", { ascending: true }),
+  ]);
+
+  if (campaignsError) throw campaignsError;
+  if (packagesError) throw packagesError;
+  if (standsError) throw standsError;
+  if (portalEmailsError) throw portalEmailsError;
+
+  const campaignMap = new Map(
+    ((campaigns ?? []) as Array<RegistrationCampaign & { event?: Event | null }>).map((campaign) => [campaign.id, campaign]),
+  );
+  const packageMap = new Map(((packages ?? []) as RegistrationPackage[]).map((pkg) => [pkg.id, pkg]));
+  const standMap = new Map(((stands ?? []) as RegistrationStand[]).map((stand) => [stand.id, stand]));
+  const portalEmailMap = new Map<string, RegistrationPortalEmail[]>();
+
+  for (const portalEmail of (portalEmails ?? []) as RegistrationPortalEmail[]) {
+    const existing = portalEmailMap.get(portalEmail.application_id) ?? [];
+    existing.push(portalEmail);
+    portalEmailMap.set(portalEmail.application_id, existing);
+  }
+
+  const logoUrlEntries = await Promise.all(
+    typedApplications.map(async (application) => {
+      if (!application.logo_path) return [application.id, null] as const;
+      const { data } = await supabase.storage.from(REGISTRATION_LOGO_BUCKET).createSignedUrl(application.logo_path, 60 * 60);
+      return [application.id, data?.signedUrl ?? null] as const;
+    }),
+  );
+  const logoUrlMap = new Map<string, string | null>(logoUrlEntries);
+
+  return typedApplications.map((application) => {
+    const campaign = campaignMap.get(application.campaign_id) ?? null;
+    return {
+      application,
+      campaign,
+      event: campaign?.event ?? null,
+      requestedPackage: application.requested_package_id ? packageMap.get(application.requested_package_id) ?? null : null,
+      approvedPackage: application.approved_package_id ? packageMap.get(application.approved_package_id) ?? null : null,
+      requestedStand: application.requested_stand_id ? standMap.get(application.requested_stand_id) ?? null : null,
+      approvedStand: application.approved_stand_id ? standMap.get(application.approved_stand_id) ?? null : null,
+      portalEmails: portalEmailMap.get(application.id) ?? [],
+      logoUrl: logoUrlMap.get(application.id) ?? null,
+    };
+  });
 }
 
 export async function getCompanyPortalAccessOverview(companyId: string): Promise<CompanyPortalAccessOverview> {
