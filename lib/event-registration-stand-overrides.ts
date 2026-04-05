@@ -10,6 +10,10 @@ type PublicStandLike = {
   stand_code: string;
   status: "available" | "disabled" | "assigned";
   assigned_application_id: string | null;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
   bookingPreview?: PublicStandBookingPreviewOverride | null;
 };
 
@@ -20,10 +24,24 @@ const STUDENT_CONNECT_2026_HIDDEN_STANDS = new Set([
   "Standard 7",
 ]);
 
+const STUDENT_CONNECT_2026_POSITION_OVERRIDES = new Map<
+  string,
+  Pick<PublicStandLike, "x" | "y" | "width" | "height">
+>([
+  ["Standard 4", { x: 80.05, y: 24.28, width: 5.72, height: 1.83 }],
+  ["Standard 5", { x: 91.0, y: 27.33, width: 1.83, height: 5.61 }],
+  ["Standard 6", { x: 90.47, y: 24.72, width: 3.39, height: 3.0 }],
+]);
+
 export function applyPublicRegistrationStandOverrides<T extends PublicStandLike>(slug: string, stands: T[]): T[] {
   if (slug !== "student-connect-2026") {
     return stands;
   }
 
-  return stands.filter((stand) => !STUDENT_CONNECT_2026_HIDDEN_STANDS.has(stand.stand_code));
+  return stands
+    .filter((stand) => !STUDENT_CONNECT_2026_HIDDEN_STANDS.has(stand.stand_code))
+    .map((stand) => {
+      const override = STUDENT_CONNECT_2026_POSITION_OVERRIDES.get(stand.stand_code);
+      return override ? { ...stand, ...override } : stand;
+    });
 }
