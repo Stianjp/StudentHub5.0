@@ -26,6 +26,6 @@ export const REGISTRATION_LEVEL_OPTIONS = [
 ] as const;
 
 export const REGISTRATION_INVOICE_OPTIONS = [
-  { value: "ehf", label: "EHF" },
   { value: "email", label: "Email" },
+  { value: "ehf", label: "EHF" },
 ] as const;

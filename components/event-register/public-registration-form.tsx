@@ -89,7 +89,7 @@ export function PublicRegistrationForm({
   const [city, setCity] = useState("");
   const [postalCode, setPostalCode] = useState("");
 
-  const [invoiceDeliveryMethod, setInvoiceDeliveryMethod] = useState<"ehf" | "email">("ehf");
+  const [invoiceDeliveryMethod, setInvoiceDeliveryMethod] = useState<"ehf" | "email">("email");
   const [invoiceEmail, setInvoiceEmail] = useState("");
   const [invoiceReference, setInvoiceReference] = useState("");
 
@@ -404,16 +404,17 @@ export function PublicRegistrationForm({
                 </button>
               ))}
             </div>
-            <label className="text-sm font-semibold text-primary">
-              Invoice e-mail
-              <Input
-                type="email"
-                disabled={invoiceDeliveryMethod !== "email"}
-                value={invoiceEmail}
-                onChange={(event) => setInvoiceEmail(event.target.value)}
-                placeholder="invoice@company.no"
-              />
-            </label>
+            {invoiceDeliveryMethod === "email" ? (
+              <label className="text-sm font-semibold text-primary">
+                Invoice e-mail
+                <Input
+                  type="email"
+                  value={invoiceEmail}
+                  onChange={(event) => setInvoiceEmail(event.target.value)}
+                  placeholder="invoice@company.no"
+                />
+              </label>
+            ) : null}
             <label className="text-sm font-semibold text-primary">
               Invoice reference
               <Input

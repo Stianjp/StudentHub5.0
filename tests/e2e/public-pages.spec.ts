@@ -53,6 +53,33 @@ test("Registreringsskjema navigerer mellom steg", async ({ page }) => {
   await expect(page.getByLabel("Company name")).toBeVisible();
 });
 
+test("Invoice-steget har Email som default og skjuler invoice e-mail for EHF", async ({ page }) => {
+  await page.goto("/event-register/student-connect-2026");
+
+  await page.getByLabel("First name").fill("Ola");
+  await page.getByLabel("Last name").fill("Nordmann");
+  await page.getByLabel("E-mail").fill("ola@test.no");
+  await page.getByLabel("Phone number").fill("12345678");
+  await clickNext(page);
+
+  await page.getByLabel("Company name").fill("Acme AS");
+  await page.getByLabel("MVA-ID").fill("123456789");
+  await page.getByLabel("Country / Region").fill("Norway");
+  await page.getByLabel("Address").fill("Karl Johans gate 1");
+  await page.getByLabel("City").fill("Oslo");
+  await page.getByLabel("Zip / Postal code").fill("0154");
+  await clickNext(page);
+
+  await expect(page.getByRole("button", { name: /Email/i }).first()).toHaveClass(/border-\[#FE9A70\]/);
+  await expect(page.getByLabel("Invoice e-mail")).toBeVisible();
+
+  await page.getByRole("button", { name: /EHF/i }).first().click();
+  await expect(page.getByLabel("Invoice e-mail")).toHaveCount(0);
+
+  await page.getByRole("button", { name: /Email/i }).first().click();
+  await expect(page.getByLabel("Invoice e-mail")).toBeVisible();
+});
+
 test("Pakkevalg filtrerer stander og nullstiller tidligere standvalg", async ({ page }) => {
   await page.goto("/event-register/student-connect-2026");
 
@@ -70,6 +97,7 @@ test("Pakkevalg filtrerer stander og nullstiller tidligere standvalg", async ({ 
   await page.getByLabel("Zip / Postal code").fill("0154");
   await clickNext(page);
 
+  await page.getByLabel("Invoice e-mail").fill("invoice@acme.no");
   await clickNext(page);
 
   await page.getByLabel("IT / Computer engineer").check();
