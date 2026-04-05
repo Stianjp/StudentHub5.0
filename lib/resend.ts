@@ -19,6 +19,20 @@ function getResendClient() {
   return new Resend(apiKey);
 }
 
+function getTransactionalFromAddress() {
+  const configuredFrom =
+    process.env.RESEND_FROM_EMAIL?.trim() ||
+    process.env.EMAIL_FROM?.trim() ||
+    "stian@oslostudenthub.no";
+
+  const configuredName =
+    process.env.RESEND_FROM_NAME?.trim() ||
+    process.env.EMAIL_FROM_NAME?.trim() ||
+    "Stian Pettersen | Oslo Student Hub";
+
+  return `${configuredName} <${configuredFrom}>`;
+}
+
 export async function sendTransactionalEmail({
   to,
   subject,
@@ -37,7 +51,7 @@ export async function sendTransactionalEmail({
   if (resend) {
     try {
       const response = await resend.emails.send({
-        from: "OSH StudentHub <noreply@oslostudenthub.no>",
+        from: getTransactionalFromAddress(),
         to,
         subject,
         html,
@@ -117,7 +131,7 @@ export async function sendBulkEmail({
     if (resend) {
       try {
         const response = await resend.emails.send({
-          from: "OSH StudentHub <noreply@oslostudenthub.no>",
+          from: getTransactionalFromAddress(),
           to: recipient.email,
           subject: renderedSubject,
           html: renderedHtml,

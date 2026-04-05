@@ -10,7 +10,10 @@ type Event = TableRow<"events">;
 type Company = TableRow<"companies">;
 type EventCompany = TableRow<"event_companies">;
 type CompanyDomain = TableRow<"company_domains">;
+type CompanyUser = TableRow<"company_users">;
 type CompanyUserRequest = TableRow<"company_user_requests">;
+type CompanyPortalInvite = TableRow<"company_portal_invites">;
+type Profile = TableRow<"profiles">;
 type Lead = TableRow<"leads">;
 type Consent = TableRow<"consents">;
 type RegistrationApplication = TableRow<"event_registration_applications">;
@@ -22,6 +25,31 @@ type EventWithStats = Event & {
   visitCount: number;
   leadCount: number;
 };
+
+export type CompanyPortalAccessUser = CompanyUser & {
+  email: string | null;
+  fullName: string | null;
+};
+
+export type CompanyPortalAccessRequest = CompanyUserRequest & {
+  fullName: string | null;
+};
+
+export type CompanyPortalAccessInviteSummary = CompanyPortalInvite & {
+  fullName: string | null;
+};
+
+export type CompanyPortalAccessOverview = {
+  activeUsers: CompanyPortalAccessUser[];
+  pendingRequests: CompanyPortalAccessRequest[];
+  portalInvites: CompanyPortalAccessInviteSummary[];
+};
+
+async function getAuthEmailByUserId(supabase: ReturnType<typeof createAdminSupabaseClient>, userId: string) {
+  const { data, error } = await supabase.auth.admin.getUserById(userId);
+  if (error) return null;
+  return data.user?.email?.trim() || null;
+}
 
 export async function listEventsWithStats(): Promise<EventWithStats[]> {
   let supabase = await createServerSupabaseClient();
@@ -254,6 +282,126 @@ export async function getCompanyWithDetails(companyId: string) {
   const { data, error } = await supabase.from("companies").select("*").eq("id", companyId).single();
   if (error) throw error;
   return data as Company;
+}
+
+export async function getCompanyPortalAccessOverview(companyId: string): Promise<CompanyPortalAccessOverview> {
+  const supabase = createAdminSupabaseClient();
+
+  const [{ data: memberships, error: membershipsError }, { data: requests, error: requestsError }, { data: invites, error: invitesError }] = await Promise.all([
+    supabase
+      .from("company_users")
+      .select("*")
+      .eq("company_id", companyId)
+      .order("approved_at", { ascending: false }),
+    supabase
+      .from("company_user_requests")
+      .select("*")
+      .eq("company_id", companyId)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("company_portal_invites")
+      .select("*")
+      .eq("company_id", companyId)
+      .order("updated_at", { ascending: false }),
+  ]);
+
+  if (membershipsError) throw membershipsError;
+  if (requestsError) throw requestsError;
+  if (invitesError) throw invitesError;
+
+  const typedMemberships = (memberships ?? []) as CompanyUser[];
+  const typedRequests = (requests ?? []) as CompanyUserRequest[];
+  const typedInvites = (invites ?? []) as CompanyPortalInvite[];
+
+  const userIds = Array.from(
+    new Set(
+      [...typedMemberships.map((membership) => membership.user_id), ...typedRequests.map((request) => request.user_id), ...typedInvites.map((invite) => invite.user_id)]
+        .filter((userId): userId is string => Boolean(userId)),
+    ),
+  );
+
+  const profileMap = new Map<string, Profile>();
+  if (userIds.length > 0) {
+    const { data: profiles, error: profilesError } = await supabase
+      .from("profiles")
+      .select("id, full_name, role, created_at, updated_at")
+      .in("id", userIds);
+
+    if (profilesError) throw profilesError;
+    for (const profile of (profiles ?? []) as Profile[]) {
+      profileMap.set(profile.id, profile);
+    }
+  }
+
+  const authEmailEntries = await Promise.all(
+    userIds.map(async (userId) => [userId, await getAuthEmailByUserId(supabase, userId)] as const),
+  );
+  const authEmailMap = new Map<string, string | null>(authEmailEntries);
+
+  return {
+    activeUsers: typedMemberships.map((membership) => ({
+      ...membership,
+      email:
+        authEmailMap.get(membership.user_id) ??
+        typedInvites.find((invite) => invite.user_id === membership.user_id)?.email ??
+        null,
+      fullName: profileMap.get(membership.user_id)?.full_name ?? null,
+    })),
+    pendingRequests: typedRequests.map((request) => ({
+      ...request,
+      fullName: profileMap.get(request.user_id)?.full_name ?? null,
+    })),
+    portalInvites: typedInvites.map((invite) => ({
+      ...invite,
+      fullName: invite.user_id ? profileMap.get(invite.user_id)?.full_name ?? null : null,
+    })),
+  };
+}
+
+export async function getPreferredCompanyContactEmail(companyId: string) {
+  const supabase = createAdminSupabaseClient();
+  const overview = await getCompanyPortalAccessOverview(companyId);
+
+  const candidateEmails = [
+    ...overview.activeUsers
+      .sort((a, b) => (b.approved_at ?? "").localeCompare(a.approved_at ?? ""))
+      .map((user) => user.email),
+    ...overview.portalInvites
+      .filter((invite) => invite.status === "accepted" || invite.status === "invited" || invite.status === "pending")
+      .map((invite) => invite.email),
+    ...overview.pendingRequests.map((request) => request.email),
+  ]
+    .map((email) => email?.trim().toLowerCase() ?? "")
+    .filter(Boolean);
+
+  if (candidateEmails.length > 0) {
+    return candidateEmails[0] ?? null;
+  }
+
+  const { data: application, error: applicationError } = await supabase
+    .from("event_registration_applications")
+    .select("contact_email")
+    .eq("company_id", companyId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (applicationError) throw applicationError;
+  if (application?.contact_email?.trim()) {
+    return application.contact_email.trim().toLowerCase();
+  }
+
+  const { data: eventCompany, error: eventCompanyError } = await supabase
+    .from("event_companies")
+    .select("invited_email")
+    .eq("company_id", companyId)
+    .not("invited_email", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (eventCompanyError) throw eventCompanyError;
+  return eventCompany?.invited_email?.trim().toLowerCase() ?? null;
 }
 
 export async function deleteCompany(companyId: string) {

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth";
+import { getCompanyWithDetails, getPreferredCompanyContactEmail } from "@/lib/admin";
 import {
   clearDynamicEmailGroupMembers,
   parseEmailGroupFormData,
@@ -104,22 +105,13 @@ export async function addGroupMember(formData: FormData) {
   let displayName = "";
 
   if (memberType === "company") {
-    const { data } = await supabase
-      .from("event_companies")
-      .select("invited_email, companies(name)")
-      .eq("company_id", memberId)
-      .not("invited_email", "is", null)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .single();
+    const [company, resolvedEmail] = await Promise.all([
+      getCompanyWithDetails(memberId),
+      getPreferredCompanyContactEmail(memberId),
+    ]);
 
-    email = data?.invited_email ?? "";
-    displayName = (data?.companies as { name?: string } | null)?.name ?? "";
-
-    if (!email) {
-      const { data: co } = await supabase.from("companies").select("name").eq("id", memberId).single();
-      displayName = co?.name ?? "";
-    }
+    displayName = company.name ?? "";
+    email = resolvedEmail ?? "";
   } else {
     const { data } = await supabase
       .from("students")

@@ -7,6 +7,7 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { deleteCompanyAction, removeCompanyFromEventAction } from "@/app/admin/actions";
 import { requireRole } from "@/lib/auth";
 import {
+  getCompanyPortalAccessOverview,
   getCompanyWithDetails,
   listCompanyLeads,
   listCompanyRegistrations,
@@ -29,6 +30,19 @@ function firstValue(value: string | string[] | undefined) {
   return value ?? "";
 }
 
+function formatDateTime(value: string | null | undefined) {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleString("nb-NO", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 export default async function AdminCompanyDetailPage({ params, searchParams }: PageProps) {
   await requireRole("admin");
   const { companyId } = await params;
@@ -36,10 +50,11 @@ export default async function AdminCompanyDetailPage({ params, searchParams }: P
   const errorMessage = firstValue(resolvedSearchParams.error);
   const removed = firstValue(resolvedSearchParams.removed) === "1";
 
-  const [company, registrations, leads] = await Promise.all([
+  const [company, registrations, leads, portalAccess] = await Promise.all([
     getCompanyWithDetails(companyId),
     listCompanyRegistrations(companyId),
     listCompanyLeads(companyId),
+    getCompanyPortalAccessOverview(companyId),
   ]);
 
   const typedRegistrations = registrations as unknown as Array<{
@@ -105,6 +120,125 @@ export default async function AdminCompanyDetailPage({ params, searchParams }: P
           <p>Verdier: {company.branding_values.join(", ") || "—"}</p>
           <p>EVP: {company.branding_evp ?? "—"}</p>
           <p>Budskap: {company.branding_message ?? "—"}</p>
+        </div>
+      </Card>
+
+      <Card className="flex flex-col gap-5">
+        <div className="flex flex-col gap-1">
+          <h3 className="text-lg font-bold text-primary">Portaltilganger</h3>
+          <p className="text-sm text-ink/70">
+            Her ser du hvilke e-postadresser som har tilgang til bedriftsportalen, hva som venter på godkjenning og invite-historikken fra registrering.
+          </p>
+        </div>
+
+        <div className="grid gap-4 xl:grid-cols-3">
+          <div className="rounded-2xl border border-primary/10 bg-primary/5 p-4">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <h4 className="text-sm font-bold text-primary">Aktive brukere</h4>
+              <Badge variant="success">{portalAccess.activeUsers.length}</Badge>
+            </div>
+            {portalAccess.activeUsers.length === 0 ? (
+              <p className="text-sm text-ink/70">Ingen godkjente portalbrukere ennå.</p>
+            ) : (
+              <ul className="flex flex-col gap-3">
+                {portalAccess.activeUsers.map((user) => (
+                  <li key={user.id} className="rounded-xl border border-primary/10 bg-white px-3 py-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-semibold text-primary">{user.fullName ?? user.email ?? "Bruker"}</p>
+                        <p className="text-sm text-ink/80">{user.email ?? "Fant ikke e-post"}</p>
+                      </div>
+                      <Badge variant="success">Godkjent</Badge>
+                    </div>
+                    <div className="mt-2 space-y-1 text-xs text-ink/60">
+                      <p>Rolle: {user.role || "member"}</p>
+                      <p>Godkjent: {formatDateTime(user.approved_at)}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div className="rounded-2xl border border-primary/10 bg-primary/5 p-4">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <h4 className="text-sm font-bold text-primary">Venter på godkjenning</h4>
+              <Badge variant="warning">{portalAccess.pendingRequests.length}</Badge>
+            </div>
+            {portalAccess.pendingRequests.length === 0 ? (
+              <p className="text-sm text-ink/70">Ingen ventende tilgangsforespørsler.</p>
+            ) : (
+              <ul className="flex flex-col gap-3">
+                {portalAccess.pendingRequests.map((request) => (
+                  <li key={request.id} className="rounded-xl border border-primary/10 bg-white px-3 py-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-semibold text-primary">{request.fullName ?? request.email}</p>
+                        <p className="text-sm text-ink/80">{request.email}</p>
+                      </div>
+                      <Badge variant="warning">Venter</Badge>
+                    </div>
+                    <div className="mt-2 space-y-1 text-xs text-ink/60">
+                      <p>Domene: {request.domain || "—"}</p>
+                      <p>Registrert: {formatDateTime(request.created_at)}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div className="rounded-2xl border border-primary/10 bg-primary/5 p-4">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <h4 className="text-sm font-bold text-primary">Invite-historikk</h4>
+              <Badge variant="info">{portalAccess.portalInvites.length}</Badge>
+            </div>
+            {portalAccess.portalInvites.length === 0 ? (
+              <p className="text-sm text-ink/70">Ingen portalinvitasjoner funnet for denne bedriften.</p>
+            ) : (
+              <ul className="flex flex-col gap-3">
+                {portalAccess.portalInvites.map((invite) => (
+                  <li key={invite.id} className="rounded-xl border border-primary/10 bg-white px-3 py-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-semibold text-primary">{invite.fullName ?? invite.email}</p>
+                        <p className="text-sm text-ink/80">{invite.email}</p>
+                      </div>
+                      <Badge
+                        variant={
+                          invite.status === "accepted"
+                            ? "success"
+                            : invite.status === "revoked"
+                              ? "warning"
+                              : "info"
+                        }
+                      >
+                        {invite.status === "accepted"
+                          ? "Aktiv"
+                          : invite.status === "revoked"
+                            ? "Trukket tilbake"
+                            : invite.status === "pending"
+                              ? "Venter"
+                              : "Invitert"}
+                      </Badge>
+                    </div>
+                    <div className="mt-2 space-y-1 text-xs text-ink/60">
+                      <p>Invitert: {formatDateTime(invite.invited_at ?? invite.created_at)}</p>
+                      <p>Akseptert: {formatDateTime(invite.accepted_at)}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+
+        <div className="text-xs text-ink/60">
+          Trenger du å godkjenne en ny bruker? Gå til{" "}
+          <Link className="font-semibold text-primary hover:text-primary/80" href="/admin/companies/register#tilgangsforesporsler">
+            Tilgangsforespørsler
+          </Link>
+          .
         </div>
       </Card>
 
