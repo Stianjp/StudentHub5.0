@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { renderTemplate } from "@/lib/resend";
+import { buildEmailSignatureHtml, renderTemplate } from "@/lib/resend";
 
 describe("renderTemplate", () => {
   it("erstatter enkelt variabel", () => {
@@ -43,5 +43,27 @@ describe("renderTemplate", () => {
     });
     expect(subject).toBe("Velkom til SC2026");
     expect(html).toBe("<p>Vi gleder oss til SC2026!</p>");
+  });
+
+  it("støtter alias mellom displayName, name og navn", () => {
+    expect(renderTemplate("Hei {{name}}", { displayName: "Salangen kommune" })).toBe("Hei Salangen kommune");
+    expect(renderTemplate("Hei {{navn}}", { name: "Salangen kommune" })).toBe("Hei Salangen kommune");
+    expect(renderTemplate("Hei {{ displayName }}", { navn: "Salangen kommune" })).toBe("Hei Salangen kommune");
+  });
+});
+
+describe("buildEmailSignatureHtml", () => {
+  it("bygger standardisert signatur med navn, tittel og telefon", () => {
+    const signature = buildEmailSignatureHtml({
+      name: "Stian Pettersen",
+      title: "Daglig leder",
+      phone: "90000000",
+      includeLogo: false,
+    });
+
+    expect(signature).toContain("Med vennlig hilsen");
+    expect(signature).toContain("Stian Pettersen | Daglig leder");
+    expect(signature).toContain("Tlf: 90000000");
+    expect(signature).toContain("www.oslostudenthub.no");
   });
 });

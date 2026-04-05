@@ -18,6 +18,7 @@ export default async function EmailTemplatesPage() {
     id: string;
     name: string;
     subject: string;
+    attachment_name: string | null;
     variables: string[];
     is_active: boolean;
   }>;
@@ -61,6 +62,9 @@ export default async function EmailTemplatesPage() {
                   </Badge>
                 </div>
                 <p className="text-sm text-ink/70">{template.subject}</p>
+                {template.attachment_name ? (
+                  <p className="text-xs font-semibold text-[#D46839]">Vedlegg: {template.attachment_name}</p>
+                ) : null}
                 {template.variables.length > 0 && (
                   <div className="flex flex-wrap gap-1 mt-1">
                     {template.variables.map((v) => (

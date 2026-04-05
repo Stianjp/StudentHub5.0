@@ -132,25 +132,25 @@ export default async function AdminCompanyDetailPage({ params, searchParams }: P
         </div>
 
         <div className="grid gap-4 xl:grid-cols-3">
-          <div className="rounded-2xl border border-primary/10 bg-primary/5 p-4">
+          <div className="rounded-2xl border border-[#CDBEE8] bg-[#F7F3FF] p-4 text-[#1A1626]">
             <div className="mb-3 flex items-center justify-between gap-3">
-              <h4 className="text-sm font-bold text-primary">Aktive brukere</h4>
+              <h4 className="text-sm font-bold text-[#140249]">Aktive brukere</h4>
               <Badge variant="success">{portalAccess.activeUsers.length}</Badge>
             </div>
             {portalAccess.activeUsers.length === 0 ? (
-              <p className="text-sm text-ink/70">Ingen godkjente portalbrukere ennå.</p>
+              <p className="text-sm text-[#30224F]">Ingen godkjente portalbrukere ennå.</p>
             ) : (
               <ul className="flex flex-col gap-3">
                 {portalAccess.activeUsers.map((user) => (
-                  <li key={user.id} className="rounded-xl border border-primary/10 bg-white px-3 py-3">
+                  <li key={user.id} className="rounded-xl border border-[#D7CBEA] bg-white px-3 py-3 text-[#1A1626] shadow-sm">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="font-semibold text-primary">{user.fullName ?? user.email ?? "Bruker"}</p>
-                        <p className="text-sm text-ink/80">{user.email ?? "Fant ikke e-post"}</p>
+                        <p className="font-semibold text-[#140249]">{user.fullName ?? user.email ?? "Bruker"}</p>
+                        <p className="text-sm text-[#30224F]">{user.email ?? "Fant ikke e-post"}</p>
                       </div>
                       <Badge variant="success">Godkjent</Badge>
                     </div>
-                    <div className="mt-2 space-y-1 text-xs text-ink/60">
+                    <div className="mt-2 space-y-1 text-xs text-[#4F4568]">
                       <p>Rolle: {user.role || "member"}</p>
                       <p>Godkjent: {formatDateTime(user.approved_at)}</p>
                     </div>
@@ -160,25 +160,25 @@ export default async function AdminCompanyDetailPage({ params, searchParams }: P
             )}
           </div>
 
-          <div className="rounded-2xl border border-primary/10 bg-primary/5 p-4">
+          <div className="rounded-2xl border border-[#CDBEE8] bg-[#F7F3FF] p-4 text-[#1A1626]">
             <div className="mb-3 flex items-center justify-between gap-3">
-              <h4 className="text-sm font-bold text-primary">Venter på godkjenning</h4>
+              <h4 className="text-sm font-bold text-[#140249]">Venter på godkjenning</h4>
               <Badge variant="warning">{portalAccess.pendingRequests.length}</Badge>
             </div>
             {portalAccess.pendingRequests.length === 0 ? (
-              <p className="text-sm text-ink/70">Ingen ventende tilgangsforespørsler.</p>
+              <p className="text-sm text-[#30224F]">Ingen ventende tilgangsforespørsler.</p>
             ) : (
               <ul className="flex flex-col gap-3">
                 {portalAccess.pendingRequests.map((request) => (
-                  <li key={request.id} className="rounded-xl border border-primary/10 bg-white px-3 py-3">
+                  <li key={request.id} className="rounded-xl border border-[#D7CBEA] bg-white px-3 py-3 text-[#1A1626] shadow-sm">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="font-semibold text-primary">{request.fullName ?? request.email}</p>
-                        <p className="text-sm text-ink/80">{request.email}</p>
+                        <p className="font-semibold text-[#140249]">{request.fullName ?? request.email}</p>
+                        <p className="text-sm text-[#30224F]">{request.email}</p>
                       </div>
                       <Badge variant="warning">Venter</Badge>
                     </div>
-                    <div className="mt-2 space-y-1 text-xs text-ink/60">
+                    <div className="mt-2 space-y-1 text-xs text-[#4F4568]">
                       <p>Domene: {request.domain || "—"}</p>
                       <p>Registrert: {formatDateTime(request.created_at)}</p>
                     </div>
@@ -188,21 +188,21 @@ export default async function AdminCompanyDetailPage({ params, searchParams }: P
             )}
           </div>
 
-          <div className="rounded-2xl border border-primary/10 bg-primary/5 p-4">
+          <div className="rounded-2xl border border-[#CDBEE8] bg-[#F7F3FF] p-4 text-[#1A1626]">
             <div className="mb-3 flex items-center justify-between gap-3">
-              <h4 className="text-sm font-bold text-primary">Invite-historikk</h4>
+              <h4 className="text-sm font-bold text-[#140249]">Invite-historikk</h4>
               <Badge variant="info">{portalAccess.portalInvites.length}</Badge>
             </div>
             {portalAccess.portalInvites.length === 0 ? (
-              <p className="text-sm text-ink/70">Ingen portalinvitasjoner funnet for denne bedriften.</p>
+              <p className="text-sm text-[#30224F]">Ingen portalinvitasjoner funnet for denne bedriften.</p>
             ) : (
               <ul className="flex flex-col gap-3">
                 {portalAccess.portalInvites.map((invite) => (
-                  <li key={invite.id} className="rounded-xl border border-primary/10 bg-white px-3 py-3">
+                  <li key={invite.id} className="rounded-xl border border-[#D7CBEA] bg-white px-3 py-3 text-[#1A1626] shadow-sm">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <p className="font-semibold text-primary">{invite.fullName ?? invite.email}</p>
-                        <p className="text-sm text-ink/80">{invite.email}</p>
+                        <p className="font-semibold text-[#140249]">{invite.fullName ?? invite.email}</p>
+                        <p className="text-sm text-[#30224F]">{invite.email}</p>
                       </div>
                       <Badge
                         variant={
@@ -222,7 +222,7 @@ export default async function AdminCompanyDetailPage({ params, searchParams }: P
                               : "Invitert"}
                       </Badge>
                     </div>
-                    <div className="mt-2 space-y-1 text-xs text-ink/60">
+                    <div className="mt-2 space-y-1 text-xs text-[#4F4568]">
                       <p>Invitert: {formatDateTime(invite.invited_at ?? invite.created_at)}</p>
                       <p>Akseptert: {formatDateTime(invite.accepted_at)}</p>
                     </div>
@@ -233,9 +233,9 @@ export default async function AdminCompanyDetailPage({ params, searchParams }: P
           </div>
         </div>
 
-        <div className="text-xs text-ink/60">
+        <div className="text-xs text-[#4F4568]">
           Trenger du å godkjenne en ny bruker? Gå til{" "}
-          <Link className="font-semibold text-primary hover:text-primary/80" href="/admin/companies/register#tilgangsforesporsler">
+          <Link className="font-semibold text-[#140249] underline underline-offset-2 hover:text-[#D46839]" href="/admin/companies/register#tilgangsforesporsler">
             Tilgangsforespørsler
           </Link>
           .

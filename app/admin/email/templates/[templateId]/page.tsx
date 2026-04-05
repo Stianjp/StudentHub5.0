@@ -26,6 +26,7 @@ export default async function EditTemplatePage({ params }: Props) {
     name: string;
     subject: string;
     html_body: string;
+    attachment_name: string | null;
     variables: string[];
     is_active: boolean;
   };
@@ -35,11 +36,11 @@ export default async function EditTemplatePage({ params }: Props) {
       <SectionHeader
         eyebrow="E-post / Maler"
         title={`Rediger: ${typedTemplate.name}`}
-        description="Oppdater mal. Variabler oppdateres automatisk basert på innhold."
+        description="Oppdater mal. Variabler og eventuelt mallagret vedlegg oppdateres her."
       />
 
       <Card>
-        <form action={updateTemplate} className="flex flex-col gap-5">
+        <form action={updateTemplate} className="flex flex-col gap-5" encType="multipart/form-data">
           <input type="hidden" name="id" value={typedTemplate.id} />
 
           <div className="flex flex-col gap-1.5">
@@ -72,6 +73,24 @@ export default async function EditTemplatePage({ params }: Props) {
               defaultValue={typedTemplate.html_body}
               className="rounded-xl border border-primary/20 bg-surface px-4 py-3 text-sm font-mono text-ink focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-ink" htmlFor="attachment">Vedlegg i mal</label>
+            {typedTemplate.attachment_name ? (
+              <p className="text-xs text-ink/70">
+                Gjeldende vedlegg: <span className="font-semibold text-primary">{typedTemplate.attachment_name}</span>
+              </p>
+            ) : (
+              <p className="text-xs text-ink/60">Ingen vedlegg lagret på malen ennå.</p>
+            )}
+            <Input id="attachment" name="attachment" type="file" />
+            {typedTemplate.attachment_name ? (
+              <label className="flex items-center gap-2 text-sm text-ink">
+                <input type="checkbox" name="remove_attachment" className="h-4 w-4" />
+                Fjern gjeldende vedlegg
+              </label>
+            ) : null}
           </div>
 
           <div className="flex items-center gap-2">

@@ -312,7 +312,7 @@ export default async function ContactOverviewCompanyPage({ params, searchParams 
                   <p className="text-xs font-semibold uppercase tracking-wide text-[#6E4DB0]">Skriv e-post</p>
                   <h3 className="text-lg font-bold text-[#2D1C63]">Send fra stian@oslostudenthub.no</h3>
                 </div>
-                <form action={sendContactCaseEmailAction} className="flex flex-col gap-3">
+                <form action={sendContactCaseEmailAction} className="flex flex-col gap-3" encType="multipart/form-data">
                   <input type="hidden" name="caseId" value={detail.activeCase.id} />
                   <input type="hidden" name="returnTo" value={caseReturnTo} />
                   <label className="text-sm font-semibold text-[#2D1C63]">
@@ -337,6 +337,49 @@ export default async function ContactOverviewCompanyPage({ params, searchParams 
                       className="border-[#6E4DB0]/20 bg-white"
                     />
                   </label>
+                  <div className="rounded-2xl border border-[#6E4DB0]/15 bg-[#FCFAFF] p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-[#6E4DB0]">Signatur</p>
+                    <div className="mt-3 grid gap-3 md:grid-cols-2">
+                      <label className="text-sm font-semibold text-[#2D1C63]">
+                        Navn
+                        <Input
+                          name="signatureName"
+                          defaultValue={profile.full_name ?? ""}
+                          placeholder="F.eks. Stian Pettersen"
+                          className="border-[#6E4DB0]/20 bg-white"
+                        />
+                      </label>
+                      <label className="text-sm font-semibold text-[#2D1C63]">
+                        Tittel
+                        <Input
+                          name="signatureTitle"
+                          placeholder="F.eks. Daglig leder"
+                          className="border-[#6E4DB0]/20 bg-white"
+                        />
+                      </label>
+                      <label className="text-sm font-semibold text-[#2D1C63]">
+                        Mobilnummer
+                        <Input
+                          name="signaturePhone"
+                          placeholder="F.eks. 900 00 000"
+                          className="border-[#6E4DB0]/20 bg-white"
+                        />
+                      </label>
+                      <label className="text-sm font-semibold text-[#2D1C63]">
+                        Vedlegg
+                        <Input
+                          name="attachments"
+                          type="file"
+                          multiple
+                          className="border-[#6E4DB0]/20 bg-white"
+                        />
+                      </label>
+                    </div>
+                    <label className="mt-3 flex items-center gap-2 text-sm text-[#30224F]">
+                      <input type="checkbox" name="signatureIncludeLogo" defaultChecked className="h-4 w-4" />
+                      Legg ved Oslo Student Hub-logo i signaturen
+                    </label>
+                  </div>
                   <Button type="submit">Send e-post</Button>
                 </form>
               </Card>

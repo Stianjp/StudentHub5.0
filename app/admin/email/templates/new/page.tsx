@@ -13,11 +13,11 @@ export default async function NewTemplatePage() {
       <SectionHeader
         eyebrow="E-post / Maler"
         title="Ny e-postmal"
-        description="Bruk {{variabelNavn}} i emne og innhold for dynamisk personalisering."
+        description="Bruk {{variabelNavn}} i emne og innhold for dynamisk personalisering. {{displayName}}, {{name}}, {{navn}} og {{signature}} støttes."
       />
 
       <Card>
-        <form action={createTemplate} className="flex flex-col gap-5">
+        <form action={createTemplate} className="flex flex-col gap-5" encType="multipart/form-data">
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-ink" htmlFor="name">Malnavn</label>
             <Input id="name" name="name" placeholder="f.eks. Velkomstmail bedrift" required />
@@ -31,7 +31,7 @@ export default async function NewTemplatePage() {
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-medium text-ink" htmlFor="html_body">HTML-innhold</label>
             <p className="text-xs text-ink/60">
-              Bruk <code className="bg-surface rounded px-1">{"{{variabelNavn}}"}</code> for å sette inn dynamiske verdier, f.eks. <code className="bg-surface rounded px-1">{"{{firstName}}"}</code>, <code className="bg-surface rounded px-1">{"{{companyName}}"}</code>.
+              Bruk <code className="bg-surface rounded px-1">{"{{variabelNavn}}"}</code> for å sette inn dynamiske verdier, f.eks. <code className="bg-surface rounded px-1">{"{{displayName}}"}</code>, <code className="bg-surface rounded px-1">{"{{navn}}"}</code> eller <code className="bg-surface rounded px-1">{"{{signature}}"}</code>.
             </p>
             <textarea
               id="html_body"
@@ -41,6 +41,14 @@ export default async function NewTemplatePage() {
               className="rounded-xl border border-primary/20 bg-surface px-4 py-3 text-sm font-mono text-ink focus:outline-none focus:ring-2 focus:ring-primary/30"
               placeholder="<p>Hei {{firstName}},</p><p>Velkommen til {{eventName}}!</p>"
             />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label className="text-sm font-medium text-ink" htmlFor="attachment">Vedlegg i mal (valgfritt)</label>
+            <Input id="attachment" name="attachment" type="file" />
+            <p className="text-xs text-ink/60">
+              Vedlegget sendes automatisk når denne malen brukes.
+            </p>
           </div>
 
           <div className="flex items-center gap-2">

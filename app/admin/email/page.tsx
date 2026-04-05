@@ -6,7 +6,7 @@ import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { EmailComposeForm } from "./email-compose-form";
 
 export default async function EmailPage() {
-  await requireRole("admin");
+  const profile = await requireRole("admin");
   await syncDynamicEmailGroups();
 
   const supabase = createAdminSupabaseClient();
@@ -21,6 +21,9 @@ export default async function EmailPage() {
     name: string;
     subject: string;
     html_body: string;
+    attachment_path: string | null;
+    attachment_name: string | null;
+    attachment_content_type: string | null;
     variables: string[];
     is_active: boolean;
   }>;
@@ -76,6 +79,7 @@ export default async function EmailPage() {
       <EmailComposeForm
         templates={typedTemplates}
         groups={groupsWithCount}
+        defaultSignatureName={profile.full_name ?? ""}
       />
     </div>
   );

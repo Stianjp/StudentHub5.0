@@ -12,6 +12,9 @@ type Template = {
   name: string;
   subject: string;
   html_body: string;
+  attachment_path: string | null;
+  attachment_name: string | null;
+  attachment_content_type: string | null;
   variables: string[];
   is_active: boolean;
 };
@@ -26,6 +29,7 @@ type Group = {
 type Props = {
   templates: Template[];
   groups: Group[];
+  defaultSignatureName: string;
 };
 
 type ActionState = {
@@ -35,7 +39,7 @@ type ActionState = {
   error?: string;
 } | null;
 
-export function EmailComposeForm({ templates, groups }: Props) {
+export function EmailComposeForm({ templates, groups, defaultSignatureName }: Props) {
   const [state, formAction, pending] = useActionState<ActionState, FormData>(
     sendEmailAction,
     null
@@ -75,7 +79,7 @@ export function EmailComposeForm({ templates, groups }: Props) {
         </Card>
       )}
 
-      <form action={formAction} className="flex flex-col gap-6">
+      <form action={formAction} className="flex flex-col gap-6" encType="multipart/form-data">
         <Card>
           <p className="text-sm font-semibold text-primary mb-4">Velg mal</p>
           <div className="flex flex-col gap-4">
@@ -108,6 +112,11 @@ export function EmailComposeForm({ templates, groups }: Props) {
                     ))}
                   </div>
                 )}
+                {selectedTemplate.attachment_name ? (
+                  <p className="mt-2 text-xs font-semibold text-[#D46839]">
+                    Mallagret vedlegg: {selectedTemplate.attachment_name}
+                  </p>
+                ) : null}
                 <button
                   type="button"
                   onClick={handlePreview}
@@ -163,6 +172,48 @@ export function EmailComposeForm({ templates, groups }: Props) {
               />
             </div>
           </div>
+        </Card>
+
+        <Card>
+          <p className="text-sm font-semibold text-primary mb-4">Signatur og vedlegg</p>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-ink/70" htmlFor="signature_name">Navn i signatur</label>
+              <Input
+                id="signature_name"
+                name="signature_name"
+                defaultValue={defaultSignatureName}
+                placeholder="F.eks. Stian Pettersen"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-ink/70" htmlFor="signature_title">Tittel</label>
+              <Input
+                id="signature_title"
+                name="signature_title"
+                placeholder="F.eks. Daglig leder"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-ink/70" htmlFor="signature_phone">Mobilnummer</label>
+              <Input
+                id="signature_phone"
+                name="signature_phone"
+                placeholder="F.eks. 900 00 000"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-ink/70" htmlFor="attachments">Vedlegg</label>
+              <Input id="attachments" name="attachments" type="file" multiple />
+            </div>
+          </div>
+          <label className="mt-3 flex items-center gap-2 text-sm text-ink">
+            <input type="checkbox" name="signature_include_logo" defaultChecked className="h-4 w-4" />
+            Legg ved Oslo Student Hub-logo i signaturen
+          </label>
+          <p className="mt-2 text-xs text-ink/60">
+            Signaturen bygges likt for alle utsendinger. Du kan også bruke <code className="rounded bg-primary/10 px-1">{"{{signature}}"}</code>, <code className="rounded bg-primary/10 px-1">{"{{name}}"}</code> eller <code className="rounded bg-primary/10 px-1">{"{{navn}}"}</code> i malene.
+          </p>
         </Card>
 
         <Card>

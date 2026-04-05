@@ -1,4 +1,5 @@
 import type { TableInsert, TableRow, TableUpdate } from "@/lib/types/database";
+import type { EmailAttachmentInput } from "@/lib/resend";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import {
   GMAIL_READ_SCOPE,
@@ -795,26 +796,57 @@ async function storeMessageForCase(input: {
 
 function buildRawMimeMessage(input: {
   from: string;
+  fromName?: string | null;
   to: string[];
   cc: string[];
   subject: string;
   htmlBody: string;
+  attachments?: EmailAttachmentInput[];
   inReplyTo?: string | null;
   references?: string | null;
 }) {
+  const fromDisplayName = input.fromName?.trim() || "Oslo Student Hub";
+  const attachments = input.attachments ?? [];
+
   const lines = [
-    `From: OSH CRM <${input.from}>`,
+    `From: ${fromDisplayName} <${input.from}>`,
     `To: ${input.to.join(", ")}`,
     ...(input.cc.length > 0 ? [`Cc: ${input.cc.join(", ")}`] : []),
     `Subject: ${input.subject}`,
     ...(input.inReplyTo ? [`In-Reply-To: ${input.inReplyTo}`] : []),
     ...(input.references ? [`References: ${input.references}`] : []),
     "MIME-Version: 1.0",
-    'Content-Type: text/html; charset="UTF-8"',
-    "Content-Transfer-Encoding: 8bit",
-    "",
-    input.htmlBody,
   ];
+
+  if (attachments.length === 0) {
+    lines.push(
+      'Content-Type: text/html; charset="UTF-8"',
+      "Content-Transfer-Encoding: 8bit",
+      "",
+      input.htmlBody,
+    );
+  } else {
+    const boundary = `mixed_${Math.random().toString(36).slice(2, 12)}`;
+    lines.push(`Content-Type: multipart/mixed; boundary="${boundary}"`, "");
+    lines.push(`--${boundary}`);
+    lines.push('Content-Type: text/html; charset="UTF-8"');
+    lines.push("Content-Transfer-Encoding: 8bit", "", input.htmlBody, "");
+
+    for (const attachment of attachments) {
+      const base64Content = Buffer.isBuffer(attachment.content)
+        ? attachment.content.toString("base64")
+        : Buffer.from(attachment.content).toString("base64");
+      const base64Lines = base64Content.match(/.{1,76}/g) ?? [];
+      const safeFilename = attachment.filename.replace(/"/g, "'");
+
+      lines.push(`--${boundary}`);
+      lines.push(`Content-Type: ${attachment.contentType || "application/octet-stream"}; name="${safeFilename}"`);
+      lines.push(`Content-Disposition: attachment; filename="${safeFilename}"`);
+      lines.push("Content-Transfer-Encoding: base64", "", ...base64Lines, "");
+    }
+
+    lines.push(`--${boundary}--`);
+  }
 
   return Buffer.from(lines.join("\r\n"))
     .toString("base64")
@@ -974,6 +1006,8 @@ export async function sendContactCaseEmail(input: {
   cc?: string[];
   subject: string;
   htmlBody: string;
+  attachments?: EmailAttachmentInput[];
+  fromDisplayName?: string | null;
   createdBy?: string | null;
 }) {
   const { config, missingConfig } = getMailboxConfig();
@@ -1001,10 +1035,12 @@ export async function sendContactCaseEmail(input: {
   const finalSubject = appendCaseNumberToSubject(input.subject, typedCase.case_number);
   const raw = buildRawMimeMessage({
     from: config.delegatedUser,
+    fromName: input.fromDisplayName ?? "Oslo Student Hub",
     to: input.to,
     cc: input.cc ?? [],
     subject: finalSubject,
     htmlBody: input.htmlBody,
+    attachments: input.attachments ?? [],
     inReplyTo: (latestMessage as ContactMessage | null)?.internet_message_id ?? null,
     references: (latestMessage as ContactMessage | null)?.internet_message_id ?? null,
   });
@@ -1049,7 +1085,7 @@ export async function sendContactCaseEmail(input: {
     internetMessageId,
     inReplyToMessageId: (latestMessage as ContactMessage | null)?.internet_message_id ?? null,
     fromEmail: config.delegatedUser,
-    fromName: "OSH CRM",
+    fromName: input.fromDisplayName ?? "Oslo Student Hub",
     toEmails: input.to,
     ccEmails: input.cc ?? [],
     subject: finalSubject,

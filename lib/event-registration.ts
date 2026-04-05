@@ -19,6 +19,7 @@ import {
   syncCrmLeadEntry,
 } from "@/lib/crm-supabase";
 import { syncDynamicEmailGroups } from "@/lib/email-groups";
+import { applyPublicRegistrationStandOverrides } from "@/lib/event-registration-stand-overrides";
 
 type RegistrationCampaign = TableRow<"event_registration_campaigns">;
 type RegistrationPackage = TableRow<"event_registration_packages">;
@@ -109,14 +110,20 @@ function buildCandidateSummary(application: Pick<RegistrationApplication, "candi
   return fields.slice(0, 4).join(", ");
 }
 
-async function attachStandBookingPreviews(stands: RegistrationStand[]) {
+async function attachStandBookingPreviews(slug: string, stands: RegistrationStand[]) {
   const assignedApplicationIds = [...new Set(stands.map((stand) => stand.assigned_application_id).filter(Boolean))];
   if (assignedApplicationIds.length === 0) {
-    return stands.map((stand) => ({ ...stand, bookingPreview: null })) as PublicRegistrationStand[];
+    return applyPublicRegistrationStandOverrides(
+      slug,
+      stands.map((stand) => ({ ...stand, bookingPreview: null })) as PublicRegistrationStand[],
+    );
   }
 
   if (!hasAdminSupabaseEnv()) {
-    return stands.map((stand) => ({ ...stand, bookingPreview: null })) as PublicRegistrationStand[];
+    return applyPublicRegistrationStandOverrides(
+      slug,
+      stands.map((stand) => ({ ...stand, bookingPreview: null })) as PublicRegistrationStand[],
+    );
   }
 
   const supabase = createAdminSupabaseClient();
@@ -148,22 +155,25 @@ async function attachStandBookingPreviews(stands: RegistrationStand[]) {
 
   const applicationMap = new Map(typedApplications.map((application) => [application.id, application]));
 
-  return stands.map((stand) => {
-    const application = stand.assigned_application_id ? applicationMap.get(stand.assigned_application_id) : null;
-    if (!application) {
-      return { ...stand, bookingPreview: null };
-    }
+  return applyPublicRegistrationStandOverrides(
+    slug,
+    stands.map((stand) => {
+      const application = stand.assigned_application_id ? applicationMap.get(stand.assigned_application_id) : null;
+      if (!application) {
+        return { ...stand, bookingPreview: null };
+      }
 
-    return {
-      ...stand,
-      bookingPreview: {
-        companyName: application.company_name,
-        logoUrl: logoUrlMap.get(application.id) ?? null,
-        candidateSummary: buildCandidateSummary(application),
-        candidateLevelLabel: candidateLevelLabel(application.candidate_level),
-      },
-    };
-  }) as PublicRegistrationStand[];
+      return {
+        ...stand,
+        bookingPreview: {
+          companyName: application.company_name,
+          logoUrl: logoUrlMap.get(application.id) ?? null,
+          candidateSummary: buildCandidateSummary(application),
+          candidateLevelLabel: candidateLevelLabel(application.candidate_level),
+        },
+      };
+    }) as PublicRegistrationStand[],
+  );
 }
 
 function isCampaignOpen(campaign: RegistrationCampaign) {
@@ -235,7 +245,7 @@ const loadPublicRegistrationCampaignDetail = unstable_cache(
     return {
       campaign: typedCampaign,
       packages: (packages ?? []) as RegistrationPackage[],
-      stands: await attachStandBookingPreviews(typedStands),
+      stands: await attachStandBookingPreviews(typedCampaign.slug, typedStands),
     };
   },
   ["event-registration-public-campaign-detail"],

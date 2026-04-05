@@ -4,6 +4,11 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { requireRole } from "@/lib/auth";
+import { parseFormAttachments } from "@/lib/email-assets";
+import {
+  appendSignatureToEmailHtml,
+  buildEmailSignatureHtml,
+} from "@/lib/resend";
 import {
   archiveContactCompany,
   createManualContactCase,
@@ -104,6 +109,9 @@ const sendCaseMailSchema = z.object({
   cc: z.string().optional().or(z.literal("")),
   subject: z.string().min(2, "Emne er påkrevd."),
   htmlBody: z.string().min(2, "Melding er påkrevd."),
+  signatureName: z.string().optional().or(z.literal("")),
+  signatureTitle: z.string().optional().or(z.literal("")),
+  signaturePhone: z.string().optional().or(z.literal("")),
 });
 
 export async function syncContactOverviewAction(formData: FormData) {
@@ -314,6 +322,9 @@ export async function sendContactCaseEmailAction(formData: FormData) {
       cc: getFormValue(formData, "cc"),
       subject: getFormValue(formData, "subject"),
       htmlBody: getFormValue(formData, "htmlBody"),
+      signatureName: getFormValue(formData, "signatureName"),
+      signatureTitle: getFormValue(formData, "signatureTitle"),
+      signaturePhone: getFormValue(formData, "signaturePhone"),
     });
 
     const to = parseEmails(parsed.to);
@@ -321,13 +332,22 @@ export async function sendContactCaseEmailAction(formData: FormData) {
     if (to.length === 0) {
       throw new Error("Minst én mottaker må angis.");
     }
+    const signatureHtml = buildEmailSignatureHtml({
+      name: parsed.signatureName || profile.full_name || "",
+      title: parsed.signatureTitle || "",
+      phone: parsed.signaturePhone || "",
+      includeLogo: formData.get("signatureIncludeLogo") === "on",
+    });
+    const attachments = await parseFormAttachments(formData);
 
     await sendContactCaseEmail({
       caseId: parsed.caseId,
       to,
       cc,
       subject: parsed.subject,
-      htmlBody: parsed.htmlBody.replace(/\n/g, "<br />"),
+      htmlBody: appendSignatureToEmailHtml(parsed.htmlBody.replace(/\n/g, "<br />"), signatureHtml),
+      attachments,
+      fromDisplayName: parsed.signatureName || profile.full_name || "Oslo Student Hub",
       createdBy: profile.id,
     });
 

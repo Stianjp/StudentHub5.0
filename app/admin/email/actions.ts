@@ -1,10 +1,18 @@
 "use server";
-
 import { revalidatePath } from "next/cache";
 import { requireRole } from "@/lib/auth";
 import { syncDynamicEmailGroups } from "@/lib/email-groups";
+import {
+  loadEmailTemplateAttachment,
+  parseFormAttachments,
+} from "@/lib/email-assets";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
-import { renderTemplate, sendBulkEmail } from "@/lib/resend";
+import {
+  appendSignatureToEmailHtml,
+  buildEmailSignatureHtml,
+  buildRecipientTemplateVariables,
+  sendBulkEmail,
+} from "@/lib/resend";
 
 function norm(value: FormDataEntryValue | null) {
   return String(value ?? "").trim();
@@ -18,7 +26,7 @@ export async function sendEmailAction(
   _prevState: ActionState,
   formData: FormData
 ): Promise<ActionState> {
-  await requireRole("admin");
+  const profile = await requireRole("admin");
 
   const templateId = norm(formData.get("template_id")) || undefined;
   const subjectOverride = norm(formData.get("subject"));
@@ -26,27 +34,46 @@ export async function sendEmailAction(
   const recipientMode = norm(formData.get("recipient_mode")); // "group" | "custom"
   const groupId = norm(formData.get("group_id")) || undefined;
   const customEmails = norm(formData.get("custom_emails"));
+  const signatureName = norm(formData.get("signature_name")) || profile.full_name || "";
+  const signatureTitle = norm(formData.get("signature_title"));
+  const signaturePhone = norm(formData.get("signature_phone"));
 
   const supabase = createAdminSupabaseClient();
 
   let subject = subjectOverride;
   let htmlBody = htmlOverride;
+  let templateAttachment: Awaited<ReturnType<typeof loadEmailTemplateAttachment>> = null;
 
   if (templateId) {
     const { data: template } = await supabase
       .from("email_templates")
-      .select("subject, html_body")
+      .select("subject, html_body, attachment_path, attachment_name, attachment_content_type")
       .eq("id", templateId)
       .single();
 
     if (template) {
       if (!subjectOverride) subject = template.subject;
       if (!htmlOverride) htmlBody = template.html_body;
+      templateAttachment = await loadEmailTemplateAttachment({
+        path: template.attachment_path,
+        filename: template.attachment_name,
+        contentType: template.attachment_content_type,
+      });
     }
   }
 
   if (!subject) throw new Error("Emne er påkrevd.");
   if (!htmlBody) throw new Error("Innhold er påkrevd.");
+
+  const signatureHtml = buildEmailSignatureHtml({
+    name: signatureName,
+    title: signatureTitle,
+    phone: signaturePhone,
+    includeLogo: formData.get("signature_include_logo") === "on",
+  });
+  const resolvedHtmlBody = appendSignatureToEmailHtml(htmlBody, signatureHtml);
+  const uploadedAttachments = await parseFormAttachments(formData);
+  const attachments = [...(templateAttachment ? [templateAttachment] : []), ...uploadedAttachments];
 
   const recipients: Recipient[] = [];
   const seenEmails = new Set<string>();
@@ -65,7 +92,15 @@ export async function sendEmailAction(
         seenEmails.add(normalizedEmail);
         recipients.push({
           email: normalizedEmail,
-          variables: { displayName: m.display_name ?? "" },
+          variables: buildRecipientTemplateVariables({
+            displayName: m.display_name ?? "",
+            extras: {
+              signature: signatureHtml,
+              senderName: signatureName,
+              senderTitle: signatureTitle,
+              senderPhone: signaturePhone,
+            },
+          }),
         });
       }
     }
@@ -79,7 +114,19 @@ export async function sendEmailAction(
       const normalizedEmail = email.toLowerCase();
       if (!seenEmails.has(normalizedEmail)) {
         seenEmails.add(normalizedEmail);
-        recipients.push({ email: normalizedEmail });
+        const derivedName = normalizedEmail.split("@")[0]?.replace(/[._-]+/g, " ").trim() ?? "";
+        recipients.push({
+          email: normalizedEmail,
+          variables: buildRecipientTemplateVariables({
+            displayName: derivedName,
+            extras: {
+              signature: signatureHtml,
+              senderName: signatureName,
+              senderTitle: signatureTitle,
+              senderPhone: signaturePhone,
+            },
+          }),
+        });
       }
     }
   }
@@ -92,10 +139,11 @@ export async function sendEmailAction(
   const result = await sendBulkEmail({
     recipients,
     subject,
-    htmlBody,
+    htmlBody: resolvedHtmlBody,
     type: "bulk_admin",
     templateId,
     batchId,
+    attachments,
     supabase,
   });
 

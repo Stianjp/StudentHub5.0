@@ -1,5 +1,6 @@
 import type { TableRow } from "@/lib/types/database";
 import type { PublicRegistrationStand } from "@/lib/event-registration";
+import { applyPublicRegistrationStandOverrides } from "@/lib/event-registration-stand-overrides";
 
 type EventRow = TableRow<"events">;
 type RegistrationCampaign = TableRow<"event_registration_campaigns">;
@@ -195,6 +196,9 @@ export function getPreviewRegistrationDetail(slug: string): PreviewRegistrationD
   return {
     campaign: { ...FIXTURE_CAMPAIGN, event: { ...FIXTURE_EVENT } },
     packages: FIXTURE_PACKAGES.map((pkg) => ({ ...pkg })),
-    stands: FIXTURE_STANDS.map((stand) => ({ ...stand, bookingPreview: null })),
+    stands: applyPublicRegistrationStandOverrides(
+      slug,
+      FIXTURE_STANDS.map((stand) => ({ ...stand, bookingPreview: null })) as PublicRegistrationStand[],
+    ),
   };
 }

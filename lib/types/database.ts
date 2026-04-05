@@ -1410,6 +1410,9 @@ export type Database = {
           name: string;
           subject: string;
           html_body: string;
+          attachment_path: string | null;
+          attachment_name: string | null;
+          attachment_content_type: string | null;
           variables: string[];
           is_active: boolean;
           created_at: string;
@@ -1420,6 +1423,9 @@ export type Database = {
           name: string;
           subject: string;
           html_body: string;
+          attachment_path?: string | null;
+          attachment_name?: string | null;
+          attachment_content_type?: string | null;
           variables?: string[];
           is_active?: boolean;
           created_at?: string;
@@ -1430,6 +1436,9 @@ export type Database = {
           name?: string;
           subject?: string;
           html_body?: string;
+          attachment_path?: string | null;
+          attachment_name?: string | null;
+          attachment_content_type?: string | null;
           variables?: string[];
           is_active?: boolean;
           created_at?: string;
