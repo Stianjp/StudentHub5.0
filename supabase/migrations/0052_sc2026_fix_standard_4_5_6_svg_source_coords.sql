@@ -9,8 +9,8 @@ set
   status = 'available',
   x = case stand_code
     when 'Standard 4' then 81.99
-    when 'Standard 5' then 89.53
-    when 'Standard 6' then 89.48
+    when 'Standard 5' then 90.15
+    when 'Standard 6' then 90.15
     else x
   end,
   y = case stand_code
@@ -20,15 +20,15 @@ set
     else y
   end,
   width = case stand_code
-    when 'Standard 4' then 3.56
-    when 'Standard 5' then 5.84
-    when 'Standard 6' then 5.84
+    when 'Standard 4' then 3.50
+    when 'Standard 5' then 3.50
+    when 'Standard 6' then 3.50
     else width
   end,
   height = case stand_code
-    when 'Standard 4' then 3.07
-    when 'Standard 5' then 1.91
-    when 'Standard 6' then 1.87
+    when 'Standard 4' then 2.94
+    when 'Standard 5' then 2.94
+    when 'Standard 6' then 2.94
     else height
   end,
   updated_at = now()
