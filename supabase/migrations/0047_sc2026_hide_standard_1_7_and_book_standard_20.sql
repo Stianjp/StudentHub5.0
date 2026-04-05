@@ -27,7 +27,8 @@ with campaign as (
 )
 update public.event_registration_stands
 set
-  status = 'assigned',
+  status = 'available',
+  assigned_application_id = null,
   updated_at = now()
 where campaign_id = (select id from campaign)
   and stand_code = 'Standard 20';

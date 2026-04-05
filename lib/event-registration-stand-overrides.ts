@@ -23,35 +23,10 @@ const STUDENT_CONNECT_2026_HIDDEN_STANDS = new Set([
   "Standard 7",
 ]);
 
-const STUDENT_CONNECT_2026_BOOKED_OVERRIDES = new Map<string, PublicStandBookingPreviewOverride>([
-  [
-    "Standard 20",
-    {
-      companyName: "Tieto",
-      logoUrl: null,
-      candidateSummary: null,
-      candidateLevelLabel: null,
-    },
-  ],
-]);
-
 export function applyPublicRegistrationStandOverrides<T extends PublicStandLike>(slug: string, stands: T[]): T[] {
   if (slug !== "student-connect-2026") {
     return stands;
   }
 
-  return stands
-    .filter((stand) => !STUDENT_CONNECT_2026_HIDDEN_STANDS.has(stand.stand_code))
-    .map((stand) => {
-      const bookingPreview = STUDENT_CONNECT_2026_BOOKED_OVERRIDES.get(stand.stand_code);
-      if (!bookingPreview) {
-        return stand;
-      }
-
-      return {
-        ...stand,
-        status: "assigned",
-        bookingPreview,
-      };
-    });
+  return stands.filter((stand) => !STUDENT_CONNECT_2026_HIDDEN_STANDS.has(stand.stand_code));
 }
