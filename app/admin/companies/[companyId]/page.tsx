@@ -184,14 +184,14 @@ export default async function AdminCompanyDetailPage({ params, searchParams }: P
                   : null;
 
               return (
-                <div key={entry.application.id} className="rounded-2xl border border-primary/10 bg-primary/5 p-5">
+                <div key={entry.application.id} className="rounded-2xl border border-[#D8CCE8] bg-[#F7F3FF] p-5 text-[#1A1626]">
                   <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                     <div className="space-y-1">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-primary/60">Påmelding</p>
-                      <h4 className="text-base font-bold text-primary">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-[#4F4568]">Påmelding</p>
+                      <h4 className="text-base font-bold text-[#140249]">
                         {entry.event?.name ?? entry.campaign?.public_title ?? entry.application.company_name}
                       </h4>
-                      <p className="text-sm text-ink/70">
+                      <p className="text-sm text-[#443465]">
                         Sendt inn {formatDateTime(entry.application.created_at)}
                         {entry.application.approved_at ? ` · godkjent ${formatDateTime(entry.application.approved_at)}` : ""}
                         {entry.application.rejected_at ? ` · avslått ${formatDateTime(entry.application.rejected_at)}` : ""}
@@ -208,66 +208,66 @@ export default async function AdminCompanyDetailPage({ params, searchParams }: P
                   </div>
 
                   <div className="mt-4 grid gap-4 xl:grid-cols-2">
-                    <div className="rounded-2xl border border-primary/10 bg-white p-4 text-sm text-ink/80 shadow-sm">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-primary/60">Kontakt og firma</p>
-                      <div className="mt-3 grid gap-1.5">
-                        <p><span className="font-semibold text-primary">Kontaktperson:</span> {entry.application.contact_first_name} {entry.application.contact_last_name}</p>
-                        <p><span className="font-semibold text-primary">Stilling:</span> {entry.application.contact_job_title ?? "—"}</p>
-                        <p><span className="font-semibold text-primary">Kontakt e-post:</span> {entry.application.contact_email}</p>
-                        <p><span className="font-semibold text-primary">Telefon:</span> {entry.application.contact_phone}</p>
-                        <p><span className="font-semibold text-primary">Org.nr:</span> {entry.application.org_number}</p>
-                        <p><span className="font-semibold text-primary">Adresse:</span> {entry.application.address}, {entry.application.postal_code} {entry.application.city}, {entry.application.country}</p>
+                    <div className="rounded-2xl border border-[#D8CCE8] bg-white p-4 text-sm text-[#1A1626] shadow-sm">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-[#4F4568]">Kontakt og firma</p>
+                      <div className="mt-3 grid gap-1.5 text-[#1A1626]">
+                        <p><span className="font-semibold text-[#140249]">Kontaktperson:</span> {entry.application.contact_first_name} {entry.application.contact_last_name}</p>
+                        <p><span className="font-semibold text-[#140249]">Stilling:</span> {entry.application.contact_job_title ?? "—"}</p>
+                        <p><span className="font-semibold text-[#140249]">Kontakt e-post:</span> {entry.application.contact_email}</p>
+                        <p><span className="font-semibold text-[#140249]">Telefon:</span> {entry.application.contact_phone}</p>
+                        <p><span className="font-semibold text-[#140249]">Org.nr:</span> {entry.application.org_number}</p>
+                        <p><span className="font-semibold text-[#140249]">Adresse:</span> {entry.application.address}, {entry.application.postal_code} {entry.application.city}, {entry.application.country}</p>
                       </div>
                     </div>
 
-                    <div className="rounded-2xl border border-primary/10 bg-white p-4 text-sm text-ink/80 shadow-sm">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-primary/60">Fakturagrunnlag</p>
-                      <div className="mt-3 grid gap-1.5">
-                        <p><span className="font-semibold text-primary">Fakturamåte:</span> {invoiceDeliveryLabel(entry.application.invoice_delivery_method)}</p>
-                        <p><span className="font-semibold text-primary">Faktura e-post:</span> {entry.application.invoice_email ?? "—"}</p>
-                        <p><span className="font-semibold text-primary">Fakturareferanse:</span> {entry.application.invoice_reference ?? "—"}</p>
-                        <p><span className="font-semibold text-primary">Ønsket pakke:</span> {entry.requestedPackage?.public_name ?? entry.requestedPackage?.mapped_package ?? "—"}</p>
-                        <p><span className="font-semibold text-primary">Godkjent pakke:</span> {entry.approvedPackage?.public_name ?? entry.approvedPackage?.mapped_package ?? "—"}</p>
-                        <p><span className="font-semibold text-primary">Ønsket stand:</span> {entry.requestedStand?.stand_code ?? "—"}</p>
-                        <p><span className="font-semibold text-primary">Godkjent stand:</span> {entry.approvedStand?.stand_code ?? "—"}</p>
+                    <div className="rounded-2xl border border-[#D8CCE8] bg-white p-4 text-sm text-[#1A1626] shadow-sm">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-[#4F4568]">Fakturagrunnlag</p>
+                      <div className="mt-3 grid gap-1.5 text-[#1A1626]">
+                        <p><span className="font-semibold text-[#140249]">Fakturamåte:</span> {invoiceDeliveryLabel(entry.application.invoice_delivery_method)}</p>
+                        <p><span className="font-semibold text-[#140249]">Faktura e-post:</span> {entry.application.invoice_email ?? "—"}</p>
+                        <p><span className="font-semibold text-[#140249]">Fakturareferanse:</span> {entry.application.invoice_reference ?? "—"}</p>
+                        <p><span className="font-semibold text-[#140249]">Ønsket pakke:</span> {entry.requestedPackage?.public_name ?? entry.requestedPackage?.mapped_package ?? "—"}</p>
+                        <p><span className="font-semibold text-[#140249]">Godkjent pakke:</span> {entry.approvedPackage?.public_name ?? entry.approvedPackage?.mapped_package ?? "—"}</p>
+                        <p><span className="font-semibold text-[#140249]">Ønsket stand:</span> {entry.requestedStand?.stand_code ?? "—"}</p>
+                        <p><span className="font-semibold text-[#140249]">Godkjent stand:</span> {entry.approvedStand?.stand_code ?? "—"}</p>
                       </div>
                     </div>
 
-                    <div className="rounded-2xl border border-primary/10 bg-white p-4 text-sm text-ink/80 shadow-sm">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-primary/60">Rekruttering fra påmelding</p>
-                      <div className="mt-3 grid gap-1.5">
-                        <p><span className="font-semibold text-primary">Nivå:</span> {candidateLevelLabel(entry.application.candidate_level)}</p>
-                        <p><span className="font-semibold text-primary">Studieretninger:</span> {joinValues(entry.application.candidate_fields)}</p>
-                        <p><span className="font-semibold text-primary">Andre studieretninger:</span> {entry.application.candidate_fields_other ?? "—"}</p>
-                        <p><span className="font-semibold text-primary">Standbehov:</span> {joinValues(entry.application.stand_needs)}</p>
-                        <p><span className="font-semibold text-primary">Andre standbehov:</span> {entry.application.stand_needs_other ?? "—"}</p>
+                    <div className="rounded-2xl border border-[#D8CCE8] bg-white p-4 text-sm text-[#1A1626] shadow-sm">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-[#4F4568]">Rekruttering fra påmelding</p>
+                      <div className="mt-3 grid gap-1.5 text-[#1A1626]">
+                        <p><span className="font-semibold text-[#140249]">Nivå:</span> {candidateLevelLabel(entry.application.candidate_level)}</p>
+                        <p><span className="font-semibold text-[#140249]">Studieretninger:</span> {joinValues(entry.application.candidate_fields)}</p>
+                        <p><span className="font-semibold text-[#140249]">Andre studieretninger:</span> {entry.application.candidate_fields_other ?? "—"}</p>
+                        <p><span className="font-semibold text-[#140249]">Standbehov:</span> {joinValues(entry.application.stand_needs)}</p>
+                        <p><span className="font-semibold text-[#140249]">Andre standbehov:</span> {entry.application.stand_needs_other ?? "—"}</p>
                       </div>
                     </div>
 
-                    <div className="rounded-2xl border border-primary/10 bg-white p-4 text-sm text-ink/80 shadow-sm">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-primary/60">Portal og vedlegg</p>
+                    <div className="rounded-2xl border border-[#D8CCE8] bg-white p-4 text-sm text-[#1A1626] shadow-sm">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-[#4F4568]">Portal og vedlegg</p>
                       <div className="mt-3 grid gap-2">
                         <div>
-                          <p className="font-semibold text-primary">Portal e-poster</p>
+                          <p className="font-semibold text-[#140249]">Portal e-poster</p>
                           {entry.portalEmails.length === 0 ? (
-                            <p className="mt-1 text-sm text-ink/60">Ingen registrerte portaladresser.</p>
+                            <p className="mt-1 text-sm text-[#615679]">Ingen registrerte portaladresser.</p>
                           ) : (
                             <ul className="mt-2 grid gap-2">
                               {entry.portalEmails.map((portalEmail) => (
-                                <li key={portalEmail.id} className="rounded-xl border border-primary/10 bg-primary/5 px-3 py-2 text-sm text-ink/80">
+                                <li key={portalEmail.id} className="rounded-xl border border-[#D8CCE8] bg-[#F7F3FF] px-3 py-2 text-sm text-[#1A1626]">
                                   {portalEmail.email}
                                 </li>
                               ))}
                             </ul>
                           )}
                         </div>
-                        <p><span className="font-semibold text-primary">Logo:</span> {entry.logoUrl ? <a className="font-semibold text-primary underline underline-offset-2" href={entry.logoUrl} target="_blank" rel="noreferrer">Åpne opplastet logo</a> : "Ingen logo lastet opp"}</p>
+                        <p><span className="font-semibold text-[#140249]">Logo:</span> {entry.logoUrl ? <a className="font-semibold text-[#140249] underline underline-offset-2" href={entry.logoUrl} target="_blank" rel="noreferrer">Åpne opplastet logo</a> : "Ingen logo lastet opp"}</p>
                       </div>
                     </div>
 
-                    <div className="rounded-2xl border border-primary/10 bg-white p-4 text-sm text-ink/80 shadow-sm xl:col-span-2">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-primary/60">Notater fra påmeldingen</p>
-                      <p className="mt-3 whitespace-pre-wrap leading-6 text-ink/80">
+                    <div className="rounded-2xl border border-[#D8CCE8] bg-white p-4 text-sm text-[#1A1626] shadow-sm xl:col-span-2">
+                      <p className="text-xs font-semibold uppercase tracking-wide text-[#4F4568]">Notater fra påmeldingen</p>
+                      <p className="mt-3 whitespace-pre-wrap leading-6 text-[#1A1626]">
                         {entry.application.notes ?? "Ingen notater sendt inn."}
                       </p>
                       {entry.application.rejection_reason ? (
