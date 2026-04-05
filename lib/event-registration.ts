@@ -188,66 +188,68 @@ function isCampaignOpen(campaign: RegistrationCampaign) {
 
 const PUBLIC_EVENT_FIELDS = "id, name, slug, starts_at, ends_at, location, registration_form_url";
 
-const loadPublicRegistrationCampaigns = unstable_cache(
-  async () => {
-    const supabase = createPublicSupabaseClient();
-    const { data, error } = await supabase
-      .from("event_registration_campaigns")
-      .select(`*, event:events(${PUBLIC_EVENT_FIELDS})`)
-      .order("opens_at", { ascending: true });
+async function fetchPublicRegistrationCampaigns() {
+  const supabase = createPublicSupabaseClient();
+  const { data, error } = await supabase
+    .from("event_registration_campaigns")
+    .select(`*, event:events(${PUBLIC_EVENT_FIELDS})`)
+    .order("opens_at", { ascending: true });
 
-    if (error) throw error;
+  if (error) throw error;
 
-    const campaigns = (data ?? []) as unknown as PublicCampaign[];
-    return campaigns.filter((campaign) => isCampaignOpen(campaign));
-  },
-  ["event-registration-public-campaigns"],
-  { revalidate: 300 },
-);
+  const campaigns = (data ?? []) as unknown as PublicCampaign[];
+  return campaigns.filter((campaign) => isCampaignOpen(campaign));
+}
+
+async function fetchPublicRegistrationCampaignDetail(slug: string): Promise<PublicCampaignDetail | null> {
+  const supabase = createPublicSupabaseClient();
+  const { data: campaign, error } = await supabase
+    .from("event_registration_campaigns")
+    .select(`*, event:events(${PUBLIC_EVENT_FIELDS})`)
+    .eq("slug", slug)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!campaign) return null;
+
+  const typedCampaign = campaign as unknown as PublicCampaign;
+
+  if (!isCampaignOpen(typedCampaign)) {
+    return null;
+  }
+
+  const [{ data: packages, error: packagesError }, { data: stands, error: standsError }] = await Promise.all([
+    supabase
+      .from("event_registration_packages")
+      .select("*")
+      .eq("campaign_id", typedCampaign.id)
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true }),
+    supabase
+      .from("event_registration_stands")
+      .select("*")
+      .eq("campaign_id", typedCampaign.id)
+      .order("sort_order", { ascending: true }),
+  ]);
+
+  if (packagesError) throw packagesError;
+  if (standsError) throw standsError;
+
+  const typedStands = (stands ?? []) as RegistrationStand[];
+
+  return {
+    campaign: typedCampaign,
+    packages: (packages ?? []) as RegistrationPackage[],
+    stands: await attachStandBookingPreviews(typedCampaign.slug, typedStands),
+  };
+}
+
+const loadPublicRegistrationCampaigns = unstable_cache(fetchPublicRegistrationCampaigns, ["event-registration-public-campaigns"], {
+  revalidate: 300,
+});
 
 const loadPublicRegistrationCampaignDetail = unstable_cache(
-  async (slug: string): Promise<PublicCampaignDetail | null> => {
-    const supabase = createPublicSupabaseClient();
-    const { data: campaign, error } = await supabase
-      .from("event_registration_campaigns")
-      .select(`*, event:events(${PUBLIC_EVENT_FIELDS})`)
-      .eq("slug", slug)
-      .maybeSingle();
-
-    if (error) throw error;
-    if (!campaign) return null;
-
-    const typedCampaign = campaign as unknown as PublicCampaign;
-
-    if (!isCampaignOpen(typedCampaign)) {
-      return null;
-    }
-
-    const [{ data: packages, error: packagesError }, { data: stands, error: standsError }] = await Promise.all([
-      supabase
-        .from("event_registration_packages")
-        .select("*")
-        .eq("campaign_id", typedCampaign.id)
-        .eq("is_active", true)
-        .order("sort_order", { ascending: true }),
-      supabase
-        .from("event_registration_stands")
-        .select("*")
-        .eq("campaign_id", typedCampaign.id)
-        .order("sort_order", { ascending: true }),
-    ]);
-
-    if (packagesError) throw packagesError;
-    if (standsError) throw standsError;
-
-    const typedStands = (stands ?? []) as RegistrationStand[];
-
-    return {
-      campaign: typedCampaign,
-      packages: (packages ?? []) as RegistrationPackage[],
-      stands: await attachStandBookingPreviews(typedCampaign.slug, typedStands),
-    };
-  },
+  fetchPublicRegistrationCampaignDetail,
   ["event-registration-public-campaign-detail"],
   { revalidate: 300 },
 );
@@ -705,12 +707,18 @@ export async function listPublicRegistrationCampaigns() {
   if (shouldUsePreviewRegistrationData()) {
     return listPreviewRegistrationCampaigns();
   }
+  if (process.env.NODE_ENV !== "production") {
+    return fetchPublicRegistrationCampaigns();
+  }
   return loadPublicRegistrationCampaigns();
 }
 
 export async function getPublicRegistrationCampaignBySlug(slug: string): Promise<PublicCampaignDetail | null> {
   if (shouldUsePreviewRegistrationData()) {
     return getPreviewRegistrationDetail(slug);
+  }
+  if (process.env.NODE_ENV !== "production") {
+    return fetchPublicRegistrationCampaignDetail(slug);
   }
   return loadPublicRegistrationCampaignDetail(slug);
 }

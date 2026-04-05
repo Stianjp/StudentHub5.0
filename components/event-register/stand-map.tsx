@@ -136,7 +136,7 @@ export function StandMap({
               className={cn(
                 "absolute flex items-center justify-center overflow-hidden rounded-md border px-1 text-center text-[9px] font-bold leading-none transition duration-150 md:text-[10px]",
                 standStateClass(stand, isSelected),
-                isInteractive && !unavailable ? "hover:scale-[1.02] focus-visible:scale-[1.02]" : undefined,
+                isInteractive && !unavailable ? "hover:brightness-[0.98]" : undefined,
                 isInteractive ? "focus-visible:ring-2 focus-visible:ring-[#FE9A70] focus-visible:ring-offset-0 focus-visible:outline-none" : undefined,
                 !isInteractive ? "pointer-events-none" : undefined,
                 unavailable && !isBooked ? "cursor-not-allowed" : undefined,

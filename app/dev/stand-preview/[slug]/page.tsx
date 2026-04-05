@@ -40,7 +40,7 @@ export default async function StandPreviewPage({ params, searchParams }: PagePro
             {detail.campaign.public_title} Stand Alignment
           </h1>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-[#1A1626]/75">
-            This preview uses local fixture data and the production floorplan PNG as the stand-geometry source of truth.
+            This preview uses local fixture data and the production floorplan SVG as the stand-geometry source of truth.
           </p>
         </div>
 
