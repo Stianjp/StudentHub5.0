@@ -119,7 +119,7 @@ export function StandShowcase({
   );
 
   return (
-    <div className="rounded-[32px] border border-white/14 bg-white/8 p-4 shadow-[0_24px_80px_rgba(20,2,73,0.32)] md:p-6">
+    <div className="rounded-[28px] border border-white/14 bg-white/8 p-3 shadow-[0_24px_80px_rgba(20,2,73,0.32)] sm:rounded-[32px] sm:p-4 md:p-6">
       <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.3em] text-secondary/80">
@@ -138,16 +138,17 @@ export function StandShowcase({
         </div>
       </div>
 
-      <div className="rounded-[28px] bg-white p-3 shadow-[0_24px_80px_rgba(20,2,73,0.18)] md:p-4">
-        <div
-          className="relative w-full overflow-hidden rounded-[24px] bg-[#f6f0ff]"
-          style={{ aspectRatio: `${floorplanWidth} / ${floorplanHeight}` }}
-        >
+      <div className="rounded-[24px] bg-white p-1.5 shadow-[0_24px_80px_rgba(20,2,73,0.18)] sm:rounded-[28px] sm:p-3 md:p-4">
+        <div className="-mx-1 overflow-x-auto overscroll-x-contain px-1 sm:mx-0 sm:px-0 md:overflow-visible">
+          <div
+            className="relative min-w-[420px] overflow-hidden rounded-[22px] bg-[#f6f0ff] sm:min-w-0 sm:rounded-[24px]"
+            style={{ aspectRatio: `${floorplanWidth} / ${floorplanHeight}` }}
+          >
           <Image
             src={floorplanImagePath}
             alt={floorplanAlt}
             fill
-            sizes="(max-width: 768px) 100vw, 860px"
+            sizes="(max-width: 639px) 420px, (max-width: 768px) 100vw, 860px"
             className="object-contain"
             priority
             unoptimized
@@ -275,32 +276,33 @@ export function StandShowcase({
             );
           })}
 
-          {activeStand?.bookingPreview ? (
-            <div
-              style={getTooltipPosition(activeStand)}
-              className="pointer-events-none absolute z-30 hidden w-[26%] min-w-[180px] rounded-2xl border border-primary/15 bg-white/98 p-3 text-left shadow-[0_18px_50px_rgba(20,2,73,0.24)] md:block"
-            >
-              <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#6d28d9]">
-                {TIER_TEXT[getPackageTier(activeStand)]}
-              </p>
-              <h4 className="mt-1 text-sm font-bold text-primary">
-                {activeStand.bookingPreview.companyName}
-              </h4>
-              <p className="mt-1 text-xs font-semibold text-ink/65">
-                {getStandLabel(activeStand)}
-              </p>
-              {activeStand.bookingPreview.candidateSummary ? (
-                <p className="mt-2 text-xs leading-relaxed text-ink/80">
-                  {activeStand.bookingPreview.candidateSummary}
+            {activeStand?.bookingPreview ? (
+              <div
+                style={getTooltipPosition(activeStand)}
+                className="pointer-events-none absolute z-30 hidden w-[26%] min-w-[180px] rounded-2xl border border-primary/15 bg-white/98 p-3 text-left shadow-[0_18px_50px_rgba(20,2,73,0.24)] md:block"
+              >
+                <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#6d28d9]">
+                  {TIER_TEXT[getPackageTier(activeStand)]}
                 </p>
-              ) : null}
-              {activeStand.bookingPreview.candidateLevelLabel ? (
-                <p className="mt-1 text-xs leading-relaxed text-ink/70">
-                  Level: {activeStand.bookingPreview.candidateLevelLabel}
+                <h4 className="mt-1 text-sm font-bold text-primary">
+                  {activeStand.bookingPreview.companyName}
+                </h4>
+                <p className="mt-1 text-xs font-semibold text-ink/65">
+                  {getStandLabel(activeStand)}
                 </p>
-              ) : null}
-            </div>
-          ) : null}
+                {activeStand.bookingPreview.candidateSummary ? (
+                  <p className="mt-2 text-xs leading-relaxed text-ink/80">
+                    {activeStand.bookingPreview.candidateSummary}
+                  </p>
+                ) : null}
+                {activeStand.bookingPreview.candidateLevelLabel ? (
+                  <p className="mt-1 text-xs leading-relaxed text-ink/70">
+                    Level: {activeStand.bookingPreview.candidateLevelLabel}
+                  </p>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
         </div>
       </div>
 
@@ -347,7 +349,7 @@ export function StandShowcase({
         </div>
       ) : (
         <div className="mt-4 rounded-[20px] border border-white/12 bg-white/10 px-4 py-3 text-sm text-mist/72 md:hidden">
-          Tap one of the booked logos on the map to see company details.
+          Swipe the map if needed, then tap one of the booked logos to see company details.
         </div>
       )}
     </div>
