@@ -14,6 +14,9 @@ import { HeroSection } from "@/components/hovedside/hero-section";
 import { SectionWrapper } from "@/components/hovedside/section-wrapper";
 import { FeatureCard } from "@/components/hovedside/feature-card";
 import { CompanyGrid } from "@/components/hovedside/company-grid";
+import { StandShowcase } from "@/components/hovedside/stand-showcase";
+import { getPublicRegistrationCampaignBySlug } from "@/lib/event-registration";
+import { STUDENT_CONNECT_2026_FLOORPLAN } from "@/lib/event-registration-fixtures";
 import { getApprovedCompaniesForCampaign } from "@/lib/hovedside/approved-companies";
 
 export const metadata: Metadata = {
@@ -23,9 +26,10 @@ export const metadata: Metadata = {
 };
 
 export default async function StudentConnect2026Page() {
-  const companies = await getApprovedCompaniesForCampaign(
-    "student-connect-2026",
-  );
+  const [companies, registrationDetail] = await Promise.all([
+    getApprovedCompaniesForCampaign("student-connect-2026"),
+    getPublicRegistrationCampaignBySlug("student-connect-2026"),
+  ]);
 
   return (
     <>
@@ -166,17 +170,34 @@ export default async function StudentConnect2026Page() {
 
       {/* ── Stands placeholder ───────────────────────────────── */}
       <SectionWrapper bg="primary" id="stands">
-        <h2 className="mb-6 text-center text-2xl font-bold text-surface">
+        <h2 className="mb-2 text-center text-2xl font-bold text-surface">
           Our Stands
         </h2>
-        <div className="flex items-center justify-center rounded-2xl bg-white/5 py-16 ring-1 ring-white/10">
-          <div className="text-center text-mist/40">
-            <MapPin size={40} className="mx-auto" />
-            <p className="mt-3 text-sm">
-              Stand map and floor plan will be shown here
-            </p>
+        <p className="mx-auto mb-8 max-w-3xl text-center text-sm leading-relaxed text-mist/68">
+          Explore the event floor plan and see which companies have already
+          reserved their stand. Booked companies appear directly on the map
+          with their logo, and hovering a logo shows a short company summary.
+        </p>
+        {registrationDetail ? (
+          <StandShowcase
+            floorplanImagePath={
+              STUDENT_CONNECT_2026_FLOORPLAN.imagePath
+            }
+            floorplanAlt={STUDENT_CONNECT_2026_FLOORPLAN.alt}
+            floorplanWidth={STUDENT_CONNECT_2026_FLOORPLAN.width}
+            floorplanHeight={STUDENT_CONNECT_2026_FLOORPLAN.height}
+            stands={registrationDetail.stands}
+          />
+        ) : (
+          <div className="flex items-center justify-center rounded-2xl bg-white/5 py-16 ring-1 ring-white/10">
+            <div className="text-center text-mist/40">
+              <MapPin size={40} className="mx-auto" />
+              <p className="mt-3 text-sm">
+                Stand map and floor plan will be shown here
+              </p>
+            </div>
           </div>
-        </div>
+        )}
       </SectionWrapper>
 
       {/* ── Approved companies (dynamic) ─────────────────────── */}
