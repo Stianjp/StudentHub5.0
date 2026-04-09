@@ -108,9 +108,9 @@ export function CompanyGrid({ companies }: Props) {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 md:space-y-8">
       {candidateFields.length > 0 ? (
-        <div className="rounded-[28px] border border-white/12 bg-white/8 p-5 shadow-[0_16px_42px_rgba(20,2,73,0.18)]">
+        <div className="rounded-[28px] border border-white/12 bg-white/8 p-4 shadow-[0_16px_42px_rgba(20,2,73,0.18)] sm:p-5">
           <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.28em] text-secondary/85">
@@ -124,18 +124,18 @@ export function CompanyGrid({ companies }: Props) {
               <button
                 type="button"
                 onClick={() => setActiveField(null)}
-                className="inline-flex items-center justify-center rounded-full border border-white/14 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-white/82 transition hover:border-secondary hover:bg-white/14"
+                className="inline-flex w-full items-center justify-center rounded-full border border-white/14 bg-white/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-white/82 transition hover:border-secondary hover:bg-white/14 sm:w-auto"
               >
                 Clear filter
               </button>
             ) : null}
           </div>
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-4 flex gap-2 overflow-x-auto pb-2 sm:flex-wrap sm:overflow-visible [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
             <button
               type="button"
               onClick={() => setActiveField(null)}
               className={cn(
-                "inline-flex items-center rounded-full border px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] transition",
+                "inline-flex shrink-0 items-center rounded-full border px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] transition",
                 !activeField
                   ? "border-secondary bg-secondary text-primary"
                   : "border-white/14 bg-white/10 text-white/80 hover:border-secondary hover:bg-white/14",
@@ -149,7 +149,7 @@ export function CompanyGrid({ companies }: Props) {
                 type="button"
                 onClick={() => setActiveField(field)}
                 className={cn(
-                  "inline-flex items-center rounded-full border px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] transition",
+                  "inline-flex shrink-0 items-center rounded-full border px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] transition",
                   activeField === field
                     ? "border-secondary bg-secondary text-primary"
                     : "border-white/14 bg-white/10 text-white/80 hover:border-secondary hover:bg-white/14",
@@ -177,11 +177,11 @@ export function CompanyGrid({ companies }: Props) {
           <section
             key={tier}
             className={cn(
-              "rounded-[32px] border p-5 shadow-[0_24px_80px_rgba(20,2,73,0.2)] md:p-6",
+              "rounded-[32px] border p-4 shadow-[0_24px_80px_rgba(20,2,73,0.2)] sm:p-5 md:p-6",
               meta.sectionClassName,
             )}
           >
-            <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+            <div className="mb-5 flex flex-col gap-2 text-center md:flex-row md:items-end md:justify-between md:text-left">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.28em] text-secondary/85">
                   Attending companies
@@ -200,7 +200,7 @@ export function CompanyGrid({ companies }: Props) {
                 <article
                   key={company.id}
                   tabIndex={0}
-                  className="group relative overflow-hidden rounded-[26px] border border-white/12 bg-white/10 p-4 text-center shadow-[0_12px_32px_rgba(20,2,73,0.16)]"
+                  className="group relative overflow-hidden rounded-[26px] border border-white/12 bg-white/10 p-3 text-center shadow-[0_12px_32px_rgba(20,2,73,0.16)] sm:p-4"
                 >
                   <div
                     className={cn(
@@ -235,7 +235,7 @@ export function CompanyGrid({ companies }: Props) {
                   </div>
 
                   <div className="mt-4 space-y-3">
-                    <h4 className="text-base font-bold text-surface">
+                    <h4 className="text-sm font-bold text-surface sm:text-base">
                       {company.companyName}
                     </h4>
                     <div className="flex flex-wrap items-center justify-center gap-2">

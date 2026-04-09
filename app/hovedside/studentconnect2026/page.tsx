@@ -69,8 +69,8 @@ export default async function StudentConnect2026Page() {
         <h2 className="mb-8 text-center text-xl font-bold text-surface">
           Date and Location
         </h2>
-        <div className="grid gap-6 md:grid-cols-3">
-          <div className="flex flex-col items-center rounded-2xl bg-white/5 p-6 text-center ring-1 ring-white/10">
+        <div className="grid gap-4 sm:grid-cols-3 sm:gap-6">
+          <div className="flex flex-col items-center rounded-2xl bg-white/5 p-5 text-center ring-1 ring-white/10 sm:p-6">
             <CalendarDays size={28} className="text-secondary" />
             <p className="mt-3 text-xs font-bold uppercase tracking-wider text-mist/60">
               Date
@@ -79,7 +79,7 @@ export default async function StudentConnect2026Page() {
               October 6th 2026
             </p>
           </div>
-          <div className="flex flex-col items-center rounded-2xl bg-white/5 p-6 text-center ring-1 ring-white/10">
+          <div className="flex flex-col items-center rounded-2xl bg-white/5 p-5 text-center ring-1 ring-white/10 sm:p-6">
             <MapPin size={28} className="text-secondary" />
             <p className="mt-3 text-xs font-bold uppercase tracking-wider text-mist/60">
               Location
@@ -88,7 +88,7 @@ export default async function StudentConnect2026Page() {
               Radisson Blu Scandinavia
             </p>
           </div>
-          <div className="flex flex-col items-center rounded-2xl bg-white/5 p-6 text-center ring-1 ring-white/10">
+          <div className="flex flex-col items-center rounded-2xl bg-white/5 p-5 text-center ring-1 ring-white/10 sm:p-6">
             <Clock size={28} className="text-secondary" />
             <p className="mt-3 text-xs font-bold uppercase tracking-wider text-mist/60">
               Time
@@ -110,7 +110,7 @@ export default async function StudentConnect2026Page() {
           </p>
           <Link
             href="/for-bedrifter"
-            className="mt-6 inline-flex items-center rounded-full border-2 border-primary bg-primary px-7 py-3 text-sm font-bold uppercase tracking-wider text-surface transition-colors hover:bg-transparent hover:text-primary"
+            className="mt-6 inline-flex w-full items-center justify-center rounded-full border-2 border-primary bg-primary px-7 py-3 text-sm font-bold uppercase tracking-wider text-surface transition-colors hover:bg-transparent hover:text-primary sm:w-auto"
           >
             Read More
           </Link>
@@ -176,7 +176,8 @@ export default async function StudentConnect2026Page() {
         <p className="mx-auto mb-8 max-w-3xl text-center text-sm leading-relaxed text-mist/68">
           Explore the event floor plan and see which companies have already
           reserved their stand. Booked companies appear directly on the map
-          with their logo, and hovering a logo shows a short company summary.
+          with their logo, and tapping or hovering a logo shows a short
+          company summary.
         </p>
         {registrationDetail ? (
           <StandShowcase

@@ -36,10 +36,10 @@ const BOOKED_STAND_STYLES: Record<ApprovedCompanyPackageTier, string> = {
 };
 
 const MOBILE_BOOKED_MARKER_SIZE: Record<ApprovedCompanyPackageTier, string> = {
-  platinum: "clamp(44px, 13vw, 58px)",
-  gold: "clamp(40px, 12vw, 52px)",
-  silver: "clamp(38px, 11vw, 48px)",
-  standard: "clamp(34px, 10vw, 44px)",
+  platinum: "clamp(54px, 17vw, 72px)",
+  gold: "clamp(48px, 15vw, 64px)",
+  silver: "clamp(44px, 14vw, 58px)",
+  standard: "clamp(40px, 13vw, 52px)",
 };
 
 function getPackageTier(stand: PublicRegistrationStand): ApprovedCompanyPackageTier {
@@ -246,12 +246,12 @@ export function StandShowcase({
                 }
                 style={{
                   ...center,
-                  width: `calc(${MOBILE_BOOKED_MARKER_SIZE[packageTier]} * 1.05)`,
-                  height: MOBILE_BOOKED_MARKER_SIZE[packageTier],
+                  width: `calc(${MOBILE_BOOKED_MARKER_SIZE[packageTier]} * 1.22)`,
+                  height: `calc(${MOBILE_BOOKED_MARKER_SIZE[packageTier]} * 1.08)`,
                   transform: "translate(-50%, -50%)",
                 }}
                 className={cn(
-                  "absolute z-30 flex items-center justify-center overflow-hidden rounded-xl border-[2.5px] bg-white p-1.5 shadow-[0_12px_30px_rgba(20,2,73,0.24)] outline-none transition-transform duration-150 md:hidden",
+                  "absolute z-30 flex items-center justify-center overflow-hidden rounded-[18px] border-[2.5px] bg-white p-2 shadow-[0_14px_34px_rgba(20,2,73,0.24)] outline-none transition-transform duration-150 md:hidden",
                   BOOKED_STAND_STYLES[packageTier],
                   activeStandId === stand.id
                     ? "scale-[1.04] ring-2 ring-[#FE9A70] ring-offset-2 ring-offset-[#f6f0ff]"
@@ -259,15 +259,15 @@ export function StandShowcase({
                 )}
               >
                 {stand.bookingPreview.logoUrl ? (
-                  <Image
-                    src={stand.bookingPreview.logoUrl}
-                    alt={`Logo for ${stand.bookingPreview.companyName}`}
-                    fill
-                    sizes="56px"
-                    className="object-contain p-1.5"
-                  />
-                ) : (
-                  <span className="px-1 text-[9px] font-bold uppercase tracking-tight text-primary">
+                    <Image
+                      src={stand.bookingPreview.logoUrl}
+                      alt={`Logo for ${stand.bookingPreview.companyName}`}
+                      fill
+                      sizes="72px"
+                      className="object-contain p-1.5"
+                    />
+                  ) : (
+                  <span className="px-1 text-[10px] font-bold uppercase tracking-tight text-primary">
                     {getCompanyInitials(stand.bookingPreview.companyName)}
                   </span>
                 )}

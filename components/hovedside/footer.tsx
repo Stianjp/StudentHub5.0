@@ -16,10 +16,10 @@ export function Footer() {
       {/* Gradient stripe */}
       <div className="h-1.5 bg-gradient-to-r from-secondary via-pink to-purple" />
 
-      <div className="mx-auto max-w-7xl px-6 py-12">
-        <div className="grid gap-10 md:grid-cols-3">
+      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
+        <div className="grid gap-10 text-center md:grid-cols-3 md:text-left">
           {/* About column */}
-          <div>
+          <div className="flex flex-col items-center md:items-start">
             <Image
               src="/brand/Logo_OSH_Gradient_whitetext.svg"
               alt="Oslo Student Hub"

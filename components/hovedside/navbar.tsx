@@ -31,15 +31,16 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 bg-primary text-mist">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
         {/* Logo */}
         <Link href="/" className="shrink-0">
           <Image
             src="/brand/Logo_OSH_Gradient_whitetext.svg"
             alt="Oslo Student Hub"
-            width={160}
-            height={56}
+            width={144}
+            height={50}
             priority
+            className="h-auto w-[128px] sm:w-[144px]"
           />
         </Link>
 
@@ -114,7 +115,7 @@ export function Navbar() {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <nav className="border-t border-white/10 px-6 pb-4 pt-2 lg:hidden">
+        <nav className="border-t border-white/10 px-4 pb-4 pt-2 sm:px-6 lg:hidden">
           {[...NAV_LINKS, ...MORE_LINKS].map((link) => (
             <Link
               key={link.href}
