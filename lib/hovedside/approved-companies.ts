@@ -19,6 +19,7 @@ export type ApprovedCompanyPreview = {
   companyName: string;
   logoUrl: string | null;
   candidateLevelLabel: string | null;
+  candidateFields: string[];
   candidateSummary: string | null;
   packageTier: ApprovedCompanyPackageTier;
   packageLabel: string;
@@ -204,6 +205,7 @@ async function fetchApprovedCompanies(
         companyName: app.company_name,
         logoUrl,
         candidateLevelLabel: candidateLevelLabel(app.candidate_level),
+        candidateFields: app.candidate_fields,
         candidateSummary: buildCandidateSummary(
           app.candidate_fields,
           app.candidate_fields_other,
