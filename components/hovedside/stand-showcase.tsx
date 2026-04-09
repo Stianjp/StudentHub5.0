@@ -36,10 +36,10 @@ const BOOKED_STAND_STYLES: Record<ApprovedCompanyPackageTier, string> = {
 };
 
 const MOBILE_BOOKED_MARKER_SIZE: Record<ApprovedCompanyPackageTier, string> = {
-  platinum: "clamp(38px, 11vw, 50px)",
-  gold: "clamp(34px, 10vw, 44px)",
-  silver: "clamp(30px, 9vw, 40px)",
-  standard: "clamp(27px, 8vw, 34px)",
+  platinum: "clamp(34px, 10vw, 44px)",
+  gold: "clamp(31px, 9vw, 40px)",
+  silver: "clamp(28px, 8vw, 36px)",
+  standard: "clamp(24px, 7vw, 30px)",
 };
 
 function getPackageTier(stand: PublicRegistrationStand): ApprovedCompanyPackageTier {
@@ -247,12 +247,12 @@ export function StandShowcase({
                 }
                 style={{
                   ...center,
-                  width: `calc(${MOBILE_BOOKED_MARKER_SIZE[packageTier]} * 1.02)`,
-                  height: `calc(${MOBILE_BOOKED_MARKER_SIZE[packageTier]} * 0.92)`,
+                  width: `calc(${MOBILE_BOOKED_MARKER_SIZE[packageTier]} * 0.98)`,
+                  height: `calc(${MOBILE_BOOKED_MARKER_SIZE[packageTier]} * 0.88)`,
                   transform: "translate(-50%, -50%)",
                 }}
                 className={cn(
-                  "absolute z-30 flex items-center justify-center overflow-hidden rounded-[14px] border-2 bg-white p-1 shadow-[0_10px_20px_rgba(20,2,73,0.18)] outline-none transition-transform duration-150 md:hidden",
+                  "absolute z-30 flex items-center justify-center overflow-hidden rounded-[12px] border-2 bg-white p-0.5 shadow-[0_8px_18px_rgba(20,2,73,0.16)] outline-none transition-transform duration-150 md:hidden",
                   BOOKED_STAND_STYLES[packageTier],
                   activeStandId === stand.id
                     ? "scale-[1.04] ring-2 ring-[#FE9A70] ring-offset-2 ring-offset-[#f6f0ff]"
@@ -264,8 +264,8 @@ export function StandShowcase({
                       src={stand.bookingPreview.logoUrl}
                       alt={`Logo for ${stand.bookingPreview.companyName}`}
                       fill
-                      sizes="48px"
-                      className="object-contain p-1"
+                      sizes="40px"
+                      className="object-contain p-0.5"
                     />
                   ) : (
                   <span className="px-1 text-[10px] font-bold uppercase tracking-tight text-primary">
