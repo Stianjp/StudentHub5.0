@@ -6,6 +6,12 @@ import { SectionWrapper } from "@/components/hovedside/section-wrapper";
 import { FeatureCard } from "@/components/hovedside/feature-card";
 import { StatsBanner } from "@/components/hovedside/stats-banner";
 import { CtaSection } from "@/components/hovedside/cta-section";
+import {
+  formatWebsiteEventMonth,
+  listWebsiteEvents,
+  resolveWebsiteEventHref,
+  splitWebsiteEvents,
+} from "@/lib/hovedside/public-events";
 
 export const metadata: Metadata = {
   title: "Students",
@@ -13,7 +19,11 @@ export const metadata: Metadata = {
     "Are you a student looking for a job or thesis? Join Oslo Student Hub to connect with top companies.",
 };
 
-export default function ForStudenterPage() {
+export default async function ForStudenterPage() {
+  const events = await listWebsiteEvents();
+  const { upcoming } = splitWebsiteEvents(events);
+  const featuredEvent = upcoming[0] ?? null;
+
   return (
     <>
       {/* ── Hero ─────────────────────────────────────────────── */}
@@ -47,22 +57,35 @@ export default function ForStudenterPage() {
       {/* ── Upcoming event ───────────────────────────────────── */}
       <SectionWrapper bg="primary">
         <div className="mx-auto max-w-lg text-center">
-          <p className="text-sm font-bold uppercase tracking-wider text-secondary">
-            April
-          </p>
-          <h3 className="mt-2 text-2xl font-bold text-surface">
-            Women in STEM
-          </h3>
-          <p className="mt-3 text-sm text-mist/60">
-            More information coming soon.. So register to find out about it
-            first!
-          </p>
-          <Link
-            href="#register"
-            className="mt-6 inline-flex items-center rounded-full border-2 border-secondary px-7 py-3 text-sm font-bold uppercase tracking-wider text-secondary transition-colors hover:bg-secondary hover:text-primary"
-          >
-            Register!
-          </Link>
+          {featuredEvent ? (
+            <>
+              <p className="text-sm font-bold uppercase tracking-wider text-secondary">
+                {formatWebsiteEventMonth(featuredEvent.starts_at)}
+              </p>
+              <h3 className="mt-2 text-2xl font-bold text-surface">
+                {featuredEvent.name}
+              </h3>
+              <p className="mt-3 text-sm text-mist/60">
+                {featuredEvent.description ??
+                  "More information coming soon. Register to stay updated."}
+              </p>
+              <Link
+                href={resolveWebsiteEventHref(featuredEvent)}
+                className="mt-6 inline-flex items-center rounded-full border-2 border-secondary px-7 py-3 text-sm font-bold uppercase tracking-wider text-secondary transition-colors hover:bg-secondary hover:text-primary"
+              >
+                Learn more
+              </Link>
+            </>
+          ) : (
+            <>
+              <h3 className="mt-2 text-2xl font-bold text-surface">
+                Upcoming events
+              </h3>
+              <p className="mt-3 text-sm text-mist/60">
+                No upcoming events have been added in admin yet.
+              </p>
+            </>
+          )}
         </div>
       </SectionWrapper>
 

@@ -9,6 +9,12 @@ import {
 import { HeroSection } from "@/components/hovedside/hero-section";
 import { SectionWrapper } from "@/components/hovedside/section-wrapper";
 import { StatsBanner } from "@/components/hovedside/stats-banner";
+import {
+  formatWebsiteEventMonth,
+  listWebsiteEvents,
+  resolveWebsiteEventHref,
+  splitWebsiteEvents,
+} from "@/lib/hovedside/public-events";
 
 export const metadata: Metadata = {
   title: "Partners",
@@ -39,7 +45,11 @@ const PARTNER_NAMES = [
   "Drammen kommune",
 ];
 
-export default function ForBedrifterPage() {
+export default async function ForBedrifterPage() {
+  const events = await listWebsiteEvents();
+  const { upcoming } = splitWebsiteEvents(events);
+  const featuredEvents = upcoming.slice(0, 2);
+
   return (
     <>
       {/* ── Hero ─────────────────────────────────────────────── */}
@@ -55,33 +65,38 @@ export default function ForBedrifterPage() {
 
       {/* ── Upcoming events ──────────────────────────────────── */}
       <SectionWrapper bg="primary">
-        <div className="grid gap-6 md:grid-cols-2">
+        {featuredEvents.length === 0 ? (
           <div className="rounded-2xl bg-white/5 p-8 ring-1 ring-white/10">
-            <p className="text-sm font-bold uppercase tracking-wider text-secondary">
-              April
-            </p>
-            <h3 className="mt-2 text-2xl font-bold text-surface">
-              Women in STEM
-            </h3>
-            <p className="mt-2 text-sm text-mist/60">
-              More information coming soon!
+            <p className="text-sm text-mist/70">
+              No upcoming events have been added in admin yet.
             </p>
           </div>
-          <div className="rounded-2xl bg-white/5 p-8 ring-1 ring-white/10">
-            <p className="text-sm font-bold uppercase tracking-wider text-secondary">
-              October
-            </p>
-            <h3 className="mt-2 text-2xl font-bold text-surface">
-              Student Hub 2026
-            </h3>
-            <Link
-              href="/studentconnect2026"
-              className="mt-2 inline-block text-sm text-secondary hover:underline"
-            >
-              See info here &rarr;
-            </Link>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2">
+            {featuredEvents.map((event) => (
+              <div
+                key={event.id}
+                className="rounded-2xl bg-white/5 p-8 ring-1 ring-white/10"
+              >
+                <p className="text-sm font-bold uppercase tracking-wider text-secondary">
+                  {formatWebsiteEventMonth(event.starts_at)}
+                </p>
+                <h3 className="mt-2 text-2xl font-bold text-surface">
+                  {event.name}
+                </h3>
+                <p className="mt-2 text-sm text-mist/60">
+                  {event.description ?? "More information coming soon."}
+                </p>
+                <Link
+                  href={resolveWebsiteEventHref(event)}
+                  className="mt-2 inline-block text-sm text-secondary hover:underline"
+                >
+                  See info here &rarr;
+                </Link>
+              </div>
+            ))}
           </div>
-        </div>
+        )}
       </SectionWrapper>
 
       {/* ── Stats ────────────────────────────────────────────── */}
