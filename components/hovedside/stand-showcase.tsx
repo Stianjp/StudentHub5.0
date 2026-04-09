@@ -36,10 +36,10 @@ const BOOKED_STAND_STYLES: Record<ApprovedCompanyPackageTier, string> = {
 };
 
 const MOBILE_BOOKED_MARKER_SIZE: Record<ApprovedCompanyPackageTier, string> = {
-  platinum: "clamp(54px, 17vw, 72px)",
-  gold: "clamp(48px, 15vw, 64px)",
-  silver: "clamp(44px, 14vw, 58px)",
-  standard: "clamp(40px, 13vw, 52px)",
+  platinum: "clamp(46px, 14vw, 62px)",
+  gold: "clamp(42px, 13vw, 56px)",
+  silver: "clamp(38px, 12vw, 50px)",
+  standard: "clamp(34px, 11vw, 44px)",
 };
 
 function getPackageTier(stand: PublicRegistrationStand): ApprovedCompanyPackageTier {
@@ -246,12 +246,12 @@ export function StandShowcase({
                 }
                 style={{
                   ...center,
-                  width: `calc(${MOBILE_BOOKED_MARKER_SIZE[packageTier]} * 1.22)`,
-                  height: `calc(${MOBILE_BOOKED_MARKER_SIZE[packageTier]} * 1.08)`,
+                  width: `calc(${MOBILE_BOOKED_MARKER_SIZE[packageTier]} * 1.14)`,
+                  height: `calc(${MOBILE_BOOKED_MARKER_SIZE[packageTier]} * 1.02)`,
                   transform: "translate(-50%, -50%)",
                 }}
                 className={cn(
-                  "absolute z-30 flex items-center justify-center overflow-hidden rounded-[18px] border-[2.5px] bg-white p-2 shadow-[0_14px_34px_rgba(20,2,73,0.24)] outline-none transition-transform duration-150 md:hidden",
+                  "absolute z-30 flex items-center justify-center overflow-hidden rounded-[16px] border-[2.5px] bg-white p-1.5 shadow-[0_12px_28px_rgba(20,2,73,0.22)] outline-none transition-transform duration-150 md:hidden",
                   BOOKED_STAND_STYLES[packageTier],
                   activeStandId === stand.id
                     ? "scale-[1.04] ring-2 ring-[#FE9A70] ring-offset-2 ring-offset-[#f6f0ff]"
@@ -263,7 +263,7 @@ export function StandShowcase({
                       src={stand.bookingPreview.logoUrl}
                       alt={`Logo for ${stand.bookingPreview.companyName}`}
                       fill
-                      sizes="72px"
+                      sizes="60px"
                       className="object-contain p-1.5"
                     />
                   ) : (
