@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { HeroSection } from "@/components/hovedside/hero-section";
 import { SectionWrapper } from "@/components/hovedside/section-wrapper";
-import { PlaceholderImage } from "@/components/hovedside/placeholder-image";
 import { CtaSection } from "@/components/hovedside/cta-section";
+import { SITE_IMAGES } from "@/lib/hovedside/site-images";
 
 export const metadata: Metadata = {
   title: "About us",
@@ -16,6 +17,9 @@ export default function AboutPage() {
       <HeroSection
         title="About us"
         subtitle="Oslo Student Hub is powered by a diverse group with expertise in technology, business, and communication. Together, we are dedicated to bridging the gap between academia and the professional world, creating opportunities, and fostering innovation."
+        backgroundImageSrc={SITE_IMAGES.homeHero.src}
+        backgroundImageAlt={SITE_IMAGES.homeHero.alt}
+        backgroundImagePosition="center"
       />
 
       <div className="h-2 bg-gradient-to-r from-secondary via-pink to-purple" />
@@ -35,7 +39,15 @@ export default function AboutPage() {
               and opportunities.
             </p>
           </div>
-          <PlaceholderImage alt="Team photo" />
+          <div className="relative aspect-[16/11] overflow-hidden rounded-[30px] bg-primary shadow-[0_24px_70px_rgba(20,2,73,0.16)] ring-1 ring-primary/6">
+            <Image
+              src={SITE_IMAGES.studentsSupport.src}
+              alt={SITE_IMAGES.studentsSupport.alt}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 48vw"
+            />
+          </div>
         </div>
       </SectionWrapper>
 

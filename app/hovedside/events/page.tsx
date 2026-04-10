@@ -10,6 +10,7 @@ import {
   resolveWebsiteEventHref,
   splitWebsiteEvents,
 } from "@/lib/hovedside/public-events";
+import { SITE_IMAGES } from "@/lib/hovedside/site-images";
 
 export const metadata: Metadata = {
   title: "Events",
@@ -25,6 +26,9 @@ export default async function EventsPage() {
       <HeroSection
         title="Events"
         subtitle="Discover exciting student events and conferences. Join us to network, learn, and have fun."
+        backgroundImageSrc={SITE_IMAGES.homeHero.src}
+        backgroundImageAlt={SITE_IMAGES.homeHero.alt}
+        backgroundImagePosition="center"
       />
 
       <div className="h-2 bg-gradient-to-r from-secondary via-pink to-purple" />

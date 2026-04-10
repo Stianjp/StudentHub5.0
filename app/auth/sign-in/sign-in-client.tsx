@@ -87,17 +87,6 @@ export function SignInClient({
   const passwordHelpId = "password-help";
 
   useEffect(() => {
-    const supabase = createClient();
-    supabase.auth.getSession().then(({ error: sessionError }) => {
-      const message = sessionError?.message?.toLowerCase() ?? "";
-      const code = (sessionError as { code?: string })?.code;
-      if (code === "refresh_token_not_found" || message.includes("refresh token")) {
-        void supabase.auth.signOut();
-      }
-    });
-  }, []);
-
-  useEffect(() => {
     if (mode !== "register" || status !== "sent") return;
 
     const timeout = window.setTimeout(() => {

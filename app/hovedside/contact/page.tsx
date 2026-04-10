@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Mail, MapPin, Send } from "lucide-react";
 import { HeroSection } from "@/components/hovedside/hero-section";
 import { SectionWrapper } from "@/components/hovedside/section-wrapper";
+import { SITE_IMAGES } from "@/lib/hovedside/site-images";
 
 export const metadata: Metadata = {
   title: "Contact",
@@ -14,6 +15,9 @@ export default function ContactPage() {
       <HeroSection
         title="Contact Us"
         subtitle="Have questions or want to collaborate? We'd love to hear from you."
+        backgroundImageSrc={SITE_IMAGES.partnersHero.src}
+        backgroundImageAlt={SITE_IMAGES.partnersHero.alt}
+        backgroundImagePosition="center"
       />
 
       <div className="h-2 bg-gradient-to-r from-secondary via-pink to-purple" />

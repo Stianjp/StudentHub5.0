@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import { Users, GraduationCap, CalendarDays, School } from "lucide-react";
 import { HeroSection } from "@/components/hovedside/hero-section";
 import { SectionWrapper } from "@/components/hovedside/section-wrapper";
@@ -12,6 +13,7 @@ import {
   resolveWebsiteEventHref,
   splitWebsiteEvents,
 } from "@/lib/hovedside/public-events";
+import { SITE_IMAGES } from "@/lib/hovedside/site-images";
 
 export const metadata: Metadata = {
   title: "Students",
@@ -32,6 +34,9 @@ export default async function ForStudenterPage() {
         subtitle="Are you a student looking for a job or thesis? Sign up here!"
         ctaLabel="Register"
         ctaHref="#register"
+        backgroundImageSrc={SITE_IMAGES.studentsHero.src}
+        backgroundImageAlt={SITE_IMAGES.studentsHero.alt}
+        backgroundImagePosition="center"
       />
 
       {/* ── Gradient stripe ──────────────────────────────────── */}
@@ -51,6 +56,38 @@ export default async function ForStudenterPage() {
             conferences and events in Oslo, where you can build connections and
             meet your future employers.
           </p>
+        </div>
+      </SectionWrapper>
+
+      <SectionWrapper bg="mist">
+        <div className="grid items-center gap-8 lg:grid-cols-[1.15fr_0.85fr]">
+          <div className="relative aspect-[16/10] overflow-hidden rounded-[30px] bg-primary shadow-[0_24px_70px_rgba(20,2,73,0.16)] ring-1 ring-primary/6">
+            <Image
+              src={SITE_IMAGES.studentsSupport.src}
+              alt={SITE_IMAGES.studentsSupport.alt}
+              fill
+              className="object-cover"
+              sizes="(max-width: 1024px) 100vw, 56vw"
+            />
+          </div>
+          <div className="max-w-xl">
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-secondary">
+              Community and visibility
+            </p>
+            <h2 className="mt-3 text-2xl font-bold text-primary md:text-3xl">
+              Meet people, ask questions, and show up where companies already are.
+            </h2>
+            <p className="mt-4 text-base leading-relaxed text-ink/70">
+              Oslo Student Hub is built around real conversations. You get access
+              to events, employer presentations, and a network that makes it
+              easier to understand where you fit and what the next step can be.
+            </p>
+            <p className="mt-4 text-sm leading-relaxed text-ink/62">
+              The platform is not only for finding a job. It is also where you
+              discover student-friendly companies, thesis opportunities, and the
+              kind of people you want to learn from.
+            </p>
+          </div>
         </div>
       </SectionWrapper>
 

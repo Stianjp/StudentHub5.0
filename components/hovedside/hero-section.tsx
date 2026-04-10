@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { ReactNode } from "react";
 
 type HeroProps = {
@@ -9,6 +10,9 @@ type HeroProps = {
   children?: ReactNode;
   /** Extra CTAs rendered beside the primary one */
   extraCtas?: { label: string; href: string }[];
+  backgroundImageSrc?: string;
+  backgroundImageAlt?: string;
+  backgroundImagePosition?: string;
 };
 
 export function HeroSection({
@@ -18,12 +22,34 @@ export function HeroSection({
   ctaHref,
   children,
   extraCtas,
+  backgroundImageSrc,
+  backgroundImageAlt = "",
+  backgroundImagePosition = "center",
 }: HeroProps) {
   return (
     <section className="relative flex min-h-[58vh] items-center overflow-hidden bg-primary md:min-h-[70vh]">
-      {/* Decorative gradient overlay simulating a dark event photo */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-purple/30" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_50%,rgba(132,106,230,0.15),transparent_70%)]" />
+      {backgroundImageSrc ? (
+        <>
+          <div className="absolute inset-0">
+            <Image
+              src={backgroundImageSrc}
+              alt={backgroundImageAlt}
+              fill
+              priority
+              className="object-cover"
+              style={{ objectPosition: backgroundImagePosition }}
+              sizes="100vw"
+            />
+          </div>
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(20,2,73,0.88)_0%,rgba(20,2,73,0.76)_36%,rgba(20,2,73,0.48)_64%,rgba(20,2,73,0.78)_100%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(254,154,112,0.16),transparent_42%),radial-gradient(ellipse_at_20%_10%,rgba(132,106,230,0.18),transparent_44%)]" />
+        </>
+      ) : (
+        <>
+          <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary/90 to-purple/30" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_50%,rgba(132,106,230,0.15),transparent_70%)]" />
+        </>
+      )}
 
       <div className="relative z-10 mx-auto w-full max-w-7xl px-4 py-16 sm:px-6 sm:py-20">
         <div className="max-w-2xl text-center sm:text-left">
@@ -54,16 +80,6 @@ export function HeroSection({
                 {cta.label}
               </Link>
             ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Placeholder for background image area (right side) */}
-      <div className="absolute right-0 top-0 hidden h-full w-1/2 lg:block">
-        <div className="flex h-full items-center justify-center text-mist/20">
-          <div className="text-center">
-            <div className="mx-auto mb-2 h-32 w-32 rounded-2xl bg-mist/5" />
-            <span className="text-xs">Bakgrunnsbilde</span>
           </div>
         </div>
       </div>

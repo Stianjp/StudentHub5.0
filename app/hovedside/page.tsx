@@ -13,13 +13,13 @@ import { SectionWrapper } from "@/components/hovedside/section-wrapper";
 import { FeatureCard } from "@/components/hovedside/feature-card";
 import { StatsBanner } from "@/components/hovedside/stats-banner";
 import { CtaSection } from "@/components/hovedside/cta-section";
-import { PlaceholderImage } from "@/components/hovedside/placeholder-image";
 import {
   formatWebsiteEventMonth,
   listWebsiteEvents,
   resolveWebsiteEventHref,
   splitWebsiteEvents,
 } from "@/lib/hovedside/public-events";
+import { SITE_IMAGES } from "@/lib/hovedside/site-images";
 
 export default async function HomePage() {
   const events = await listWebsiteEvents();
@@ -34,6 +34,9 @@ export default async function HomePage() {
         subtitle="By building business partnerships, we make the transition from studies to a professional career smoother and more accessible for students"
         ctaLabel="Register"
         ctaHref="/for-studenter"
+        backgroundImageSrc={SITE_IMAGES.homeHero.src}
+        backgroundImageAlt={SITE_IMAGES.homeHero.alt}
+        backgroundImagePosition="center"
       />
 
       {/* ── Gradient stripe ──────────────────────────────────── */}

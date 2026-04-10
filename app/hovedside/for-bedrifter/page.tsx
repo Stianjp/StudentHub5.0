@@ -15,6 +15,7 @@ import {
   resolveWebsiteEventHref,
   splitWebsiteEvents,
 } from "@/lib/hovedside/public-events";
+import { SITE_IMAGES } from "@/lib/hovedside/site-images";
 
 const COMPANY_REGISTRATION_URL = "https://eventregister.oslostudenthub.no/";
 
@@ -60,6 +61,9 @@ export default async function ForBedrifterPage() {
         subtitle="Partner with Oslo Student Hub to connect with the next generation of engineers, developers, and innovators."
         ctaLabel="Become a partner"
         ctaHref={COMPANY_REGISTRATION_URL}
+        backgroundImageSrc={SITE_IMAGES.partnersHero.src}
+        backgroundImageAlt={SITE_IMAGES.partnersHero.alt}
+        backgroundImagePosition="center"
       />
 
       {/* ── Gradient stripe ──────────────────────────────────── */}

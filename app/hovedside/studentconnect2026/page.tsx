@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import Image from "next/image";
 import {
   CalendarDays,
   MapPin,
@@ -18,6 +19,7 @@ import { StandShowcase } from "@/components/hovedside/stand-showcase";
 import { getPublicRegistrationCampaignBySlug } from "@/lib/event-registration";
 import { STUDENT_CONNECT_2026_FLOORPLAN } from "@/lib/event-registration-fixtures";
 import { getApprovedCompaniesForCampaign } from "@/lib/hovedside/approved-companies";
+import { SITE_IMAGES } from "@/lib/hovedside/site-images";
 
 const COMPANY_REGISTRATION_URL = "https://eventregister.oslostudenthub.no/";
 
@@ -45,6 +47,9 @@ export default async function StudentConnect2026Page() {
           { label: "See our stands", href: "#stands" },
           { label: "Find attending companies", href: "#companies" },
         ]}
+        backgroundImageSrc={SITE_IMAGES.studentConnectHero.src}
+        backgroundImageAlt={SITE_IMAGES.studentConnectHero.alt}
+        backgroundImagePosition="center"
       />
 
       {/* ── Intro ────────────────────────────────────────────── */}
@@ -63,6 +68,49 @@ export default async function StudentConnect2026Page() {
             company looking to engage with the next generation of professionals,
             the Student Hub is the perfect setting to connect, network, and grow.
           </p>
+        </div>
+      </SectionWrapper>
+
+      <SectionWrapper bg="mist">
+        <div className="mb-8 max-w-2xl">
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-secondary">
+            Inside the event
+          </p>
+          <h2 className="mt-3 text-2xl font-bold text-primary md:text-3xl">
+            Student Connect is built around real conversations, live stands, and
+            a venue that feels active from the first hour.
+          </h2>
+        </div>
+        <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+          <div className="relative aspect-[16/11] overflow-hidden rounded-[30px] bg-primary shadow-[0_24px_70px_rgba(20,2,73,0.16)] ring-1 ring-primary/6">
+            <Image
+              src={SITE_IMAGES.studentConnectHall.src}
+              alt={SITE_IMAGES.studentConnectHall.alt}
+              fill
+              className="object-cover"
+              sizes="(max-width: 1024px) 100vw, 60vw"
+            />
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
+            <div className="relative aspect-[4/3] overflow-hidden rounded-[28px] bg-primary shadow-[0_20px_50px_rgba(20,2,73,0.14)] ring-1 ring-primary/6">
+              <Image
+                src={SITE_IMAGES.studentConnectConversations.src}
+                alt={SITE_IMAGES.studentConnectConversations.alt}
+                fill
+                className="object-cover"
+                sizes="(max-width: 1024px) 50vw, 30vw"
+              />
+            </div>
+            <div className="relative aspect-[4/3] overflow-hidden rounded-[28px] bg-primary shadow-[0_20px_50px_rgba(20,2,73,0.14)] ring-1 ring-primary/6">
+              <Image
+                src={SITE_IMAGES.studentConnectStand.src}
+                alt={SITE_IMAGES.studentConnectStand.alt}
+                fill
+                className="object-cover"
+                sizes="(max-width: 1024px) 50vw, 30vw"
+              />
+            </div>
+          </div>
         </div>
       </SectionWrapper>
 
@@ -167,6 +215,26 @@ export default async function StudentConnect2026Page() {
             title="Industry Representation"
             description="Companies from various sectors participate, showcasing the diversity of opportunities available for students."
           />
+        </div>
+        <div className="mt-6 grid gap-4 md:grid-cols-2">
+          <div className="relative aspect-[16/10] overflow-hidden rounded-[28px] bg-primary shadow-[0_20px_50px_rgba(20,2,73,0.14)] ring-1 ring-primary/6">
+            <Image
+              src={SITE_IMAGES.studentConnectStudents.src}
+              alt={SITE_IMAGES.studentConnectStudents.alt}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 48vw"
+            />
+          </div>
+          <div className="relative aspect-[16/10] overflow-hidden rounded-[28px] bg-primary shadow-[0_20px_50px_rgba(20,2,73,0.14)] ring-1 ring-primary/6">
+            <Image
+              src={SITE_IMAGES.studentConnectPresentation.src}
+              alt={SITE_IMAGES.studentConnectPresentation.alt}
+              fill
+              className="object-cover"
+              sizes="(max-width: 768px) 100vw, 48vw"
+            />
+          </div>
         </div>
       </SectionWrapper>
 

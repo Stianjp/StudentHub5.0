@@ -74,6 +74,10 @@ export const getOrCreateCompanyForUser = cache(async function getOrCreateCompany
     .from("company_users")
     .select("company_id, approved_at")
     .eq("user_id", userId)
+    .not("approved_at", "is", null)
+    .order("approved_at", { ascending: false })
+    .order("created_at", { ascending: false })
+    .limit(1)
     .maybeSingle();
 
   if (membership?.company_id && membership.approved_at) {
@@ -92,6 +96,10 @@ export const getOrCreateCompanyForUser = cache(async function getOrCreateCompany
       .from("company_users")
       .select("company_id, approved_at")
       .eq("user_id", userId)
+      .not("approved_at", "is", null)
+      .order("approved_at", { ascending: false })
+      .order("created_at", { ascending: false })
+      .limit(1)
       .maybeSingle();
 
     if (invitedMembership?.company_id && invitedMembership.approved_at) {
@@ -120,6 +128,10 @@ export const getCompanyAccessStatus = cache(async function getCompanyAccessStatu
     .from("company_users")
     .select("company_id, approved_at")
     .eq("user_id", userId)
+    .not("approved_at", "is", null)
+    .order("approved_at", { ascending: false })
+    .order("created_at", { ascending: false })
+    .limit(1)
     .maybeSingle();
 
   if (membership?.company_id && membership.approved_at) {

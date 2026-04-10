@@ -3,6 +3,7 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import type { Database } from "@/lib/types/database";
 import { assertSupabaseEnv } from "@/lib/supabase/env";
 import { resolveCookieDomain } from "@/lib/supabase/cookie-domain";
+import { isRecoverableRefreshTokenError } from "@/lib/supabase/auth-errors";
 
 export async function createServerSupabaseClient() {
   const cookieStore = await cookies();
@@ -74,9 +75,7 @@ export async function createServerSupabaseClient() {
       if (cookieUser) return { data: { user: cookieUser }, error: null };
       return result;
     } catch (error) {
-      const message = (error as { message?: string }).message?.toLowerCase() ?? "";
-      const code = (error as { code?: string }).code;
-      if (code === "refresh_token_not_found" || message.includes("refresh token not found")) {
+      if (isRecoverableRefreshTokenError(error as { code?: string; message?: string })) {
         const cookieUser = extractUserFromCookies();
         if (cookieUser) return { data: { user: cookieUser }, error: null };
         return { data: { user: null }, error: null };
