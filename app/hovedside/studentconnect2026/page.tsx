@@ -19,6 +19,8 @@ import { getPublicRegistrationCampaignBySlug } from "@/lib/event-registration";
 import { STUDENT_CONNECT_2026_FLOORPLAN } from "@/lib/event-registration-fixtures";
 import { getApprovedCompaniesForCampaign } from "@/lib/hovedside/approved-companies";
 
+const COMPANY_REGISTRATION_URL = "https://eventregister.oslostudenthub.no/";
+
 export const metadata: Metadata = {
   title: "Student Connect 2026",
   description:
@@ -38,7 +40,7 @@ export default async function StudentConnect2026Page() {
         title="Biggest Student Conference in Oslo"
         subtitle="Bridging students and industry!"
         ctaLabel="Company registration"
-        ctaHref="/for-bedrifter"
+        ctaHref={COMPANY_REGISTRATION_URL}
         extraCtas={[
           { label: "See our stands", href: "#stands" },
           { label: "Find attending companies", href: "#companies" },
@@ -109,7 +111,7 @@ export default async function StudentConnect2026Page() {
             students and future professionals. Become a partner now!
           </p>
           <Link
-            href="/for-bedrifter"
+            href={COMPANY_REGISTRATION_URL}
             className="mt-6 inline-flex w-full items-center justify-center rounded-full border-2 border-primary bg-primary px-7 py-3 text-sm font-bold uppercase tracking-wider text-surface transition-colors hover:bg-transparent hover:text-primary sm:w-auto"
           >
             Read More

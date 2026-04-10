@@ -32,6 +32,16 @@ type StandMapProps = {
   testId?: string;
 };
 
+const BOOKED_STAND_STYLES: Record<
+  NonNullable<StandMapStand["package_tier"]>,
+  string
+> = {
+  platinum: "border-[#f6a6bd] shadow-[0_8px_22px_rgba(246,166,189,0.34)]",
+  gold: "border-[#f0c245] shadow-[0_8px_22px_rgba(240,194,69,0.28)]",
+  silver: "border-[#7ec8ef] shadow-[0_8px_22px_rgba(126,200,239,0.26)]",
+  standard: "border-[#7ecf91] shadow-[0_8px_22px_rgba(126,207,145,0.26)]",
+};
+
 function standStateClass(stand: StandMapStand, isSelected: boolean) {
   if (stand.status !== "available" || stand.assigned_application_id) {
     return stand.bookingPreview
@@ -56,6 +66,15 @@ function standStateClass(stand: StandMapStand, isSelected: boolean) {
   return isSelected
     ? "z-20 border-[#140249] bg-[#c5f1bb] text-primary"
     : "border-primary/40 bg-[#c5f1bb]/85 text-primary";
+}
+
+function getCompanyInitials(value: string) {
+  return value
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
 }
 
 export function StandMap({
@@ -123,7 +142,11 @@ export function StandMap({
               onBlur={() => {
                 if (isBooked) setActiveBookedStandId((current) => (current === stand.id ? null : current));
               }}
-              aria-label={stand.display_label ?? stand.stand_code}
+              aria-label={
+                isBooked && stand.bookingPreview
+                  ? `Booket stand ${stand.display_label ?? stand.stand_code} av ${stand.bookingPreview.companyName}`
+                  : stand.display_label ?? stand.stand_code
+              }
               aria-pressed={isSelected}
               aria-disabled={unavailable}
               data-testid={`stand-map-stand-${stand.id}`}
@@ -134,21 +157,48 @@ export function StandMap({
                 height: `${stand.height}%`,
               }}
               className={cn(
-                "absolute flex items-center justify-center overflow-hidden rounded-[4px] border px-0.5 text-center text-[8px] font-bold leading-none tracking-tight transition duration-150 md:text-[9px]",
-                standStateClass(stand, isSelected),
+                "absolute overflow-hidden transition duration-150",
+                isBooked
+                  ? cn(
+                      "z-20 rounded-[6px] border-2 bg-white p-[2px] shadow-sm",
+                      BOOKED_STAND_STYLES[stand.package_tier],
+                      activeBookedStandId === stand.id ? "ring-2 ring-[#FE9A70]" : undefined,
+                    )
+                  : cn(
+                      "flex items-center justify-center rounded-[4px] border px-0.5 text-center text-[8px] font-bold leading-none tracking-tight md:text-[9px]",
+                      standStateClass(stand, isSelected),
+                    ),
                 isInteractive && !unavailable ? "hover:brightness-[0.98]" : undefined,
                 isInteractive ? "focus-visible:ring-2 focus-visible:ring-[#FE9A70] focus-visible:ring-offset-0 focus-visible:outline-none" : undefined,
                 !isInteractive ? "pointer-events-none" : undefined,
                 unavailable && !isBooked ? "cursor-not-allowed" : undefined,
               )}
             >
-              {isSelected ? (
+              {isSelected && !isBooked ? (
                 <span
                   aria-hidden="true"
                   className="absolute right-0.5 top-0.5 h-2.5 w-2.5 rounded-full bg-[#FE9A70] ring-1 ring-white"
                 />
               ) : null}
-              <span className="block truncate">{stand.display_label ?? stand.stand_code}</span>
+              {isBooked && stand.bookingPreview ? (
+                <div className="relative flex h-full w-full items-center justify-center rounded-[4px] bg-white px-0.5">
+                  {stand.bookingPreview.logoUrl ? (
+                    <Image
+                      src={stand.bookingPreview.logoUrl}
+                      alt={`Logo for ${stand.bookingPreview.companyName}`}
+                      fill
+                      sizes="64px"
+                      className="object-contain p-1"
+                    />
+                  ) : (
+                    <span className="block truncate text-[7px] font-bold uppercase tracking-tight text-primary md:text-[8px]">
+                      {getCompanyInitials(stand.bookingPreview.companyName)}
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <span className="block truncate">{stand.display_label ?? stand.stand_code}</span>
+              )}
             </button>
           );
         })}

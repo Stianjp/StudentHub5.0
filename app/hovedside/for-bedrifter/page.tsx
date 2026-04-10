@@ -16,6 +16,8 @@ import {
   splitWebsiteEvents,
 } from "@/lib/hovedside/public-events";
 
+const COMPANY_REGISTRATION_URL = "https://eventregister.oslostudenthub.no/";
+
 export const metadata: Metadata = {
   title: "Partners",
   description:
@@ -57,7 +59,7 @@ export default async function ForBedrifterPage() {
         title="Meet technology students in Oslo!"
         subtitle="Partner with Oslo Student Hub to connect with the next generation of engineers, developers, and innovators."
         ctaLabel="Become a partner"
-        ctaHref="/studentconnect2026"
+        ctaHref={COMPANY_REGISTRATION_URL}
       />
 
       {/* ── Gradient stripe ──────────────────────────────────── */}
