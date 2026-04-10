@@ -70,6 +70,7 @@ export default async function CompanyRoiPage({ searchParams }: RoiPageProps) {
         eyebrow="ROI"
         title="ROI og innsikt"
         description="Kun tilgjengelig for Gull og Platinum med gyldig tilgangsperiode per event."
+        tone="light"
         actions={
           <div className="flex flex-wrap gap-2">
             {registrations.map((reg) => (
@@ -78,8 +79,8 @@ export default async function CompanyRoiPage({ searchParams }: RoiPageProps) {
                 className={cn(
                   "rounded-xl border px-3 py-2 text-xs font-semibold transition",
                   reg.event_id === currentRegistration.event_id
-                    ? "border-secondary text-secondary"
-                    : "border-transparent bg-primary/5 text-primary hover:border-secondary/60 hover:text-secondary",
+                    ? "border-secondary bg-secondary/12 text-surface"
+                    : "border-white/18 bg-white/10 text-surface/86 hover:border-secondary/60 hover:text-surface",
                 )}
                 href={`/company/roi?eventId=${reg.event_id}`}
               >
@@ -117,9 +118,9 @@ export default async function CompanyRoiPage({ searchParams }: RoiPageProps) {
         </div>
 
         {!hasRoiAccess ? (
-          <div className="rounded-xl border border-warning/30 bg-warning/10 p-4 text-sm text-ink/90">
-            <p>ROI er ikke tilgjengelig for denne pakken.</p>
-            <p className="mt-2 font-semibold">{UPGRADE_CONTACT_COPY}</p>
+          <div className="company-light-surface rounded-xl border border-warning/30 bg-[#FFF6E8] p-4 text-sm text-[#1A1626]">
+            <p className="font-semibold text-[#140249]">ROI er ikke tilgjengelig for denne pakken.</p>
+            <p className="mt-2 font-semibold text-[#2D1C63]">{UPGRADE_CONTACT_COPY}</p>
           </div>
         ) : null}
       </Card>

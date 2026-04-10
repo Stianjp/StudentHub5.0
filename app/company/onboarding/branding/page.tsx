@@ -35,6 +35,7 @@ export default async function CompanyOnboardingBrandingPage() {
         eyebrow="Bedriftsregistrering"
         title="Steg 3: Employer branding"
         description="Del verdier, EVP og budskap som skal vises til studentene."
+        tone="light"
       />
 
       <OnboardingSteps current="branding" />

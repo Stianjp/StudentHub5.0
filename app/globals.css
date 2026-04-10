@@ -175,6 +175,49 @@ table {
   box-shadow: 0 12px 30px rgba(20, 2, 73, 0.12);
 }
 
+.company-scope .company-light-surface {
+  background-color: #FFFFFF;
+  color: #140249;
+  border-color: rgba(20, 2, 73, 0.14);
+}
+
+.company-scope .company-light-surface :is(h1, h2, h3, h4, h5, h6, p, label, legend, li, span, a, small, strong)[class*="text-primary"] {
+  color: #140249;
+}
+
+.company-scope .company-light-surface :is(h1, h2, h3, h4, h5, h6, p, label, legend, li, span, a, small, strong)[class*="text-ink"] {
+  color: #443465;
+}
+
+.company-scope .company-light-surface :is(input, textarea, select) {
+  background-color: #FFFFFF;
+  color: #1A1626;
+  border-color: rgba(20, 2, 73, 0.18);
+}
+
+.company-scope .company-light-surface :is(input, textarea, select)::placeholder {
+  color: rgba(26, 22, 38, 0.62);
+}
+
+.company-scope .company-light-surface :is(input, textarea, select):hover {
+  border-color: rgba(212, 104, 57, 0.88);
+}
+
+.company-scope .company-light-surface :is(input, textarea, select):focus {
+  border-color: #D46839;
+  box-shadow: 0 0 0 2px rgba(212, 104, 57, 0.22);
+}
+
+.company-scope .company-light-surface select {
+  color-scheme: light;
+}
+
+.company-scope .company-light-surface select option,
+.company-scope .company-light-surface select optgroup {
+  background-color: #FFFFFF;
+  color: #1A1626;
+}
+
 .admin-scope .contact-overview-page .osh-card,
 .admin-scope .contact-overview-page table {
   background-color: #FFFFFF;

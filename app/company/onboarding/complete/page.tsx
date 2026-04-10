@@ -33,6 +33,7 @@ export default async function CompanyOnboardingCompletePage() {
         eyebrow="Bedriftsregistrering"
         title="Oppsummering"
         description="Du er nesten klar! Her er status og neste steg."
+        tone="light"
       />
 
       <OnboardingSteps current="complete" />
@@ -50,7 +51,7 @@ export default async function CompanyOnboardingCompletePage() {
         </div>
         <ul className="grid gap-2 text-sm text-ink/80">
           {status.sections.map((section) => (
-            <li key={section.key} className="flex items-center justify-between rounded-xl bg-primary/5 px-3 py-2">
+            <li key={section.key} className="company-light-surface flex items-center justify-between rounded-xl bg-primary/5 px-3 py-2">
               <span className="font-semibold text-primary">{section.label}</span>
               <span className={section.completed ? "text-success" : "text-warning"}>
                 {section.completed ? "Fullført" : "Mangler"}

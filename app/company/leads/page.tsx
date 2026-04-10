@@ -90,6 +90,7 @@ export default async function CompanyLeadsPage() {
             ? "Full lead-visning på events med Gull/Platinum eller ekstra Leads-tilgang. Andre events vises anonymisert."
             : "Standard/Sølv: Du ser kun antall interesserte studenter per event."
         }
+        tone="light"
         actions={
           hasAnyDetailedLeadAccess ? (
             <Link
@@ -105,9 +106,9 @@ export default async function CompanyLeadsPage() {
       />
 
       {!hasAnyDetailedLeadAccess ? (
-        <Card className="border border-warning/30 bg-warning/10 text-sm text-ink/90">
-          <p>Denne pakken gir ikke tilgang til navn, kontaktinfo eller enkeltrad-visning av leads.</p>
-          <p className="mt-2 font-semibold">{UPGRADE_CONTACT_COPY}</p>
+        <Card className="company-light-surface border border-warning/30 bg-[#FFF6E8] text-sm text-[#1A1626]">
+          <p className="font-semibold text-[#140249]">Denne pakken gir ikke tilgang til navn, kontaktinfo eller enkeltrad-visning av leads.</p>
+          <p className="mt-2 font-semibold text-[#2D1C63]">{UPGRADE_CONTACT_COPY}</p>
         </Card>
       ) : null}
 
@@ -131,7 +132,7 @@ export default async function CompanyLeadsPage() {
                 </div>
               </div>
               {!hasDetailedLeadAccessForGroup ? (
-                <div className="rounded-xl border border-primary/10 bg-primary/5 px-4 py-4">
+                <div className="company-light-surface rounded-xl border border-primary/10 bg-primary/5 px-4 py-4">
                   <p className="text-sm font-semibold text-primary">Antall interesserte studenter</p>
                   <p className="mt-2 text-3xl font-bold text-primary">{rows.length}</p>
                   <p className="mt-2 text-sm text-ink/70">

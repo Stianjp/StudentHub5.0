@@ -50,6 +50,7 @@ export default async function CompanyOnboardingRecruitmentPage() {
         eyebrow="Bedriftsregistrering"
         title="Steg 2: Rekrutteringsbehov"
         description="Kryss av for hvilke studentgrupper og jobbkategorier dere ønsker."
+        tone="light"
       />
 
       <OnboardingSteps current="recruitment" />
@@ -65,7 +66,7 @@ export default async function CompanyOnboardingRecruitmentPage() {
               {fieldOptions.map((option) => (
                 <label
                   key={option}
-                  className="flex items-center gap-2 rounded-xl border border-primary/10 bg-surface px-3 py-2 text-sm"
+                  className="company-light-surface flex items-center gap-2 rounded-xl border border-primary/10 bg-surface px-3 py-2 text-sm"
                 >
                   <input
                     type="checkbox"
@@ -86,7 +87,7 @@ export default async function CompanyOnboardingRecruitmentPage() {
               {levelOptions.map((option) => (
                 <label
                   key={option}
-                  className="flex items-center gap-2 rounded-full border border-primary/20 bg-surface px-3 py-2 text-sm"
+                  className="company-light-surface flex items-center gap-2 rounded-full border border-primary/20 bg-surface px-3 py-2 text-sm"
                 >
                   <input
                     type="checkbox"
@@ -107,7 +108,7 @@ export default async function CompanyOnboardingRecruitmentPage() {
               {bachelorYears.map((year) => (
                 <label
                   key={`bachelor-${year}`}
-                  className="flex items-center gap-2 rounded-full border border-primary/20 bg-surface px-3 py-2 text-sm"
+                  className="company-light-surface flex items-center gap-2 rounded-full border border-primary/20 bg-surface px-3 py-2 text-sm"
                 >
                   <input
                     type="checkbox"
@@ -128,7 +129,7 @@ export default async function CompanyOnboardingRecruitmentPage() {
               {masterYears.map((year) => (
                 <label
                   key={`master-${year}`}
-                  className="flex items-center gap-2 rounded-full border border-primary/20 bg-surface px-3 py-2 text-sm"
+                  className="company-light-surface flex items-center gap-2 rounded-full border border-primary/20 bg-surface px-3 py-2 text-sm"
                 >
                   <input
                     type="checkbox"
@@ -149,7 +150,7 @@ export default async function CompanyOnboardingRecruitmentPage() {
               {jobTypeOptions.map((option) => (
                 <label
                   key={option}
-                  className="flex items-center gap-2 rounded-xl border border-primary/10 bg-surface px-3 py-2 text-sm"
+                  className="company-light-surface flex items-center gap-2 rounded-xl border border-primary/10 bg-surface px-3 py-2 text-sm"
                 >
                   <input
                     type="checkbox"

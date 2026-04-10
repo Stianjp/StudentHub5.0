@@ -43,6 +43,7 @@ export default async function CompanyOnboardingInfoPage({ searchParams }: PagePr
         eyebrow="Bedriftsregistrering"
         title="Steg 1: Firma-info"
         description="Fortell oss litt om bedriften. Dette hjelper studentene å forstå hvem dere er."
+        tone="light"
       />
 
       <OnboardingSteps current="info" />
@@ -83,7 +84,7 @@ export default async function CompanyOnboardingInfoPage({ searchParams }: PagePr
                   <label
                     key={category}
                     htmlFor={inputId}
-                    className="flex items-center gap-2 rounded-xl border border-primary/10 bg-surface px-3 py-2 text-sm"
+                    className="company-light-surface flex items-center gap-2 rounded-xl border border-primary/10 bg-surface px-3 py-2 text-sm"
                   >
                     <input
                       id={inputId}

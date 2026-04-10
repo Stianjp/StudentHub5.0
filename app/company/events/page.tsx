@@ -86,6 +86,7 @@ export default async function CompanyEventsPage() {
         eyebrow="Events"
         title="Dine event-deltakelser"
         description="Pakke og premium-tilgang styres av OSH-admin per event."
+        tone="light"
         actions={
           <Link
             className={cn(
@@ -141,7 +142,7 @@ export default async function CompanyEventsPage() {
                       ) : null}
                     </div>
                   </div>
-                  <div className="mt-3 grid gap-2 text-xs text-ink/80 md:grid-cols-2">
+                  <div className="mt-3 grid gap-2 text-xs text-surface/80 md:grid-cols-2">
                     <div>
                       <p className="font-semibold text-primary">Mål</p>
                       <p>{registration.goals.join(", ") || "Ikke satt"}</p>
@@ -160,7 +161,7 @@ export default async function CompanyEventsPage() {
                         {goalOptions.map((option) => (
                           <label
                             key={option}
-                            className="flex items-center gap-2 rounded-xl border border-primary/10 bg-surface px-3 py-2 text-sm"
+                            className="company-light-surface flex items-center gap-2 rounded-xl border border-primary/10 bg-surface px-3 py-2 text-sm"
                           >
                             <input
                               type="checkbox"
@@ -180,7 +181,7 @@ export default async function CompanyEventsPage() {
                         {kpiOptions.map((option) => (
                           <label
                             key={option}
-                            className="flex items-center gap-2 rounded-xl border border-primary/10 bg-surface px-3 py-2 text-sm"
+                            className="company-light-surface flex items-center gap-2 rounded-xl border border-primary/10 bg-surface px-3 py-2 text-sm"
                           >
                             <input
                               type="checkbox"
@@ -199,7 +200,7 @@ export default async function CompanyEventsPage() {
                     </Button>
                   </form>
 
-                  <div className="mt-4 rounded-2xl border border-primary/10 bg-surface p-4">
+                  <div className="company-light-surface mt-4 rounded-2xl border border-primary/10 bg-surface p-4">
                     <p className="text-sm font-semibold text-primary">Meld på deltaker (bedrift)</p>
                   <p className={cn("mt-1 text-xs", limitReached ? "font-semibold text-warning" : "text-ink/70")}>
                     {attendeeCount} av {attendeeLimit} ansatte meldt på. {remainingAttendees} kostnadsfrie billetter til ansatte gjenstår.
@@ -252,7 +253,7 @@ export default async function CompanyEventsPage() {
             </p>
             <ul className="grid gap-2">
               {openEvents.map((event) => (
-                <li key={event.id} className="rounded-xl border border-primary/10 bg-surface p-4">
+                <li key={event.id} className="company-light-surface rounded-xl border border-primary/10 bg-surface p-4">
                   <p className="font-semibold text-primary">{event.name}</p>
                   <p className="text-xs">{event.location ?? "Lokasjon kommer"}</p>
                   {isExternalHttpUrl(event.registration_form_url) ? (
