@@ -48,8 +48,16 @@ export async function updateSession(request: NextRequest) {
         value: "",
         maxAge: 0,
         path: "/",
-        domain,
       });
+      if (domain) {
+        response.cookies.set({
+          name: cookie.name,
+          value: "",
+          maxAge: 0,
+          path: "/",
+          domain,
+        });
+      }
     });
   }
 
