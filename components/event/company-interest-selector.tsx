@@ -71,7 +71,7 @@ export function CompanyInterestSelector({
         {companies.map((company) => (
           <label
             key={company.id}
-            className="flex items-center gap-2 rounded-xl border border-surface/20 bg-primary/20 px-3 py-2 text-sm"
+            className="flex items-center gap-2 rounded-xl border border-primary/30 bg-[#4A3A87] px-3 py-2 text-sm shadow-sm"
           >
             <input
               type="checkbox"
