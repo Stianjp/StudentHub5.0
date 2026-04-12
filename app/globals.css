@@ -78,6 +78,24 @@ table {
   border-color: rgba(237, 232, 245, 0.2);
 }
 
+.student-scope table :is(th, td),
+.admin-scope table :is(th, td),
+.company-scope table :is(th, td) {
+  color: #EDE8F5;
+}
+
+.student-scope table :is(h1, h2, h3, h4, h5, h6, p, label, legend, li, span, a, small, strong, div)[class*="text-primary"],
+.admin-scope table :is(h1, h2, h3, h4, h5, h6, p, label, legend, li, span, a, small, strong, div)[class*="text-primary"],
+.company-scope table :is(h1, h2, h3, h4, h5, h6, p, label, legend, li, span, a, small, strong, div)[class*="text-primary"] {
+  color: #FFFFFF;
+}
+
+.student-scope table :is(h1, h2, h3, h4, h5, h6, p, label, legend, li, span, a, small, strong, div)[class*="text-ink"],
+.admin-scope table :is(h1, h2, h3, h4, h5, h6, p, label, legend, li, span, a, small, strong, div)[class*="text-ink"],
+.company-scope table :is(h1, h2, h3, h4, h5, h6, p, label, legend, li, span, a, small, strong, div)[class*="text-ink"] {
+  color: rgba(237, 232, 245, 0.88);
+}
+
 .student-scope .osh-card[class*="bg-success/"],
 .admin-scope .osh-card[class*="bg-success/"],
 .company-scope .osh-card[class*="bg-success/"] {
