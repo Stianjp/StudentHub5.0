@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-import { createClient } from "@/lib/supabase/client";
+import { clearBrowserAuthState, createClient } from "@/lib/supabase/client";
 import { getDefaultNextPath } from "@/lib/auth-urls";
 import { roleFromHost } from "@/lib/host";
 import {
@@ -83,8 +83,14 @@ export function SignInClient({
   const [confirmPasswordInput, setConfirmPasswordInput] = useState("");
   const [studentStudyLevel, setStudentStudyLevel] = useState<StudyLevel | "">("");
   const [studentStudyYear, setStudentStudyYear] = useState("");
+  const [isSessionResetting, setIsSessionResetting] = useState(true);
   const errorId = "auth-error";
   const passwordHelpId = "password-help";
+
+  useEffect(() => {
+    clearBrowserAuthState();
+    setIsSessionResetting(false);
+  }, []);
 
   useEffect(() => {
     if (mode !== "register" || status !== "sent") return;
@@ -130,6 +136,7 @@ export function SignInClient({
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (isSessionResetting) return;
     setStatus("loading");
     setError(null);
 
@@ -147,6 +154,8 @@ export function SignInClient({
     }
 
     const supabase = createClient();
+    clearBrowserAuthState();
+    await supabase.auth.signOut({ scope: "local" });
     const nextPath =
       typeof next === "string" ? next : getDefaultNextPath(roleValue, window.location.hostname);
 
@@ -645,8 +654,10 @@ export function SignInClient({
             ) : null}
 
             <div className="flex flex-col gap-2">
-              <Button disabled={status === "loading"} type="submit">
-                {status === "loading"
+              <Button disabled={status === "loading" || isSessionResetting} type="submit">
+                {isSessionResetting
+                  ? "Klargjør innlogging…"
+                  : status === "loading"
                   ? "Jobber…"
                   : mode === "register"
                     ? "Registrer"

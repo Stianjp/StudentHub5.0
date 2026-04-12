@@ -50,6 +50,50 @@ function parseCookies() {
   return map;
 }
 
+function clearCookie(name: string, domain?: string) {
+  if (!isBrowser()) return;
+  const expires = new Date(0);
+  document.cookie = buildCookieString(name, "", {
+    path: "/",
+    expires,
+  });
+  if (domain) {
+    document.cookie = buildCookieString(name, "", {
+      path: "/",
+      expires,
+      domain,
+    });
+  }
+}
+
+export function clearBrowserAuthState() {
+  if (!isBrowser()) return;
+
+  const { cookieDomain } = assertSupabaseEnv();
+  const domain = resolveCookieDomain(window.location.hostname, cookieDomain);
+  const cookies = parseCookies();
+
+  Array.from(cookies.keys())
+    .filter((name) => name.startsWith("sb-"))
+    .forEach((name) => clearCookie(name, domain));
+
+  try {
+    Object.keys(localStorage)
+      .filter((key) => key.startsWith("sb-") || key.startsWith("supabase."))
+      .forEach((key) => localStorage.removeItem(key));
+  } catch {
+    // ignore localStorage issues
+  }
+
+  try {
+    Object.keys(sessionStorage)
+      .filter((key) => key.startsWith("sb-") || key.startsWith("supabase."))
+      .forEach((key) => sessionStorage.removeItem(key));
+  } catch {
+    // ignore sessionStorage issues
+  }
+}
+
 export function createClient() {
   const { supabaseUrl, supabaseAnonKey, cookieDomain } = assertSupabaseEnv();
 
