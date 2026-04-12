@@ -32,6 +32,17 @@ function packageLabel(pkg: string) {
   return pkg;
 }
 
+function standLevelLabel(standType: string | null | undefined, packageTier: string) {
+  const normalized = standType?.trim().toLowerCase();
+  if (!normalized) return packageLabel(packageTier);
+  if (normalized === "standard") return "Standard";
+  if (normalized === "silver" || normalized === "sølv") return "Sølv";
+  if (normalized === "gold" || normalized === "gull") return "Gull";
+  if (normalized === "platinum") return "Platinum";
+  if (normalized === "premium") return packageLabel(packageTier);
+  return packageLabel(packageTier);
+}
+
 function isExternalHttpUrl(value: string | null | undefined) {
   if (!value) return false;
   return /^https?:\/\//i.test(value.trim());
@@ -85,7 +96,7 @@ export default async function CompanyEventsPage() {
       <SectionHeader
         eyebrow="Events"
         title="Dine event-deltakelser"
-        description="Pakke og premium-tilgang styres av OSH-admin per event."
+        description="Pakke og eventuell ekstra tilgang til Leads/ROI styres av OSH-admin per event."
         tone="light"
         actions={
           <Link
@@ -112,6 +123,11 @@ export default async function CompanyEventsPage() {
               const attendeeCount = attendeeCountsByEvent[registration.event_id] ?? 0;
               const remainingAttendees = Math.max(attendeeLimit - attendeeCount, 0);
               const limitReached = remainingAttendees === 0;
+              const standLevel = standLevelLabel(registration.stand_type, registration.package);
+              const hasIncludedPremiumAccess =
+                registration.package === "gold" || registration.package === "platinum";
+              const hasExtraRoiAccess = !hasIncludedPremiumAccess && Boolean(registration.can_view_roi);
+              const hasExtraLeadAccess = !hasIncludedPremiumAccess && Boolean(registration.can_view_leads);
 
               return (
                 <div key={registration.id} className="rounded-xl border border-primary/10 bg-primary/5 p-4">
@@ -127,9 +143,9 @@ export default async function CompanyEventsPage() {
                       <Badge variant={packageVariant(registration.package)}>
                         {packageLabel(registration.package)}
                       </Badge>
-                      {registration.stand_type ? (
-                        <Badge variant="default">Standnivå: {registration.stand_type}</Badge>
-                      ) : null}
+                      <Badge variant="default">Standnivå: {standLevel}</Badge>
+                      {hasExtraRoiAccess ? <Badge variant="info">Ekstra ROI</Badge> : null}
+                      {hasExtraLeadAccess ? <Badge variant="info">Ekstra Leads</Badge> : null}
                       {isExternalHttpUrl(registration.event.registration_form_url) ? (
                         <a
                           className="button-link text-xs"
@@ -150,6 +166,21 @@ export default async function CompanyEventsPage() {
                     <div>
                       <p className="font-semibold text-primary">KPI-er</p>
                       <p>{registration.kpis.join(", ") || "Ikke satt"}</p>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-primary">Tilgang</p>
+                      <p>
+                        {hasIncludedPremiumAccess
+                          ? "Leads og ROI er inkludert i pakken."
+                          : hasExtraRoiAccess || hasExtraLeadAccess
+                            ? [
+                                hasExtraLeadAccess ? "Leads" : null,
+                                hasExtraRoiAccess ? "ROI" : null,
+                              ]
+                                .filter(Boolean)
+                                .join(" og ") + " er aktivert som tillegg."
+                            : "Kun Gull og Platinum har Leads/ROI inkludert. OSH-admin kan aktivere tillegg."}
+                      </p>
                     </div>
                   </div>
 

@@ -499,6 +499,7 @@ export type RoiMetrics = {
 
 export async function getRoiMetrics(companyId: string, eventId: string): Promise<RoiMetrics> {
   const supabase = await createServerSupabaseClient();
+  const eventScope = `event_id.eq.${eventId},event_id.is.null`;
 
   const [
     { data: visits, error: visitsError },
@@ -515,13 +516,14 @@ export async function getRoiMetrics(companyId: string, eventId: string): Promise
       .from("consents")
       .select("*")
       .eq("company_id", companyId)
-      .eq("event_id", eventId)
+      .or(eventScope)
       .eq("consent" as never, true as never),
     supabase
       .from("leads")
-      .select("study_level, study_year, field_of_study")
+      .select("student_id, study_level, study_year, field_of_study, created_at")
       .eq("company_id", companyId)
-      .eq("event_id", eventId),
+      .order("created_at", { ascending: false })
+      .or(eventScope),
     supabase
       .from("companies")
       .select("id, recruitment_levels, recruitment_years_bachelor, recruitment_years_master")
@@ -537,13 +539,30 @@ export async function getRoiMetrics(companyId: string, eventId: string): Promise
   const visitRows = (visits ?? []) as StandVisit[];
   const consentRows = (consents ?? []) as Consent[];
   const leadRows = (leads ?? []) as unknown as Array<{
+    student_id: string | null;
     study_level: string | null;
     study_year: number | null;
     field_of_study: string | null;
+    created_at: string;
   }>;
+  const uniqueConsentStudentIds = new Set(consentRows.map((row) => row.student_id).filter(Boolean));
+  const leadRowsByStudent = new Map<string, {
+    student_id: string | null;
+    study_level: string | null;
+    study_year: number | null;
+    field_of_study: string | null;
+    created_at: string;
+  }>();
+  leadRows.forEach((lead) => {
+    if (!lead.student_id) return;
+    if (!leadRowsByStudent.has(lead.student_id)) {
+      leadRowsByStudent.set(lead.student_id, lead);
+    }
+  });
+  const uniqueLeadRows = Array.from(leadRowsByStudent.values());
 
   const visitsCount = visitRows.length;
-  const leadsCount = consentRows.length;
+  const leadsCount = uniqueConsentStudentIds.size;
   const conversion = visitsCount === 0 ? 0 : Math.round((leadsCount / visitsCount) * 100);
 
   const hourly = new Map<string, number>();
@@ -553,13 +572,13 @@ export async function getRoiMetrics(companyId: string, eventId: string): Promise
   });
 
   const studyCounts = new Map<string, number>();
-  if (leadRows.length > 0) {
-    leadRows.forEach((lead) => {
+  if (uniqueLeadRows.length > 0) {
+    uniqueLeadRows.forEach((lead) => {
       const program = lead.field_of_study ?? "Ukjent";
       studyCounts.set(program, (studyCounts.get(program) ?? 0) + 1);
     });
-  } else if (consentRows.length > 0) {
-    const studentIds = consentRows.map((row) => row.student_id);
+  } else if (uniqueConsentStudentIds.size > 0) {
+    const studentIds = Array.from(uniqueConsentStudentIds);
     const { data: students, error: studentsError } = await supabase
       .from("students")
       .select("id, study_program")
@@ -577,7 +596,7 @@ export async function getRoiMetrics(companyId: string, eventId: string): Promise
   const levelCounts = new Map<string, number>();
   const yearCountsBachelor = new Map<number, number>();
   const yearCountsMaster = new Map<number, number>();
-  leadRows.forEach((lead) => {
+  uniqueLeadRows.forEach((lead) => {
     const level = lead.study_level?.toLowerCase();
     const year = lead.study_year ?? null;
     if (level) {

@@ -150,13 +150,14 @@ export default async function EventPage({ params, searchParams }: EventPageProps
         ) : (
           <div className="grid gap-3 md:grid-cols-2">
             {registrations.map((registration) => (
-              <Link
-                key={registration.id}
-                href={`/event/events/${eventId}/companies/${registration.company_id}/register`}
-              >
+              <Link key={registration.id} href={`/event/events/${eventId}/companies/${registration.company_id}/register`}>
                 <Card className="flex flex-col gap-2 transition hover:-translate-y-0.5">
                   <p className="text-sm font-semibold text-primary">{registration.company.name}</p>
-                  <p className="text-xs text-ink/70">{registration.company.industry ?? "Bransje ikke satt"}</p>
+                  <p className="text-xs text-ink/70">
+                    {registration.company.recruitment_fields?.length
+                      ? registration.company.recruitment_fields.join(", ")
+                      : registration.company.industry ?? "Bransje ikke satt"}
+                  </p>
                 </Card>
               </Link>
             ))}

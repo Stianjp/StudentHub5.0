@@ -239,7 +239,7 @@ export function RegistrationForm({ eventId, companies, mode, lockedCompany }: Re
             </div>
           </div>
         ) : (
-          <div className="rounded-xl border border-primary/10 bg-primary/5 p-4 text-sm text-ink/80">
+          <div className="company-light-surface rounded-xl border border-primary/10 bg-primary/5 p-4 text-sm text-[#1A1626]">
             Bedrift: <span className="font-semibold text-primary">{lockedCompany?.name}</span>
           </div>
         )}
@@ -249,7 +249,7 @@ export function RegistrationForm({ eventId, companies, mode, lockedCompany }: Re
             Studienivå
             <div className="mt-2 flex flex-wrap gap-2">
               {["Bachelor", "Master"].map((level) => (
-                <label key={level} className="flex items-center gap-2 rounded-full border border-primary/20 px-3 py-2 text-sm">
+                <label key={level} className="company-light-surface flex items-center gap-2 rounded-full border border-primary/20 bg-surface px-3 py-2 text-sm text-primary">
                   <input
                     type="radio"
                     name="studyLevel"
@@ -308,7 +308,7 @@ export function RegistrationForm({ eventId, companies, mode, lockedCompany }: Re
             {INTEREST_OPTIONS.map((interest) => (
               <label
                 key={interest}
-                className="flex items-center gap-2 rounded-xl border border-primary/10 bg-surface px-3 py-2 text-sm"
+                className="company-light-surface flex items-center gap-2 rounded-xl border border-primary/10 bg-surface px-3 py-2 text-sm text-primary"
               >
                 <input
                   type="checkbox"
@@ -322,7 +322,7 @@ export function RegistrationForm({ eventId, companies, mode, lockedCompany }: Re
           </div>
         </fieldset>
 
-        <label className="flex items-center gap-2 rounded-xl border border-primary/10 bg-primary/5 px-3 py-2 text-sm font-semibold text-primary">
+        <label className="company-light-surface flex items-center gap-2 rounded-xl border border-primary/10 bg-primary/5 px-3 py-2 text-sm font-semibold text-primary">
           <input className="h-4 w-4" type="checkbox" name="consent" value="true" />
           Jeg samtykker til å bli kontaktet av bedriften(e).
         </label>
@@ -342,7 +342,7 @@ export function RegistrationForm({ eventId, companies, mode, lockedCompany }: Re
           </p>
         ) : null}
         {status === "success" ? (
-          <p className="text-xs text-ink/70">Skjemaet nullstilles automatisk etter 5 sekunder.</p>
+          <p className="text-xs text-[#4B5563]">Skjemaet nullstilles automatisk etter 5 sekunder.</p>
         ) : null}
       </form>
     </Card>

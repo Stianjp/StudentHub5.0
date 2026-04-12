@@ -169,20 +169,20 @@ export default async function CompanyOnboardingRecruitmentPage() {
             <legend className="text-sm font-semibold text-primary">
               Andre nøkkelord (valgfritt)
             </legend>
-            <label className="text-sm text-ink/70">
+            <label className="text-sm text-surface/80">
               Hvis dere ønsker å legge til egne nøkkelord kan dere gjøre det senere i admin.
             </label>
             <input type="hidden" name="recruitmentRoles" value="" />
             <input type="hidden" name="recruitmentTiming" value="" />
           </fieldset>
 
-          <div className="flex flex-col gap-2 text-sm text-ink/70">
+          <div className="flex flex-col gap-2 text-sm text-surface/80">
             <p>Tips: Feltene brukes i matching og for å generere en topp-liste i dashboardet.</p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
             <Button type="submit">Lagre og gå videre</Button>
-            <Link className="text-sm font-semibold text-primary/70 hover:text-primary" href="/company/onboarding/branding">
+            <Link className="text-sm font-semibold text-surface/80 hover:text-surface" href="/company/onboarding/branding">
               Hopp til steg 3 →
             </Link>
           </div>

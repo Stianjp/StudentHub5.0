@@ -142,31 +142,31 @@ async function RoiContent({ eventId, companyId }: { eventId: string; companyId: 
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card className="flex flex-col gap-3">
-          <h3 className="text-lg font-bold text-primary">Top studieretninger</h3>
+        <Card className="flex flex-col gap-3 text-surface">
+          <h3 className="text-lg font-bold text-surface">Top studieretninger</h3>
           {metrics.topStudyPrograms.length === 0 ? (
-            <p className="text-sm text-ink/70">Ikke nok samtykkedata enda.</p>
+            <p className="text-sm text-surface/80">Ikke nok samtykkedata enda.</p>
           ) : (
-            <ul className="grid gap-2 text-sm text-ink/80">
+            <ul className="grid gap-2 text-sm text-surface/88">
               {metrics.topStudyPrograms.map((item) => (
-                <li key={item.program} className="flex items-center justify-between rounded-xl bg-primary/5 px-3 py-2">
-                  <span className="font-semibold text-primary">{item.program}</span>
-                  <span className="text-xs font-semibold text-primary/70">{item.count}</span>
+                <li key={item.program} className="flex items-center justify-between rounded-xl bg-white/8 px-3 py-2">
+                  <span className="font-semibold text-surface">{item.program}</span>
+                  <span className="text-xs font-semibold text-surface/80">{item.count}</span>
                 </li>
               ))}
             </ul>
           )}
         </Card>
 
-        <Card className="flex flex-col gap-3">
-          <h3 className="text-lg font-bold text-primary">Målgruppe (bedriften)</h3>
-          <div className="grid gap-2 text-sm text-ink/80">
+        <Card className="flex flex-col gap-3 text-surface">
+          <h3 className="text-lg font-bold text-surface">Målgruppe (bedriften)</h3>
+          <div className="grid gap-2 text-sm text-surface/88">
             <div>
-              <p className="font-semibold text-primary">Nivå</p>
+              <p className="font-semibold text-surface">Nivå</p>
               <p>{metrics.targetLevels.length > 0 ? metrics.targetLevels.join(", ") : "Ikke satt"}</p>
             </div>
             <div>
-              <p className="font-semibold text-primary">Bachelor-år</p>
+              <p className="font-semibold text-surface">Bachelor-år</p>
               <p>
                 {metrics.targetYearsBachelor.length > 0
                   ? metrics.targetYearsBachelor.sort((a, b) => a - b).map((y) => `${y}. år`).join(", ")
@@ -174,7 +174,7 @@ async function RoiContent({ eventId, companyId }: { eventId: string; companyId: 
               </p>
             </div>
             <div>
-              <p className="font-semibold text-primary">Master-år</p>
+              <p className="font-semibold text-surface">Master-år</p>
               <p>
                 {metrics.targetYearsMaster.length > 0
                   ? metrics.targetYearsMaster.sort((a, b) => a - b).map((y) => `${y}. år`).join(", ")
@@ -184,44 +184,44 @@ async function RoiContent({ eventId, companyId }: { eventId: string; companyId: 
           </div>
         </Card>
 
-        <Card className="flex flex-col gap-3">
-          <h3 className="text-lg font-bold text-primary">Besøk per tidspunkt</h3>
+        <Card className="flex flex-col gap-3 text-surface">
+          <h3 className="text-lg font-bold text-surface">Besøk per tidspunkt</h3>
           {metrics.visitsByHour.length === 0 ? (
-            <p className="text-sm text-ink/70">Ingen besøk registrert.</p>
+            <p className="text-sm text-surface/80">Ingen besøk registrert.</p>
           ) : (
-            <ul className="grid gap-2 text-sm text-ink/80">
+            <ul className="grid gap-2 text-sm text-surface/88">
               {metrics.visitsByHour.map((item) => (
-                <li key={item.hour} className="flex items-center justify-between rounded-xl bg-primary/5 px-3 py-2">
-                  <span className="font-semibold text-primary">
+                <li key={item.hour} className="flex items-center justify-between rounded-xl bg-white/8 px-3 py-2">
+                  <span className="font-semibold text-surface">
                     {new Date(item.hour).toLocaleTimeString("nb-NO", { hour: "2-digit", minute: "2-digit" })}
                   </span>
-                  <span className="text-xs font-semibold text-primary/70">{item.count}</span>
+                  <span className="text-xs font-semibold text-surface/80">{item.count}</span>
                 </li>
               ))}
             </ul>
           )}
         </Card>
 
-        <Card className="flex flex-col gap-3">
-          <h3 className="text-lg font-bold text-primary">Leads per nivå/år</h3>
-          <div className="grid gap-3 text-sm text-ink/80">
+        <Card className="flex flex-col gap-3 text-surface">
+          <h3 className="text-lg font-bold text-surface">Leads per nivå/år</h3>
+          <div className="grid gap-3 text-sm text-surface/88">
             <div>
-              <p className="font-semibold text-primary">Nivå</p>
+              <p className="font-semibold text-surface">Nivå</p>
               {metrics.leadsByLevel.length === 0 ? (
                 <p>Ingen data.</p>
               ) : (
                 <ul className="grid gap-2">
                   {metrics.leadsByLevel.map((item) => (
-                    <li key={item.level} className="flex items-center justify-between rounded-xl bg-primary/5 px-3 py-2">
-                      <span className="font-semibold text-primary">{item.level}</span>
-                      <span className="text-xs font-semibold text-primary/70">{item.count}</span>
+                    <li key={item.level} className="flex items-center justify-between rounded-xl bg-white/8 px-3 py-2">
+                      <span className="font-semibold text-surface">{item.level}</span>
+                      <span className="text-xs font-semibold text-surface/80">{item.count}</span>
                     </li>
                   ))}
                 </ul>
               )}
             </div>
             <div>
-              <p className="font-semibold text-primary">Bachelor-år</p>
+              <p className="font-semibold text-surface">Bachelor-år</p>
               {metrics.leadsByYearBachelor.length === 0 ? (
                 <p>Ingen data.</p>
               ) : (
@@ -229,17 +229,17 @@ async function RoiContent({ eventId, companyId }: { eventId: string; companyId: 
                   {metrics.leadsByYearBachelor.map((item) => (
                     <li
                       key={`bachelor-${item.year}`}
-                      className="flex items-center justify-between rounded-xl bg-primary/5 px-3 py-2"
+                      className="flex items-center justify-between rounded-xl bg-white/8 px-3 py-2"
                     >
-                      <span className="font-semibold text-primary">{item.year}. år</span>
-                      <span className="text-xs font-semibold text-primary/70">{item.count}</span>
+                      <span className="font-semibold text-surface">{item.year}. år</span>
+                      <span className="text-xs font-semibold text-surface/80">{item.count}</span>
                     </li>
                   ))}
                 </ul>
               )}
             </div>
             <div>
-              <p className="font-semibold text-primary">Master-år</p>
+              <p className="font-semibold text-surface">Master-år</p>
               {metrics.leadsByYearMaster.length === 0 ? (
                 <p>Ingen data.</p>
               ) : (
@@ -247,10 +247,10 @@ async function RoiContent({ eventId, companyId }: { eventId: string; companyId: 
                   {metrics.leadsByYearMaster.map((item) => (
                     <li
                       key={`master-${item.year}`}
-                      className="flex items-center justify-between rounded-xl bg-primary/5 px-3 py-2"
+                      className="flex items-center justify-between rounded-xl bg-white/8 px-3 py-2"
                     >
-                      <span className="font-semibold text-primary">{item.year}. år</span>
-                      <span className="text-xs font-semibold text-primary/70">{item.count}</span>
+                      <span className="font-semibold text-surface">{item.year}. år</span>
+                      <span className="text-xs font-semibold text-surface/80">{item.count}</span>
                     </li>
                   ))}
                 </ul>

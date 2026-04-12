@@ -126,8 +126,8 @@ export default async function CompanyDashboardPage() {
         </Card>
 
         <Card className="flex flex-col gap-4">
-          <h3 className="text-lg font-bold text-primary">Hva skjer nå?</h3>
-          <ol className="list-decimal space-y-2 pl-5 text-sm text-ink/80">
+          <h3 className="text-lg font-bold text-surface">Hva skjer nå?</h3>
+          <ol className="list-decimal space-y-2 pl-5 text-sm text-surface/88">
             <li>Fullfør alle stegene i registreringen.</li>
             <li>Be OSH-teamet registrere dere på ønsket event.</li>
             <li>Admin setter pakke (Standard/Sølv/Gull/Platinum).</li>

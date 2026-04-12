@@ -26,6 +26,17 @@ function packageLabel(pkg?: string | null) {
   return pkg;
 }
 
+function standLevelLabel(standType?: string | null, packageTier?: string | null) {
+  const normalized = standType?.trim().toLowerCase();
+  if (!normalized) return packageLabel(packageTier);
+  if (normalized === "standard") return "Standard";
+  if (normalized === "silver" || normalized === "sølv") return "Sølv";
+  if (normalized === "gold" || normalized === "gull") return "Gull";
+  if (normalized === "platinum") return "Platinum";
+  if (normalized === "premium") return packageLabel(packageTier);
+  return packageLabel(packageTier);
+}
+
 function toDateTimeLocal(value: string | null | undefined) {
   if (!value) return "";
   const date = new Date(value);
@@ -98,7 +109,7 @@ export default async function AdminCompanyPackagesPage({ searchParams }: PagePro
       <SectionHeader
         eyebrow="Bedriftspakker"
         title="Styr pakke og tilgang per event"
-        description="Dette er hovedstedet for pakke og ekstra tilgang. Standnivå følger pakken automatisk."
+        description="Dette er hovedstedet for pakke og ekstra tilgang til Leads/ROI. Standnivå følger pakken automatisk."
         actions={<Link className="button-link text-xs" href="/admin/events/overview">Eventoversikt</Link>}
       />
 
@@ -144,6 +155,7 @@ export default async function AdminCompanyPackagesPage({ searchParams }: PagePro
             {rows.map((row) => {
               const hasRoiAccess = hasRoiAccessForRegistration(row);
               const hasLeadAccess = hasLeadDetailsAccessForRegistration(row);
+              const standLevel = standLevelLabel(row.stand_type, row.package);
               return (
                 <li key={row.id} className="rounded-xl border border-primary/10 bg-primary/5 p-4">
                   <div className="mb-3 flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
@@ -158,7 +170,7 @@ export default async function AdminCompanyPackagesPage({ searchParams }: PagePro
                         Pakke: {packageLabel(row.package)}
                       </span>
                       <span className="rounded-full bg-primary/10 px-3 py-1 text-primary">
-                        Standnivå: {row.stand_type ?? packageLabel(row.package)}
+                        Standnivå: {standLevel}
                       </span>
                       <span className="rounded-full bg-primary/10 px-3 py-1 text-primary">
                         ROI: {hasRoiAccess ? "Ja" : "Nei"}
@@ -190,8 +202,8 @@ export default async function AdminCompanyPackagesPage({ searchParams }: PagePro
                       <p className="font-semibold text-primary">Standnivå følger pakken</p>
                       <p className="mt-1">
                         Denne registreringen bruker{" "}
-                        <span className="font-semibold text-primary">{row.stand_type ?? packageLabel(row.package)}</span>.
-                        Endrer du pakke, oppdateres standnivå automatisk til Standard, Silver, Gold eller Platinum.
+                        <span className="font-semibold text-primary">{standLevel}</span>.
+                        Endrer du pakke, oppdateres standnivå automatisk til Standard, Sølv, Gull eller Platinum.
                       </p>
                     </div>
 
