@@ -59,7 +59,7 @@ function isPersonalDomain(domain: string) {
   return PERSONAL_EMAIL_DOMAINS.has(domain);
 }
 
-async function findAuthUserByEmail(email: string) {
+export async function findAuthUserByEmail(email: string) {
   const supabase = createAdminSupabaseClient();
   const target = normalizeEmailAddress(email);
   let page = 1;

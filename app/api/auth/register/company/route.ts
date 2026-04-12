@@ -9,8 +9,22 @@ import {
 } from "@/lib/auth-registration";
 import {
   ensureCompanyAccessRequest,
+  findAuthUserByEmail,
   uploadCompanyLogo,
 } from "@/lib/company-access";
+
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error && error.message.trim()) {
+    return error.message;
+  }
+  if (typeof error === "object" && error !== null && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string" && message.trim()) {
+      return message;
+    }
+  }
+  return "Ukjent feil";
+}
 
 export async function POST(request: Request) {
   const hostValidationError = validateHostRoleLock(request.headers.get("host"), "company");
@@ -51,6 +65,21 @@ export async function POST(request: Request) {
   let logoPath: string | null = null;
 
   try {
+    const existingUser = await findAuthUserByEmail(normalizedEmail);
+    if (existingUser?.id) {
+      const { data: existingProfile } = await admin
+        .from("profiles")
+        .select("role")
+        .eq("id", existingUser.id)
+        .maybeSingle();
+      const existingRole = (existingProfile as { role?: string } | null)?.role ?? null;
+      const message =
+        existingRole === "admin"
+          ? "Denne e-posten finnes allerede som en OSH-konto. Logg inn i stedet for å registrere en ny bedriftskonto."
+          : "Denne e-posten finnes allerede. Logg inn i stedet, eller bruk en annen e-post for en ny bedriftsbruker.";
+      return NextResponse.json({ error: message }, { status: 409 });
+    }
+
     const { data, error } = await supabase.auth.signUp({
       email: normalizedEmail,
       password: parsed.data.password,
@@ -121,7 +150,7 @@ export async function POST(request: Request) {
       await admin.auth.admin.deleteUser(createdUserId).catch(() => undefined);
     }
 
-    const message = error instanceof Error ? error.message : "Ukjent feil";
+    const message = getErrorMessage(error);
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
