@@ -4,9 +4,6 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { getEvent, getEventCompanies } from "@/lib/events";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getOrCreateStudentForUser } from "@/lib/student";
-import { registerAttendeeForEvent } from "@/app/event/actions";
-import { Input } from "@/components/ui/input";
-import { CompanyInterestSelector } from "@/components/event/company-interest-selector";
 
 type EventPageProps = {
   params: Promise<{ eventId: string }>;
@@ -39,10 +36,6 @@ export default async function EventPage({ params, searchParams }: EventPageProps
     : { data: [] };
   const typedTickets = (tickets ?? []) as Array<{ id: string; event_id: string; student_id: string | null }>;
   const registeredEventIds = new Set(typedTickets.map((ticket) => ticket.event_id));
-  const companyOptions = registrations.map((registration) => ({
-    id: registration.company_id,
-    name: registration.company.name,
-  }));
   const eventTime = `${new Date(event.starts_at).toLocaleString("nb-NO")} - ${new Date(event.ends_at).toLocaleString("nb-NO")}`;
 
   return (
@@ -79,7 +72,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
       </Card>
 
       <section className="grid gap-4">
-        <h2 className="text-lg font-bold text-primary">Hent billett</h2>
+        <h2 className="text-lg font-bold text-primary">Hent din gratis student billett her</h2>
         {ticketSent ? (
           <Card className="border border-secondary/40 bg-secondary/15 text-sm font-semibold text-primary" role="status">
             Billett sendt til din e-post. Sjekk også søppelpost.
@@ -90,54 +83,34 @@ export default async function EventPage({ params, searchParams }: EventPageProps
             Du har allerede billett til dette eventet.
           </Card>
         ) : null}
-        <Card className="flex flex-col gap-4">
-          <form action={registerAttendeeForEvent} className="grid gap-3 md:grid-cols-3">
-            <input type="hidden" name="eventId" value={eventId} />
-            <input type="hidden" name="returnTo" value={`/event/events/${eventId}?ticket=sent`} />
-            {companyOptions.length > 0 ? <input type="hidden" name="requireCompany" value="1" /> : null}
-            <label className="text-sm font-semibold text-primary md:col-span-1">
-              Navn
-              <Input
-                name="fullName"
-                required
-                placeholder="Fornavn Etternavn"
-                defaultValue={student?.full_name ?? ""}
-              />
-            </label>
-            <label className="text-sm font-semibold text-primary md:col-span-1">
-              E-post
-              <Input
-                name="email"
-                type="email"
-                required
-                placeholder="navn@epost.no"
-                defaultValue={student?.email ?? user?.email ?? ""}
-              />
-            </label>
-            <label className="text-sm font-semibold text-primary md:col-span-1">
-              Telefon
-              <Input
-                name="phone"
-                required
-                placeholder="Telefonnummer"
-                defaultValue={student?.phone ?? ""}
-              />
-            </label>
-            <div className="md:col-span-3">
-              <p className="text-sm font-semibold text-primary">Hvilke bedrifter er du interessert i?</p>
-              <p className="text-xs text-ink/60">Velg alle, noen eller ingen.</p>
-              <div className="mt-2">
-                <CompanyInterestSelector companies={companyOptions} required={companyOptions.length > 0} />
-              </div>
+        <Card className="grid gap-4 border border-secondary/20 bg-[linear-gradient(135deg,#FFF7EE_0%,#FFFFFF_45%,#FFF0F1_100%)]">
+          <div className="grid gap-4 md:grid-cols-[1.2fr_0.8fr] md:items-center">
+            <div className="grid gap-2">
+              <p className="text-sm text-ink/75">
+                Vi har laget en egen registreringsside for studenter, slik at dere kan fylle ut hele studentprofilen og velge om dere vil opprette bruker samtidig.
+              </p>
+              <p className="text-sm text-ink/75">
+                Dette gjør registreringen mer brukervennlig og gir dere raskere tilgang til billett, matching og videre oppfølging.
+              </p>
             </div>
-            <button
-              type="submit"
-              className="md:col-span-3 inline-flex items-center justify-center rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-surface transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
-              disabled={registeredEventIds.has(eventId)}
-            >
-              {registeredEventIds.has(eventId) ? "Allerede påmeldt" : "Hent billett"}
-            </button>
-          </form>
+            <div className="flex flex-col gap-3">
+              <Link
+                className={`inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-bold tracking-wide transition ${
+                  registeredEventIds.has(eventId)
+                    ? "cursor-not-allowed bg-primary/15 text-primary/60"
+                    : "bg-primary text-surface shadow-soft hover:-translate-y-0.5 hover:bg-primary/90"
+                }`}
+                href={registeredEventIds.has(eventId) ? "#" : `/event/events/${eventId}/ticket`}
+                aria-disabled={registeredEventIds.has(eventId)}
+                tabIndex={registeredEventIds.has(eventId) ? -1 : undefined}
+              >
+                {registeredEventIds.has(eventId) ? "Allerede påmeldt" : "Hent din gratis student billett her"}
+              </Link>
+              <p className="text-xs text-ink/60">
+                Konto er valgfritt, men anbefalt hvis du vil logge inn på studentsiden etterpå.
+              </p>
+            </div>
+          </div>
         </Card>
       </section>
 
