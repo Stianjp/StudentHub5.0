@@ -18,6 +18,21 @@ import { SITE_IMAGES } from "@/lib/hovedside/site-images";
 
 const COMPANY_REGISTRATION_URL = "https://eventregister.oslostudenthub.no/";
 
+const PAST_EVENTS = [
+  {
+    title: "Næringslivsdagen 2025",
+    description: "A career-focused event bringing students and companies together for conversations, exposure, and recruitment.",
+  },
+  {
+    title: "Hackaton by Oslo Student Hub",
+    description: "With NITO, SFR OsloMet, Insj Oslo, Telenor and Schenider Electric.",
+  },
+  {
+    title: "SHE2025",
+    description: "A flagship community event focused on inspiration, networking, and visibility for future talent.",
+  },
+];
+
 export const metadata: Metadata = {
   title: "Partners",
   description:
@@ -82,6 +97,29 @@ export default async function ForBedrifterPage() {
             ))}
           </div>
         )}
+      </SectionWrapper>
+
+      <SectionWrapper>
+        <h2 className="mb-2 text-center text-2xl font-bold text-primary">
+          Past events
+        </h2>
+        <p className="mx-auto mb-8 max-w-2xl text-center text-sm text-ink/60">
+          A selection of previous events delivered together with students, partners, and industry.
+        </p>
+        <div className="grid gap-5 md:grid-cols-3">
+          {PAST_EVENTS.map((event) => (
+            <div
+              key={event.title}
+              className="rounded-[28px] bg-mist/40 p-6 shadow-[0_18px_44px_rgba(20,2,73,0.08)] ring-1 ring-primary/6"
+            >
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-secondary">
+                Past event
+              </p>
+              <h3 className="mt-3 text-xl font-bold text-primary">{event.title}</h3>
+              <p className="mt-3 text-sm leading-relaxed text-ink/70">{event.description}</p>
+            </div>
+          ))}
+        </div>
       </SectionWrapper>
 
       {/* ── Stats ────────────────────────────────────────────── */}
