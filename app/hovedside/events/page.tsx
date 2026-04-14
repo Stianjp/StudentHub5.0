@@ -17,9 +17,38 @@ export const metadata: Metadata = {
   description: "Upcoming and past events organized by Oslo Student Hub.",
 };
 
+const CURATED_PAST_EVENTS = [
+  {
+    slug: "naeringslivsdagen-2025",
+    name: "Næringslivsdagen 2025",
+    dateLabel: "2025",
+  },
+  {
+    slug: "hackaton-by-osh",
+    name: "Hackaton by Oslo Student Hub, with NITO, SFR OsloMet, Insj Oslo, Telenor and Schenider Electric",
+    dateLabel: "Previous event",
+  },
+  {
+    slug: "she2025",
+    name: "SHE2025",
+    dateLabel: "2025",
+  },
+];
+
 export default async function EventsPage() {
   const events = await listWebsiteEvents();
   const { upcoming, past } = splitWebsiteEvents(events);
+  const visiblePast = [
+    ...past,
+    ...CURATED_PAST_EVENTS.filter(
+      (curatedEvent) =>
+        !past.some(
+          (event) =>
+            event.slug === curatedEvent.slug ||
+            event.name.toLowerCase() === curatedEvent.name.toLowerCase(),
+        ),
+    ),
+  ];
 
   return (
     <>
@@ -83,7 +112,7 @@ export default async function EventsPage() {
       {/* ── Past events ──────────────────────────────────────── */}
       <SectionWrapper bg="mist">
         <h2 className="mb-8 text-2xl font-bold text-primary">Past Events</h2>
-        {past.length === 0 ? (
+        {visiblePast.length === 0 ? (
           <div className="rounded-2xl bg-surface p-6 shadow-soft ring-1 ring-primary/5">
             <p className="text-sm text-ink/70">
               Past events will appear here automatically.
@@ -91,10 +120,10 @@ export default async function EventsPage() {
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2">
-            {past.map((event) => (
+            {visiblePast.map((event) => (
             <div
               key={event.name}
-              id={event.slug}
+              id={event.slug ?? undefined}
               className="flex items-center gap-4 rounded-xl bg-surface px-5 py-4 ring-1 ring-primary/5"
             >
               <CalendarDays size={20} className="shrink-0 text-purple/60" />
@@ -103,7 +132,7 @@ export default async function EventsPage() {
                   {event.name}
                 </p>
                 <p className="text-xs text-ink/50">
-                  {formatWebsiteEventDate(event.starts_at)}
+                  {"starts_at" in event ? formatWebsiteEventDate(event.starts_at) : event.dateLabel}
                 </p>
               </div>
             </div>
