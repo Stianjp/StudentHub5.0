@@ -5,7 +5,6 @@ import {
   CalendarDays,
   GraduationCap,
   Rocket,
-  Handshake,
   HeartHandshake,
 } from "lucide-react";
 import { HeroSection } from "@/components/hovedside/hero-section";
@@ -13,6 +12,8 @@ import { SectionWrapper } from "@/components/hovedside/section-wrapper";
 import { FeatureCard } from "@/components/hovedside/feature-card";
 import { StatsBanner } from "@/components/hovedside/stats-banner";
 import { CtaSection } from "@/components/hovedside/cta-section";
+import { CompanyGrid } from "@/components/hovedside/company-grid";
+import { getApprovedCompaniesForCampaign } from "@/lib/hovedside/approved-companies";
 import {
   formatWebsiteEventMonth,
   listWebsiteEvents,
@@ -22,7 +23,10 @@ import {
 import { SITE_IMAGES } from "@/lib/hovedside/site-images";
 
 export default async function HomePage() {
-  const events = await listWebsiteEvents();
+  const [events, companies] = await Promise.all([
+    listWebsiteEvents(),
+    getApprovedCompaniesForCampaign("student-connect-2026"),
+  ]);
   const { upcoming } = splitWebsiteEvents(events);
   const featuredEvents = upcoming.slice(0, 2);
 
@@ -140,36 +144,14 @@ export default async function HomePage() {
       </SectionWrapper>
 
       {/* ── Partners ─────────────────────────────────────────── */}
-      <SectionWrapper>
-        <h2 className="mb-8 text-center text-2xl font-bold text-primary">
+      <SectionWrapper bg="primary">
+        <h2 className="mb-2 text-center text-2xl font-bold text-surface">
           Our partners
         </h2>
-        <div className="grid grid-cols-3 gap-4 sm:grid-cols-4 md:grid-cols-6">
-          {[
-            "Aker Solutions",
-            "Capgemini",
-            "Multiconsult",
-            "Skanska",
-            "Tietoevry",
-            "WSP",
-            "COWI",
-            "Hydro",
-            "ABB",
-            "Veidekke",
-            "Kongsberg",
-            "Tomra",
-          ].map((name) => (
-            <div
-              key={name}
-              className="flex h-20 items-center justify-center rounded-xl bg-mist/40 px-3 text-center text-xs font-semibold text-primary/60 ring-1 ring-primary/5"
-            >
-              {name}
-            </div>
-          ))}
-        </div>
-        <p className="mt-4 text-center text-xs text-ink/50">
-          Logoer erstattes med ekte bedriftslogoer
+        <p className="mx-auto mb-8 max-w-2xl text-center text-sm text-mist/60">
+          Confirmed partners for Student Connect 2026, sorted by package from Platinum to Standard.
         </p>
+        <CompanyGrid companies={companies} />
       </SectionWrapper>
 
       {/* ── CTA ──────────────────────────────────────────────── */}

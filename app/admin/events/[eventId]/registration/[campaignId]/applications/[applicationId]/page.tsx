@@ -90,9 +90,9 @@ export default async function AdminRegistrationApplicationPage({ params, searchP
       ) : null}
 
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,0.8fr)]">
-        <Card className="grid gap-4">
+        <Card className="grid gap-4 text-surface">
           <h3 className="text-lg font-bold text-primary">Kontakt og bedrift</h3>
-          <div className="grid gap-3 md:grid-cols-2 text-sm text-ink/80">
+          <div className="grid gap-3 text-sm text-surface/90 md:grid-cols-2">
             <p><span className="font-semibold text-primary">Kontakt:</span> {detail.application.contact_first_name} {detail.application.contact_last_name}</p>
             <p><span className="font-semibold text-primary">E-post:</span> {detail.application.contact_email}</p>
             <p><span className="font-semibold text-primary">Telefon:</span> {detail.application.contact_phone}</p>
@@ -105,9 +105,9 @@ export default async function AdminRegistrationApplicationPage({ params, searchP
           </div>
         </Card>
 
-        <Card className="grid gap-4">
+        <Card className="grid gap-4 text-surface">
           <h3 className="text-lg font-bold text-primary">Pakke og stand</h3>
-          <div className="grid gap-3 text-sm text-ink/80">
+          <div className="grid gap-3 text-sm text-surface/90">
             <p><span className="font-semibold text-primary">Requested package:</span> {detail.requestedPackage?.public_name ?? "Ikke satt"}</p>
             <p><span className="font-semibold text-primary">Requested stand:</span> {requestedStand?.stand_code ?? "Ikke valgt"}</p>
             <p><span className="font-semibold text-primary">Approved package:</span> {detail.approvedPackage?.public_name ?? "Ikke satt"}</p>
@@ -118,9 +118,9 @@ export default async function AdminRegistrationApplicationPage({ params, searchP
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-        <Card className="grid gap-4">
+        <Card className="grid gap-4 text-surface">
           <h3 className="text-lg font-bold text-primary">Fakturainfo og målgruppe</h3>
-          <div className="grid gap-3 text-sm text-ink/80">
+          <div className="grid gap-3 text-sm text-surface/90">
             <p><span className="font-semibold text-primary">Invoice delivery:</span> {detail.application.invoice_delivery_method.toUpperCase()}</p>
             <p><span className="font-semibold text-primary">Invoice e-mail:</span> {detail.application.invoice_email ?? "Ikke satt"}</p>
             <p><span className="font-semibold text-primary">Invoice reference:</span> {detail.application.invoice_reference ?? "Ikke satt"}</p>
@@ -133,14 +133,14 @@ export default async function AdminRegistrationApplicationPage({ params, searchP
           </div>
         </Card>
 
-        <Card className="grid gap-4">
+        <Card className="grid gap-4 text-surface">
           <h3 className="text-lg font-bold text-primary">Portalbrukere og logo</h3>
           <div className="grid gap-3">
             <div>
               <p className="text-sm font-semibold text-primary">Portal e-poster</p>
               <div className="mt-2 grid gap-2">
                 {detail.portalEmails.map((portalEmail) => (
-                  <div key={portalEmail.id} className="rounded-2xl border border-primary/10 bg-primary/5 px-4 py-3 text-sm text-ink/80">
+                  <div key={portalEmail.id} className="rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-surface/95">
                     {portalEmail.email}
                   </div>
                 ))}
@@ -156,7 +156,7 @@ export default async function AdminRegistrationApplicationPage({ params, searchP
                 />
               </div>
             ) : (
-              <p className="text-sm text-ink/70">Ingen logo lastet opp.</p>
+              <p className="text-sm text-surface/75">Ingen logo lastet opp.</p>
             )}
           </div>
         </Card>

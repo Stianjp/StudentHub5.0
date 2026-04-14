@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
-  CalendarDays,
-  Users,
-  Building2,
   Send,
 } from "lucide-react";
 import { HeroSection } from "@/components/hovedside/hero-section";
+import { PartnerLogoCarousel } from "@/components/hovedside/partner-logo-carousel";
 import { SectionWrapper } from "@/components/hovedside/section-wrapper";
 import { StatsBanner } from "@/components/hovedside/stats-banner";
+import { getPartnerLogoItems } from "@/lib/hovedside/partner-logos";
 import {
   formatWebsiteEventMonth,
   listWebsiteEvents,
@@ -25,31 +24,11 @@ export const metadata: Metadata = {
     "Meet technology students in Oslo. Partner with Oslo Student Hub for career events and recruitment.",
 };
 
-const PARTNER_NAMES = [
-  "Aker Solutions",
-  "Tietoevry",
-  "Capgemini",
-  "Multiconsult",
-  "Skanska",
-  "Intility",
-  "Veidekke",
-  "Forsvarsbygg",
-  "WSP",
-  "COWI",
-  "Hydro",
-  "ABB",
-  "Kongsberg",
-  "Tomra",
-  "Skatteetaten",
-  "Energima",
-  "Standard Norge",
-  "Backe AS",
-  "Holmestrand kommune",
-  "Drammen kommune",
-];
-
 export default async function ForBedrifterPage() {
-  const events = await listWebsiteEvents();
+  const [events, partnerLogos] = await Promise.all([
+    listWebsiteEvents(),
+    getPartnerLogoItems(),
+  ]);
   const { upcoming } = splitWebsiteEvents(events);
   const featuredEvents = upcoming.slice(0, 2);
 
@@ -160,26 +139,17 @@ export default async function ForBedrifterPage() {
         </div>
       </SectionWrapper>
 
-      {/* ── Partners grid ────────────────────────────────────── */}
+      {/* ── Partners carousel ────────────────────────────────── */}
       <SectionWrapper bg="primary">
         <h2 className="mb-2 text-center text-2xl font-bold text-surface">
-          Meet our partners at the career fair
+          Partner logo on website carousel
         </h2>
         <p className="mx-auto mb-8 max-w-xl text-center text-sm text-mist/60">
-          Companies that have participated in our events
+          Logos from companies and organizations Oslo Student Hub has collaborated with.
         </p>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-          {PARTNER_NAMES.map((name) => (
-            <div
-              key={name}
-              className="flex h-20 items-center justify-center rounded-xl bg-white/5 px-3 text-center text-xs font-semibold text-mist/70 ring-1 ring-white/10"
-            >
-              {name}
-            </div>
-          ))}
-        </div>
+        <PartnerLogoCarousel items={partnerLogos} />
         <p className="mt-4 text-center text-xs text-mist/40">
-          Logoer erstattes med ekte bedriftslogoer
+          Web-visbare filer i `public/Partner-site/Partner-logos` blir vist automatisk i karusellen.
         </p>
       </SectionWrapper>
 

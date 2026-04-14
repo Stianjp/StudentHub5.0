@@ -360,6 +360,37 @@ button:active:not(:disabled) {
   box-shadow: 0 0 0 2px rgba(254, 154, 112, 0.7);
 }
 
+.partner-carousel-mask {
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent 0, black 8%, black 92%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0, black 8%, black 92%, transparent 100%);
+}
+
+.partner-carousel-track {
+  display: flex;
+  width: max-content;
+  gap: 1rem;
+  animation: partner-carousel-scroll 34s linear infinite;
+}
+
+.partner-carousel-track-reverse {
+  animation-direction: reverse;
+}
+
+.partner-carousel-mask:hover .partner-carousel-track {
+  animation-play-state: paused;
+}
+
+@keyframes partner-carousel-scroll {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+
+  to {
+    transform: translate3d(calc(-50% - 0.5rem), 0, 0);
+  }
+}
+
 @layer components {
   .button-link {
     @apply inline-flex min-h-11 items-center justify-center rounded-full border border-transparent px-6 py-2.5 text-sm font-bold tracking-wide;
