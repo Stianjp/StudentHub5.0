@@ -24,7 +24,7 @@ function PartnerLogoTrack({
         {loopItems.map((item, index) => (
           <div
             key={`${item.src}-${index}`}
-            className="flex min-w-[180px] items-center justify-center rounded-[26px] border border-white/12 bg-white/8 px-6 py-5 shadow-[0_18px_50px_rgba(20,2,73,0.18)] backdrop-blur-sm sm:min-w-[220px]"
+            className="flex min-w-[180px] items-center justify-center rounded-[26px] border border-white/55 bg-white px-6 py-5 shadow-[0_18px_50px_rgba(20,2,73,0.18)] sm:min-w-[220px]"
           >
             <div className="relative h-12 w-full sm:h-14">
               <Image

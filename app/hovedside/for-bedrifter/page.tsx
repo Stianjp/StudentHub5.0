@@ -142,15 +142,12 @@ export default async function ForBedrifterPage() {
       {/* ── Partners carousel ────────────────────────────────── */}
       <SectionWrapper bg="primary">
         <h2 className="mb-2 text-center text-2xl font-bold text-surface">
-          Partner logo on website carousel
+          Previous partners
         </h2>
         <p className="mx-auto mb-8 max-w-xl text-center text-sm text-mist/60">
           Logos from companies and organizations Oslo Student Hub has collaborated with.
         </p>
         <PartnerLogoCarousel items={partnerLogos} />
-        <p className="mt-4 text-center text-xs text-mist/40">
-          Web-visbare filer i `public/Partner-site/Partner-logos` blir vist automatisk i karusellen.
-        </p>
       </SectionWrapper>
 
       {/* ── Gradient stripe ──────────────────────────────────── */}
