@@ -11,7 +11,6 @@ import { getCompanyOnboardingStatus } from "@/lib/company-onboarding";
 import { listActiveEvents } from "@/lib/events";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { uploadCompanyLogoForCompanyAction } from "@/app/company/actions";
-import { LogoPreview } from "@/app/company/logo-preview";
 
 type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -108,7 +107,18 @@ export default async function CompanyDashboardPage({ searchParams }: PageProps) 
             </Link>
           </div>
 
-          <LogoPreview logoUrl={registrationLogo.logoUrl} companyName={company.name} />
+          <div className="rounded-3xl border border-primary/10 bg-mist p-6">
+            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary/60">Logo preview</p>
+            <div className="mt-4 flex min-h-36 items-center justify-center rounded-2xl border border-primary/10 bg-white p-6">
+              <Image
+                src={registrationLogo.logoUrl}
+                alt={`Logo preview for ${company.name}`}
+                width={220}
+                height={110}
+                className="max-h-24 w-auto object-contain"
+              />
+            </div>
+          </div>
 
           <form action={uploadCompanyLogoForCompanyAction} className="flex flex-col gap-3 rounded-2xl border border-primary/10 bg-primary/5 p-4 md:flex-row md:items-end">
             <label className="flex-1 text-sm font-semibold text-primary">
