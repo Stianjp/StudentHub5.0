@@ -31,8 +31,8 @@ const MORE_LINKS: NavLink[] = [
 ];
 
 const LOGIN_LINKS: NavLink[] = [
-  { label: "Student", href: "/auth/sign-in?role=student" },
-  { label: "Company", href: "/auth/sign-in?role=company" },
+  { label: "Student", href: "https://stian.oslostudenthub.no/" },
+  { label: "Company", href: "https://bedrift.oslostudenthub.no/" },
 ];
 
 export function Navbar({ baseUrl }: { baseUrl?: string }) {
