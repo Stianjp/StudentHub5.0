@@ -11,14 +11,23 @@ import {
   companyEventGoalsSchema,
   companyEventSignupSchema,
   companyInfoSchema,
+  companyOpportunitySchema,
   companyRecruitmentSchema,
 } from "@/lib/validation/company";
 import {
   getCompanyAttendeeTicketAllowance,
+  hasJobPublishingAccessForRegistration,
   getOrCreateCompanyForUser,
+  hasThesisPublishingAccessForRegistration,
 } from "@/lib/company";
 import { normalizeStudyCategories } from "@/lib/company-categories";
 import { sendTransactionalEmail } from "@/lib/resend";
+
+function isNextRedirectError(error: unknown) {
+  const digest = (error as { digest?: string })?.digest;
+  const message = (error as { message?: string })?.message;
+  return digest === "NEXT_REDIRECT" || message === "NEXT_REDIRECT";
+}
 
 function generateTicketNumber() {
   return `T-${Math.random().toString(36).slice(2, 6).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
@@ -80,6 +89,35 @@ async function getCompanyContext() {
     throw new Error("Bedriftskontoen er ikke godkjent ennå.");
   }
   return { supabase, user, company };
+}
+
+function getCompanyActionMessage(error: unknown) {
+  return error instanceof Error ? error.message : "Noe gikk galt.";
+}
+
+async function ensureOpportunityAccess(companyId: string, opportunityType: "job" | "thesis") {
+  const supabase = createAdminSupabaseClient();
+  const { data, error } = await supabase
+    .from("event_companies")
+    .select("package, can_publish_jobs, can_publish_thesis")
+    .eq("company_id", companyId);
+
+  if (error) throw error;
+  const registrations = (data ?? []) as Array<{
+    package: string | null;
+    can_publish_jobs?: boolean | null;
+    can_publish_thesis?: boolean | null;
+  }>;
+  const hasAccess =
+    opportunityType === "job"
+      ? registrations.some((registration) => hasJobPublishingAccessForRegistration(registration))
+      : registrations.some((registration) => hasThesisPublishingAccessForRegistration(registration));
+
+  if (!hasAccess) {
+    throw new Error(
+      "Publisering er inkludert for Gull og Platinum. For Silver og Standard kan dette kjøpes som tillegg. Kontakt stian@oslostudenthub.no.",
+    );
+  }
 }
 
 export async function saveCompanyInfo(formData: FormData) {
@@ -270,6 +308,112 @@ export async function signupForEvent(formData: FormData) {
 
   revalidatePath("/company/events");
   revalidatePath("/company");
+}
+
+export async function saveCompanyOpportunity(formData: FormData) {
+  const opportunityType = String(formData.get("opportunityType") ?? "") === "thesis" ? "thesis" : "job";
+  try {
+    const parsed = companyOpportunitySchema.safeParse({
+      id: String(formData.get("id") ?? ""),
+      opportunityType,
+      title: String(formData.get("title") ?? ""),
+      location: String(formData.get("location") ?? ""),
+      applicationUrl: String(formData.get("applicationUrl") ?? ""),
+      applicationDeadline: String(formData.get("applicationDeadline") ?? ""),
+      fieldTags: formData.getAll("fieldTags"),
+      levels: formData.getAll("levels"),
+      yearsBachelor: formData.getAll("yearsBachelor"),
+      yearsMaster: formData.getAll("yearsMaster"),
+      engagementTypes: formData.getAll("engagementTypes"),
+      description: String(formData.get("description") ?? ""),
+      isPublished: formData.get("isPublished") !== null,
+    });
+
+    if (!parsed.success) {
+      throw new Error(parsed.error.issues.map((issue) => issue.message).join(", "));
+    }
+
+    const { company } = await getCompanyContext();
+    await ensureOpportunityAccess(company.id, parsed.data.opportunityType);
+
+    const supabase = createAdminSupabaseClient();
+    const now = new Date().toISOString();
+    const payload = {
+      company_id: company.id,
+      opportunity_type: parsed.data.opportunityType,
+      title: parsed.data.title,
+      location: parsed.data.location,
+      application_url: parsed.data.applicationUrl || null,
+      application_deadline: parsed.data.applicationDeadline,
+      field_tags: parsed.data.fieldTags,
+      levels: parsed.data.levels,
+      years_bachelor: parsed.data.levels.includes("Bachelor") ? parsed.data.yearsBachelor : [],
+      years_master: parsed.data.levels.includes("Master") ? parsed.data.yearsMaster : [],
+      engagement_types: parsed.data.opportunityType === "job" ? parsed.data.engagementTypes : [],
+      description: parsed.data.description || null,
+      is_published: parsed.data.isPublished,
+      updated_at: now,
+    };
+
+    if (parsed.data.id) {
+      const { error } = await supabase
+        .from("company_opportunities")
+        .update(payload)
+        .eq("id", parsed.data.id)
+        .eq("company_id", company.id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabase.from("company_opportunities").insert({
+        ...payload,
+        created_at: now,
+      });
+      if (error) throw error;
+    }
+
+    revalidatePath("/company/jobs");
+    revalidatePath("/company/thesis-projects");
+    revalidatePath("/jobs");
+    revalidatePath("/thesis-projects");
+    redirect(
+      `/company/${parsed.data.opportunityType === "job" ? "jobs" : "thesis-projects"}?saved=1`,
+    );
+  } catch (error) {
+    if (isNextRedirectError(error)) throw error;
+    const message = getCompanyActionMessage(error);
+    redirect(
+      `/company/${opportunityType === "job" ? "jobs" : "thesis-projects"}?error=${encodeURIComponent(message)}`,
+    );
+  }
+}
+
+export async function deleteCompanyOpportunity(formData: FormData) {
+  const opportunityType = String(formData.get("opportunityType") ?? "") === "thesis" ? "thesis" : "job";
+  try {
+    const id = String(formData.get("id") ?? "").trim();
+    const { company } = await getCompanyContext();
+    await ensureOpportunityAccess(company.id, opportunityType);
+
+    const supabase = createAdminSupabaseClient();
+    const { error } = await supabase
+      .from("company_opportunities")
+      .delete()
+      .eq("id", id)
+      .eq("company_id", company.id);
+
+    if (error) throw error;
+
+    revalidatePath("/company/jobs");
+    revalidatePath("/company/thesis-projects");
+    revalidatePath("/jobs");
+    revalidatePath("/thesis-projects");
+    redirect(`/company/${opportunityType === "job" ? "jobs" : "thesis-projects"}?saved=1`);
+  } catch (error) {
+    if (isNextRedirectError(error)) throw error;
+    const message = getCompanyActionMessage(error);
+    redirect(
+      `/company/${opportunityType === "job" ? "jobs" : "thesis-projects"}?error=${encodeURIComponent(message)}`,
+    );
+  }
 }
 
 export async function updateCompanyEventGoals(formData: FormData) {

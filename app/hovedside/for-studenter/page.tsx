@@ -90,6 +90,20 @@ export default async function ForStudenterPage() {
               discover student-friendly companies, thesis opportunities, and the
               kind of people you want to learn from.
             </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link
+                href="/jobs"
+                className="inline-flex items-center rounded-full border-2 border-primary px-6 py-3 text-sm font-bold uppercase tracking-wider text-primary transition-colors hover:bg-primary hover:text-surface"
+              >
+                Explore jobs
+              </Link>
+              <Link
+                href="/thesis-projects"
+                className="inline-flex items-center rounded-full border-2 border-purple px-6 py-3 text-sm font-bold uppercase tracking-wider text-purple transition-colors hover:bg-purple hover:text-surface"
+              >
+                Explore thesis projects
+              </Link>
+            </div>
           </div>
         </div>
       </SectionWrapper>

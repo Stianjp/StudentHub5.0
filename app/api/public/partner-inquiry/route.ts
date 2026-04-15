@@ -51,7 +51,7 @@ export async function POST(request: Request) {
 
     const selectedEventType =
       parsed.data.eventType === "Other"
-        ? parsed.data.eventTypeOther.trim()
+        ? (parsed.data.eventTypeOther ?? "").trim()
         : parsed.data.eventType;
 
     const supabase = createAdminSupabaseClient();

@@ -8,6 +8,8 @@ import { Menu, X, ChevronDown, User } from "lucide-react";
 
 const NAV_LINKS = [
   { label: "Students", href: "/for-studenter" },
+  { label: "Jobs", href: "/jobs" },
+  { label: "Thesis projects", href: "/thesis-projects" },
   { label: "Partners", href: "/partners" },
   { label: "Student Connect 2026", href: "/studentconnect2026" },
   { label: "Events", href: "/events" },

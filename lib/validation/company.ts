@@ -97,6 +97,84 @@ export const companyEventGoalsSchema = z.object({
   kpis: stringArray,
 });
 
+const normalizedUrl = z.preprocess(
+  (value) => {
+    if (typeof value !== "string") return value;
+    const trimmed = value.trim();
+    if (!trimmed) return "";
+    if (!/^https?:\/\//i.test(trimmed)) {
+      return `https://${trimmed}`;
+    }
+    return trimmed;
+  },
+  z.union([z.string().url("Søknadslenke må være en gyldig URL"), z.literal("")]),
+);
+
+export const companyOpportunitySchema = z
+  .object({
+    id: z.string().uuid("Ugyldig oppføring").optional().or(z.literal("")),
+    opportunityType: z.enum(["job", "thesis"]),
+    title: z.string().min(2, "Tittel er påkrevd"),
+    location: z.string().min(2, "Lokasjon er påkrevd"),
+    applicationUrl: normalizedUrl,
+    applicationDeadline: z.string().min(1, "Søknadsfrist er påkrevd"),
+    fieldTags: stringArray,
+    levels: stringArray,
+    yearsBachelor: numberArray,
+    yearsMaster: numberArray,
+    engagementTypes: stringArray,
+    description: z.string().optional().or(z.literal("")),
+    isPublished: z.boolean().default(true),
+  })
+  .superRefine((value, ctx) => {
+    if (value.fieldTags.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["fieldTags"],
+        message: "Velg minst én studieretning.",
+      });
+    }
+    if (value.levels.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["levels"],
+        message: "Velg Bachelor og/eller Master.",
+      });
+    }
+    if (value.levels.includes("Bachelor") && value.yearsBachelor.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["yearsBachelor"],
+        message: "Velg minst ett bachelor-år.",
+      });
+    }
+    if (value.levels.includes("Master") && value.yearsMaster.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["yearsMaster"],
+        message: "Velg minst ett master-år.",
+      });
+    }
+    if (value.opportunityType === "job" && value.engagementTypes.length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["engagementTypes"],
+        message: "Velg minst én stillingstype.",
+      });
+    }
+    const wordCount = (value.description ?? "")
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean).length;
+    if (wordCount > 150) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["description"],
+        message: "Beskrivelsen kan være maks 150 ord.",
+      });
+    }
+  });
+
 export const magicLinkSchema = z.object({
   email: z.string().email("Ugyldig e-post"),
   role: z.enum(["student", "company", "admin"]),

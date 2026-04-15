@@ -59,6 +59,20 @@ export function hasLeadDetailsAccessForRegistration(input: {
   return hasPremiumPackageAccess(input.package) || Boolean(input.can_view_leads);
 }
 
+export function hasJobPublishingAccessForRegistration(input: {
+  package: string | null | undefined;
+  can_publish_jobs?: boolean | null;
+}) {
+  return hasPremiumPackageAccess(input.package) || Boolean(input.can_publish_jobs);
+}
+
+export function hasThesisPublishingAccessForRegistration(input: {
+  package: string | null | undefined;
+  can_publish_thesis?: boolean | null;
+}) {
+  return hasPremiumPackageAccess(input.package) || Boolean(input.can_publish_thesis);
+}
+
 export const getOrCreateCompanyForUser = cache(async function getOrCreateCompanyForUser(
   userId: string,
   email?: string | null,

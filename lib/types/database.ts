@@ -702,6 +702,63 @@ export type Database = {
         };
         Relationships: [];
       };
+      company_opportunities: {
+        Row: {
+          id: string;
+          company_id: string;
+          opportunity_type: "job" | "thesis";
+          title: string;
+          location: string | null;
+          application_url: string | null;
+          application_deadline: string | null;
+          field_tags: string[];
+          levels: string[];
+          years_bachelor: number[];
+          years_master: number[];
+          engagement_types: string[];
+          description: string | null;
+          is_published: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          company_id: string;
+          opportunity_type: "job" | "thesis";
+          title: string;
+          location?: string | null;
+          application_url?: string | null;
+          application_deadline?: string | null;
+          field_tags?: string[];
+          levels?: string[];
+          years_bachelor?: number[];
+          years_master?: number[];
+          engagement_types?: string[];
+          description?: string | null;
+          is_published?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          company_id?: string;
+          opportunity_type?: "job" | "thesis";
+          title?: string;
+          location?: string | null;
+          application_url?: string | null;
+          application_deadline?: string | null;
+          field_tags?: string[];
+          levels?: string[];
+          years_bachelor?: number[];
+          years_master?: number[];
+          engagement_types?: string[];
+          description?: string | null;
+          is_published?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       event_companies: {
         Row: {
           id: string;
@@ -715,6 +772,8 @@ export type Database = {
           package: "standard" | "silver" | "gold" | "platinum";
           can_view_roi: boolean;
           can_view_leads: boolean;
+          can_publish_jobs: boolean;
+          can_publish_thesis: boolean;
           extra_attendee_tickets: number;
           access_from: string | null;
           access_until: string | null;
@@ -736,6 +795,8 @@ export type Database = {
           package?: "standard" | "silver" | "gold" | "platinum";
           can_view_roi?: boolean;
           can_view_leads?: boolean;
+          can_publish_jobs?: boolean;
+          can_publish_thesis?: boolean;
           extra_attendee_tickets?: number;
           access_from?: string | null;
           access_until?: string | null;
@@ -757,6 +818,8 @@ export type Database = {
           package?: "standard" | "silver" | "gold" | "platinum";
           can_view_roi?: boolean;
           can_view_leads?: boolean;
+          can_publish_jobs?: boolean;
+          can_publish_thesis?: boolean;
           extra_attendee_tickets?: number;
           access_from?: string | null;
           access_until?: string | null;

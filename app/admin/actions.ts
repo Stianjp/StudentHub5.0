@@ -654,6 +654,8 @@ export async function updateCompanyPackageSettings(formData: FormData) {
     const accessUntil = String(getFormValue(formData, "accessUntil") ?? "").trim();
     const canViewRoi = getFormValue(formData, "canViewRoi") !== null;
     const canViewLeads = getFormValue(formData, "canViewLeads") !== null;
+    const canPublishJobs = getFormValue(formData, "canPublishJobs") !== null;
+    const canPublishThesis = getFormValue(formData, "canPublishThesis") !== null;
     const extraAttendeeTickets = Number(extraAttendeeTicketsRaw);
 
     if (!isUuid(registrationId)) {
@@ -677,6 +679,8 @@ export async function updateCompanyPackageSettings(formData: FormData) {
       accessUntil: accessUntil || null,
       canViewRoi,
       canViewLeads,
+      canPublishJobs,
+      canPublishThesis,
     });
 
     revalidatePath("/admin/company-packages");
@@ -685,6 +689,10 @@ export async function updateCompanyPackageSettings(formData: FormData) {
     revalidatePath("/company/leads");
     revalidatePath("/company/roi");
     revalidatePath("/company/events");
+    revalidatePath("/company/jobs");
+    revalidatePath("/company/thesis-projects");
+    revalidatePath("/jobs");
+    revalidatePath("/thesis-projects");
     if (typeof returnTo === "string" && returnTo.startsWith("/")) {
       const separator = returnTo.includes("?") ? "&" : "?";
       redirect(`${returnTo}${separator}saved=1`);

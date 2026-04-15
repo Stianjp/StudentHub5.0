@@ -936,6 +936,8 @@ export async function updateEventCompanyPackageSettings(input: {
   accessUntil?: string | null;
   canViewRoi: boolean;
   canViewLeads: boolean;
+  canPublishJobs: boolean;
+  canPublishThesis: boolean;
 }) {
   const supabase = createAdminSupabaseClient();
   const now = new Date().toISOString();
@@ -950,6 +952,8 @@ export async function updateEventCompanyPackageSettings(input: {
       access_until: input.accessUntil || null,
       can_view_roi: input.canViewRoi,
       can_view_leads: input.canViewLeads,
+      can_publish_jobs: input.canPublishJobs,
+      can_publish_thesis: input.canPublishThesis,
       updated_at: now,
     })
     .eq("id", input.registrationId)

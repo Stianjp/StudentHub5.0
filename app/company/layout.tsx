@@ -9,6 +9,8 @@ const nav = [
   { href: "/company/events", label: "Events" },
   { href: "/company/leads", label: "Leads" },
   { href: "/company/roi", label: "ROI" },
+  { href: "/company/jobs", label: "Publish jobs" },
+  { href: "/company/thesis-projects", label: "Publish thesis" },
 ];
 
 export const dynamic = "force-dynamic";

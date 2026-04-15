@@ -10,7 +10,9 @@ import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { updateCompanyPackageSettings } from "@/app/admin/actions";
 import {
   hasLeadDetailsAccessForRegistration,
+  hasJobPublishingAccessForRegistration,
   hasRoiAccessForRegistration,
+  hasThesisPublishingAccessForRegistration,
 } from "@/lib/company";
 
 type PageProps = {
@@ -71,7 +73,7 @@ export default async function AdminCompanyPackagesPage({ searchParams }: PagePro
   let registrationsQuery = supabase
     .from("event_companies")
     .select(
-      "id, event_id, company_id, stand_type, package, can_view_roi, can_view_leads, extra_attendee_tickets, access_from, access_until, updated_at, company:companies(id, name), event:events(id, name, starts_at)",
+      "id, event_id, company_id, stand_type, package, can_view_roi, can_view_leads, can_publish_jobs, can_publish_thesis, extra_attendee_tickets, access_from, access_until, updated_at, company:companies(id, name), event:events(id, name, starts_at)",
     )
     .order("created_at", { ascending: false });
 
@@ -96,6 +98,8 @@ export default async function AdminCompanyPackagesPage({ searchParams }: PagePro
     stand_type: string | null;
     can_view_roi: boolean;
     can_view_leads: boolean;
+    can_publish_jobs: boolean;
+    can_publish_thesis: boolean;
     extra_attendee_tickets: number;
     access_from: string | null;
     access_until: string | null;
@@ -109,7 +113,7 @@ export default async function AdminCompanyPackagesPage({ searchParams }: PagePro
       <SectionHeader
         eyebrow="Bedriftspakker"
         title="Styr pakke og tilgang per event"
-        description="Dette er hovedstedet for pakke og ekstra tilgang til Leads/ROI. Standnivå følger pakken automatisk."
+        description="Dette er hovedstedet for pakke og ekstra tilgang til Leads, ROI, Jobs og Thesis publishing. Standnivå følger pakken automatisk."
         actions={<Link className="button-link text-xs" href="/admin/events/overview">Eventoversikt</Link>}
       />
 
@@ -155,6 +159,8 @@ export default async function AdminCompanyPackagesPage({ searchParams }: PagePro
             {rows.map((row) => {
               const hasRoiAccess = hasRoiAccessForRegistration(row);
               const hasLeadAccess = hasLeadDetailsAccessForRegistration(row);
+              const hasJobPublishingAccess = hasJobPublishingAccessForRegistration(row);
+              const hasThesisPublishingAccess = hasThesisPublishingAccessForRegistration(row);
               const standLevel = standLevelLabel(row.stand_type, row.package);
               return (
                 <li key={row.id} className="rounded-xl border border-primary/10 bg-primary/5 p-4">
@@ -177,6 +183,12 @@ export default async function AdminCompanyPackagesPage({ searchParams }: PagePro
                       </span>
                       <span className="rounded-full bg-primary/10 px-3 py-1 text-primary">
                         Leads: {hasLeadAccess ? "Ja" : "Nei"}
+                      </span>
+                      <span className="rounded-full bg-primary/10 px-3 py-1 text-primary">
+                        Jobs: {hasJobPublishingAccess ? "Ja" : "Nei"}
+                      </span>
+                      <span className="rounded-full bg-primary/10 px-3 py-1 text-primary">
+                        Thesis: {hasThesisPublishingAccess ? "Ja" : "Nei"}
                       </span>
                       <span className="rounded-full bg-primary/10 px-3 py-1 text-primary">
                         Ekstra billetter: +{row.extra_attendee_tickets ?? 0}
@@ -215,6 +227,14 @@ export default async function AdminCompanyPackagesPage({ searchParams }: PagePro
                       <label className="flex items-center gap-2 rounded-xl border border-primary/10 bg-surface px-3 py-2 text-sm font-semibold text-primary">
                         <input type="checkbox" name="canViewLeads" defaultChecked={Boolean(row.can_view_leads)} />
                         Ekstra: Skal kunne se Leads
+                      </label>
+                      <label className="flex items-center gap-2 rounded-xl border border-primary/10 bg-surface px-3 py-2 text-sm font-semibold text-primary">
+                        <input type="checkbox" name="canPublishJobs" defaultChecked={Boolean(row.can_publish_jobs)} />
+                        Ekstra: Skal kunne publisere jobber
+                      </label>
+                      <label className="flex items-center gap-2 rounded-xl border border-primary/10 bg-surface px-3 py-2 text-sm font-semibold text-primary">
+                        <input type="checkbox" name="canPublishThesis" defaultChecked={Boolean(row.can_publish_thesis)} />
+                        Ekstra: Skal kunne publisere thesis-prosjekter
                       </label>
                     </div>
 
