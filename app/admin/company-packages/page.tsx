@@ -220,19 +220,19 @@ export default async function AdminCompanyPackagesPage({ searchParams }: PagePro
                     </div>
 
                     <div className="grid gap-2">
-                      <label className="flex items-center gap-2 rounded-xl border border-primary/10 bg-surface px-3 py-2 text-sm font-semibold text-primary">
+                      <label className="flex items-center gap-2 rounded-xl border border-primary/10 bg-surface px-3 py-2 text-sm font-semibold text-[#140249]">
                         <input type="checkbox" name="canViewRoi" defaultChecked={Boolean(row.can_view_roi)} />
                         Ekstra: Skal kunne se ROI
                       </label>
-                      <label className="flex items-center gap-2 rounded-xl border border-primary/10 bg-surface px-3 py-2 text-sm font-semibold text-primary">
+                      <label className="flex items-center gap-2 rounded-xl border border-primary/10 bg-surface px-3 py-2 text-sm font-semibold text-[#140249]">
                         <input type="checkbox" name="canViewLeads" defaultChecked={Boolean(row.can_view_leads)} />
                         Ekstra: Skal kunne se Leads
                       </label>
-                      <label className="flex items-center gap-2 rounded-xl border border-primary/10 bg-surface px-3 py-2 text-sm font-semibold text-primary">
+                      <label className="flex items-center gap-2 rounded-xl border border-primary/10 bg-surface px-3 py-2 text-sm font-semibold text-[#140249]">
                         <input type="checkbox" name="canPublishJobs" defaultChecked={Boolean(row.can_publish_jobs)} />
                         Ekstra: Skal kunne publisere jobber
                       </label>
-                      <label className="flex items-center gap-2 rounded-xl border border-primary/10 bg-surface px-3 py-2 text-sm font-semibold text-primary">
+                      <label className="flex items-center gap-2 rounded-xl border border-primary/10 bg-surface px-3 py-2 text-sm font-semibold text-[#140249]">
                         <input type="checkbox" name="canPublishThesis" defaultChecked={Boolean(row.can_publish_thesis)} />
                         Ekstra: Skal kunne publisere thesis-prosjekter
                       </label>
