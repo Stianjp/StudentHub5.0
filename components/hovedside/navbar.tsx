@@ -8,7 +8,7 @@ import { Menu, X, ChevronDown, User } from "lucide-react";
 
 const NAV_LINKS = [
   { label: "Students", href: "/for-studenter" },
-  { label: "Partners", href: "/for-bedrifter" },
+  { label: "Partners", href: "/partners" },
   { label: "Student Connect 2026", href: "/studentconnect2026" },
   { label: "Events", href: "/events" },
 ];
@@ -19,12 +19,18 @@ const MORE_LINKS = [
   { label: "Contact", href: "/contact" },
 ];
 
-export function Navbar() {
+export function Navbar({ baseUrl }: { baseUrl?: string }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
 
+  function resolveHref(href: string) {
+    if (!baseUrl) return href;
+    return new URL(href, baseUrl).toString();
+  }
+
   function isActive(href: string) {
+    if (baseUrl) return false;
     const normalised = pathname.replace(/^\/hovedside/, "");
     return normalised === href || normalised.startsWith(href + "/");
   }
@@ -33,7 +39,7 @@ export function Navbar() {
     <header className="sticky top-0 z-50 bg-primary text-mist">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
         {/* Logo */}
-        <Link href="/" className="shrink-0">
+        <Link href={resolveHref("/")} className="shrink-0">
           <Image
             src="/brand/Logo_OSH_Gradient_whitetext.svg"
             alt="Oslo Student Hub"
@@ -49,7 +55,7 @@ export function Navbar() {
           {NAV_LINKS.map((link) => (
             <Link
               key={link.href}
-              href={link.href}
+              href={resolveHref(link.href)}
               className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                 isActive(link.href)
                   ? "text-secondary"
@@ -82,7 +88,7 @@ export function Navbar() {
                 {MORE_LINKS.map((link) => (
                   <Link
                     key={link.href}
-                    href={link.href}
+                    href={resolveHref(link.href)}
                     className={`block px-4 py-2 text-sm transition-colors ${
                       isActive(link.href)
                         ? "text-secondary"
@@ -119,7 +125,7 @@ export function Navbar() {
           {[...NAV_LINKS, ...MORE_LINKS].map((link) => (
             <Link
               key={link.href}
-              href={link.href}
+              href={resolveHref(link.href)}
               onClick={() => setMobileOpen(false)}
               className={`block py-3 text-sm font-medium transition-colors ${
                 isActive(link.href)

@@ -3,7 +3,7 @@ import Image from "next/image";
 
 const QUICK_LINKS = [
   { label: "Students", href: "/for-studenter" },
-  { label: "Partners", href: "/for-bedrifter" },
+  { label: "Partners", href: "/partners" },
   { label: "Student Connect 2026", href: "/studentconnect2026" },
   { label: "Events", href: "/events" },
   { label: "About us", href: "/about" },
@@ -62,10 +62,10 @@ export function Footer() {
               <li>Oslo, Norway</li>
               <li>
                 <a
-                  href="mailto:kontakt@oslostudenthub.no"
+                  href="mailto:support@oslostudenthub.no"
                   className="transition-colors hover:text-secondary"
                 >
-                  kontakt@oslostudenthub.no
+                  support@oslostudenthub.no
                 </a>
               </li>
             </ul>

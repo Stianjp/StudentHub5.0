@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
-  Send,
 } from "lucide-react";
+import { PartnerInquiryForm } from "@/components/hovedside/partner-inquiry-form";
 import { HeroSection } from "@/components/hovedside/hero-section";
 import { PartnerLogoCarousel } from "@/components/hovedside/partner-logo-carousel";
 import { SectionWrapper } from "@/components/hovedside/section-wrapper";
@@ -139,41 +139,7 @@ export default async function ForBedrifterPage() {
           <h2 className="text-center text-2xl font-bold text-primary md:text-3xl">
             Do you want to have an event with us?
           </h2>
-          <div className="mt-8 space-y-4 rounded-2xl bg-mist/40 p-8 ring-1 ring-primary/5">
-            <p className="text-sm font-semibold text-primary">
-              What type of event are you interested in?
-            </p>
-            <div className="grid gap-3 sm:grid-cols-2">
-              {[
-                "Company presentation",
-                "Social event with students",
-                "Help to promote for students",
-                "Other",
-              ].map((option) => (
-                <label
-                  key={option}
-                  className="flex items-center gap-3 rounded-xl bg-surface px-4 py-3 text-sm text-ink/80 ring-1 ring-primary/5"
-                >
-                  <input
-                    type="checkbox"
-                    disabled
-                    className="h-4 w-4 rounded border-primary/30"
-                  />
-                  {option}
-                </label>
-              ))}
-            </div>
-            <button
-              disabled
-              className="mt-4 flex items-center gap-2 rounded-full bg-primary px-6 py-2.5 text-sm font-bold text-surface opacity-50"
-            >
-              <Send size={14} />
-              Submit
-            </button>
-            <p className="text-xs text-ink/40">
-              Skjemaet er en placeholder og ikke koblet til backend enda.
-            </p>
-          </div>
+          <PartnerInquiryForm />
         </div>
       </SectionWrapper>
 

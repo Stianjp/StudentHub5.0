@@ -5,7 +5,6 @@ import { Users, GraduationCap, CalendarDays, School } from "lucide-react";
 import { HeroSection } from "@/components/hovedside/hero-section";
 import { SectionWrapper } from "@/components/hovedside/section-wrapper";
 import { FeatureCard } from "@/components/hovedside/feature-card";
-import { StatsBanner } from "@/components/hovedside/stats-banner";
 import { CtaSection } from "@/components/hovedside/cta-section";
 import {
   formatWebsiteEventMonth,
@@ -21,6 +20,10 @@ export const metadata: Metadata = {
     "Are you a student looking for a job or thesis? Join Oslo Student Hub to connect with top companies.",
 };
 
+const STUDENT_PORTAL_URL = "https://student.oslostudenthub.no/";
+const STUDENT_CONNECT_TICKET_URL =
+  "https://event.oslostudenthub.no/event/events/3f1d6b8e-7a43-4f0a-9a8c-3b6b3d6c7f1e/ticket";
+
 export default async function ForStudenterPage() {
   const events = await listWebsiteEvents();
   const { upcoming } = splitWebsiteEvents(events);
@@ -33,7 +36,7 @@ export default async function ForStudenterPage() {
         title="WE CONNECT STUDENTS & COMPANIES"
         subtitle="Are you a student looking for a job or thesis? Sign up here!"
         ctaLabel="Register"
-        ctaHref="#register"
+        ctaHref={STUDENT_PORTAL_URL}
         backgroundImageSrc={SITE_IMAGES.studentsHero.src}
         backgroundImageAlt={SITE_IMAGES.studentsHero.alt}
         backgroundImagePosition="center"
@@ -103,15 +106,23 @@ export default async function ForStudenterPage() {
                 {featuredEvent.name}
               </h3>
               <p className="mt-3 text-sm text-mist/60">
-                {featuredEvent.description ??
-                  "More information coming soon. Register to stay updated."}
+                Student Connect 2026 is our main event for students and companies,
+                with networking, employer conversations, and free student tickets.
               </p>
-              <Link
-                href={resolveWebsiteEventHref(featuredEvent)}
-                className="mt-6 inline-flex items-center rounded-full border-2 border-secondary px-7 py-3 text-sm font-bold uppercase tracking-wider text-secondary transition-colors hover:bg-secondary hover:text-primary"
-              >
-                Learn more
-              </Link>
+              <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+                <Link
+                  href={resolveWebsiteEventHref(featuredEvent)}
+                  className="inline-flex items-center rounded-full border-2 border-secondary px-7 py-3 text-sm font-bold uppercase tracking-wider text-secondary transition-colors hover:bg-secondary hover:text-primary"
+                >
+                  Learn more
+                </Link>
+                <Link
+                  href={STUDENT_CONNECT_TICKET_URL}
+                  className="inline-flex items-center rounded-full bg-secondary px-7 py-3 text-sm font-bold uppercase tracking-wider text-primary transition-colors hover:bg-secondary/90"
+                >
+                  Get your free ticket here
+                </Link>
+              </div>
             </>
           ) : (
             <>
@@ -121,6 +132,12 @@ export default async function ForStudenterPage() {
               <p className="mt-3 text-sm text-mist/60">
                 No upcoming events have been added in admin yet.
               </p>
+              <Link
+                href={STUDENT_CONNECT_TICKET_URL}
+                className="mt-6 inline-flex items-center rounded-full bg-secondary px-7 py-3 text-sm font-bold uppercase tracking-wider text-primary transition-colors hover:bg-secondary/90"
+              >
+                Get your free ticket here
+              </Link>
             </>
           )}
         </div>
@@ -190,8 +207,8 @@ export default async function ForStudenterPage() {
       {/* ── CTA ──────────────────────────────────────────────── */}
       <CtaSection
         headline="Ready to start your career journey?"
-        ctaLabel="Student Connect 2026"
-        ctaHref="/studentconnect2026"
+        ctaLabel="Register now"
+        ctaHref={STUDENT_PORTAL_URL}
       />
     </>
   );
