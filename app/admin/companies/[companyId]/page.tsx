@@ -1,10 +1,11 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { SectionHeader } from "@/components/ui/section-header";
-import { deleteCompanyAction, removeCompanyFromEventAction } from "@/app/admin/actions";
+import { deleteCompanyAction, removeCompanyFromEventAction, uploadCompanyLogoAction } from "@/app/admin/actions";
 import { requireRole } from "@/lib/auth";
 import {
   getCompanyPortalAccessOverview,
@@ -13,6 +14,7 @@ import {
   listCompanyRegistrationApplications,
   listCompanyRegistrations,
 } from "@/lib/admin";
+import { getLatestCompanyRegistrationLogo } from "@/lib/company";
 
 const packageLabel: Record<string, string> = {
   standard: "Standard",
@@ -89,6 +91,7 @@ export default async function AdminCompanyDetailPage({ params, searchParams }: P
     getCompanyPortalAccessOverview(companyId),
     listCompanyRegistrationApplications(companyId),
   ]);
+  const companyLogo = await getLatestCompanyRegistrationLogo(companyId);
 
   const typedRegistrations = registrations as unknown as Array<{
     id: string;
@@ -139,6 +142,11 @@ export default async function AdminCompanyDetailPage({ params, searchParams }: P
           Bedriften er fjernet fra arrangementet, og eventuell reservert stand er frigjort.
         </Card>
       ) : null}
+      {firstValue(resolvedSearchParams.saved) === "1" ? (
+        <Card className="border border-success/30 bg-success/10 text-sm text-success">
+          Endring lagret.
+        </Card>
+      ) : null}
 
       <Card className="grid gap-3 text-sm text-ink/80 md:grid-cols-2">
         <div>
@@ -155,6 +163,49 @@ export default async function AdminCompanyDetailPage({ params, searchParams }: P
           <p>Studieretninger: {company.recruitment_fields.join(", ") || "—"}</p>
           <p>Nivå: {joinValues(recruitmentLevels)}</p>
           <p>Jobbtyper: {company.recruitment_job_types.join(", ") || "—"}</p>
+        </div>
+        <div className="md:col-span-2">
+          <p className="text-xs font-semibold uppercase tracking-wide text-primary/60">Firmalogo</p>
+          <div className="mt-3 grid gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
+            <div className="flex min-h-[140px] items-center justify-center overflow-hidden rounded-2xl border border-primary/10 bg-white p-4">
+              {companyLogo?.logoUrl ? (
+                <Image
+                  src={companyLogo.logoUrl}
+                  alt={`Logo for ${company.name}`}
+                  width={180}
+                  height={120}
+                  className="h-auto max-h-[110px] w-auto max-w-full object-contain"
+                />
+              ) : (
+                <p className="text-center text-sm text-ink/60">Ingen logo lastet opp</p>
+              )}
+            </div>
+            <div className="grid gap-3">
+              <p className="text-sm text-ink/70">
+                Last opp eller erstatt bedriftslogoen her. Denne brukes på studentsidene der bedriften vises.
+              </p>
+              <form action={uploadCompanyLogoAction} className="flex flex-col gap-3 md:max-w-md">
+                <input type="hidden" name="companyId" value={companyId} />
+                <label className="text-sm font-semibold text-primary">
+                  Ny logo
+                  <Input name="logo" type="file" accept="image/*" required />
+                </label>
+                <div className="flex flex-wrap gap-3">
+                  <Button type="submit">Last opp logo</Button>
+                  {companyLogo?.logoUrl ? (
+                    <a
+                      className="button-link text-xs"
+                      href={companyLogo.logoUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Åpne nåværende logo
+                    </a>
+                  ) : null}
+                </div>
+              </form>
+            </div>
+          </div>
         </div>
         <div className="md:col-span-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-primary/60">Branding</p>

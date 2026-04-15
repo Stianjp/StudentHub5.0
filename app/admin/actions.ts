@@ -30,6 +30,7 @@ import {
 import { isUuid } from "@/lib/utils";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { sendTransactionalEmail } from "@/lib/resend";
+import { uploadCompanyLogo } from "@/lib/company-access";
 
 const STAND_TYPE_VALUES = ["Standard", "Silver", "Gold", "Platinum"] as const;
 const PACKAGE_VALUES = ["standard", "silver", "gold", "platinum"] as const;
@@ -339,6 +340,70 @@ export async function removeCompanyFromEventAction(formData: FormData) {
     const message = getErrorMessage(error);
     if (typeof returnTo === "string" && returnTo.startsWith("/")) {
       redirect(`${returnTo}${returnTo.includes("?") ? "&" : "?"}error=${encodeURIComponent(message)}`);
+    }
+    throw error;
+  }
+}
+
+export async function uploadCompanyLogoAction(formData: FormData) {
+  await requireRole("admin");
+  try {
+    const companyId = String(getFormValue(formData, "companyId") ?? "").trim();
+    if (!isUuid(companyId)) {
+      throw new Error("Ugyldig bedrift.");
+    }
+
+    const file = formData.get("logo");
+    if (!(file instanceof File) || file.size === 0) {
+      throw new Error("Velg en logofil.");
+    }
+    if (file.size > 6 * 1024 * 1024) {
+      throw new Error("Logoen kan ikke være større enn 6 MB.");
+    }
+    if (!file.type.startsWith("image/")) {
+      throw new Error("Logoen må være en bildefil.");
+    }
+
+    const supabase = createAdminSupabaseClient();
+    const { data: company, error: companyError } = await supabase
+      .from("companies")
+      .select("id, org_number, logo_path")
+      .eq("id", companyId)
+      .single();
+    if (companyError) throw companyError;
+
+    const logoPath = await uploadCompanyLogo({
+      userId: companyId,
+      file,
+      orgNumber: company.org_number,
+    });
+
+    const { error: updateError } = await supabase
+      .from("companies")
+      .update({
+        logo_path: logoPath,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", companyId);
+    if (updateError) throw updateError;
+
+    if (company.logo_path && company.logo_path !== logoPath) {
+      await supabase.storage.from("event-registration-assets").remove([company.logo_path]).catch(() => undefined);
+    }
+
+    revalidatePath("/admin/companies");
+    revalidatePath(`/admin/companies/${companyId}`);
+    revalidatePath("/student/companies");
+    revalidatePath("/student/consents");
+    revalidatePath("/student/events");
+    revalidatePath("/student/dashboard");
+    redirect(`/admin/companies/${companyId}?saved=1`);
+  } catch (error) {
+    if (isNextRedirectError(error)) throw error;
+    const companyId = String(getFormValue(formData, "companyId") ?? "").trim();
+    const message = getErrorMessage(error);
+    if (isUuid(companyId)) {
+      redirect(`/admin/companies/${companyId}?error=${encodeURIComponent(message)}`);
     }
     throw error;
   }

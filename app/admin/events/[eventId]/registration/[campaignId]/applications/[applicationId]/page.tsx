@@ -313,8 +313,8 @@ export default async function AdminRegistrationApplicationPage({ params, searchP
         ) : (
           <div className="grid gap-3">
             {detail.invites.map((invite) => (
-              <div key={invite.id} className="flex flex-col gap-3 rounded-2xl border border-primary/10 bg-primary/5 p-4 md:flex-row md:items-center md:justify-between">
-                <div className="grid gap-1 text-sm text-ink/80">
+              <div key={invite.id} className="flex flex-col gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-4 text-surface md:flex-row md:items-center md:justify-between">
+                <div className="grid gap-1 text-sm text-surface/88">
                   <p className="font-semibold text-primary">{invite.email}</p>
                   <p>Status: {invite.status}</p>
                   <p>Invitert: {invite.invited_at ? new Date(invite.invited_at).toLocaleString("nb-NO") : "Ikke sendt"}</p>
