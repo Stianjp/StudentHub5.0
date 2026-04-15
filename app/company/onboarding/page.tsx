@@ -74,7 +74,7 @@ export default async function CompanyOnboardingInfoPage({ searchParams }: PagePr
           </label>
           <div className="text-sm font-semibold text-primary">
             <p>Bransje (velg en eller flere)</p>
-            <p className="mt-1 text-xs font-normal text-ink/70">
+            <p className="mt-1 text-xs font-normal text-surface/78">
               Bransje brukes for matching mot studenter og for filtrering på event-sidene.
             </p>
             <div className="mt-2 grid gap-2 md:grid-cols-2">
@@ -129,7 +129,7 @@ export default async function CompanyOnboardingInfoPage({ searchParams }: PagePr
             <Input name="website" defaultValue={company.website ?? ""} placeholder="https://" />
           </label>
 
-          <div className="flex flex-col gap-2 text-sm text-ink/70">
+          <div className="flex flex-col gap-2 text-sm text-surface/78">
             <p>Tips: Bransje, lokasjon og størrelse brukes til å forbedre matching.</p>
           </div>
 

@@ -45,14 +45,14 @@ export default async function CompanyOnboardingBrandingPage() {
           <input type="hidden" name="next" value="/company/onboarding/complete" />
           <label className="text-sm font-semibold text-primary">
             Bedriftskultur og DNA
-            <p className="mt-1 text-xs font-normal text-ink/70">
-              Velg 3–5 stikkord som beskriver "viben" på kontoret (f.eks. Sosialt, Innovativt, Flatt hierarki).
+            <p className="mt-1 text-xs font-normal text-surface/78">
+              Velg 3–5 stikkord som beskriver &quot;viben&quot; på kontoret (f.eks. Sosialt, Innovativt, Flatt hierarki).
             </p>
             <Input name="brandingValues" defaultValue={company.branding_values.join(", ")} placeholder="Sosialt, Innovativt, Flatt hierarki" />
           </label>
           <label className="text-sm font-semibold text-primary">
             Deres unike løfte – EVP
-            <p className="mt-1 text-xs font-normal text-ink/70">
+            <p className="mt-1 text-xs font-normal text-surface/78">
               Maks 150 tegn. Dette er det første studenten ser i match-score forklaringen.
             </p>
             <Textarea
@@ -94,7 +94,7 @@ export default async function CompanyOnboardingBrandingPage() {
             </div>
           </div>
 
-          <div className="flex flex-col gap-2 text-sm text-ink/70">
+          <div className="flex flex-col gap-2 text-sm text-surface/78">
             <p>Tips: Dette brukes på event-sidene og i match-score forklaringer.</p>
           </div>
 

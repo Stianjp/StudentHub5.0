@@ -92,6 +92,8 @@ export function PublicRegistrationForm({
   const [invoiceDeliveryMethod, setInvoiceDeliveryMethod] = useState<"ehf" | "email">("email");
   const [invoiceEmail, setInvoiceEmail] = useState("");
   const [invoiceReference, setInvoiceReference] = useState("");
+  const [invoiceDueDays, setInvoiceDueDays] = useState<"14" | "30" | "45" | "other">("30");
+  const [invoiceDueDaysOther, setInvoiceDueDaysOther] = useState("");
 
   const [candidateLevel, setCandidateLevel] = useState<"bachelor" | "master" | "both">("both");
   const [candidateFields, setCandidateFields] = useState<string[]>([]);
@@ -165,6 +167,9 @@ export function PublicRegistrationForm({
     if (stepIndex === 2 && invoiceDeliveryMethod === "email" && !invoiceEmail) {
       return "Add the invoice email before continuing.";
     }
+    if (stepIndex === 2 && invoiceDueDays === "other" && !invoiceDueDaysOther.trim()) {
+      return "Specify the preferred payment terms before continuing.";
+    }
     if (stepIndex === 3 && candidateFields.length === 0) {
       return "Choose at least one student field.";
     }
@@ -227,6 +232,8 @@ export function PublicRegistrationForm({
       formData.append("invoiceDeliveryMethod", invoiceDeliveryMethod);
       formData.append("invoiceEmail", invoiceEmail);
       formData.append("invoiceReference", invoiceReference);
+      formData.append("invoiceDueDays", invoiceDueDays);
+      formData.append("invoiceDueDaysOther", invoiceDueDaysOther);
       formData.append("candidateLevel", candidateLevel);
       formData.append("candidateFieldsOther", candidateFieldsOther);
       formData.append("requestedPackageId", requestedPackageId);
@@ -423,6 +430,41 @@ export function PublicRegistrationForm({
                 placeholder="Purchase order, project code or other note"
               />
             </label>
+            <div className="grid gap-3">
+              <p className="text-sm font-semibold text-primary">Payment terms</p>
+              <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                {[
+                  { value: "14", label: "14 days" },
+                  { value: "30", label: "30 days" },
+                  { value: "45", label: "45 days" },
+                  { value: "other", label: "Other - specify" },
+                ].map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    onClick={() => setInvoiceDueDays(option.value as "14" | "30" | "45" | "other")}
+                    className={cn(
+                      "rounded-2xl border px-4 py-3 text-left text-sm font-semibold transition",
+                      invoiceDueDays === option.value
+                        ? "border-[#FE9A70] bg-[#FE9A70]/15 text-[#140249] shadow-sm"
+                        : "border-gray-300 bg-white text-gray-700 hover:border-[#FE9A70]",
+                    )}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+              {invoiceDueDays === "other" ? (
+                <label className="text-sm font-semibold text-primary">
+                  Specify payment terms
+                  <Input
+                    value={invoiceDueDaysOther}
+                    onChange={(event) => setInvoiceDueDaysOther(event.target.value)}
+                    placeholder="Example: 60 days or by agreement"
+                  />
+                </label>
+              ) : null}
+            </div>
           </div>
         ) : null}
 

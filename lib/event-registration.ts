@@ -108,6 +108,22 @@ function candidateLevelToRecruitmentLevels(value: RegistrationApplication["candi
   return ["Bachelor", "Master"];
 }
 
+function buildInvoiceReference(input: {
+  invoiceReference?: string | null;
+  invoiceDueDays: "14" | "30" | "45" | "other";
+  invoiceDueDaysOther?: string | null;
+}) {
+  const reference = input.invoiceReference?.trim() ?? "";
+  const dueLabel =
+    input.invoiceDueDays === "other"
+      ? (input.invoiceDueDaysOther?.trim() ?? "")
+      : `${input.invoiceDueDays} days`;
+
+  if (!dueLabel) return reference || null;
+  if (!reference) return `Payment terms: ${dueLabel}`;
+  return `${reference} | Payment terms: ${dueLabel}`;
+}
+
 function buildCandidateSummary(application: Pick<RegistrationApplication, "candidate_fields" | "candidate_fields_other">) {
   const fields = [...application.candidate_fields];
   if (application.candidate_fields_other) {
@@ -787,6 +803,8 @@ export async function submitPublicRegistrationApplication(input: {
     invoiceDeliveryMethod: input.formData.get("invoiceDeliveryMethod"),
     invoiceEmail: input.formData.get("invoiceEmail"),
     invoiceReference: input.formData.get("invoiceReference"),
+    invoiceDueDays: input.formData.get("invoiceDueDays"),
+    invoiceDueDaysOther: input.formData.get("invoiceDueDaysOther"),
     candidateLevel: input.formData.get("candidateLevel"),
     candidateFields,
     candidateFieldsOther: input.formData.get("candidateFieldsOther"),
@@ -875,7 +893,11 @@ export async function submitPublicRegistrationApplication(input: {
     postal_code: parsed.data.postalCode.trim(),
     invoice_delivery_method: parsed.data.invoiceDeliveryMethod,
     invoice_email: parsed.data.invoiceDeliveryMethod === "email" ? normalizeEmail(parsed.data.invoiceEmail ?? "") : null,
-    invoice_reference: parsed.data.invoiceReference || null,
+    invoice_reference: buildInvoiceReference({
+      invoiceReference: parsed.data.invoiceReference,
+      invoiceDueDays: parsed.data.invoiceDueDays,
+      invoiceDueDaysOther: parsed.data.invoiceDueDaysOther,
+    }),
     candidate_level: parsed.data.candidateLevel,
     candidate_fields: parsed.data.candidateFields,
     candidate_fields_other: parsed.data.candidateFieldsOther || null,

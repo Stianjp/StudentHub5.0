@@ -109,7 +109,7 @@ export default async function CompanyLeadPage({ params }: LeadPageProps) {
           {leadRow.source ? <Badge variant="default">{leadRow.source === "stand" ? "Stand" : "Studentportal"}</Badge> : null}
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 text-sm text-ink/80">
+        <div className="grid gap-4 text-sm text-surface/88 md:grid-cols-2">
           <div>
             <p className="font-semibold text-primary">Studieretning</p>
             <p>{leadRow.field_of_study ?? student?.study_program ?? "—"}</p>
@@ -147,21 +147,21 @@ export default async function CompanyLeadPage({ params }: LeadPageProps) {
               </span>
             ) : null}
             {!student?.work_style && !student?.social_profile && !student?.team_size ? (
-              <span className="text-ink/60">Ingen preferanser registrert.</span>
+              <span className="text-surface/72">Ingen preferanser registrert.</span>
             ) : null}
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 text-sm text-ink/80">
+        <div className="grid gap-4 text-sm text-surface/88 md:grid-cols-2">
           <div>
             <p className="font-semibold text-primary">Kontaktinfo</p>
             {consent?.consent ? (
               <>
                 <p>{student?.email ?? "—"}</p>
-                <p className="text-xs text-ink/60">{student?.phone ?? ""}</p>
+                <p className="text-xs text-surface/72">{student?.phone ?? ""}</p>
               </>
             ) : (
-              <p className="text-xs text-ink/60">Skjult (ingen samtykke)</p>
+              <p className="text-xs text-surface/72">Skjult (ingen samtykke)</p>
             )}
           </div>
           <div>

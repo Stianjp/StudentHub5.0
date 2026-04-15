@@ -36,6 +36,8 @@ export const publicRegistrationApplicationSchema = z
     invoiceDeliveryMethod: z.enum(["ehf", "email"]),
     invoiceEmail: z.union([z.string().email("Invoice email must be valid."), z.literal("")]).optional(),
     invoiceReference: z.string().optional().or(z.literal("")),
+    invoiceDueDays: z.enum(["14", "30", "45", "other"]),
+    invoiceDueDaysOther: z.string().optional().or(z.literal("")),
     candidateLevel: z.enum(["bachelor", "master", "both"]),
     candidateFields: stringArray.refine((value) => value.length > 0, "Select at least one field."),
     candidateFieldsOther: z.string().optional().or(z.literal("")),
@@ -60,6 +62,13 @@ export const publicRegistrationApplicationSchema = z
         code: z.ZodIssueCode.custom,
         path: ["invoiceEmail"],
         message: "Invoice email is required when email invoicing is selected.",
+      });
+    }
+    if (value.invoiceDueDays === "other" && !value.invoiceDueDaysOther?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["invoiceDueDaysOther"],
+        message: "Specify the preferred payment terms.",
       });
     }
   });
