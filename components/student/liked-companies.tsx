@@ -1,12 +1,16 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
+import { getCompanyAudienceLabel } from "@/lib/student-company-display";
 
 type CompanyOption = {
   id: string;
   name: string;
   industry: string | null;
+  logoUrl?: string | null;
+  recruitmentFields?: string[] | null;
 };
 
 export function LikedCompanies({
@@ -44,21 +48,53 @@ export function LikedCompanies({
               type="button"
               aria-pressed={active}
               onClick={() => toggle(company.id)}
-              className={`flex items-center justify-between rounded-xl border px-3 py-2 text-left text-sm transition-[background-color,border-color,color,box-shadow,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70] focus-visible:ring-offset-2 focus-visible:ring-offset-[#140249] ${
+              className={`flex items-center justify-between gap-3 rounded-xl border px-3 py-3 text-left text-sm transition-[background-color,border-color,color,box-shadow,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70] focus-visible:ring-offset-2 focus-visible:ring-offset-[#140249] ${
                 active
                   ? "!border-secondary bg-secondary/20 text-surface shadow-[0_0_0_3px_#FE9A70]"
                   : "border-surface/20 bg-primary/20 text-surface hover:border-secondary/60 hover:bg-primary/30 hover:shadow-soft"
               }`}
             >
-              <span className="flex items-center gap-2 font-semibold">
-                {active ? (
-                  <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-secondary text-[10px] font-bold text-primary">
-                    ✓
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/15 bg-white/95 p-2">
+                  {company.logoUrl ? (
+                    <Image
+                      src={company.logoUrl}
+                      alt={`Logo for ${company.name}`}
+                      width={48}
+                      height={48}
+                      className="h-full w-full object-contain"
+                    />
+                  ) : (
+                    <span className="text-[10px] font-black text-[#140249]">
+                      {company.name
+                        .split(/\s+/)
+                        .filter(Boolean)
+                        .slice(0, 2)
+                        .map((part) => part[0]?.toUpperCase() ?? "")
+                        .join("")}
+                    </span>
+                  )}
+                </div>
+                <span className="min-w-0">
+                  <span className="flex items-center gap-2 font-semibold">
+                    {active ? (
+                      <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-secondary text-[10px] font-bold text-primary">
+                        ✓
+                      </span>
+                    ) : null}
+                    <span className="truncate">{company.name}</span>
                   </span>
-                ) : null}
-                {company.name}
-              </span>
-              <Badge variant={active ? "success" : "default"}>{company.industry ?? "Bedrift"}</Badge>
+                  <span className="mt-0.5 block text-xs text-surface/70">
+                    {getCompanyAudienceLabel({
+                      industry: company.industry,
+                      recruitmentFields: company.recruitmentFields,
+                    })}
+                  </span>
+                </span>
+              </div>
+              <Badge variant={active ? "success" : "default"}>
+                {active ? "Favoritt" : "Bedrift"}
+              </Badge>
             </button>
           );
         })}

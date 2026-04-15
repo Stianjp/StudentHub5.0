@@ -9,6 +9,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getOrCreateStudentForUser } from "@/lib/student";
 import { requireRole } from "@/lib/auth";
 import { cancelStudentEventTicket, registerStudentForEvent } from "@/app/event/actions";
+import { getLatestCompanyRegistrationLogos } from "@/lib/company";
 
 type PageProps = {
   params: Promise<{ eventId: string }>;
@@ -55,12 +56,23 @@ export default async function StudentEventSignupPage({ params, searchParams }: P
   ]);
   const typedRegistrations = registrations as Array<{
     company_id: string;
-    company: { name: string };
+    company: {
+      id: string;
+      name: string;
+      industry: string | null;
+      recruitment_fields: string[] | null;
+    };
   }>;
+  const companyLogoMap = await getLatestCompanyRegistrationLogos(
+    typedRegistrations.map((registration) => registration.company_id),
+  );
   const existingTicket = ((ticketRows ?? [])[0] ?? null) as StudentTicket | null;
   const companyOptions = typedRegistrations.map((registration) => ({
     id: registration.company_id,
     name: registration.company.name,
+    logoUrl: companyLogoMap[registration.company_id] ?? null,
+    industry: registration.company.industry,
+    recruitmentFields: registration.company.recruitment_fields,
   }));
 
   const needsName = !student.full_name;

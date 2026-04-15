@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -6,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Select } from "@/components/ui/select";
 import { requireRole } from "@/lib/auth";
+import { getLatestCompanyRegistrationLogos } from "@/lib/company";
+import { getCompanyAudienceLabel } from "@/lib/student-company-display";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getOrCreateStudentForUser, listStudentConsents } from "@/lib/student";
 import {
@@ -40,7 +43,7 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
 
   const { data: companies, error: companiesError } = await supabase
     .from("companies")
-    .select("id, name, industry")
+    .select("id, name, industry, recruitment_fields")
     .order("name");
 
   if (companiesError) throw companiesError;
@@ -48,7 +51,11 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
     id: string;
     name: string;
     industry: string | null;
+    recruitment_fields: string[] | null;
   }>;
+  const companyLogoMap = await getLatestCompanyRegistrationLogos(
+    typedCompanies.map((company) => company.id),
+  );
 
   const selectedIndustry = typeof params.industry === "string" && params.industry ? params.industry : INDUSTRY_ALL;
   const statusParam = typeof params.status === "string" ? params.status : STATUS_ALL;
@@ -92,7 +99,7 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
     if (selectedStatus === STATUS_NOT_CONSENTED && hasConsent) return false;
 
     if (!normalizedSearch) return true;
-    const haystack = `${company.name} ${company.industry ?? ""}`.toLowerCase();
+    const haystack = `${company.name} ${company.industry ?? ""} ${(company.recruitment_fields ?? []).join(" ")}`.toLowerCase();
     return haystack.includes(normalizedSearch);
   });
 
@@ -189,14 +196,41 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
                         : "border-surface/10 bg-[#1B0858]"
                     }`}
                   >
-                    <div>
-                      <p className="font-semibold text-surface">{company.name}</p>
-                      <p className="text-xs text-surface/70">{company.industry ?? "Bransje ikke satt"}</p>
-                      <p className="mt-1 text-xs text-surface/70">
-                        {updatedAt
-                          ? `Sist oppdatert ${new Date(updatedAt).toLocaleString("nb-NO")}`
-                          : "Ingen registrert samtykkehistorikk ennå."}
-                      </p>
+                    <div className="flex min-w-0 items-center gap-4">
+                      <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/15 bg-white/95 p-2">
+                        {companyLogoMap[company.id] ? (
+                          <Image
+                            src={companyLogoMap[company.id] as string}
+                            alt={`Logo for ${company.name}`}
+                            width={56}
+                            height={56}
+                            className="h-full w-full object-contain"
+                          />
+                        ) : (
+                          <span className="text-[10px] font-black text-[#140249]">
+                            {company.name
+                              .split(/\s+/)
+                              .filter(Boolean)
+                              .slice(0, 2)
+                              .map((part) => part[0]?.toUpperCase() ?? "")
+                              .join("")}
+                          </span>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-surface">{company.name}</p>
+                        <p className="text-xs text-surface/70">
+                          {getCompanyAudienceLabel({
+                            industry: company.industry,
+                            recruitmentFields: company.recruitment_fields,
+                          })}
+                        </p>
+                        <p className="mt-1 text-xs text-surface/70">
+                          {updatedAt
+                            ? `Sist oppdatert ${new Date(updatedAt).toLocaleString("nb-NO")}`
+                            : "Ingen registrert samtykkehistorikk ennå."}
+                        </p>
+                      </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge variant={hasConsent ? "success" : "warning"}>

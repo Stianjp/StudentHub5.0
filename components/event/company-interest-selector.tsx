@@ -1,10 +1,15 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
+import { getCompanyAudienceLabel } from "@/lib/student-company-display";
 
 type CompanyOption = {
   id: string;
   name: string;
+  logoUrl?: string | null;
+  industry?: string | null;
+  recruitmentFields?: string[] | null;
 };
 
 export function CompanyInterestSelector({
@@ -71,7 +76,7 @@ export function CompanyInterestSelector({
         {companies.map((company) => (
           <label
             key={company.id}
-            className="flex items-center gap-2 rounded-xl border border-primary/30 bg-[#4A3A87] px-3 py-2 text-sm shadow-sm"
+            className="flex items-center gap-3 rounded-xl border border-primary/30 bg-[#4A3A87] px-3 py-3 text-sm shadow-sm"
           >
             <input
               type="checkbox"
@@ -81,7 +86,37 @@ export function CompanyInterestSelector({
               onChange={() => toggle(company.id)}
               className="h-4 w-4 rounded border-surface/30 bg-primary text-secondary focus:ring-secondary"
             />
-            <span className="font-semibold text-surface">{company.name}</span>
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/15 bg-white/95 p-2">
+              {company.logoUrl ? (
+                <Image
+                  src={company.logoUrl}
+                  alt={`Logo for ${company.name}`}
+                  width={44}
+                  height={44}
+                  className="h-full w-full object-contain"
+                />
+              ) : (
+                <span className="text-[10px] font-black text-[#140249]">
+                  {company.name
+                    .split(/\s+/)
+                    .filter(Boolean)
+                    .slice(0, 2)
+                    .map((part) => part[0]?.toUpperCase() ?? "")
+                    .join("")}
+                </span>
+              )}
+            </div>
+            <span className="min-w-0">
+              <span className="block truncate font-semibold text-surface">
+                {company.name}
+              </span>
+              <span className="mt-0.5 block text-xs text-surface/72">
+                {getCompanyAudienceLabel({
+                  industry: company.industry,
+                  recruitmentFields: company.recruitmentFields,
+                })}
+              </span>
+            </span>
           </label>
         ))}
       </div>

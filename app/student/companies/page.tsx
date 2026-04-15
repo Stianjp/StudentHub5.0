@@ -7,6 +7,7 @@ import { Select } from "@/components/ui/select";
 import { LikedCompanies } from "@/components/student/liked-companies";
 import { saveLikedCompanies } from "@/app/student/actions";
 import { requireRole } from "@/lib/auth";
+import { getLatestCompanyRegistrationLogos } from "@/lib/company";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getOrCreateStudentForUser } from "@/lib/student";
 
@@ -48,7 +49,7 @@ export default async function StudentCompaniesPage({ searchParams }: PageProps) 
 
   const [student, { data: companies, error: companiesError }] = await Promise.all([
     getOrCreateStudentForUser(profile.id, user.email),
-    supabase.from("companies").select("id, name, industry").order("name"),
+    supabase.from("companies").select("id, name, industry, recruitment_fields").order("name"),
   ]);
 
   if (companiesError) throw companiesError;
@@ -56,7 +57,11 @@ export default async function StudentCompaniesPage({ searchParams }: PageProps) 
     id: string;
     name: string;
     industry: string | null;
+    recruitment_fields: string[] | null;
   }>;
+  const companyLogoMap = await getLatestCompanyRegistrationLogos(
+    allCompanies.map((company) => company.id),
+  );
   const industryOptions = Array.from(
     new Set([...INDUSTRY_OPTIONS, ...allCompanies.map((company) => company.industry).filter(Boolean)]),
   ) as string[];
@@ -66,7 +71,8 @@ export default async function StudentCompaniesPage({ searchParams }: PageProps) 
     const matchesSearch =
       normalizedSearch.length === 0 ||
       company.name.toLowerCase().includes(normalizedSearch) ||
-      (company.industry ?? "").toLowerCase().includes(normalizedSearch);
+      (company.industry ?? "").toLowerCase().includes(normalizedSearch) ||
+      (company.recruitment_fields ?? []).join(" ").toLowerCase().includes(normalizedSearch);
     return matchesIndustry && matchesSearch;
   });
 
@@ -134,7 +140,16 @@ export default async function StudentCompaniesPage({ searchParams }: PageProps) 
 
         {allCompanies.length > 0 ? (
           <form action={saveLikedCompanies} className="flex flex-col gap-4">
-            <LikedCompanies companies={filteredCompanies} initialSelected={student.liked_company_ids ?? []} />
+            <LikedCompanies
+              companies={filteredCompanies.map((company) => ({
+                id: company.id,
+                name: company.name,
+                industry: company.industry,
+                recruitmentFields: company.recruitment_fields,
+                logoUrl: companyLogoMap[company.id] ?? null,
+              }))}
+              initialSelected={student.liked_company_ids ?? []}
+            />
             <div className="flex flex-wrap gap-3">
               <Button type="submit">Lagre favoritter</Button>
               <Link className="button-link text-xs" href="/student">
