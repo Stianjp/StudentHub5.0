@@ -262,8 +262,8 @@ export async function uploadCompanyLogoForCompanyAction(formData: FormData) {
     if (!(file instanceof File) || file.size === 0) {
       throw new Error("Velg en logofil.");
     }
-    if (file.size > 6 * 1024 * 1024) {
-      throw new Error("Logoen kan ikke være større enn 6 MB.");
+    if (file.size > 5 * 1024 * 1024) {
+      throw new Error("Logoen kan ikke være større enn 5 MB.");
     }
     if (!file.type.startsWith("image/")) {
       throw new Error("Logoen må være en bildefil.");
