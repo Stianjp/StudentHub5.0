@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Stat } from "@/components/ui/stat";
 import { requireRole } from "@/lib/auth";
@@ -9,8 +10,14 @@ import { getCompanyLeads, getCompanyRegistrations, getLatestCompanyRegistrationL
 import { getCompanyOnboardingStatus } from "@/lib/company-onboarding";
 import { listActiveEvents } from "@/lib/events";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { uploadCompanyLogoForCompanyAction } from "@/app/company/actions";
 
-export default async function CompanyDashboardPage() {
+type PageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function CompanyDashboardPage({ searchParams }: PageProps) {
+  const params = await searchParams;
   const profile = await requireRole("company");
   const supabase = await createServerSupabaseClient();
   const {
@@ -41,6 +48,8 @@ export default async function CompanyDashboardPage() {
   const consentedLeads = typedLeads.filter((lead) => lead.consent?.consent).length;
 
   const onboarding = getCompanyOnboardingStatus(company);
+  const statusError = typeof params.error === "string" ? params.error : "";
+  const saved = params.saved === "1";
 
   return (
     <div className="flex flex-col gap-10">
@@ -61,31 +70,108 @@ export default async function CompanyDashboardPage() {
         <Stat label="Aktive events" value={events.length} hint="Tilgjengelige nå" />
       </section>
 
-      {registrationLogo?.logoUrl ? (
-        <Card className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-2xl border border-primary/10 bg-white p-3">
-              <Image
-                src={registrationLogo.logoUrl}
-                alt={`Logo for ${company.name}`}
-                width={96}
-                height={96}
-                className="h-full w-full object-contain"
-              />
-            </div>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-primary/60">Bedriftslogo</p>
-              <p className="text-lg font-bold text-primary">{company.name}</p>
-              <p className="text-sm text-ink/75">
-                Hentet fra siste eventregistrering{registrationLogo.eventName ? ` til ${registrationLogo.eventName}` : ""}.
-              </p>
-            </div>
-          </div>
-          <Link href="/company/events">
-            <Button variant="secondary">Se eventpåmeldinger</Button>
-          </Link>
+      {saved ? (
+        <Card className="border border-success/30 bg-success/10 text-sm text-success">
+          Logo oppdatert.
         </Card>
       ) : null}
+      {statusError ? (
+        <Card className="border border-error/30 bg-error/10 text-sm text-error">
+          {decodeURIComponent(statusError)}
+        </Card>
+      ) : null}
+
+      {registrationLogo?.logoUrl ? (
+        <Card className="flex flex-col gap-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-4">
+              <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-2xl border border-primary/10 bg-white p-3">
+                <Image
+                  src={registrationLogo.logoUrl}
+                  alt={`Logo for ${company.name}`}
+                  width={96}
+                  height={96}
+                  className="h-full w-full object-contain"
+                />
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wide text-primary/60">Bedriftslogo</p>
+                <p className="text-lg font-bold text-primary">{company.name}</p>
+                <p className="text-sm text-ink/75">
+                  Denne logoen brukes på student-, event-, jobb- og thesis-sider som henter firmalogo sentralt.
+                </p>
+              </div>
+            </div>
+            <Link href="/company/events">
+              <Button variant="secondary">Se eventpåmeldinger</Button>
+            </Link>
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr_1fr]">
+            <div className="rounded-3xl border border-primary/10 bg-primary p-6">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-surface/60">Dark surface preview</p>
+              <div className="mt-4 flex min-h-36 items-center justify-center rounded-2xl border border-white/10 bg-[#140249] p-6">
+                <Image
+                  src={registrationLogo.logoUrl}
+                  alt={`Logo preview for ${company.name}`}
+                  width={220}
+                  height={110}
+                  className="max-h-24 w-auto object-contain"
+                />
+              </div>
+            </div>
+            <div className="rounded-3xl border border-primary/10 bg-mist p-6">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary/60">Light card preview</p>
+              <div className="mt-4 flex min-h-36 items-center justify-center rounded-2xl border border-primary/10 bg-white p-5">
+                <Image
+                  src={registrationLogo.logoUrl}
+                  alt={`Light preview for ${company.name}`}
+                  width={180}
+                  height={90}
+                  className="max-h-20 w-auto object-contain"
+                />
+              </div>
+            </div>
+            <div className="rounded-3xl border border-primary/10 bg-mist p-6">
+              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary/60">Compact logo tile</p>
+              <div className="mt-4 flex min-h-36 items-center justify-center rounded-2xl border border-primary/10 bg-white p-4">
+                <Image
+                  src={registrationLogo.logoUrl}
+                  alt={`Tile preview for ${company.name}`}
+                  width={120}
+                  height={120}
+                  className="max-h-16 w-auto object-contain"
+                />
+              </div>
+            </div>
+          </div>
+
+          <form action={uploadCompanyLogoForCompanyAction} className="flex flex-col gap-3 rounded-2xl border border-primary/10 bg-primary/5 p-4 md:flex-row md:items-end">
+            <label className="flex-1 text-sm font-semibold text-primary">
+              Last opp ny logo
+              <Input name="logo" type="file" accept="image/*" required className="mt-2 rounded-2xl" />
+            </label>
+            <Button type="submit" variant="secondary">Oppdater logo</Button>
+          </form>
+        </Card>
+      ) : (
+        <Card className="flex flex-col gap-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-primary/60">Bedriftslogo</p>
+            <p className="text-lg font-bold text-primary">{company.name}</p>
+            <p className="text-sm text-ink/75">
+              Ingen logo er lastet opp ennå. Last opp en logo her, så brukes den på alle sider som viser bedriften.
+            </p>
+          </div>
+          <form action={uploadCompanyLogoForCompanyAction} className="flex flex-col gap-3 rounded-2xl border border-primary/10 bg-primary/5 p-4 md:flex-row md:items-end">
+            <label className="flex-1 text-sm font-semibold text-primary">
+              Last opp logo
+              <Input name="logo" type="file" accept="image/*" required className="mt-2 rounded-2xl" />
+            </label>
+            <Button type="submit" variant="secondary">Lagre logo</Button>
+          </form>
+        </Card>
+      )}
 
       <section className="grid gap-6 lg:grid-cols-2">
         <Card className="relative overflow-hidden">

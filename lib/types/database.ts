@@ -710,6 +710,7 @@ export type Database = {
           title: string;
           location: string | null;
           application_url: string | null;
+          contact_email: string | null;
           application_deadline: string | null;
           field_tags: string[];
           levels: string[];
@@ -728,6 +729,7 @@ export type Database = {
           title: string;
           location?: string | null;
           application_url?: string | null;
+          contact_email?: string | null;
           application_deadline?: string | null;
           field_tags?: string[];
           levels?: string[];
@@ -746,6 +748,7 @@ export type Database = {
           title?: string;
           location?: string | null;
           application_url?: string | null;
+          contact_email?: string | null;
           application_deadline?: string | null;
           field_tags?: string[];
           levels?: string[];

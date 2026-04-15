@@ -22,6 +22,7 @@ import {
 } from "@/lib/company";
 import { normalizeStudyCategories } from "@/lib/company-categories";
 import { sendTransactionalEmail } from "@/lib/resend";
+import { uploadCompanyLogo } from "@/lib/company-access";
 
 function isNextRedirectError(error: unknown) {
   const digest = (error as { digest?: string })?.digest;
@@ -253,6 +254,72 @@ export async function saveCompanyBranding(formData: FormData) {
   }
 }
 
+export async function uploadCompanyLogoForCompanyAction(formData: FormData) {
+  try {
+    const { company } = await getCompanyContext();
+    const file = formData.get("logo");
+
+    if (!(file instanceof File) || file.size === 0) {
+      throw new Error("Velg en logofil.");
+    }
+    if (file.size > 6 * 1024 * 1024) {
+      throw new Error("Logoen kan ikke være større enn 6 MB.");
+    }
+    if (!file.type.startsWith("image/")) {
+      throw new Error("Logoen må være en bildefil.");
+    }
+
+    const supabase = createAdminSupabaseClient();
+    const { data: currentCompany, error: companyError } = await supabase
+      .from("companies")
+      .select("id, org_number, logo_path")
+      .eq("id", company.id)
+      .single();
+    if (companyError) throw companyError;
+
+    const logoPath = await uploadCompanyLogo({
+      userId: company.id,
+      file,
+      orgNumber: currentCompany.org_number,
+    });
+
+    const { error: updateError } = await supabase
+      .from("companies")
+      .update({
+        logo_path: logoPath,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", company.id);
+    if (updateError) throw updateError;
+
+    if (currentCompany.logo_path && currentCompany.logo_path !== logoPath) {
+      await supabase.storage.from("event-registration-assets").remove([currentCompany.logo_path]).catch(() => undefined);
+    }
+
+    revalidatePath("/company");
+    revalidatePath("/company/onboarding");
+    revalidatePath("/company/onboarding/branding");
+    revalidatePath("/company/jobs");
+    revalidatePath("/company/thesis-projects");
+    revalidatePath("/student/companies");
+    revalidatePath("/student/consents");
+    revalidatePath("/student/events");
+    revalidatePath("/student/dashboard");
+    revalidatePath("/hovedside");
+    revalidatePath("/hovedside/studentconnect2026");
+    revalidatePath("/jobs");
+    revalidatePath("/thesis-projects");
+    revalidatePath("/event-register");
+    revalidatePath("/event/events");
+    revalidatePath(`/admin/companies/${company.id}`);
+    redirect("/company?saved=1");
+  } catch (error) {
+    if (isNextRedirectError(error)) throw error;
+    const message = getCompanyActionMessage(error);
+    redirect(`/company?error=${encodeURIComponent(message)}`);
+  }
+}
+
 export async function signupForEvent(formData: FormData) {
   const parsed = companyEventSignupSchema.safeParse({
     eventId: formData.get("eventId"),
@@ -319,6 +386,7 @@ export async function saveCompanyOpportunity(formData: FormData) {
       title: String(formData.get("title") ?? ""),
       location: String(formData.get("location") ?? ""),
       applicationUrl: String(formData.get("applicationUrl") ?? ""),
+      contactEmail: String(formData.get("contactEmail") ?? ""),
       applicationDeadline: String(formData.get("applicationDeadline") ?? ""),
       fieldTags: formData.getAll("fieldTags"),
       levels: formData.getAll("levels"),
@@ -344,6 +412,7 @@ export async function saveCompanyOpportunity(formData: FormData) {
       title: parsed.data.title,
       location: parsed.data.location,
       application_url: parsed.data.applicationUrl || null,
+      contact_email: parsed.data.contactEmail || null,
       application_deadline: parsed.data.applicationDeadline,
       field_tags: parsed.data.fieldTags,
       levels: parsed.data.levels,

@@ -7,11 +7,6 @@ import { getCompanyRegistrations, getLatestCompanyRegistrationLogos, hasPremiumP
 type OpportunityType = "job" | "thesis";
 type CompanyOpportunity = TableRow<"company_opportunities">;
 
-export const OPPORTUNITY_LEVEL_OPTIONS = ["Bachelor", "Master"] as const;
-export const OPPORTUNITY_BACHELOR_YEARS = [1, 2, 3] as const;
-export const OPPORTUNITY_MASTER_YEARS = [1, 2, 3, 4, 5] as const;
-export const JOB_ENGAGEMENT_OPTIONS = ["Internship", "Part time", "Full time"] as const;
-
 export function hasJobPublishingAccessForRegistration(input: {
   package: string | null | undefined;
   can_publish_jobs?: boolean | null;
@@ -109,6 +104,24 @@ export function getOpportunityStudySummary(opportunity: Pick<CompanyOpportunity,
     fieldsLabel: fields.length > 0 ? fields.join(", ") : "Open for multiple study directions",
     levelsLabel: levels.length > 0 ? levels.join(", ") : "Bachelor and Master",
   };
+}
+
+export function getOpportunityPrimaryAction(opportunity: Pick<CompanyOpportunity, "application_url" | "contact_email">) {
+  if (opportunity.application_url) {
+    return {
+      href: opportunity.application_url,
+      label: "View details",
+      external: true,
+    };
+  }
+  if (opportunity.contact_email) {
+    return {
+      href: `mailto:${opportunity.contact_email}`,
+      label: "Contact company",
+      external: false,
+    };
+  }
+  return null;
 }
 
 export function matchesOpportunityFilters(

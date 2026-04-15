@@ -117,6 +117,7 @@ export const companyOpportunitySchema = z
     title: z.string().min(2, "Tittel er påkrevd"),
     location: z.string().min(2, "Lokasjon er påkrevd"),
     applicationUrl: normalizedUrl,
+    contactEmail: z.union([z.string().email("Kontaktmail må være en gyldig e-post"), z.literal("")]),
     applicationDeadline: z.string().min(1, "Søknadsfrist er påkrevd"),
     fieldTags: stringArray,
     levels: stringArray,
@@ -127,6 +128,13 @@ export const companyOpportunitySchema = z
     isPublished: z.boolean().default(true),
   })
   .superRefine((value, ctx) => {
+    if (!value.applicationUrl && !value.contactEmail) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["contactEmail"],
+        message: "Fyll ut enten søknadslenke eller kontaktmail.",
+      });
+    }
     if (value.fieldTags.length === 0) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,

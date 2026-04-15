@@ -4,10 +4,11 @@ import { BriefcaseBusiness, GraduationCap, MapPin } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import {
   formatOpportunityDeadline,
+  getOpportunityPrimaryAction,
   getOpportunityStudySummary,
   matchesOpportunityFilters,
-  OPPORTUNITY_LEVEL_OPTIONS,
 } from "@/lib/company-opportunities";
+import { OPPORTUNITY_LEVEL_OPTIONS } from "@/lib/company-opportunity-options";
 import type { TableRow } from "@/lib/types/database";
 
 type CompanyOpportunity = TableRow<"company_opportunities"> & {
@@ -150,6 +151,7 @@ export function OpportunityBoard({
             ) : (
               filtered.map((opportunity) => {
                 const summary = getOpportunityStudySummary(opportunity);
+                const primaryAction = getOpportunityPrimaryAction(opportunity);
                 return (
                   <Card key={opportunity.id} className="rounded-[32px] bg-white/85 p-6 shadow-[0_24px_60px_rgba(49,23,94,0.08)]">
                     <div className="flex flex-col gap-5">
@@ -157,14 +159,16 @@ export function OpportunityBoard({
                         <span className="inline-flex w-fit rounded-full bg-[#EEE0FF] px-4 py-2 text-sm font-semibold text-primary/75">
                           Apply by: {formatOpportunityDeadline(opportunity.application_deadline)}
                         </span>
-                        <a
-                          href={opportunity.application_url ?? "#"}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex min-h-11 min-w-32 items-center justify-center rounded-full border border-transparent bg-primary px-6 py-2.5 text-sm font-bold tracking-wide text-surface transition hover:-translate-y-0.5 hover:bg-primary/90"
-                        >
-                          {mode === "job" ? "Job details" : "Project details"}
-                        </a>
+                        {primaryAction ? (
+                          <a
+                            href={primaryAction.href}
+                            target={primaryAction.external ? "_blank" : undefined}
+                            rel={primaryAction.external ? "noreferrer" : undefined}
+                            className="inline-flex min-h-11 min-w-32 items-center justify-center rounded-full border border-transparent bg-primary px-6 py-2.5 text-sm font-bold tracking-wide text-surface transition hover:-translate-y-0.5 hover:bg-primary/90"
+                          >
+                            {primaryAction.label}
+                          </a>
+                        ) : null}
                       </div>
 
                       <div className="grid gap-6 md:grid-cols-[96px_minmax(0,1fr)]">
@@ -184,6 +188,9 @@ export function OpportunityBoard({
                         <div>
                           <h3 className="text-3xl font-black text-primary">{opportunity.title}</h3>
                           <p className="mt-1 text-xl font-bold text-primary/85">{opportunity.companyName}</p>
+                          {opportunity.contact_email ? (
+                            <p className="mt-1 text-sm text-primary/65">Contact: {opportunity.contact_email}</p>
+                          ) : null}
                           {opportunity.description ? (
                             <p className="mt-4 max-w-3xl text-sm leading-7 text-primary/72">{opportunity.description}</p>
                           ) : null}
