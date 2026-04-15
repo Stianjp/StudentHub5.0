@@ -170,11 +170,11 @@ export async function getCompanyRegistrations(companyId: string) {
 }
 
 export async function getLatestCompanyRegistrationLogo(companyId: string) {
-  let supabase = await createServerSupabaseClient();
+  let supabase;
   try {
-    supabase = createAdminSupabaseClient() as unknown as typeof supabase;
+    supabase = createAdminSupabaseClient() as Awaited<ReturnType<typeof createServerSupabaseClient>>;
   } catch {
-    // fallback
+    supabase = await createServerSupabaseClient();
   }
 
   const { data: company, error: companyError } = await supabase
@@ -221,11 +221,11 @@ export async function getLatestCompanyRegistrationLogos(companyIds: string[]) {
   const uniqueCompanyIds = Array.from(new Set(companyIds.map((companyId) => companyId.trim()).filter(Boolean)));
   if (uniqueCompanyIds.length === 0) return {} as Record<string, string | null>;
 
-  let supabase = await createServerSupabaseClient();
+  let supabase;
   try {
-    supabase = createAdminSupabaseClient() as unknown as typeof supabase;
+    supabase = createAdminSupabaseClient() as Awaited<ReturnType<typeof createServerSupabaseClient>>;
   } catch {
-    // fallback
+    supabase = await createServerSupabaseClient();
   }
 
   const { data: companies, error: companyError } = await supabase
