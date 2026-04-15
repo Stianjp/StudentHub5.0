@@ -6,7 +6,13 @@ import Link from "next/link";
 import Image from "next/image";
 import { Menu, X, ChevronDown, User } from "lucide-react";
 
-const NAV_LINKS = [
+type NavLink = {
+  label: string;
+  href: string;
+  children?: NavLink[];
+};
+
+const NAV_LINKS: NavLink[] = [
   { label: "Students", href: "/for-studenter" },
   {
     label: "Partners",
@@ -18,13 +24,13 @@ const NAV_LINKS = [
   { label: "Thesis", href: "/thesis-projects" },
 ];
 
-const MORE_LINKS = [
+const MORE_LINKS: NavLink[] = [
   { label: "About us", href: "/about" },
   { label: "FAQ", href: "/faq" },
   { label: "Contact", href: "/contact" },
 ];
 
-const LOGIN_LINKS = [
+const LOGIN_LINKS: NavLink[] = [
   { label: "Student", href: "/auth/sign-in?role=student" },
   { label: "Company", href: "/auth/sign-in?role=company" },
 ];
