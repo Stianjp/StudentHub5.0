@@ -81,7 +81,45 @@ export default async function StudentConnect2026Page() {
             a venue that feels active from the first hour.
           </h2>
         </div>
-        <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+        <div className="grid gap-4 md:hidden">
+          <div className="rounded-[28px] border border-primary/8 bg-white p-5 shadow-[0_18px_48px_rgba(20,2,73,0.08)]">
+            <h3 className="text-lg font-bold text-primary">
+              A focused mobile overview
+            </h3>
+            <p className="mt-2 text-sm leading-relaxed text-ink/70">
+              On mobile we keep this page lighter so it stays stable while you
+              browse. The full photo gallery and stand experience are still
+              available on desktop.
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-[24px] border border-primary/8 bg-white p-4 shadow-[0_16px_40px_rgba(20,2,73,0.08)]">
+              <p className="text-xs font-bold uppercase tracking-[0.24em] text-secondary">
+                Stands
+              </p>
+              <p className="mt-2 text-sm text-ink/70">
+                Meet companies directly in an active fair setting.
+              </p>
+            </div>
+            <div className="rounded-[24px] border border-primary/8 bg-white p-4 shadow-[0_16px_40px_rgba(20,2,73,0.08)]">
+              <p className="text-xs font-bold uppercase tracking-[0.24em] text-secondary">
+                Conversations
+              </p>
+              <p className="mt-2 text-sm text-ink/70">
+                Talk to recruiters, alumni, and future collaborators.
+              </p>
+            </div>
+            <div className="rounded-[24px] border border-primary/8 bg-white p-4 shadow-[0_16px_40px_rgba(20,2,73,0.08)]">
+              <p className="text-xs font-bold uppercase tracking-[0.24em] text-secondary">
+                Career focus
+              </p>
+              <p className="mt-2 text-sm text-ink/70">
+                Explore internships, graduate roles, and thesis opportunities.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="hidden gap-4 md:grid lg:grid-cols-[1.2fr_0.8fr]">
           <div className="relative aspect-[16/11] overflow-hidden rounded-[30px] bg-primary shadow-[0_24px_70px_rgba(20,2,73,0.16)] ring-1 ring-primary/6">
             <Image
               src={SITE_IMAGES.studentConnectHall.src}
@@ -216,7 +254,16 @@ export default async function StudentConnect2026Page() {
             description="Companies from various sectors participate, showcasing the diversity of opportunities available for students."
           />
         </div>
-        <div className="mt-6 grid gap-4 md:grid-cols-2">
+        <div className="mt-6 rounded-[28px] border border-primary/8 bg-white p-5 shadow-[0_18px_48px_rgba(20,2,73,0.08)] md:hidden">
+          <p className="text-xs font-bold uppercase tracking-[0.24em] text-secondary">
+            Mobile note
+          </p>
+          <p className="mt-2 text-sm leading-relaxed text-ink/70">
+            The image gallery is hidden on mobile to reduce crashes in Safari
+            and Chrome on iPhone.
+          </p>
+        </div>
+        <div className="mt-6 hidden gap-4 md:grid md:grid-cols-2">
           <div className="relative aspect-[16/10] overflow-hidden rounded-[28px] bg-primary shadow-[0_20px_50px_rgba(20,2,73,0.14)] ring-1 ring-primary/6">
             <Image
               src={SITE_IMAGES.studentConnectStudents.src}
@@ -249,26 +296,40 @@ export default async function StudentConnect2026Page() {
           with their logo, and tapping or hovering a logo shows a short
           company summary.
         </p>
-        {registrationDetail ? (
-          <StandShowcase
-            floorplanImagePath={
-              STUDENT_CONNECT_2026_FLOORPLAN.imagePath
-            }
-            floorplanAlt={STUDENT_CONNECT_2026_FLOORPLAN.alt}
-            floorplanWidth={STUDENT_CONNECT_2026_FLOORPLAN.width}
-            floorplanHeight={STUDENT_CONNECT_2026_FLOORPLAN.height}
-            stands={registrationDetail.stands}
-          />
-        ) : (
-          <div className="flex items-center justify-center rounded-2xl bg-white/5 py-16 ring-1 ring-white/10">
-            <div className="text-center text-mist/40">
-              <MapPin size={40} className="mx-auto" />
-              <p className="mt-3 text-sm">
-                Stand map and floor plan will be shown here
-              </p>
-            </div>
+        <div className="md:hidden">
+          <div className="rounded-[28px] border border-white/12 bg-white/8 p-5 text-center shadow-[0_18px_48px_rgba(20,2,73,0.18)]">
+            <MapPin size={36} className="mx-auto text-secondary" />
+            <p className="mt-4 text-base font-semibold text-surface">
+              The interactive stand map is shown on desktop.
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-mist/72">
+              We have hidden the full floor plan on mobile to keep this page
+              stable on iPhone and Android.
+            </p>
           </div>
-        )}
+        </div>
+        <div className="hidden md:block">
+          {registrationDetail ? (
+            <StandShowcase
+              floorplanImagePath={
+                STUDENT_CONNECT_2026_FLOORPLAN.imagePath
+              }
+              floorplanAlt={STUDENT_CONNECT_2026_FLOORPLAN.alt}
+              floorplanWidth={STUDENT_CONNECT_2026_FLOORPLAN.width}
+              floorplanHeight={STUDENT_CONNECT_2026_FLOORPLAN.height}
+              stands={registrationDetail.stands}
+            />
+          ) : (
+            <div className="flex items-center justify-center rounded-2xl bg-white/5 py-16 ring-1 ring-white/10">
+              <div className="text-center text-mist/40">
+                <MapPin size={40} className="mx-auto" />
+                <p className="mt-3 text-sm">
+                  Stand map and floor plan will be shown here
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
       </SectionWrapper>
 
       {/* ── Approved companies (dynamic) ─────────────────────── */}
@@ -279,7 +340,7 @@ export default async function StudentConnect2026Page() {
         <p className="mx-auto mb-8 max-w-xl text-center text-sm text-mist/60">
           These companies have been confirmed for Student Connect 2026.
         </p>
-        <CompanyGrid companies={companies} />
+        <CompanyGrid companies={companies} compactOnMobile />
       </SectionWrapper>
 
       {/* ── Gradient stripe ──────────────────────────────────── */}
