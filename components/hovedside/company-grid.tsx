@@ -220,6 +220,7 @@ export function CompanyGrid({ companies }: Props) {
                           alt={company.companyName}
                           fill
                           className="object-contain"
+                          sizes="(max-width: 640px) 140px, (max-width: 1024px) 180px, 220px"
                         />
                       </div>
                     ) : (
