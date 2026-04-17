@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { Building2 } from "lucide-react";
@@ -154,7 +153,7 @@ export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
                   </span>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  {tierCompanies.slice(0, 6).map((company) => (
+                  {tierCompanies.map((company) => (
                     <span
                       key={company.id}
                       className="inline-flex rounded-full border border-white/14 bg-white/10 px-3 py-1 text-xs font-semibold text-mist/90"
@@ -162,24 +161,11 @@ export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
                       {company.companyName}
                     </span>
                   ))}
-                  {tierCompanies.length > 6 ? (
-                    <span className="inline-flex rounded-full border border-white/14 bg-white/5 px-3 py-1 text-xs font-semibold text-mist/70">
-                      +{tierCompanies.length - 6} more
-                    </span>
-                  ) : null}
                 </div>
               </section>
             );
           })}
         </div>
-
-        <Link
-          href="/studentconnect2026"
-          prefetch={false}
-          className="inline-flex w-full items-center justify-center rounded-full border-2 border-secondary px-6 py-3 text-sm font-bold uppercase tracking-[0.18em] text-secondary transition-colors hover:bg-secondary hover:text-primary"
-        >
-          View full partner list
-        </Link>
       </div>
     );
   }
