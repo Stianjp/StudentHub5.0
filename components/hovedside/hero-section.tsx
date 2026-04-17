@@ -30,7 +30,7 @@ export function HeroSection({
     <section className="relative flex min-h-[58vh] items-center overflow-hidden bg-primary md:min-h-[70vh]">
       {backgroundImageSrc ? (
         <>
-          <div className="absolute inset-0">
+          <div className="absolute inset-0 hidden md:block">
             <Image
               src={backgroundImageSrc}
               alt={backgroundImageAlt}
@@ -41,8 +41,8 @@ export function HeroSection({
               sizes="100vw"
             />
           </div>
-          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(20,2,73,0.88)_0%,rgba(20,2,73,0.76)_36%,rgba(20,2,73,0.48)_64%,rgba(20,2,73,0.78)_100%)]" />
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(254,154,112,0.16),transparent_42%),radial-gradient(ellipse_at_20%_10%,rgba(132,106,230,0.18),transparent_44%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(20,2,73,0.98)_0%,rgba(20,2,73,0.94)_100%)] md:bg-[linear-gradient(90deg,rgba(20,2,73,0.88)_0%,rgba(20,2,73,0.76)_36%,rgba(20,2,73,0.48)_64%,rgba(20,2,73,0.78)_100%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(254,154,112,0.14),transparent_42%),radial-gradient(ellipse_at_20%_10%,rgba(132,106,230,0.2),transparent_44%)] md:bg-[radial-gradient(ellipse_at_top_right,rgba(254,154,112,0.16),transparent_42%),radial-gradient(ellipse_at_20%_10%,rgba(132,106,230,0.18),transparent_44%)]" />
         </>
       ) : (
         <>

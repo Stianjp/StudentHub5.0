@@ -152,7 +152,7 @@ export default async function HomePage() {
         <p className="mx-auto mb-8 max-w-2xl text-center text-sm text-mist/60">
           Confirmed partners for Student Connect 2026, sorted by package from Platinum to Standard.
         </p>
-        <CompanyGrid companies={companies} />
+        <CompanyGrid companies={companies} compactOnMobile />
       </SectionWrapper>
 
       {/* ── CTA ──────────────────────────────────────────────── */}

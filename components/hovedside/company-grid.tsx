@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import Link from "next/link";
 import Image from "next/image";
+import { useEffect, useMemo, useState } from "react";
 import { Building2 } from "lucide-react";
 import type {
   ApprovedCompanyPackageTier,
@@ -11,6 +12,7 @@ import { cn } from "@/lib/utils";
 
 type Props = {
   companies: ApprovedCompanyPreview[];
+  compactOnMobile?: boolean;
 };
 
 const TIER_ORDER: ApprovedCompanyPackageTier[] = [
@@ -78,13 +80,24 @@ function collectCandidateFields(companies: ApprovedCompanyPreview[]) {
     .sort((left, right) => left.localeCompare(right, "nb"));
 }
 
-export function CompanyGrid({ companies }: Props) {
+export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
   const [activeField, setActiveField] = useState<string | null>(null);
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(min-width: 768px)");
+    const handleChange = () => setIsDesktop(mediaQuery.matches);
+
+    handleChange();
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
+  }, []);
 
   const candidateFields = useMemo(
     () => collectCandidateFields(companies),
     [companies],
   );
+  const groupedAllCompanies = useMemo(() => groupCompanies(companies), [companies]);
   const visibleCompanies = useMemo(() => {
     if (!activeField) return companies;
     return companies.filter((company) =>
@@ -103,6 +116,70 @@ export function CompanyGrid({ companies }: Props) {
         <p className="mt-3 text-sm text-mist/60">
           Participating companies will be announced here as they are approved.
         </p>
+      </div>
+    );
+  }
+
+  if (compactOnMobile && !isDesktop) {
+    return (
+      <div className="space-y-4">
+        <div className="rounded-[28px] border border-white/12 bg-white/8 p-5 shadow-[0_16px_42px_rgba(20,2,73,0.18)]">
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-secondary/85">
+            Mobile overview
+          </p>
+          <h3 className="mt-2 text-xl font-bold text-surface">
+            Student Connect 2026 partners
+          </h3>
+          <p className="mt-2 text-sm leading-relaxed text-mist/75">
+            We have simplified this section on mobile to keep the page fast and
+            stable on iPhone and Android.
+          </p>
+        </div>
+
+        <div className="grid gap-3">
+          {groupedAllCompanies.map(({ tier, companies: tierCompanies }) => {
+            const meta = TIER_META[tier];
+            return (
+              <section
+                key={tier}
+                className={cn(
+                  "rounded-[24px] border p-4 shadow-[0_16px_42px_rgba(20,2,73,0.16)]",
+                  meta.sectionClassName,
+                )}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <h4 className="text-lg font-bold text-surface">{meta.label}</h4>
+                  <span className="text-sm font-semibold text-mist/70">
+                    {tierCompanies.length} companies
+                  </span>
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {tierCompanies.slice(0, 6).map((company) => (
+                    <span
+                      key={company.id}
+                      className="inline-flex rounded-full border border-white/14 bg-white/10 px-3 py-1 text-xs font-semibold text-mist/90"
+                    >
+                      {company.companyName}
+                    </span>
+                  ))}
+                  {tierCompanies.length > 6 ? (
+                    <span className="inline-flex rounded-full border border-white/14 bg-white/5 px-3 py-1 text-xs font-semibold text-mist/70">
+                      +{tierCompanies.length - 6} more
+                    </span>
+                  ) : null}
+                </div>
+              </section>
+            );
+          })}
+        </div>
+
+        <Link
+          href="/studentconnect2026"
+          prefetch={false}
+          className="inline-flex w-full items-center justify-center rounded-full border-2 border-secondary px-6 py-3 text-sm font-bold uppercase tracking-[0.18em] text-secondary transition-colors hover:bg-secondary hover:text-primary"
+        >
+          View full partner list
+        </Link>
       </div>
     );
   }
