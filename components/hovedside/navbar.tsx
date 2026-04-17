@@ -56,7 +56,7 @@ export function Navbar({ baseUrl }: { baseUrl?: string }) {
     <header className="sticky top-0 z-50 bg-primary text-mist">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
         {/* Logo */}
-        <Link href={resolveHref("/")} className="shrink-0">
+        <Link href={resolveHref("/")} prefetch={false} className="shrink-0">
           <Image
             src="/brand/Logo_OSH_Gradient_whitetext.svg"
             alt="Oslo Student Hub"
@@ -77,6 +77,7 @@ export function Navbar({ baseUrl }: { baseUrl?: string }) {
               >
                 <Link
                   href={resolveHref(link.href)}
+                  prefetch={false}
                   className={`flex items-center gap-1 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                     isActive(link.href) || link.children.some((child) => isActive(child.href))
                       ? "text-secondary"
@@ -91,6 +92,7 @@ export function Navbar({ baseUrl }: { baseUrl?: string }) {
                     <Link
                       key={child.href}
                       href={resolveHref(child.href)}
+                      prefetch={false}
                       className={`block px-4 py-2 text-sm transition-colors ${
                         isActive(child.href)
                           ? "text-secondary"
@@ -106,6 +108,7 @@ export function Navbar({ baseUrl }: { baseUrl?: string }) {
               <Link
                 key={link.href}
                 href={resolveHref(link.href)}
+                prefetch={false}
                 className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                   isActive(link.href)
                     ? "text-secondary"
@@ -140,6 +143,7 @@ export function Navbar({ baseUrl }: { baseUrl?: string }) {
                   <Link
                     key={link.href}
                     href={resolveHref(link.href)}
+                    prefetch={false}
                     className={`block px-4 py-2 text-sm transition-colors ${
                       isActive(link.href)
                         ? "text-secondary"
@@ -198,6 +202,7 @@ export function Navbar({ baseUrl }: { baseUrl?: string }) {
               <div key={link.href} className="py-2">
                 <Link
                   href={resolveHref(link.href)}
+                  prefetch={false}
                   onClick={() => setMobileOpen(false)}
                   className={`block py-2 text-sm font-medium transition-colors ${
                     isActive(link.href)
@@ -212,6 +217,7 @@ export function Navbar({ baseUrl }: { baseUrl?: string }) {
                     <Link
                       key={child.href}
                       href={resolveHref(child.href)}
+                      prefetch={false}
                       onClick={() => setMobileOpen(false)}
                       className={`block py-2 text-sm transition-colors ${
                         isActive(child.href)
@@ -228,6 +234,7 @@ export function Navbar({ baseUrl }: { baseUrl?: string }) {
               <Link
                 key={link.href}
                 href={resolveHref(link.href)}
+                prefetch={false}
                 onClick={() => setMobileOpen(false)}
                 className={`block py-3 text-sm font-medium transition-colors ${
                   isActive(link.href)

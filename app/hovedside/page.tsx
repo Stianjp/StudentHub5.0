@@ -72,6 +72,7 @@ export default async function HomePage() {
                 </p>
                 <Link
                   href={resolveWebsiteEventHref(event)}
+                  prefetch={false}
                   className="mt-2 inline-block text-sm text-secondary hover:underline"
                 >
                   See info here &rarr;

@@ -66,6 +66,7 @@ export function HeroSection({
             {ctaLabel && ctaHref && (
               <Link
                 href={ctaHref}
+                prefetch={false}
                 className="inline-flex w-full items-center justify-center rounded-full border-2 border-secondary px-6 py-3 text-sm font-bold uppercase tracking-[0.18em] text-secondary transition-colors hover:bg-secondary hover:text-primary sm:w-auto sm:px-7"
               >
                 {ctaLabel}
@@ -75,6 +76,7 @@ export function HeroSection({
               <Link
                 key={cta.href}
                 href={cta.href}
+                prefetch={false}
                 className="inline-flex w-full items-center justify-center rounded-full border-2 border-secondary px-6 py-3 text-sm font-bold uppercase tracking-[0.18em] text-secondary transition-colors hover:bg-secondary hover:text-primary sm:w-auto sm:px-7"
               >
                 {cta.label}

@@ -15,6 +15,7 @@ export function CtaSection({ headline, ctaLabel, ctaHref }: Props) {
         </h2>
         <Link
           href={ctaHref}
+          prefetch={false}
           className="mt-6 inline-flex items-center rounded-full border-2 border-primary bg-primary px-8 py-3 text-sm font-bold uppercase tracking-wider text-surface transition-colors hover:bg-transparent hover:text-primary"
         >
           {ctaLabel}
