@@ -7,6 +7,8 @@ type HostTarget = {
 };
 
 const HOST_TARGETS: HostTarget[] = [
+  { match: "oslostudenthub.no", basePath: "/hovedside" },
+  { match: "www.", basePath: "/hovedside" },
   { match: "test-hovedside.", basePath: "/hovedside" },
   { match: "eventregister.", basePath: "/event-register" },
   { match: "bedrift.", basePath: "/company" },

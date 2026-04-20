@@ -2,6 +2,9 @@ import { describe, it, expect } from "vitest";
 
 // Subdomain → basePath mapping (mirrors HOST_TARGETS in proxy.ts)
 const HOST_TARGETS = [
+  { match: "oslostudenthub.no", basePath: "/hovedside" },
+  { match: "www.", basePath: "/hovedside" },
+  { match: "test-hovedside.", basePath: "/hovedside" },
   { match: "eventregister.", basePath: "/event-register" },
   { match: "bedrift.", basePath: "/company" },
   { match: "admin.", basePath: "/admin" },
@@ -18,6 +21,12 @@ function resolveBasePath(host: string): string | null {
 }
 
 describe("Subdomain routing (proxy.ts HOST_TARGETS)", () => {
+  it("ruter hoveddomenet til /hovedside", () => {
+    expect(resolveBasePath("oslostudenthub.no")).toBe("/hovedside");
+    expect(resolveBasePath("www.oslostudenthub.no")).toBe("/hovedside");
+    expect(resolveBasePath("test-hovedside.oslostudenthub.no")).toBe("/hovedside");
+  });
+
   it("ruter eventregister til /event-register", () => {
     expect(resolveBasePath("eventregister.oslostudenthub.no")).toBe("/event-register");
   });
@@ -39,7 +48,6 @@ describe("Subdomain routing (proxy.ts HOST_TARGETS)", () => {
   });
 
   it("returnerer null for ukjent subdomene", () => {
-    expect(resolveBasePath("oslostudenthub.no")).toBeNull();
     expect(resolveBasePath("localhost:3000")).toBeNull();
     expect(resolveBasePath("unknown.oslostudenthub.no")).toBeNull();
   });
