@@ -12,6 +12,7 @@ export function ResetClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const code = searchParams.get("code");
+  const errorCode = searchParams.get("error_code");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "error" | "success">("idle");
@@ -22,8 +23,15 @@ export function ResetClient() {
     roleParam === "student" || roleParam === "company"
       ? `/auth/sign-in?role=${roleParam}`
       : "/auth/sign-in";
+  const requestNewResetUrl = `${signInUrl}${signInUrl.includes("?") ? "&" : "?"}mode=reset`;
+  const expiredLink = errorCode === "otp_expired";
+  const expiredLinkMessage = "Passordlenken er utløpt eller allerede brukt. Be om en ny lenke.";
 
   useEffect(() => {
+    if (expiredLink) {
+      return;
+    }
+
     const supabase = createClient();
 
     async function prepareRecoverySession() {
@@ -68,10 +76,15 @@ export function ResetClient() {
     }
 
     void prepareRecoverySession();
-  }, [code]);
+  }, [code, expiredLink]);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (expiredLink) {
+      setStatus("error");
+      setError(expiredLinkMessage);
+      return;
+    }
     if (!sessionReady) {
       setStatus("error");
       setError("Reset-lenken er ikke klar ennå. Prøv igjen om et øyeblikk.");
@@ -133,14 +146,25 @@ export function ResetClient() {
               Bekreft passord
               <Input name="confirm" type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
             </label>
-            <Button type="submit" disabled={status === "loading" || !sessionReady}>
+            <Button type="submit" disabled={status === "loading" || !sessionReady || expiredLink}>
               {status === "loading" ? "Oppdaterer…" : "Oppdater passord"}
             </Button>
           </form>
 
-          {status === "error" && error ? (
+          {expiredLink ? (
             <div className="rounded-xl bg-error/15 px-4 py-3 text-sm font-medium text-error" aria-live="assertive">
-              {error}
+              <p>{expiredLinkMessage}</p>
+              <a
+                href={requestNewResetUrl}
+                className="mt-3 inline-flex items-center justify-center rounded-full border border-error/40 px-4 py-2 text-xs font-semibold text-error hover:bg-error/10"
+              >
+                Be om ny passordlenke
+              </a>
+            </div>
+          ) : null}
+          {status === "error" && error && !expiredLink ? (
+            <div className="rounded-xl bg-error/15 px-4 py-3 text-sm font-medium text-error" aria-live="assertive">
+              <p>{error}</p>
             </div>
           ) : null}
           {status === "success" && error ? (
