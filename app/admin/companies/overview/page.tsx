@@ -4,7 +4,7 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { Select } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { listCompanies } from "@/lib/admin";
+import { listCompaniesWithApprovalOverview } from "@/lib/admin";
 
 type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -12,7 +12,7 @@ type PageProps = {
 
 export default async function AdminCompaniesOverviewPage({ searchParams }: PageProps) {
   const params = await searchParams;
-  const companies = await listCompanies();
+  const companies = await listCompaniesWithApprovalOverview();
 
   const query = typeof params.q === "string" ? params.q.toLowerCase() : "";
   const sort = typeof params.sort === "string" ? params.sort : "name";
@@ -27,6 +27,20 @@ export default async function AdminCompaniesOverviewPage({ searchParams }: PageP
   );
 
   const sortedCompanies = [...filteredCompanies].sort((a, b) => {
+    if (sort === "approved") {
+      const countComparison =
+        dir === "asc"
+          ? a.approvedApplicationCount - b.approvedApplicationCount
+          : b.approvedApplicationCount - a.approvedApplicationCount;
+      if (countComparison !== 0) return countComparison;
+
+      const aDate = a.latestApprovedAt ?? "";
+      const bDate = b.latestApprovedAt ?? "";
+      const dateComparison =
+        dir === "asc" ? aDate.localeCompare(bDate) : bDate.localeCompare(aDate);
+      if (dateComparison !== 0) return dateComparison;
+    }
+
     const aValue = sort === "industry" ? a.industry ?? "" : a.name;
     const bValue = sort === "industry" ? b.industry ?? "" : b.name;
     return dir === "asc" ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
@@ -67,6 +81,7 @@ export default async function AdminCompaniesOverviewPage({ searchParams }: PageP
             <Select name="sort" defaultValue={sort}>
               <option value="name">Navn</option>
               <option value="industry">Bransje</option>
+              <option value="approved">Godkjente søknader</option>
             </Select>
           </label>
           <label className="text-sm font-semibold text-primary">
@@ -90,6 +105,8 @@ export default async function AdminCompaniesOverviewPage({ searchParams }: PageP
               <th className="px-4 py-3">Org.nr</th>
               <th className="px-4 py-3">Bransje</th>
               <th className="px-4 py-3">Lokasjon</th>
+              <th className="px-4 py-3">Godkjente søknader</th>
+              <th className="px-4 py-3">Sist godkjent</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-primary/5">
@@ -103,6 +120,24 @@ export default async function AdminCompaniesOverviewPage({ searchParams }: PageP
                 <td className="px-4 py-3 text-ink/80">{company.org_number ?? "—"}</td>
                 <td className="px-4 py-3 text-ink/80">{company.industry ?? "—"}</td>
                 <td className="px-4 py-3 text-ink/80">{company.location ?? "—"}</td>
+                <td className="px-4 py-3 text-ink/80">
+                  {company.approvedApplicationCount > 0 ? (
+                    <span className="inline-flex rounded-full border border-success/20 bg-success/10 px-2.5 py-1 text-xs font-semibold text-success">
+                      {company.approvedApplicationCount} godkjent
+                    </span>
+                  ) : (
+                    "—"
+                  )}
+                </td>
+                <td className="px-4 py-3 text-ink/80">
+                  {company.latestApprovedAt
+                    ? new Intl.DateTimeFormat("nb-NO", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                      }).format(new Date(company.latestApprovedAt))
+                    : "—"}
+                </td>
               </tr>
             ))}
           </tbody>

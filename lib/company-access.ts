@@ -2,6 +2,7 @@ import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import type { TableRow } from "@/lib/types/database";
 import { normalizeStudyCategories } from "@/lib/company-categories";
 import { normalizeEmailAddress } from "@/lib/auth-registration";
+import { sendTransactionalEmail } from "@/lib/resend";
 
 type Company = TableRow<"companies">;
 
@@ -286,6 +287,14 @@ export async function ensureCompanyAccessRequest(input: EnsureCompanyAccessReque
     };
   }
 
+  const { data: existingRequest, error: existingRequestError } = await supabase
+    .from("company_user_requests")
+    .select("id, email, domain, company_id, org_number")
+    .eq("user_id", input.userId)
+    .maybeSingle();
+
+  if (existingRequestError) throw existingRequestError;
+
   const resolved = await resolveCompanyForRequest({
     email: normalizedEmail,
     orgNumber: normalizedOrgNumber,
@@ -331,6 +340,13 @@ export async function ensureCompanyAccessRequest(input: EnsureCompanyAccessReque
 
   if (requestError) throw requestError;
 
+  const shouldNotifyAdmin =
+    !existingRequest ||
+    existingRequest.email !== normalizedEmail ||
+    existingRequest.domain !== domain ||
+    existingRequest.company_id !== company.id ||
+    (existingRequest.org_number ?? "") !== (normalizedOrgNumber || company.org_number || "");
+
   await supabase
     .from("company_portal_invites")
     .update({
@@ -339,6 +355,31 @@ export async function ensureCompanyAccessRequest(input: EnsureCompanyAccessReque
     })
     .eq("email", normalizedEmail)
     .in("status", ["pending", "invited"]);
+
+  if (shouldNotifyAdmin) {
+    const companyAdminUrl = `https://admin.oslostudenthub.no/admin/companies/${company.id}`;
+
+    await sendTransactionalEmail({
+      to: "stian@oslostudenthub.no",
+      subject: `Ny forespørsel om bedriftsprofiltilgang: ${company.name}`,
+      type: "company_access_request_admin_notification",
+      html: `<p>Hei,</p>
+<p><strong>${normalizedEmail}</strong> har bedt om tilgang til bedriftsprofilen for <strong>${company.name}</strong>.</p>
+<p><strong>Firmanavn:</strong> ${company.name}<br />
+<strong>Org.nr:</strong> ${normalizeOrgNumber(company.org_number) || "—"}<br />
+<strong>Domene:</strong> ${domain || "—"}</p>
+<p>Åpne bedriften i admin her:</p>
+<p><a href="${companyAdminUrl}">${companyAdminUrl}</a></p>`,
+      payload: {
+        companyId: company.id,
+        companyName: company.name,
+        requestedBy: normalizedEmail,
+        domain,
+        orgNumber: normalizeOrgNumber(company.org_number) || null,
+      },
+      supabase,
+    });
+  }
 
   return {
     company,

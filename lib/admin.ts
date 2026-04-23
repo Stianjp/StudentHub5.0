@@ -128,6 +128,82 @@ export async function listCompanies() {
   return (data ?? []) as Company[];
 }
 
+export type CompanyWithApprovalOverview = Company & {
+  approvedApplicationCount: number;
+  latestApprovedAt: string | null;
+};
+
+export async function listCompaniesWithApprovalOverview(): Promise<CompanyWithApprovalOverview[]> {
+  const supabase = createAdminSupabaseClient();
+  const [{ data: companies, error: companiesError }, { data: approvedApplications, error: applicationsError }] =
+    await Promise.all([
+      supabase.from("companies").select("*").order("name"),
+      supabase
+        .from("event_registration_applications")
+        .select("company_id, org_number, approved_at")
+        .eq("status", "approved")
+        .not("approved_at", "is", null),
+    ]);
+
+  if (companiesError) throw companiesError;
+  if (applicationsError) throw applicationsError;
+
+  const approvedByCompanyId = new Map<string, { count: number; latestApprovedAt: string | null }>();
+  const approvedByOrgNumber = new Map<string, { count: number; latestApprovedAt: string | null }>();
+
+  for (const application of (approvedApplications ?? []) as Pick<
+    RegistrationApplication,
+    "company_id" | "org_number" | "approved_at"
+  >[]) {
+    const approvedAt = application.approved_at ?? null;
+
+    if (application.company_id) {
+      const current = approvedByCompanyId.get(application.company_id) ?? {
+        count: 0,
+        latestApprovedAt: null,
+      };
+      approvedByCompanyId.set(application.company_id, {
+        count: current.count + 1,
+        latestApprovedAt:
+          !current.latestApprovedAt || (approvedAt && approvedAt > current.latestApprovedAt)
+            ? approvedAt
+            : current.latestApprovedAt,
+      });
+    }
+
+    const normalizedOrgNumber = normalizeOrgNumber(application.org_number);
+    if (normalizedOrgNumber) {
+      const current = approvedByOrgNumber.get(normalizedOrgNumber) ?? {
+        count: 0,
+        latestApprovedAt: null,
+      };
+      approvedByOrgNumber.set(normalizedOrgNumber, {
+        count: current.count + 1,
+        latestApprovedAt:
+          !current.latestApprovedAt || (approvedAt && approvedAt > current.latestApprovedAt)
+            ? approvedAt
+            : current.latestApprovedAt,
+      });
+    }
+  }
+
+  return ((companies ?? []) as Company[]).map((company) => {
+    const byCompanyId = approvedByCompanyId.get(company.id);
+    const byOrgNumber = approvedByOrgNumber.get(normalizeOrgNumber(company.org_number));
+    const approvedApplicationCount = Math.max(byCompanyId?.count ?? 0, byOrgNumber?.count ?? 0);
+    const latestApprovedAt =
+      [byCompanyId?.latestApprovedAt, byOrgNumber?.latestApprovedAt]
+        .filter((value): value is string => Boolean(value))
+        .sort((left, right) => right.localeCompare(left))[0] ?? null;
+
+    return {
+      ...company,
+      approvedApplicationCount,
+      latestApprovedAt,
+    };
+  });
+}
+
 export async function createCompany(input: {
   name: string;
   orgNumber?: string | null;
