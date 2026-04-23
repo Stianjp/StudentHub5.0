@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { validatePasswordStrength } from "@/lib/auth-registration";
 import { createClient } from "@/lib/supabase/client";
 
 export function ResetClient() {
@@ -30,6 +31,17 @@ export function ResetClient() {
   const expiredLink = errorCode === "otp_expired";
   const expiredLinkMessage = "Passordlenken er utløpt eller allerede brukt. Be om en ny lenke.";
   const hasTokenHashRecovery = Boolean(tokenHash && recoveryType === "recovery");
+
+  function formatPasswordUpdateError(message: string) {
+    const normalized = message.trim();
+    if (!normalized) {
+      return "Kunne ikke oppdatere passord. Prøv å åpne lenken på nytt.";
+    }
+    if (/same password/i.test(normalized)) {
+      return "Nytt passord må være forskjellig fra det gamle.";
+    }
+    return normalized;
+  }
 
   useEffect(() => {
     if (expiredLink) {
@@ -126,14 +138,10 @@ export function ResetClient() {
     setStatus("loading");
     setError(null);
 
-    if (password.length < 8) {
+    const passwordError = validatePasswordStrength(password, confirm);
+    if (passwordError) {
       setStatus("error");
-      setError("Passord må være minst 8 tegn.");
-      return;
-    }
-    if (password !== confirm) {
-      setStatus("error");
-      setError("Passordene matcher ikke.");
+      setError(passwordError);
       return;
     }
 
@@ -141,7 +149,7 @@ export function ResetClient() {
     const { error: updateError } = await supabase.auth.updateUser({ password });
     if (updateError) {
       setStatus("error");
-      setError("Kunne ikke oppdatere passord. Prøv å åpne lenken på nytt.");
+      setError(formatPasswordUpdateError(updateError.message));
       return;
     }
 
