@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { Card } from "@/components/ui/card";
@@ -11,18 +11,72 @@ import { createClient } from "@/lib/supabase/client";
 export function ResetClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const code = searchParams.get("code");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "error" | "success">("idle");
   const [error, setError] = useState<string | null>(null);
+  const [sessionReady, setSessionReady] = useState(false);
   const roleParam = searchParams.get("role");
   const signInUrl =
     roleParam === "student" || roleParam === "company"
       ? `/auth/sign-in?role=${roleParam}`
       : "/auth/sign-in";
 
+  useEffect(() => {
+    const supabase = createClient();
+
+    async function prepareRecoverySession() {
+      const hash = typeof window !== "undefined" ? window.location.hash : "";
+      const hashParams = new URLSearchParams(hash.replace(/^#/, ""));
+      const accessToken = hashParams.get("access_token");
+      const refreshToken = hashParams.get("refresh_token");
+
+      if (accessToken && refreshToken) {
+        const { error: sessionError } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+        if (sessionError) {
+          setStatus("error");
+          setError("Reset-lenken er ugyldig eller utløpt. Be om en ny lenke.");
+          return;
+        }
+        setSessionReady(true);
+        return;
+      }
+
+      if (code) {
+        const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+        if (exchangeError) {
+          setStatus("error");
+          setError("Reset-lenken er ugyldig eller utløpt. Be om en ny lenke.");
+          return;
+        }
+        setSessionReady(true);
+        return;
+      }
+
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        setSessionReady(true);
+        return;
+      }
+
+      setStatus("error");
+      setError("Mangler gyldig reset-lenke. Be om en ny lenke.");
+    }
+
+    void prepareRecoverySession();
+  }, [code]);
+
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!sessionReady) {
+      setStatus("error");
+      setError("Reset-lenken er ikke klar ennå. Prøv igjen om et øyeblikk.");
+      return;
+    }
     setStatus("loading");
     setError(null);
 
@@ -73,23 +127,13 @@ export function ResetClient() {
           <form className="flex flex-col gap-4" onSubmit={onSubmit}>
             <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
               Nytt passord
-              <Input
-                name="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
+              <Input name="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
             </label>
             <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
               Bekreft passord
-              <Input
-                name="confirm"
-                type="password"
-                value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
-              />
+              <Input name="confirm" type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
             </label>
-            <Button type="submit" disabled={status === "loading"}>
+            <Button type="submit" disabled={status === "loading" || !sessionReady}>
               {status === "loading" ? "Oppdaterer…" : "Oppdater passord"}
             </Button>
           </form>
