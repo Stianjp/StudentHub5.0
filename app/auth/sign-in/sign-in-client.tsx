@@ -161,7 +161,7 @@ export function SignInClient({
 
     if (mode === "reset") {
       const { error: resetError } = await supabase.auth.resetPasswordForEmail(emailValue, {
-        redirectTo: `${window.location.origin}/auth/reset`,
+        redirectTo: `${window.location.origin}/auth/reset?role=${roleValue}`,
       });
       if (resetError) {
         setStatus("error");

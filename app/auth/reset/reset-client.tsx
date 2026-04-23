@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,10 +10,16 @@ import { createClient } from "@/lib/supabase/client";
 
 export function ResetClient() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "error" | "success">("idle");
   const [error, setError] = useState<string | null>(null);
+  const roleParam = searchParams.get("role");
+  const signInUrl =
+    roleParam === "student" || roleParam === "company"
+      ? `/auth/sign-in?role=${roleParam}`
+      : "/auth/sign-in";
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -41,7 +47,7 @@ export function ResetClient() {
 
     setStatus("success");
     setError("Passord oppdatert. Logg inn på nytt.");
-    router.push("/auth/sign-in");
+    router.push(signInUrl);
   }
 
   return (
