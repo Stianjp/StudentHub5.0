@@ -13,11 +13,14 @@ export function ResetClient() {
   const searchParams = useSearchParams();
   const code = searchParams.get("code");
   const errorCode = searchParams.get("error_code");
+  const tokenHash = searchParams.get("token_hash");
+  const recoveryType = searchParams.get("type");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [status, setStatus] = useState<"idle" | "loading" | "error" | "success">("idle");
   const [error, setError] = useState<string | null>(null);
   const [sessionReady, setSessionReady] = useState(false);
+  const [verifyingRecovery, setVerifyingRecovery] = useState(false);
   const roleParam = searchParams.get("role");
   const signInUrl =
     roleParam === "student" || roleParam === "company"
@@ -26,9 +29,14 @@ export function ResetClient() {
   const requestNewResetUrl = `${signInUrl}${signInUrl.includes("?") ? "&" : "?"}mode=reset`;
   const expiredLink = errorCode === "otp_expired";
   const expiredLinkMessage = "Passordlenken er utløpt eller allerede brukt. Be om en ny lenke.";
+  const hasTokenHashRecovery = Boolean(tokenHash && recoveryType === "recovery");
 
   useEffect(() => {
     if (expiredLink) {
+      return;
+    }
+
+    if (hasTokenHashRecovery) {
       return;
     }
 
@@ -76,7 +84,32 @@ export function ResetClient() {
     }
 
     void prepareRecoverySession();
-  }, [code, expiredLink]);
+  }, [code, expiredLink, hasTokenHashRecovery]);
+
+  async function activateRecoverySession() {
+    if (!tokenHash || recoveryType !== "recovery") return;
+
+    setVerifyingRecovery(true);
+    setStatus("loading");
+    setError(null);
+
+    const supabase = createClient();
+    const { error: verifyError } = await supabase.auth.verifyOtp({
+      token_hash: tokenHash,
+      type: "recovery",
+    });
+
+    if (verifyError) {
+      setStatus("error");
+      setError("Passordlenken er ugyldig, utløpt eller allerede brukt. Be om en ny lenke.");
+      setVerifyingRecovery(false);
+      return;
+    }
+
+    setSessionReady(true);
+    setStatus("idle");
+    setVerifyingRecovery(false);
+  }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -137,6 +170,20 @@ export function ResetClient() {
             <p className="text-sm text-surface/85">Velg et sterkt passord (minst 8 tegn).</p>
           </div>
 
+          {hasTokenHashRecovery && !sessionReady && !expiredLink ? (
+            <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-4 text-sm text-surface/85">
+              <p>Denne lenken må bekreftes før du kan sette nytt passord.</p>
+              <Button
+                type="button"
+                className="mt-4"
+                onClick={() => void activateRecoverySession()}
+                disabled={verifyingRecovery}
+              >
+                {verifyingRecovery ? "Klargjør lenke…" : "Fortsett til passordbytte"}
+              </Button>
+            </div>
+          ) : null}
+
           <form className="flex flex-col gap-4" onSubmit={onSubmit}>
             <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
               Nytt passord
@@ -146,7 +193,10 @@ export function ResetClient() {
               Bekreft passord
               <Input name="confirm" type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
             </label>
-            <Button type="submit" disabled={status === "loading" || !sessionReady || expiredLink}>
+            <Button
+              type="submit"
+              disabled={status === "loading" || !sessionReady || expiredLink || (hasTokenHashRecovery && !sessionReady)}
+            >
               {status === "loading" ? "Oppdaterer…" : "Oppdater passord"}
             </Button>
           </form>

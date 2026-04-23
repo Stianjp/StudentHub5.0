@@ -83,13 +83,12 @@ export function SignInClient({
   const [confirmPasswordInput, setConfirmPasswordInput] = useState("");
   const [studentStudyLevel, setStudentStudyLevel] = useState<StudyLevel | "">("");
   const [studentStudyYear, setStudentStudyYear] = useState("");
-  const [isSessionResetting, setIsSessionResetting] = useState(true);
+  const [isSessionResetting] = useState(false);
   const errorId = "auth-error";
   const passwordHelpId = "password-help";
 
   useEffect(() => {
     clearBrowserAuthState();
-    setIsSessionResetting(false);
   }, []);
 
   useEffect(() => {
@@ -160,12 +159,19 @@ export function SignInClient({
       typeof next === "string" ? next : getDefaultNextPath(roleValue, window.location.hostname);
 
     if (mode === "reset") {
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(emailValue, {
-        redirectTo: `${window.location.origin}/auth/reset?role=${roleValue}`,
+      const response = await fetch("/api/auth/reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: emailValue,
+          role: roleValue,
+        }),
       });
-      if (resetError) {
+
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
         setStatus("error");
-        setError("Kunne ikke sende e-post. Sjekk adressen og prøv igjen.");
+        setError(payload?.error ?? "Kunne ikke sende e-post. Sjekk adressen og prøv igjen.");
         return;
       }
       setStatus("sent");
