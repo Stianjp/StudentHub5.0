@@ -18,6 +18,41 @@ const REGISTRATION_LOGO_BUCKET = "event-registration-assets";
 
 type EventRegistration = EventCompany & { event: Event };
 
+async function signStoredLogoPath(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
+  path: string | null | undefined,
+) {
+  if (!path) return null;
+
+  const { data, error } = await supabase.storage
+    .from(REGISTRATION_LOGO_BUCKET)
+    .createSignedUrl(path, 60 * 60);
+
+  if (error || !data?.signedUrl) return null;
+  return data.signedUrl;
+}
+
+async function findLatestCompanyProfileLogoPath(
+  supabase: Awaited<ReturnType<typeof createServerSupabaseClient>>,
+  orgNumber: string | null | undefined,
+) {
+  const normalizedOrgNumber = orgNumber?.replace(/\s+/g, "") || null;
+  if (!normalizedOrgNumber) return null;
+
+  const { data, error } = await supabase.storage
+    .from(REGISTRATION_LOGO_BUCKET)
+    .list(`company-profiles/${normalizedOrgNumber}`, {
+      limit: 100,
+      sortBy: { column: "updated_at", order: "desc" },
+    });
+
+  if (error) return null;
+
+  const latestFile = (data ?? []).find((entry) => Boolean(entry.name));
+  if (!latestFile?.name) return null;
+  return `company-profiles/${normalizedOrgNumber}/${latestFile.name}`;
+}
+
 const COMPANY_ATTENDEE_TICKET_LIMITS: Record<string, number> = {
   standard: 2,
   silver: 3,
@@ -193,19 +228,23 @@ export async function getLatestCompanyRegistrationLogo(companyId: string) {
 
   const { data: company, error: companyError } = await supabase
     .from("companies")
-    .select("logo_path")
+    .select("logo_path, org_number")
     .eq("id", companyId)
     .maybeSingle();
 
   if (companyError) throw companyError;
   if (company?.logo_path) {
-    const { data: signed } = await supabase.storage
-      .from(REGISTRATION_LOGO_BUCKET)
-      .createSignedUrl(company.logo_path, 60 * 60);
-    return {
-      logoUrl: signed?.signedUrl ?? null,
-      eventName: null,
-    };
+    let logoUrl = await signStoredLogoPath(supabase, company.logo_path);
+    if (!logoUrl) {
+      const fallbackPath = await findLatestCompanyProfileLogoPath(supabase, company.org_number);
+      logoUrl = await signStoredLogoPath(supabase, fallbackPath);
+    }
+    if (logoUrl) {
+      return {
+        logoUrl,
+        eventName: null,
+      };
+    }
   }
 
   const { data: application, error } = await supabase
@@ -220,13 +259,13 @@ export async function getLatestCompanyRegistrationLogo(companyId: string) {
   if (error) throw error;
   if (!application?.logo_path) return null;
 
-  const [{ data: signed }, { data: event }] = await Promise.all([
-    supabase.storage.from(REGISTRATION_LOGO_BUCKET).createSignedUrl(application.logo_path, 60 * 60),
+  const [logoUrl, { data: event }] = await Promise.all([
+    signStoredLogoPath(supabase, application.logo_path),
     supabase.from("events").select("name").eq("id", application.event_id).maybeSingle(),
   ]);
 
   return {
-    logoUrl: signed?.signedUrl ?? null,
+    logoUrl,
     eventName: event?.name ?? null,
   };
 }
@@ -244,25 +283,28 @@ export async function getLatestCompanyRegistrationLogos(companyIds: string[]) {
 
   const { data: companies, error: companyError } = await supabase
     .from("companies")
-    .select("id, logo_path")
+    .select("id, org_number, logo_path")
     .in("id", uniqueCompanyIds);
 
   if (companyError) throw companyError;
-  const typedCompanies = (companies ?? []) as Array<Pick<Company, "id" | "logo_path">>;
-
-  const directLogoPaths = new Map(
-    typedCompanies
-      .filter((company) => company.id && company.logo_path)
-      .map((company) => [company.id as string, company.logo_path as string]),
-  );
+  const typedCompanies = (companies ?? []) as Array<
+    Pick<Company, "id" | "org_number" | "logo_path">
+  >;
 
   const signedDirectEntries = await Promise.all(
-    Array.from(directLogoPaths.entries()).map(async ([companyId, logoPath]) => {
-      const { data: signed } = await supabase.storage
-        .from(REGISTRATION_LOGO_BUCKET)
-        .createSignedUrl(logoPath, 60 * 60);
-      return [companyId, signed?.signedUrl ?? null] as const;
-    }),
+    typedCompanies
+      .filter((company) => Boolean(company.id))
+      .map(async (company) => {
+        let logoUrl = await signStoredLogoPath(supabase, company.logo_path);
+        if (!logoUrl) {
+          const fallbackPath = await findLatestCompanyProfileLogoPath(
+            supabase,
+            company.org_number,
+          );
+          logoUrl = await signStoredLogoPath(supabase, fallbackPath);
+        }
+        return [company.id as string, logoUrl] as const;
+      }),
   );
 
   const signedLogoMap = new Map<string, string | null>(signedDirectEntries);
@@ -351,10 +393,14 @@ export async function getLatestCompanyRegistrationLogosByIdentifiers(
       companyLogoCandidates.map(async (company) => {
         let logoUrl = company.id ? byCompanyId[company.id] ?? null : null;
         if (!logoUrl && company.logo_path) {
-          const { data: signed } = await supabase.storage
-            .from(REGISTRATION_LOGO_BUCKET)
-            .createSignedUrl(company.logo_path, 60 * 60);
-          logoUrl = signed?.signedUrl ?? null;
+          logoUrl = await signStoredLogoPath(supabase, company.logo_path);
+        }
+        if (!logoUrl) {
+          const fallbackPath = await findLatestCompanyProfileLogoPath(
+            supabase,
+            company.org_number,
+          );
+          logoUrl = await signStoredLogoPath(supabase, fallbackPath);
         }
         return [company.org_number as string, logoUrl] as const;
       }),
@@ -388,10 +434,8 @@ export async function getLatestCompanyRegistrationLogosByIdentifiers(
 
     const signedEntries = await Promise.all(
       Array.from(latestByOrgNumber.entries()).map(async ([orgNumber, logoPath]) => {
-        const { data: signed } = await supabase.storage
-          .from(REGISTRATION_LOGO_BUCKET)
-          .createSignedUrl(logoPath, 60 * 60);
-        return [orgNumber, signed?.signedUrl ?? null] as const;
+        const logoUrl = await signStoredLogoPath(supabase, logoPath);
+        return [orgNumber, logoUrl] as const;
       }),
     );
 

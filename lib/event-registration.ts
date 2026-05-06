@@ -548,7 +548,7 @@ async function ensureCompanyFromApplication(input: {
         city: input.application.city,
         country: input.application.country,
         location: `${input.application.city}, ${input.application.country}`,
-        logo_path: input.application.logo_path ?? existingCompany.data.logo_path ?? null,
+        logo_path: existingCompany.data.logo_path ?? input.application.logo_path ?? null,
         recruitment_fields:
           input.application.candidate_fields.length > 0
             ? input.application.candidate_fields

@@ -201,7 +201,7 @@ async function syncExistingCompanyFromRegistration(company: Company, input: Ensu
   if (input.postalCode?.trim()) update.postal_code = input.postalCode.trim();
   if (input.city?.trim()) update.city = input.city.trim();
   if (input.country?.trim()) update.country = input.country.trim();
-  if (input.logoPath?.trim()) update.logo_path = input.logoPath.trim();
+  if (input.logoPath?.trim() && !company.logo_path) update.logo_path = input.logoPath.trim();
 
   const recruitmentFields = normalizeStudyCategories(input.recruitmentFields ?? []);
   if (recruitmentFields.length > 0) {
