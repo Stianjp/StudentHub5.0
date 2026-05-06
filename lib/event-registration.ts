@@ -20,7 +20,6 @@ import {
 } from "@/lib/crm-supabase";
 import { syncDynamicEmailGroups } from "@/lib/email-groups";
 import { applyPublicRegistrationStandOverrides } from "@/lib/event-registration-stand-overrides";
-import { getLatestCompanyRegistrationLogos } from "@/lib/company";
 
 type RegistrationCampaign = TableRow<"event_registration_campaigns">;
 type RegistrationPackage = TableRow<"event_registration_packages">;
@@ -152,7 +151,7 @@ async function attachStandBookingPreviews(slug: string, stands: RegistrationStan
   const supabase = createAdminSupabaseClient();
   const { data: applications, error } = await supabase
     .from("event_registration_applications")
-    .select("id, company_id, company_name, candidate_level, candidate_fields, candidate_fields_other, logo_path")
+    .select("id, company_id, company_name, org_number, candidate_level, candidate_fields, candidate_fields_other, logo_path")
     .in("id", assignedApplicationIds);
 
   if (error) throw error;
@@ -163,6 +162,7 @@ async function attachStandBookingPreviews(slug: string, stands: RegistrationStan
       | "id"
       | "company_id"
       | "company_name"
+      | "org_number"
       | "candidate_level"
       | "candidate_fields"
       | "candidate_fields_other"
@@ -170,17 +170,25 @@ async function attachStandBookingPreviews(slug: string, stands: RegistrationStan
     >
   >;
 
-  const companyLogoMap = await getLatestCompanyRegistrationLogos(
-    typedApplications
-      .map((application) => application.company_id ?? "")
-      .filter(Boolean),
+  const { getLatestCompanyRegistrationLogosByIdentifiers } = await import("@/lib/company");
+  const companyLogoMap = await getLatestCompanyRegistrationLogosByIdentifiers(
+    typedApplications.map((application) => ({
+      companyId: application.company_id,
+      orgNumber: application.org_number,
+    })),
   );
   const logoUrlMap = new Map<string, string | null>();
   await Promise.all(
     typedApplications.map(async (application) => {
-      const companyLogoUrl = application.company_id
-        ? companyLogoMap[application.company_id] ?? null
-        : null;
+      const companyLogoUrl =
+        (application.company_id
+          ? companyLogoMap.byCompanyId[application.company_id] ?? null
+          : null) ??
+        (application.org_number
+          ? companyLogoMap.byOrgNumber[
+              application.org_number.replace(/\s+/g, "")
+            ] ?? null
+          : null);
       if (companyLogoUrl) {
         logoUrlMap.set(application.id, companyLogoUrl);
         return;

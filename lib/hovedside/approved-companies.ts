@@ -1,5 +1,5 @@
 import { unstable_cache } from "next/cache";
-import { getLatestCompanyRegistrationLogos } from "@/lib/company";
+import { getLatestCompanyRegistrationLogosByIdentifiers } from "@/lib/company";
 import type { Database } from "@/lib/types/database";
 
 type RegistrationApplication =
@@ -97,6 +97,7 @@ async function fetchApprovedCompanies(
     | "id"
     | "company_id"
     | "company_name"
+    | "org_number"
     | "logo_path"
     | "candidate_level"
     | "candidate_fields"
@@ -110,7 +111,7 @@ async function fetchApprovedCompanies(
   const { data: applications } = await supabase
     .from("event_registration_applications")
     .select(
-      "id, company_id, company_name, logo_path, candidate_level, candidate_fields, candidate_fields_other, approved_package_id, requested_package_id, approved_stand_id, requested_stand_id",
+      "id, company_id, company_name, org_number, logo_path, candidate_level, candidate_fields, candidate_fields_other, approved_package_id, requested_package_id, approved_stand_id, requested_stand_id",
     )
     .eq("campaign_id", campaign.id)
     .eq("status", "approved")
@@ -175,15 +176,20 @@ async function fetchApprovedCompanies(
       >[]
     ).map((stand) => [stand.id, stand]),
   );
-  const companyLogoMap = await getLatestCompanyRegistrationLogos(
-    typedApplications
-      .map((app) => app.company_id ?? "")
-      .filter(Boolean),
+  const companyLogoMap = await getLatestCompanyRegistrationLogosByIdentifiers(
+    typedApplications.map((app) => ({
+      companyId: app.company_id,
+      orgNumber: app.org_number,
+    })),
   );
 
   const previews: ApprovedCompanyPreview[] = await Promise.all(
     typedApplications.map(async (app) => {
-      let logoUrl = app.company_id ? companyLogoMap[app.company_id] ?? null : null;
+      let logoUrl =
+        (app.company_id ? companyLogoMap.byCompanyId[app.company_id] ?? null : null) ??
+        (app.org_number
+          ? companyLogoMap.byOrgNumber[app.org_number.replace(/\s+/g, "")] ?? null
+          : null);
       if (!logoUrl && app.logo_path) {
         const { data } = await supabase.storage
           .from(LOGO_BUCKET)

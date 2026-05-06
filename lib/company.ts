@@ -302,6 +302,107 @@ export async function getLatestCompanyRegistrationLogos(companyIds: string[]) {
   return Object.fromEntries(signedLogoMap.entries()) as Record<string, string | null>;
 }
 
+type CompanyLogoLookupInput = {
+  companyId?: string | null;
+  orgNumber?: string | null;
+};
+
+export async function getLatestCompanyRegistrationLogosByIdentifiers(
+  inputs: CompanyLogoLookupInput[],
+) {
+  const normalizedInputs = inputs.map((input) => ({
+    companyId: input.companyId?.trim() || null,
+    orgNumber: input.orgNumber?.replace(/\s+/g, "") || null,
+  }));
+  const uniqueCompanyIds = Array.from(
+    new Set(normalizedInputs.map((input) => input.companyId).filter(Boolean)),
+  ) as string[];
+  const uniqueOrgNumbers = Array.from(
+    new Set(normalizedInputs.map((input) => input.orgNumber).filter(Boolean)),
+  ) as string[];
+
+  const byCompanyId = uniqueCompanyIds.length
+    ? await getLatestCompanyRegistrationLogos(uniqueCompanyIds)
+    : ({} as Record<string, string | null>);
+
+  let supabase;
+  try {
+    supabase = createAdminSupabaseClient() as Awaited<
+      ReturnType<typeof createServerSupabaseClient>
+    >;
+  } catch {
+    supabase = await createServerSupabaseClient();
+  }
+
+  const byOrgNumber: Record<string, string | null> = {};
+  if (uniqueOrgNumbers.length > 0) {
+    const { data: companiesByOrg, error: companiesByOrgError } = await supabase
+      .from("companies")
+      .select("id, org_number, logo_path")
+      .in("org_number", uniqueOrgNumbers);
+
+    if (companiesByOrgError) throw companiesByOrgError;
+
+    const companyLogoCandidates = ((companiesByOrg ?? []) as Array<
+      Pick<Company, "id" | "org_number" | "logo_path">
+    >).filter((company) => company.id && company.org_number);
+
+    const signedEntries = await Promise.all(
+      companyLogoCandidates.map(async (company) => {
+        let logoUrl = company.id ? byCompanyId[company.id] ?? null : null;
+        if (!logoUrl && company.logo_path) {
+          const { data: signed } = await supabase.storage
+            .from(REGISTRATION_LOGO_BUCKET)
+            .createSignedUrl(company.logo_path, 60 * 60);
+          logoUrl = signed?.signedUrl ?? null;
+        }
+        return [company.org_number as string, logoUrl] as const;
+      }),
+    );
+
+    signedEntries.forEach(([orgNumber, logoUrl]) => {
+      byOrgNumber[orgNumber] = logoUrl;
+    });
+  }
+
+  const unresolvedOrgNumbers = uniqueOrgNumbers.filter(
+    (orgNumber) => !(orgNumber in byOrgNumber),
+  );
+
+  if (unresolvedOrgNumbers.length > 0) {
+    const { data: applicationsByOrg, error: applicationsByOrgError } = await supabase
+      .from("event_registration_applications")
+      .select("org_number, logo_path, created_at")
+      .in("org_number", unresolvedOrgNumbers)
+      .not("logo_path", "is", null)
+      .order("created_at", { ascending: false });
+
+    if (applicationsByOrgError) throw applicationsByOrgError;
+
+    const latestByOrgNumber = new Map<string, string>();
+    for (const application of applicationsByOrg ?? []) {
+      const orgNumber = application.org_number?.replace(/\s+/g, "") || null;
+      if (!orgNumber || !application.logo_path || latestByOrgNumber.has(orgNumber)) continue;
+      latestByOrgNumber.set(orgNumber, application.logo_path);
+    }
+
+    const signedEntries = await Promise.all(
+      Array.from(latestByOrgNumber.entries()).map(async ([orgNumber, logoPath]) => {
+        const { data: signed } = await supabase.storage
+          .from(REGISTRATION_LOGO_BUCKET)
+          .createSignedUrl(logoPath, 60 * 60);
+        return [orgNumber, signed?.signedUrl ?? null] as const;
+      }),
+    );
+
+    signedEntries.forEach(([orgNumber, logoUrl]) => {
+      byOrgNumber[orgNumber] = logoUrl;
+    });
+  }
+
+  return { byCompanyId, byOrgNumber };
+}
+
 export async function getCompanyAttendeeCountByEvent(companyId: string) {
   let supabase = await createServerSupabaseClient();
   try {

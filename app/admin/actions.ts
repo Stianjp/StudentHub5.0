@@ -397,6 +397,10 @@ export async function uploadCompanyLogoAction(formData: FormData) {
     revalidatePath("/student/consents");
     revalidatePath("/student/events");
     revalidatePath("/student/dashboard");
+    revalidatePath("/hovedside");
+    revalidatePath("/hovedside/studentconnect2026");
+    revalidatePath("/event-register");
+    revalidatePath("/event/events");
     redirect(`/admin/companies/${companyId}?saved=1`);
   } catch (error) {
     if (isNextRedirectError(error)) throw error;
