@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Image from "next/image";
 import type { PublicRegistrationStand } from "@/lib/event-registration";
 import type { ApprovedCompanyPackageTier } from "@/lib/hovedside/approved-companies";
+import { shouldUseDirectImageUrl } from "@/lib/logo-url";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -123,7 +124,7 @@ export function StandShowcase({
       <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.3em] text-secondary/80">
-            Bookede stands
+            Booked stands
           </p>
           <h3 className="mt-1 text-2xl font-bold text-surface">
             Floor plan for Student Connect 2026
@@ -212,6 +213,9 @@ export function StandShowcase({
                         alt={`Logo for ${stand.bookingPreview.companyName}`}
                         fill
                         className="object-contain p-1"
+                        unoptimized={shouldUseDirectImageUrl(
+                          stand.bookingPreview.logoUrl,
+                        )}
                       />
                     ) : (
                       <span className="text-[7px] font-bold uppercase tracking-tight text-primary md:text-[8px]">
@@ -266,6 +270,9 @@ export function StandShowcase({
                       fill
                       sizes="40px"
                       className="object-contain p-0.5"
+                      unoptimized={shouldUseDirectImageUrl(
+                        stand.bookingPreview.logoUrl,
+                      )}
                     />
                   ) : (
                   <span className="px-1 text-[10px] font-bold uppercase tracking-tight text-primary">
@@ -317,6 +324,9 @@ export function StandShowcase({
                   fill
                   sizes="64px"
                   className="object-contain p-2"
+                  unoptimized={shouldUseDirectImageUrl(
+                    activeStand.bookingPreview.logoUrl,
+                  )}
                 />
               ) : (
                 <span className="px-2 text-center text-[11px] font-bold uppercase tracking-tight text-primary">

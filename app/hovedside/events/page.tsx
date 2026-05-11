@@ -6,6 +6,7 @@ import { SectionWrapper } from "@/components/hovedside/section-wrapper";
 import {
   formatWebsiteEventDate,
   formatWebsiteEventMonth,
+  getWebsiteEventDescription,
   listWebsiteEvents,
   resolveWebsiteEventHref,
   splitWebsiteEvents,
@@ -95,7 +96,7 @@ export default async function EventsPage() {
                 {formatWebsiteEventDate(event.starts_at)}
               </p>
               <p className="mt-3 text-sm text-ink/70">
-                {event.description ?? "More information coming soon."}
+                {getWebsiteEventDescription(event)}
               </p>
               <Link
                 href={resolveWebsiteEventHref(event)}

@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
+import { shouldUseDirectImageUrl } from "@/lib/logo-url";
 import type { TableRow } from "@/lib/types/database";
 import { cn } from "@/lib/utils";
 
@@ -144,7 +145,7 @@ export function StandMap({
               }}
               aria-label={
                 isBooked && stand.bookingPreview
-                  ? `Booket stand ${stand.display_label ?? stand.stand_code} av ${stand.bookingPreview.companyName}`
+                  ? `Booked stand ${stand.display_label ?? stand.stand_code} by ${stand.bookingPreview.companyName}`
                   : stand.display_label ?? stand.stand_code
               }
               aria-pressed={isSelected}
@@ -189,6 +190,9 @@ export function StandMap({
                       fill
                       sizes="64px"
                       className="object-contain p-1"
+                      unoptimized={shouldUseDirectImageUrl(
+                        stand.bookingPreview.logoUrl,
+                      )}
                     />
                   ) : (
                     <span className="block truncate text-[7px] font-bold uppercase tracking-tight text-primary md:text-[8px]">
@@ -214,6 +218,9 @@ export function StandMap({
                   width={80}
                   height={80}
                   className="h-full w-full object-contain p-2"
+                  unoptimized={shouldUseDirectImageUrl(
+                    activeBookedStand.bookingPreview.logoUrl,
+                  )}
                 />
               ) : (
                 <span className="px-3 text-center text-xs font-bold uppercase tracking-wider text-primary/55">
@@ -223,7 +230,7 @@ export function StandMap({
             </div>
             <div className="grid gap-1">
               <p className="text-xs font-bold uppercase tracking-widest text-[#6d28d9]">
-                Booket stand
+                Booked stand
               </p>
               <h3 className="text-lg font-bold text-primary">
                 {activeBookedStand.bookingPreview.companyName}
@@ -233,13 +240,13 @@ export function StandMap({
               </p>
               {activeBookedStand.bookingPreview.candidateSummary ? (
                 <p className="text-sm text-ink/80">
-                  <span className="font-semibold text-primary">Interessert i:</span>{" "}
+                  <span className="font-semibold text-primary">Interested in:</span>{" "}
                   {activeBookedStand.bookingPreview.candidateSummary}
                 </p>
               ) : null}
               {activeBookedStand.bookingPreview.candidateLevelLabel ? (
                 <p className="text-sm text-ink/80">
-                  <span className="font-semibold text-primary">Studienivå:</span>{" "}
+                  <span className="font-semibold text-primary">Study level:</span>{" "}
                   {activeBookedStand.bookingPreview.candidateLevelLabel}
                 </p>
               ) : null}

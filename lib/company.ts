@@ -15,6 +15,7 @@ type Consent = TableRow<"consents">;
 type StandVisit = TableRow<"stand_visits">;
 type Lead = TableRow<"leads">;
 const REGISTRATION_LOGO_BUCKET = "event-registration-assets";
+export const PUBLIC_LOGO_URL_TTL_SECONDS = 60 * 60 * 24 * 7;
 
 type EventRegistration = EventCompany & { event: Event };
 
@@ -26,7 +27,7 @@ async function signStoredLogoPath(
 
   const { data, error } = await supabase.storage
     .from(REGISTRATION_LOGO_BUCKET)
-    .createSignedUrl(path, 60 * 60);
+    .createSignedUrl(path, PUBLIC_LOGO_URL_TTL_SECONDS);
 
   if (error || !data?.signedUrl) return null;
   return data.signedUrl;

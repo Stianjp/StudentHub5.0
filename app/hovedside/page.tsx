@@ -16,6 +16,7 @@ import { CompanyGrid } from "@/components/hovedside/company-grid";
 import { getApprovedCompaniesForCampaign } from "@/lib/hovedside/approved-companies";
 import {
   formatWebsiteEventMonth,
+  getWebsiteEventDescription,
   listWebsiteEvents,
   resolveWebsiteEventHref,
   splitWebsiteEvents,
@@ -68,7 +69,7 @@ export default async function HomePage() {
                   {event.name}
                 </h3>
                 <p className="mt-2 text-sm text-mist/60">
-                  {event.description ?? "More information coming soon."}
+                  {getWebsiteEventDescription(event)}
                 </p>
                 <Link
                   href={resolveWebsiteEventHref(event)}

@@ -1,5 +1,8 @@
 import { unstable_cache } from "next/cache";
-import { getLatestCompanyRegistrationLogosByIdentifiers } from "@/lib/company";
+import {
+  PUBLIC_LOGO_URL_TTL_SECONDS,
+  getLatestCompanyRegistrationLogosByIdentifiers,
+} from "@/lib/company";
 import type { Database } from "@/lib/types/database";
 
 type RegistrationApplication =
@@ -193,7 +196,7 @@ async function fetchApprovedCompanies(
       if (!logoUrl && app.logo_path) {
         const { data } = await supabase.storage
           .from(LOGO_BUCKET)
-          .createSignedUrl(app.logo_path, 3600);
+          .createSignedUrl(app.logo_path, PUBLIC_LOGO_URL_TTL_SECONDS);
         logoUrl = data?.signedUrl ?? null;
       }
 

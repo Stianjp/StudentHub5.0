@@ -9,6 +9,7 @@ import {
   matchesOpportunityFilters,
 } from "@/lib/company-opportunities";
 import { OPPORTUNITY_LEVEL_OPTIONS } from "@/lib/company-opportunity-options";
+import { shouldUseDirectImageUrl } from "@/lib/logo-url";
 import type { TableRow } from "@/lib/types/database";
 
 type CompanyOpportunity = TableRow<"company_opportunities"> & {
@@ -180,6 +181,9 @@ export function OpportunityBoard({
                               width={88}
                               height={88}
                               className="h-20 w-20 object-contain"
+                              unoptimized={shouldUseDirectImageUrl(
+                                opportunity.logoUrl,
+                              )}
                             />
                           ) : (
                             <span className="text-sm font-bold text-primary/50">OSH</span>

@@ -1,5 +1,6 @@
 import { randomUUID } from "crypto";
 import { unstable_cache } from "next/cache";
+import { PUBLIC_LOGO_URL_TTL_SECONDS } from "@/lib/company";
 import type { TableRow } from "@/lib/types/database";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { createPublicSupabaseClient } from "@/lib/supabase/public";
@@ -197,7 +198,12 @@ async function attachStandBookingPreviews(slug: string, stands: RegistrationStan
         logoUrlMap.set(application.id, null);
         return;
       }
-      const { data: signed } = await supabase.storage.from(LOGO_BUCKET).createSignedUrl(application.logo_path, 60 * 60);
+      const { data: signed } = await supabase.storage
+        .from(LOGO_BUCKET)
+        .createSignedUrl(
+          application.logo_path,
+          PUBLIC_LOGO_URL_TTL_SECONDS,
+        );
       logoUrlMap.set(application.id, signed?.signedUrl ?? null);
     }),
   );

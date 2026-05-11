@@ -10,6 +10,7 @@ import { StatsBanner } from "@/components/hovedside/stats-banner";
 import { getPartnerLogoItems } from "@/lib/hovedside/partner-logos";
 import {
   formatWebsiteEventMonth,
+  getWebsiteEventDescription,
   listWebsiteEvents,
   resolveWebsiteEventHref,
   splitWebsiteEvents,
@@ -85,7 +86,7 @@ export default async function ForBedrifterPage() {
                   {event.name}
                 </h3>
                 <p className="mt-2 text-sm text-mist/60">
-                  {event.description ?? "More information coming soon."}
+                  {getWebsiteEventDescription(event)}
                 </p>
                 <Link
                   href={resolveWebsiteEventHref(event)}

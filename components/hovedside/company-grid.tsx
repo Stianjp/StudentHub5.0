@@ -7,6 +7,7 @@ import type {
   ApprovedCompanyPackageTier,
   ApprovedCompanyPreview,
 } from "@/lib/hovedside/approved-companies";
+import { shouldUseDirectImageUrl } from "@/lib/logo-url";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -284,6 +285,7 @@ export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
                           fill
                           className="object-contain"
                           sizes="(max-width: 640px) 140px, (max-width: 1024px) 180px, 220px"
+                          unoptimized={shouldUseDirectImageUrl(company.logoUrl)}
                         />
                       </div>
                     ) : (

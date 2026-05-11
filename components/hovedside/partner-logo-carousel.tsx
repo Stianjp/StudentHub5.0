@@ -46,7 +46,7 @@ export function PartnerLogoCarousel({ items }: Props) {
   if (items.length === 0) {
     return (
       <div className="rounded-[28px] border border-white/12 bg-white/8 px-6 py-10 text-center text-sm text-mist/65">
-        Partnerlogoer vises her når filer er lagt i `public/Partner-site/Partner-logos`.
+        Partner logos will appear here when files are added to `public/Partner-site/Partner-logos`.
       </div>
     );
   }

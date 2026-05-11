@@ -17,6 +17,19 @@ export type WebsiteEvent = Pick<
   | "is_active"
 >;
 
+const WEBSITE_EVENT_DESCRIPTION_OVERRIDES: Partial<
+  Record<NonNullable<WebsiteEvent["slug"]>, string>
+> = {
+  "student-connect-2026": "Main event for students and companies.",
+};
+
+const WEBSITE_EVENT_DESCRIPTION_TRANSLATIONS: Record<string, string> = {
+  "Hovedarrangement for studenter og bedrifter.":
+    "Main event for students and companies.",
+  "Hovedarrangement for studenter og bedrifter":
+    "Main event for students and companies.",
+};
+
 export const listWebsiteEvents = cache(async function listWebsiteEvents() {
   const supabase = createPublicSupabaseClient();
   const { data, error } = await supabase
@@ -66,6 +79,20 @@ export function formatWebsiteEventDate(date: string) {
     month: "long",
     year: "numeric",
   }).format(new Date(date));
+}
+
+export function getWebsiteEventDescription(
+  event: Pick<WebsiteEvent, "slug" | "description">,
+) {
+  const override = event.slug
+    ? WEBSITE_EVENT_DESCRIPTION_OVERRIDES[event.slug]
+    : null;
+  if (override) return override;
+
+  const description = event.description?.trim();
+  if (!description) return "More information coming soon.";
+
+  return WEBSITE_EVENT_DESCRIPTION_TRANSLATIONS[description] ?? description;
 }
 
 export function resolveWebsiteEventHref(event: WebsiteEvent) {
