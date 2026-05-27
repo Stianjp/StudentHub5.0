@@ -82,7 +82,11 @@ function collectCandidateFields(companies: ApprovedCompanyPreview[]) {
 }
 
 function getCompanyDescription(company: ApprovedCompanyPreview) {
-  return company.representationText?.trim() || "Bedriften har ikke lagt inn representasjonstekst ennå.";
+  return company.representationText?.trim() || null;
+}
+
+function getLookingForText(company: ApprovedCompanyPreview) {
+  return company.candidateSummary?.trim() || "Ikke spesifisert ennå.";
 }
 
 function truncateWords(value: string, maxWords: number) {
@@ -192,6 +196,8 @@ export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
             companyName={selectedCompany.companyName}
             logoUrl={selectedCompany.logoUrl}
             representationText={selectedCompany.representationText}
+            candidateSummary={selectedCompany.candidateSummary}
+            candidateLevelLabel={selectedCompany.candidateLevelLabel}
             packageLabel={selectedCompany.packageLabel}
             standLabel={selectedCompany.standLabel}
             onClose={() => setSelectedCompanyId(null)}
@@ -367,6 +373,10 @@ export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
                         {truncateWords(description, 28)}
                       </p>
                     ) : null}
+                    <p className="mx-auto max-w-[24rem] text-sm leading-relaxed text-mist/82">
+                      <span className="font-bold text-surface">Looking for:</span>{" "}
+                      {truncateWords(getLookingForText(company), 18)}
+                    </p>
                   </div>
 
                   <div className="pointer-events-none absolute inset-x-4 bottom-4 translate-y-2 rounded-2xl border border-white/12 bg-[#140249]/95 p-3 text-left opacity-0 shadow-[0_16px_40px_rgba(20,2,73,0.32)] transition duration-150 group-hover:translate-y-0 group-hover:opacity-100 group-focus-within:translate-y-0 group-focus-within:opacity-100">
@@ -378,6 +388,10 @@ export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
                         {truncateWords(description, 46)}
                       </p>
                     ) : null}
+                    <p className="mt-2 text-xs leading-relaxed text-white/85">
+                      <span className="font-bold">Looking for:</span>{" "}
+                      {truncateWords(getLookingForText(company), 20)}
+                    </p>
                     {company.standLabel ? (
                       <p className="mt-1 text-xs leading-relaxed text-white/72">
                         Stand: {company.standLabel}
@@ -398,6 +412,8 @@ export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
           companyName={selectedCompany.companyName}
           logoUrl={selectedCompany.logoUrl}
           representationText={selectedCompany.representationText}
+          candidateSummary={selectedCompany.candidateSummary}
+          candidateLevelLabel={selectedCompany.candidateLevelLabel}
           packageLabel={selectedCompany.packageLabel}
           standLabel={selectedCompany.standLabel}
           onClose={() => setSelectedCompanyId(null)}

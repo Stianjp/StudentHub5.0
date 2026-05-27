@@ -10,23 +10,27 @@ type Props = {
   companyName: string;
   logoUrl?: string | null;
   representationText?: string | null;
+  candidateSummary?: string | null;
+  candidateLevelLabel?: string | null;
   packageLabel?: string | null;
   standLabel?: string | null;
   onClose: () => void;
 };
 
-const EMPTY_DESCRIPTION = "Bedriften har ikke lagt inn representasjonstekst ennå.";
-
 export function CompanyInfoModal({
   companyName,
   logoUrl,
   representationText,
+  candidateSummary,
+  candidateLevelLabel,
   packageLabel,
   standLabel,
   onClose,
 }: Props) {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
-  const description = representationText?.trim() || EMPTY_DESCRIPTION;
+  const description = representationText?.trim() || null;
+  const lookingFor = candidateSummary?.trim() || "Ikke spesifisert ennå.";
+  const level = candidateLevelLabel?.trim() || null;
 
   useEffect(() => {
     closeButtonRef.current?.focus();
@@ -102,9 +106,26 @@ export function CompanyInfoModal({
           </div>
         </div>
 
-        <p className="mt-6 max-h-[48vh] overflow-y-auto whitespace-pre-line text-sm leading-relaxed text-ink/82 sm:text-base">
-          {description}
-        </p>
+        <div className="mt-6 max-h-[48vh] space-y-4 overflow-y-auto">
+          {description ? (
+            <p className="whitespace-pre-line text-sm leading-relaxed text-ink/82 sm:text-base">
+              {description}
+            </p>
+          ) : null}
+          <div className="rounded-2xl border border-primary/10 bg-primary/5 px-4 py-3">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary/70">
+              Looking for:
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-ink/82 sm:text-base">
+              {lookingFor}
+            </p>
+            {level ? (
+              <p className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-primary/62">
+                {level}
+              </p>
+            ) : null}
+          </div>
+        </div>
       </section>
     </div>,
     document.body,

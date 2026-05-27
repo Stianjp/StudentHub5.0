@@ -90,7 +90,11 @@ function getStandCenter(stand: PublicRegistrationStand) {
 }
 
 function getBookingDescription(bookingPreview: NonNullable<PublicRegistrationStand["bookingPreview"]>) {
-  return bookingPreview.representationText?.trim() || "Bedriften har ikke lagt inn representasjonstekst ennå.";
+  return bookingPreview.representationText?.trim() || null;
+}
+
+function getLookingForText(bookingPreview: NonNullable<PublicRegistrationStand["bookingPreview"]>) {
+  return bookingPreview.candidateSummary?.trim() || "Ikke spesifisert ennå.";
 }
 
 function truncateWords(value: string, maxWords: number) {
@@ -328,11 +332,17 @@ export function StandShowcase({
                 <p className="mt-1 text-xs font-semibold text-ink/65">
                   {getStandLabel(activeStand)}
                 </p>
-                <p className="mt-2 text-xs leading-relaxed text-ink/80">
-                  {truncateWords(
-                    getBookingDescription(activeStand.bookingPreview),
-                    42,
-                  )}
+                {getBookingDescription(activeStand.bookingPreview) ? (
+                  <p className="mt-2 text-xs leading-relaxed text-ink/80">
+                    {truncateWords(
+                      getBookingDescription(activeStand.bookingPreview) ?? "",
+                      42,
+                    )}
+                  </p>
+                ) : null}
+                <p className="mt-2 text-xs leading-relaxed text-ink/82">
+                  <span className="font-bold">Looking for:</span>{" "}
+                  {truncateWords(getLookingForText(activeStand.bookingPreview), 18)}
                 </p>
               </div>
             ) : null}
@@ -373,11 +383,15 @@ export function StandShowcase({
               </p>
             </div>
           </div>
-          {activeStand.bookingPreview ? (
+          {getBookingDescription(activeStand.bookingPreview) ? (
             <p className="mt-3 text-sm leading-relaxed text-ink/80">
               {getBookingDescription(activeStand.bookingPreview)}
             </p>
           ) : null}
+          <p className="mt-2 text-sm leading-relaxed text-ink/82">
+            <span className="font-bold">Looking for:</span>{" "}
+            {getLookingForText(activeStand.bookingPreview)}
+          </p>
         </div>
       ) : (
         <div className="mt-4 rounded-[20px] border border-white/12 bg-white/10 px-4 py-3 text-sm text-mist/72 md:hidden">
@@ -390,6 +404,8 @@ export function StandShowcase({
           companyName={selectedStand.bookingPreview.companyName}
           logoUrl={selectedStand.bookingPreview.logoUrl}
           representationText={selectedStand.bookingPreview.representationText}
+          candidateSummary={selectedStand.bookingPreview.candidateSummary}
+          candidateLevelLabel={selectedStand.bookingPreview.candidateLevelLabel}
           packageLabel={TIER_TEXT[getPackageTier(selectedStand)]}
           standLabel={getStandLabel(selectedStand)}
           onClose={() => setSelectedStandId(null)}
