@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -12,6 +12,7 @@ import {
   companyEventSignupSchema,
   companyInfoSchema,
   companyOpportunitySchema,
+  companyRepresentationSchema,
   companyRecruitmentSchema,
 } from "@/lib/validation/company";
 import {
@@ -251,6 +252,45 @@ export async function saveCompanyBranding(formData: FormData) {
   const nextPath = formData.get("next");
   if (typeof nextPath === "string" && nextPath.startsWith("/")) {
     redirect(nextPath);
+  }
+}
+
+export async function saveCompanyRepresentation(formData: FormData) {
+  try {
+    const parsed = companyRepresentationSchema.safeParse({
+      representationText: String(formData.get("representationText") ?? ""),
+    });
+
+    if (!parsed.success) {
+      throw new Error(parsed.error.issues.map((issue) => issue.message).join(", "));
+    }
+
+    const { supabase, company } = await getCompanyContext();
+    const trimmedText = (parsed.data.representationText ?? "").trim();
+    const now = new Date().toISOString();
+
+    const { error } = await supabase
+      .from("companies")
+      .update({
+        representation_text: trimmedText || null,
+        updated_at: now,
+      })
+      .eq("id", company.id);
+
+    if (error) throw error;
+
+    revalidateTag("approved-companies", "max");
+    revalidateTag("event-registration-public-campaign-detail", "max");
+    revalidatePath("/company/representation");
+    revalidatePath("/hovedside");
+    revalidatePath("/hovedside/studentconnect2026");
+    revalidatePath("/");
+    revalidatePath("/studentconnect2026");
+    redirect("/company/representation?saved=1");
+  } catch (error) {
+    if (isNextRedirectError(error)) throw error;
+    const message = getCompanyActionMessage(error);
+    redirect(`/company/representation?error=${encodeURIComponent(message)}`);
   }
 }
 

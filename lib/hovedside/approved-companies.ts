@@ -11,6 +11,7 @@ type RegistrationPackage =
   Database["public"]["Tables"]["event_registration_packages"]["Row"];
 type RegistrationStand =
   Database["public"]["Tables"]["event_registration_stands"]["Row"];
+type Company = Database["public"]["Tables"]["companies"]["Row"];
 
 export type ApprovedCompanyPackageTier =
   | "platinum"
@@ -25,6 +26,7 @@ export type ApprovedCompanyPreview = {
   candidateLevelLabel: string | null;
   candidateFields: string[];
   candidateSummary: string | null;
+  representationText: string | null;
   packageTier: ApprovedCompanyPackageTier;
   packageLabel: string;
   standLabel: string | null;
@@ -61,6 +63,10 @@ function buildCandidateSummary(
   if (fieldsOther) all.push(fieldsOther);
   if (all.length === 0) return null;
   return all.slice(0, 4).join(", ");
+}
+
+function normalizeOrgNumber(value: string) {
+  return value.replace(/\s+/g, "");
 }
 
 function normalizePackageTier(
@@ -134,11 +140,27 @@ async function fetchApprovedCompanies(
     ...new Set(
       typedApplications
         .flatMap((app) => [app.approved_stand_id, app.requested_stand_id])
-        .filter(Boolean),
+      .filter(Boolean),
     ),
   ] as string[];
+  const companyIds = [
+    ...new Set(typedApplications.map((app) => app.company_id).filter(Boolean)),
+  ] as string[];
+  const orgNumbers = [
+    ...new Set(
+      typedApplications
+        .map((app) => app.org_number)
+        .filter((orgNumber): orgNumber is string => Boolean(orgNumber))
+        .map(normalizeOrgNumber),
+    ),
+  ];
 
-  const [{ data: packages }, { data: stands }] = await Promise.all([
+  const [
+    { data: packages },
+    { data: stands },
+    { data: companiesById },
+    { data: companiesByOrgNumber },
+  ] = await Promise.all([
     packageIds.length > 0
       ? supabase
           .from("event_registration_packages")
@@ -161,6 +183,22 @@ async function fetchApprovedCompanies(
             "id" | "display_label" | "stand_code"
           >[],
         }),
+    companyIds.length > 0
+      ? supabase
+          .from("companies")
+          .select("id, org_number, representation_text")
+          .in("id", companyIds)
+      : Promise.resolve({
+          data: [] as Pick<Company, "id" | "org_number" | "representation_text">[],
+        }),
+    orgNumbers.length > 0
+      ? supabase
+          .from("companies")
+          .select("id, org_number, representation_text")
+          .in("org_number", orgNumbers)
+      : Promise.resolve({
+          data: [] as Pick<Company, "id" | "org_number" | "representation_text">[],
+        }),
   ]);
 
   const packageMap = new Map(
@@ -178,6 +216,30 @@ async function fetchApprovedCompanies(
         "id" | "display_label" | "stand_code"
       >[]
     ).map((stand) => [stand.id, stand]),
+  );
+  const companyRepresentationRows = [
+    ...((companiesById ?? []) as Pick<
+      Company,
+      "id" | "org_number" | "representation_text"
+    >[]),
+    ...((companiesByOrgNumber ?? []) as Pick<
+      Company,
+      "id" | "org_number" | "representation_text"
+    >[]),
+  ];
+  const representationByCompanyId = new Map(
+    companyRepresentationRows.map((company) => [
+      company.id,
+      company.representation_text?.trim() || null,
+    ]),
+  );
+  const representationByOrgNumber = new Map(
+    companyRepresentationRows
+      .filter((company) => company.org_number)
+      .map((company) => [
+        normalizeOrgNumber(company.org_number as string),
+        company.representation_text?.trim() || null,
+      ]),
   );
   const companyLogoMap = await getLatestCompanyRegistrationLogosByIdentifiers(
     typedApplications.map((app) => ({
@@ -226,6 +288,14 @@ async function fetchApprovedCompanies(
           app.candidate_fields,
           app.candidate_fields_other,
         ),
+        representationText:
+          (app.company_id
+            ? representationByCompanyId.get(app.company_id) ?? null
+            : null) ??
+          (app.org_number
+            ? representationByOrgNumber.get(normalizeOrgNumber(app.org_number)) ??
+              null
+            : null),
         packageTier,
         packageLabel: pkg?.public_name ?? packageLabelFromTier(packageTier),
         standLabel: stand?.display_label ?? stand?.stand_code ?? null,
@@ -244,5 +314,5 @@ async function fetchApprovedCompanies(
 export const getApprovedCompaniesForCampaign = unstable_cache(
   fetchApprovedCompanies,
   ["approved-companies"],
-  { revalidate: 300 },
+  { revalidate: 300, tags: ["approved-companies"] },
 );

@@ -9,6 +9,7 @@ import type {
 } from "@/lib/hovedside/approved-companies";
 import { shouldUseDirectImageUrl } from "@/lib/logo-url";
 import { cn } from "@/lib/utils";
+import { CompanyInfoModal } from "@/components/hovedside/company-info-modal";
 
 type Props = {
   companies: ApprovedCompanyPreview[];
@@ -80,9 +81,20 @@ function collectCandidateFields(companies: ApprovedCompanyPreview[]) {
     .sort((left, right) => left.localeCompare(right, "nb"));
 }
 
+function getCompanyDescription(company: ApprovedCompanyPreview) {
+  return company.representationText?.trim() || "Bedriften har ikke lagt inn representasjonstekst ennå.";
+}
+
+function truncateWords(value: string, maxWords: number) {
+  const words = value.trim().split(/\s+/).filter(Boolean);
+  if (words.length <= maxWords) return value;
+  return `${words.slice(0, maxWords).join(" ")}...`;
+}
+
 export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
   const [activeField, setActiveField] = useState<string | null>(null);
   const [isDesktop, setIsDesktop] = useState(false);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia("(min-width: 768px)");
@@ -108,6 +120,10 @@ export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
     () => groupCompanies(visibleCompanies),
     [visibleCompanies],
   );
+  const selectedCompany = useMemo(
+    () => companies.find((company) => company.id === selectedCompanyId) ?? null,
+    [companies, selectedCompanyId],
+  );
 
   if (companies.length === 0) {
     return (
@@ -122,66 +138,81 @@ export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
 
   if (compactOnMobile && !isDesktop) {
     return (
-      <div className="space-y-4">
-        <div className="rounded-[28px] border border-white/12 bg-white/8 p-5 shadow-[0_16px_42px_rgba(20,2,73,0.18)]">
-          <p className="text-xs font-bold uppercase tracking-[0.28em] text-secondary/85">
-            Mobile overview
-          </p>
-          <h3 className="mt-2 text-xl font-bold text-surface">
-            Student Connect 2026 partners
-          </h3>
-          <p className="mt-2 text-sm leading-relaxed text-mist/75">
-            We have simplified this section on mobile to keep the page fast and
-            stable on iPhone and Android.
-          </p>
+      <>
+        <div className="space-y-4">
+          <div className="rounded-[28px] border border-white/12 bg-white/8 p-5 shadow-[0_16px_42px_rgba(20,2,73,0.18)]">
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-secondary/85">
+              Mobile overview
+            </p>
+            <h3 className="mt-2 text-xl font-bold text-surface">
+              Student Connect 2026 partners
+            </h3>
+            <p className="mt-2 text-sm leading-relaxed text-mist/75">
+              Trykk på en bedrift for å lese en kort presentasjon.
+            </p>
+          </div>
+
+          <div className="grid gap-3">
+            {groupedAllCompanies.map(({ tier, companies: tierCompanies }) => {
+              const meta = TIER_META[tier];
+              return (
+                <section
+                  key={tier}
+                  className={cn(
+                    "rounded-[24px] border p-4 shadow-[0_16px_42px_rgba(20,2,73,0.16)]",
+                    meta.sectionClassName,
+                  )}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <h4 className="text-lg font-bold text-surface">{meta.label}</h4>
+                    <span className="text-sm font-semibold text-mist/70">
+                      {tierCompanies.length} companies
+                    </span>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {tierCompanies.map((company) => (
+                      <button
+                        key={company.id}
+                        type="button"
+                        onClick={() => setSelectedCompanyId(company.id)}
+                        className="inline-flex rounded-full border border-white/14 bg-white/10 px-3 py-1 text-xs font-semibold text-mist/90 transition hover:border-secondary hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary"
+                      >
+                        {company.companyName}
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
+          </div>
         </div>
 
-        <div className="grid gap-3">
-          {groupedAllCompanies.map(({ tier, companies: tierCompanies }) => {
-            const meta = TIER_META[tier];
-            return (
-              <section
-                key={tier}
-                className={cn(
-                  "rounded-[24px] border p-4 shadow-[0_16px_42px_rgba(20,2,73,0.16)]",
-                  meta.sectionClassName,
-                )}
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <h4 className="text-lg font-bold text-surface">{meta.label}</h4>
-                  <span className="text-sm font-semibold text-mist/70">
-                    {tierCompanies.length} companies
-                  </span>
-                </div>
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {tierCompanies.map((company) => (
-                    <span
-                      key={company.id}
-                      className="inline-flex rounded-full border border-white/14 bg-white/10 px-3 py-1 text-xs font-semibold text-mist/90"
-                    >
-                      {company.companyName}
-                    </span>
-                  ))}
-                </div>
-              </section>
-            );
-          })}
-        </div>
-      </div>
+        {selectedCompany ? (
+          <CompanyInfoModal
+            companyName={selectedCompany.companyName}
+            logoUrl={selectedCompany.logoUrl}
+            representationText={selectedCompany.representationText}
+            packageLabel={selectedCompany.packageLabel}
+            standLabel={selectedCompany.standLabel}
+            onClose={() => setSelectedCompanyId(null)}
+          />
+        ) : null}
+      </>
     );
   }
 
   return (
-    <div className="space-y-6 md:space-y-8">
-      {candidateFields.length > 0 ? (
-        <div className="rounded-[28px] border border-white/12 bg-white/8 p-4 shadow-[0_16px_42px_rgba(20,2,73,0.18)] sm:p-5">
+    <>
+      <div className="space-y-6 md:space-y-8">
+        {candidateFields.length > 0 ? (
+          <div className="rounded-[28px] border border-white/12 bg-white/8 p-4 shadow-[0_16px_42px_rgba(20,2,73,0.18)] sm:p-5">
           <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.28em] text-secondary/85">
-                Filter by student profile
+                Filter by study field
               </p>
               <h3 className="mt-1 text-xl font-bold text-surface">
-                Which students are the companies looking for?
+                Find companies by relevant background
               </h3>
             </div>
             {activeField ? (
@@ -223,28 +254,28 @@ export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
               </button>
             ))}
           </div>
-        </div>
-      ) : null}
+          </div>
+        ) : null}
 
-      {groupedCompanies.length === 0 ? (
-        <div className="rounded-[28px] border border-white/12 bg-white/8 py-12 text-center shadow-[0_16px_42px_rgba(20,2,73,0.18)]">
-          <p className="text-sm font-semibold text-mist/70">
-            No companies match this filter yet.
-          </p>
-        </div>
-      ) : null}
+        {groupedCompanies.length === 0 ? (
+          <div className="rounded-[28px] border border-white/12 bg-white/8 py-12 text-center shadow-[0_16px_42px_rgba(20,2,73,0.18)]">
+            <p className="text-sm font-semibold text-mist/70">
+              No companies match this filter yet.
+            </p>
+          </div>
+        ) : null}
 
-      {groupedCompanies.map(({ tier, companies: tierCompanies }) => {
-        const meta = TIER_META[tier];
+        {groupedCompanies.map(({ tier, companies: tierCompanies }) => {
+          const meta = TIER_META[tier];
 
-        return (
-          <section
-            key={tier}
-            className={cn(
-              "rounded-[32px] border p-4 shadow-[0_24px_80px_rgba(20,2,73,0.2)] sm:p-5 md:p-6",
-              meta.sectionClassName,
-            )}
-          >
+          return (
+            <section
+              key={tier}
+              className={cn(
+                "rounded-[32px] border p-4 shadow-[0_24px_80px_rgba(20,2,73,0.2)] sm:p-5 md:p-6",
+                meta.sectionClassName,
+              )}
+            >
             <div className="mb-5 flex flex-col gap-2 text-center md:flex-row md:items-end md:justify-between md:text-left">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.28em] text-secondary/85">
@@ -260,12 +291,24 @@ export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
             </div>
 
             <div className={meta.gridClassName}>
-              {tierCompanies.map((company) => (
-                <article
-                  key={company.id}
-                  tabIndex={0}
-                  className="group relative overflow-hidden rounded-[26px] border border-white/12 bg-white/10 p-3 text-center shadow-[0_12px_32px_rgba(20,2,73,0.16)] sm:p-4"
-                >
+              {tierCompanies.map((company) => {
+                const description = getCompanyDescription(company);
+
+                return (
+                  <article
+                    key={company.id}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Les mer om ${company.companyName}`}
+                    onClick={() => setSelectedCompanyId(company.id)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        setSelectedCompanyId(company.id);
+                      }
+                    }}
+                    className="group relative cursor-pointer overflow-hidden rounded-[26px] border border-white/12 bg-white/10 p-3 text-center shadow-[0_12px_32px_rgba(20,2,73,0.16)] outline-none transition hover:border-secondary/50 focus-visible:ring-2 focus-visible:ring-secondary sm:p-4"
+                  >
                   <div
                     className={cn(
                       "relative flex items-center justify-center border border-primary/10 bg-white shadow-[inset_0_1px_0_rgba(255,255,255,0.55)]",
@@ -318,15 +361,10 @@ export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
                           {company.standLabel}
                         </span>
                       ) : null}
-                      {company.candidateLevelLabel ? (
-                        <span className="inline-flex rounded-full border border-white/14 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-mist/85">
-                          {company.candidateLevelLabel}
-                        </span>
-                      ) : null}
                     </div>
-                    {company.candidateSummary ? (
+                    {description ? (
                       <p className="mx-auto max-w-[24rem] text-sm leading-relaxed text-mist/75">
-                        Looking for: {company.candidateSummary}
+                        {truncateWords(description, 28)}
                       </p>
                     ) : null}
                   </div>
@@ -335,14 +373,9 @@ export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
                     <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-secondary/90">
                       {company.companyName}
                     </p>
-                    {company.candidateSummary ? (
+                    {description ? (
                       <p className="mt-2 text-xs leading-relaxed text-white/85">
-                        {company.candidateSummary}
-                      </p>
-                    ) : null}
-                    {company.candidateLevelLabel ? (
-                      <p className="mt-1 text-xs leading-relaxed text-white/72">
-                        {company.candidateLevelLabel}
+                        {truncateWords(description, 46)}
                       </p>
                     ) : null}
                     {company.standLabel ? (
@@ -352,11 +385,24 @@ export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
                     ) : null}
                   </div>
                 </article>
-              ))}
+                );
+              })}
             </div>
           </section>
-        );
-      })}
-    </div>
+          );
+        })}
+      </div>
+
+      {selectedCompany ? (
+        <CompanyInfoModal
+          companyName={selectedCompany.companyName}
+          logoUrl={selectedCompany.logoUrl}
+          representationText={selectedCompany.representationText}
+          packageLabel={selectedCompany.packageLabel}
+          standLabel={selectedCompany.standLabel}
+          onClose={() => setSelectedCompanyId(null)}
+        />
+      ) : null}
+    </>
   );
 }

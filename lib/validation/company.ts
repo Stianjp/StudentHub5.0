@@ -84,6 +84,24 @@ export const companyBrandingSchema = z.object({
   socialProfile: z.string().optional().or(z.literal("")),
 });
 
+function countWords(value: string) {
+  return value.trim().split(/\s+/).filter(Boolean).length;
+}
+
+export const companyRepresentationSchema = z
+  .object({
+    representationText: z.string().optional().or(z.literal("")),
+  })
+  .superRefine((value, ctx) => {
+    if (countWords(value.representationText ?? "") > 250) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["representationText"],
+        message: "Representasjonsteksten kan være maks 250 ord.",
+      });
+    }
+  });
+
 export const companyEventSignupSchema = z.object({
   eventId: z.string().uuid("Ugyldig event"),
   standType: z.string().optional().or(z.literal("")),

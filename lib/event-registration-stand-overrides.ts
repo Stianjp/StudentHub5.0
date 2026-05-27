@@ -3,6 +3,7 @@ export type PublicStandBookingPreviewOverride = {
   logoUrl: string | null;
   candidateSummary: string | null;
   candidateLevelLabel: string | null;
+  representationText: string | null;
 };
 
 type PublicStandLike = {

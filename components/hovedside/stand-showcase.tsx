@@ -6,6 +6,7 @@ import type { PublicRegistrationStand } from "@/lib/event-registration";
 import type { ApprovedCompanyPackageTier } from "@/lib/hovedside/approved-companies";
 import { shouldUseDirectImageUrl } from "@/lib/logo-url";
 import { cn } from "@/lib/utils";
+import { CompanyInfoModal } from "@/components/hovedside/company-info-modal";
 
 type Props = {
   floorplanImagePath: string;
@@ -88,6 +89,16 @@ function getStandCenter(stand: PublicRegistrationStand) {
   } as const;
 }
 
+function getBookingDescription(bookingPreview: NonNullable<PublicRegistrationStand["bookingPreview"]>) {
+  return bookingPreview.representationText?.trim() || "Bedriften har ikke lagt inn representasjonstekst ennå.";
+}
+
+function truncateWords(value: string, maxWords: number) {
+  const words = value.trim().split(/\s+/).filter(Boolean);
+  if (words.length <= maxWords) return value;
+  return `${words.slice(0, maxWords).join(" ")}...`;
+}
+
 export function StandShowcase({
   floorplanImagePath,
   floorplanAlt,
@@ -96,6 +107,7 @@ export function StandShowcase({
   stands,
 }: Props) {
   const [activeStandId, setActiveStandId] = useState<string | null>(null);
+  const [selectedStandId, setSelectedStandId] = useState<string | null>(null);
 
   const visibleStands = useMemo(
     () => stands.filter((stand) => stand.status !== "disabled"),
@@ -110,6 +122,16 @@ export function StandShowcase({
           stand.bookingPreview,
       ) ?? null,
     [activeStandId, visibleStands],
+  );
+  const selectedStand = useMemo(
+    () =>
+      visibleStands.find(
+        (stand) =>
+          stand.id === selectedStandId &&
+          stand.assigned_application_id &&
+          stand.bookingPreview,
+      ) ?? null,
+    [selectedStandId, visibleStands],
   );
   const bookedCount = useMemo(
     () =>
@@ -131,7 +153,7 @@ export function StandShowcase({
           </h3>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-mist/70">
             Tap or hover over a booked logo to see which company has reserved
-            the stand and what kind of students they want to meet.
+            the stand and read a short company summary.
           </p>
         </div>
         <div className="inline-flex items-center gap-2 rounded-full border border-white/14 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white/75">
@@ -167,6 +189,16 @@ export function StandShowcase({
                 role={isBooked ? "button" : undefined}
                 tabIndex={isBooked ? 0 : undefined}
                 aria-label={getStandLabel(stand)}
+                onClick={() => {
+                  if (isBooked) setSelectedStandId(stand.id);
+                }}
+                onKeyDown={(event) => {
+                  if (!isBooked) return;
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    setSelectedStandId(stand.id);
+                  }
+                }}
                 onMouseEnter={() => {
                   if (isBooked) setActiveStandId(stand.id);
                 }}
@@ -193,7 +225,7 @@ export function StandShowcase({
                   "absolute overflow-hidden transition-[transform,box-shadow] duration-150",
                   isBooked
                     ? cn(
-                        "z-20 rounded-[7px] border-2 bg-white p-[2px] outline-none md:block",
+                        "z-20 cursor-pointer rounded-[7px] border-2 bg-white p-[2px] outline-none md:block",
                         BOOKED_STAND_STYLES[packageTier],
                         activeStandId === stand.id
                           ? "translate-y-[-1px]"
@@ -244,11 +276,10 @@ export function StandShowcase({
                 type="button"
                 aria-label={`Booked stand: ${stand.bookingPreview.companyName}`}
                 aria-pressed={activeStandId === stand.id}
-                onClick={() =>
-                  setActiveStandId((current) =>
-                    current === stand.id ? null : stand.id,
-                  )
-                }
+                onClick={() => {
+                  setActiveStandId(stand.id);
+                  setSelectedStandId(stand.id);
+                }}
                 style={{
                   ...center,
                   width: `calc(${MOBILE_BOOKED_MARKER_SIZE[packageTier]} * 0.98)`,
@@ -297,16 +328,12 @@ export function StandShowcase({
                 <p className="mt-1 text-xs font-semibold text-ink/65">
                   {getStandLabel(activeStand)}
                 </p>
-                {activeStand.bookingPreview.candidateSummary ? (
-                  <p className="mt-2 text-xs leading-relaxed text-ink/80">
-                    {activeStand.bookingPreview.candidateSummary}
-                  </p>
-                ) : null}
-                {activeStand.bookingPreview.candidateLevelLabel ? (
-                  <p className="mt-1 text-xs leading-relaxed text-ink/70">
-                    Level: {activeStand.bookingPreview.candidateLevelLabel}
-                  </p>
-                ) : null}
+                <p className="mt-2 text-xs leading-relaxed text-ink/80">
+                  {truncateWords(
+                    getBookingDescription(activeStand.bookingPreview),
+                    42,
+                  )}
+                </p>
               </div>
             ) : null}
           </div>
@@ -346,14 +373,9 @@ export function StandShowcase({
               </p>
             </div>
           </div>
-          {activeStand.bookingPreview.candidateSummary ? (
+          {activeStand.bookingPreview ? (
             <p className="mt-3 text-sm leading-relaxed text-ink/80">
-              {activeStand.bookingPreview.candidateSummary}
-            </p>
-          ) : null}
-          {activeStand.bookingPreview.candidateLevelLabel ? (
-            <p className="mt-1 text-sm leading-relaxed text-ink/70">
-              Level: {activeStand.bookingPreview.candidateLevelLabel}
+              {getBookingDescription(activeStand.bookingPreview)}
             </p>
           ) : null}
         </div>
@@ -362,6 +384,17 @@ export function StandShowcase({
           Swipe the map if needed, then tap one of the booked logos to see company details.
         </div>
       )}
+
+      {selectedStand?.bookingPreview ? (
+        <CompanyInfoModal
+          companyName={selectedStand.bookingPreview.companyName}
+          logoUrl={selectedStand.bookingPreview.logoUrl}
+          representationText={selectedStand.bookingPreview.representationText}
+          packageLabel={TIER_TEXT[getPackageTier(selectedStand)]}
+          standLabel={getStandLabel(selectedStand)}
+          onClose={() => setSelectedStandId(null)}
+        />
+      ) : null}
     </div>
   );
 }

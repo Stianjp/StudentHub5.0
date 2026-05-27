@@ -338,7 +338,8 @@ export default async function StudentConnect2026Page() {
           Attending Companies
         </h2>
         <p className="mx-auto mb-8 max-w-xl text-center text-sm text-mist/60">
-          These companies have been confirmed for Student Connect 2026.
+          These companies have been confirmed for Student Connect 2026. Hover
+          or click a company to read a short presentation.
         </p>
         <CompanyGrid companies={companies} compactOnMobile />
       </SectionWrapper>

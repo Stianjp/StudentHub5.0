@@ -43,6 +43,7 @@ export type PublicStandBookingPreview = {
   logoUrl: string | null;
   candidateSummary: string | null;
   candidateLevelLabel: string | null;
+  representationText: string | null;
 };
 export type PublicRegistrationStand = RegistrationStand & {
   bookingPreview?: PublicStandBookingPreview | null;
@@ -170,6 +171,60 @@ async function attachStandBookingPreviews(slug: string, stands: RegistrationStan
       | "logo_path"
     >
   >;
+  const companyIds = [
+    ...new Set(typedApplications.map((application) => application.company_id).filter(Boolean)),
+  ] as string[];
+  const orgNumbers = [
+    ...new Set(
+      typedApplications
+        .map((application) => application.org_number)
+        .filter((orgNumber): orgNumber is string => Boolean(orgNumber))
+        .map(normalizeOrgNumber),
+    ),
+  ];
+  const [{ data: companiesById }, { data: companiesByOrgNumber }] =
+    await Promise.all([
+      companyIds.length > 0
+        ? supabase
+            .from("companies")
+            .select("id, org_number, representation_text")
+            .in("id", companyIds)
+        : Promise.resolve({
+            data: [] as Pick<Company, "id" | "org_number" | "representation_text">[],
+          }),
+      orgNumbers.length > 0
+        ? supabase
+            .from("companies")
+            .select("id, org_number, representation_text")
+            .in("org_number", orgNumbers)
+        : Promise.resolve({
+            data: [] as Pick<Company, "id" | "org_number" | "representation_text">[],
+          }),
+    ]);
+  const companyRepresentationRows = [
+    ...((companiesById ?? []) as Pick<
+      Company,
+      "id" | "org_number" | "representation_text"
+    >[]),
+    ...((companiesByOrgNumber ?? []) as Pick<
+      Company,
+      "id" | "org_number" | "representation_text"
+    >[]),
+  ];
+  const representationByCompanyId = new Map(
+    companyRepresentationRows.map((company) => [
+      company.id,
+      company.representation_text?.trim() || null,
+    ]),
+  );
+  const representationByOrgNumber = new Map(
+    companyRepresentationRows
+      .filter((company) => company.org_number)
+      .map((company) => [
+        normalizeOrgNumber(company.org_number as string),
+        company.representation_text?.trim() || null,
+      ]),
+  );
 
   const { getLatestCompanyRegistrationLogosByIdentifiers } = await import("@/lib/company");
   const companyLogoMap = await getLatestCompanyRegistrationLogosByIdentifiers(
@@ -225,6 +280,15 @@ async function attachStandBookingPreviews(slug: string, stands: RegistrationStan
           logoUrl: logoUrlMap.get(application.id) ?? null,
           candidateSummary: buildCandidateSummary(application),
           candidateLevelLabel: candidateLevelLabel(application.candidate_level),
+          representationText:
+            (application.company_id
+              ? representationByCompanyId.get(application.company_id) ?? null
+              : null) ??
+            (application.org_number
+              ? representationByOrgNumber.get(
+                  normalizeOrgNumber(application.org_number),
+                ) ?? null
+              : null),
         },
       };
     }) as PublicRegistrationStand[],
@@ -306,7 +370,7 @@ const loadPublicRegistrationCampaigns = unstable_cache(fetchPublicRegistrationCa
 const loadPublicRegistrationCampaignDetail = unstable_cache(
   fetchPublicRegistrationCampaignDetail,
   ["event-registration-public-campaign-detail"],
-  { revalidate: 300 },
+  { revalidate: 300, tags: ["event-registration-public-campaign-detail"] },
 );
 
 function inferStandTypeFromPackage(packageTier: RegistrationPackage["mapped_package"]) {

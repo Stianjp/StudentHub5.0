@@ -60,6 +60,7 @@ export type Database = {
           branding_message: string | null;
           work_style: string | null;
           social_profile: string | null;
+          representation_text: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -89,6 +90,7 @@ export type Database = {
           branding_message?: string | null;
           work_style?: string | null;
           social_profile?: string | null;
+          representation_text?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -118,6 +120,7 @@ export type Database = {
           branding_message?: string | null;
           work_style?: string | null;
           social_profile?: string | null;
+          representation_text?: string | null;
           created_at?: string;
           updated_at?: string;
         };

@@ -151,7 +151,9 @@ export default async function HomePage() {
           Our partners
         </h2>
         <p className="mx-auto mb-8 max-w-2xl text-center text-sm text-mist/60">
-          Confirmed partners for Student Connect 2026, sorted by package from Platinum to Standard.
+          Confirmed partners for Student Connect 2026, sorted by package from
+          Platinum to Standard. Hover or click a company to read a short
+          presentation.
         </p>
         <CompanyGrid companies={companies} compactOnMobile />
       </SectionWrapper>
