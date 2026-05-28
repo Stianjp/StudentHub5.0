@@ -1,5 +1,28 @@
 import { z } from "zod";
 
+const optionalText = z.string().optional().or(z.literal(""));
+
+const normalizedOrgNumber = z.preprocess(
+  (value) => {
+    if (typeof value !== "string") return value;
+    return value.replace(/\s+/g, "").trim();
+  },
+  z.union([z.string().regex(/^\d{9}$/, "Org.nr må være 9 siffer."), z.literal("")]),
+);
+
+const normalizedWebsite = z.preprocess(
+  (value) => {
+    if (typeof value !== "string") return value;
+    const trimmed = value.trim();
+    if (!trimmed) return "";
+    if (!/^https?:\/\//i.test(trimmed)) {
+      return `https://${trimmed}`;
+    }
+    return trimmed;
+  },
+  z.union([z.string().url("Nettside må være en gyldig URL"), z.literal("")]),
+);
+
 export const eventSchema = z.object({
   name: z.string().min(2),
   slug: z
@@ -37,14 +60,24 @@ export const registerCompanySchema = z.object({
 
 export const createCompanySchema = z.object({
   name: z.string().min(2, "Navn er påkrevd."),
-  orgNumber: z
-    .string()
-    .regex(/^\d{9}$/, "Org.nr må være 9 siffer.")
-    .optional()
-    .or(z.literal("")),
-  industry: z.string().optional().or(z.literal("")),
-  location: z.string().optional().or(z.literal("")),
-  domain: z.string().optional().or(z.literal("")),
+  orgNumber: normalizedOrgNumber.optional().or(z.literal("")),
+  industry: optionalText,
+  location: optionalText,
+  domain: optionalText,
+});
+
+export const updateCompanyDetailsSchema = z.object({
+  companyId: z.string().uuid(),
+  name: z.string().min(2, "Navn er påkrevd."),
+  orgNumber: normalizedOrgNumber.optional().or(z.literal("")),
+  industry: optionalText,
+  size: optionalText,
+  location: optionalText,
+  address: optionalText,
+  postalCode: optionalText,
+  city: optionalText,
+  country: optionalText,
+  website: normalizedWebsite.optional().or(z.literal("")),
 });
 
 export const companyDomainSchema = z.object({

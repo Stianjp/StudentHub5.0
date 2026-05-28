@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { SectionHeader } from "@/components/ui/section-header";
+import { CompanyProfileEditor } from "@/components/admin/company-profile-editor";
 import { deleteCompanyAction, removeCompanyFromEventAction, uploadCompanyLogoAction } from "@/app/admin/actions";
 import { requireRole } from "@/lib/auth";
 import {
@@ -121,17 +121,6 @@ export default async function AdminCompanyDetailPage({ params, searchParams }: P
 
   return (
     <div className="flex flex-col gap-8">
-      <SectionHeader
-        eyebrow="Bedrift"
-        title={company.name}
-        description={company.industry ?? "Bransje ikke satt"}
-        actions={
-          <Link className="text-sm font-semibold text-primary/70 transition hover:text-primary" href="/admin/companies">
-            ← Tilbake
-          </Link>
-        }
-      />
-
       {errorMessage ? (
         <Card className="border border-error/30 bg-error/10 text-sm text-error">
           {decodeURIComponent(errorMessage)}
@@ -148,15 +137,29 @@ export default async function AdminCompanyDetailPage({ params, searchParams }: P
         </Card>
       ) : null}
 
+      <div className="flex justify-end">
+        <Link className="text-sm font-semibold text-primary/70 transition hover:text-primary" href="/admin/companies">
+          ← Tilbake
+        </Link>
+      </div>
+
+      <CompanyProfileEditor
+        company={{
+          id: company.id,
+          name: company.name,
+          org_number: company.org_number,
+          industry: company.industry,
+          size: company.size,
+          location: company.location,
+          address: company.address,
+          postal_code: company.postal_code,
+          city: company.city,
+          country: company.country,
+          website: company.website,
+        }}
+      />
+
       <Card className="grid gap-3 text-sm text-ink/80 md:grid-cols-2">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-primary/60">Firmainfo</p>
-          <p className="text-base font-semibold text-primary">{company.name}</p>
-          <p>Org.nr: {company.org_number ?? "—"}</p>
-          <p>Lokasjon: {company.location ?? "—"}</p>
-          <p>Størrelse: {company.size ?? "—"}</p>
-          <p>Nettside: {company.website ?? "—"}</p>
-        </div>
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-primary/60">Rekruttering</p>
           <p>Roller: {company.recruitment_roles.join(", ") || "—"}</p>
@@ -207,6 +210,9 @@ export default async function AdminCompanyDetailPage({ params, searchParams }: P
             </div>
           </div>
         </div>
+      </Card>
+
+      <Card className="grid gap-3 text-sm text-ink/80 md:grid-cols-2">
         <div className="md:col-span-2">
           <p className="text-xs font-semibold uppercase tracking-wide text-primary/60">Branding</p>
           <p>Verdier: {company.branding_values.join(", ") || "—"}</p>

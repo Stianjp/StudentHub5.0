@@ -8,6 +8,7 @@ import {
   eventSchema,
   setPackageSchema,
   createCompanySchema,
+  updateCompanyDetailsSchema,
   companyDomainSchema,
   approveCompanyAccessSchema,
   deleteCompanySchema,
@@ -30,7 +31,7 @@ import {
 import { isUuid } from "@/lib/utils";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { sendTransactionalEmail } from "@/lib/resend";
-import { uploadCompanyLogo } from "@/lib/company-access";
+import { buildCompanyLocation, uploadCompanyLogo } from "@/lib/company-access";
 
 const STAND_TYPE_VALUES = ["Standard", "Silver", "Gold", "Platinum"] as const;
 const PACKAGE_VALUES = ["standard", "silver", "gold", "platinum"] as const;
@@ -293,6 +294,98 @@ export async function deleteCompanyAction(formData: FormData) {
     const message = getErrorMessage(error);
     if (isUuid(companyId)) {
       redirect(`/admin/companies/${companyId}?error=${encodeURIComponent(message)}`);
+    }
+    throw error;
+  }
+}
+
+export async function updateCompanyDetailsAction(formData: FormData) {
+  await requireRole("admin");
+  const returnTo = formData.get("returnTo");
+
+  try {
+    const parsed = updateCompanyDetailsSchema.safeParse({
+      companyId: getFormValue(formData, "companyId"),
+      name: getFormValue(formData, "name"),
+      orgNumber: getFormValue(formData, "orgNumber"),
+      industry: getFormValue(formData, "industry"),
+      size: getFormValue(formData, "size"),
+      location: getFormValue(formData, "location"),
+      address: getFormValue(formData, "address"),
+      postalCode: getFormValue(formData, "postalCode"),
+      city: getFormValue(formData, "city"),
+      country: getFormValue(formData, "country"),
+      website: getFormValue(formData, "website"),
+    });
+
+    if (!parsed.success) {
+      throw new Error(parsed.error.issues.map((issue) => issue.message).join(", "));
+    }
+
+    const data = parsed.data;
+    const location =
+      (data.location ?? "").trim() ||
+      buildCompanyLocation({
+        city: (data.city ?? "").trim() || null,
+        country: (data.country ?? "").trim() || null,
+        fallback: null,
+      });
+
+    const supabase = createAdminSupabaseClient();
+    const { error } = await supabase
+      .from("companies")
+      .update({
+        name: data.name.trim(),
+        org_number: (data.orgNumber ?? "").trim() || null,
+        industry: (data.industry ?? "").trim() || null,
+        size: (data.size ?? "").trim() || null,
+        location: location || null,
+        address: (data.address ?? "").trim() || null,
+        postal_code: (data.postalCode ?? "").trim() || null,
+        city: (data.city ?? "").trim() || null,
+        country: (data.country ?? "").trim() || null,
+        website: (data.website ?? "").trim() || null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", data.companyId);
+
+    if (error) throw error;
+
+    revalidatePath("/admin");
+    revalidatePath("/admin/companies");
+    revalidatePath("/admin/companies/overview");
+    revalidatePath(`/admin/companies/${parsed.data.companyId}`);
+    revalidatePath("/admin/company-packages");
+    revalidatePath("/admin/events");
+    revalidatePath("/admin/leads");
+    revalidatePath("/admin/crm");
+    revalidatePath("/admin/email/contact-overview");
+    revalidatePath("/company");
+    revalidatePath("/company/onboarding");
+    revalidatePath("/company/onboarding/branding");
+    revalidatePath("/company/representation");
+    revalidatePath("/company/events");
+    revalidatePath("/company/jobs");
+    revalidatePath("/company/leads");
+    revalidatePath("/company/roi");
+    revalidatePath("/company/thesis-projects");
+    revalidatePath("/student/companies");
+    revalidatePath("/student/consents");
+    revalidatePath("/student/events");
+    revalidatePath("/student/dashboard");
+    revalidatePath("/hovedside");
+    revalidatePath("/hovedside/studentconnect2026");
+    revalidatePath("/event-register");
+    revalidatePath("/event/events");
+
+    if (typeof returnTo === "string" && returnTo.startsWith("/")) {
+      redirect(`${returnTo}?saved=1`);
+    }
+  } catch (error) {
+    if (isNextRedirectError(error)) throw error;
+    if (typeof returnTo === "string" && returnTo.startsWith("/")) {
+      const message = getErrorMessage(error);
+      redirect(`${returnTo}?error=${encodeURIComponent(message)}`);
     }
     throw error;
   }
