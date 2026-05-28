@@ -186,18 +186,18 @@ async function fetchApprovedCompanies(
     companyIds.length > 0
       ? supabase
           .from("companies")
-          .select("id, org_number, representation_text")
+          .select("id, name, org_number, representation_text")
           .in("id", companyIds)
       : Promise.resolve({
-          data: [] as Pick<Company, "id" | "org_number" | "representation_text">[],
+          data: [] as Pick<Company, "id" | "name" | "org_number" | "representation_text">[],
         }),
     orgNumbers.length > 0
       ? supabase
           .from("companies")
-          .select("id, org_number, representation_text")
+          .select("id, name, org_number, representation_text")
           .in("org_number", orgNumbers)
       : Promise.resolve({
-          data: [] as Pick<Company, "id" | "org_number" | "representation_text">[],
+          data: [] as Pick<Company, "id" | "name" | "org_number" | "representation_text">[],
         }),
   ]);
 
@@ -220,13 +220,24 @@ async function fetchApprovedCompanies(
   const companyRepresentationRows = [
     ...((companiesById ?? []) as Pick<
       Company,
-      "id" | "org_number" | "representation_text"
+      "id" | "name" | "org_number" | "representation_text"
     >[]),
     ...((companiesByOrgNumber ?? []) as Pick<
       Company,
-      "id" | "org_number" | "representation_text"
+      "id" | "name" | "org_number" | "representation_text"
     >[]),
   ];
+  const companyNameByCompanyId = new Map(
+    companyRepresentationRows.map((company) => [company.id, company.name?.trim() || null]),
+  );
+  const companyNameByOrgNumber = new Map(
+    companyRepresentationRows
+      .filter((company) => company.org_number)
+      .map((company) => [
+        normalizeOrgNumber(company.org_number as string),
+        company.name?.trim() || null,
+      ]),
+  );
   const representationByCompanyId = new Map(
     companyRepresentationRows.map((company) => [
       company.id,
@@ -280,7 +291,12 @@ async function fetchApprovedCompanies(
 
       return {
         id: app.id,
-        companyName: app.company_name,
+        companyName:
+          (app.company_id ? companyNameByCompanyId.get(app.company_id) ?? null : null) ??
+          (app.org_number
+            ? companyNameByOrgNumber.get(normalizeOrgNumber(app.org_number)) ?? null
+            : null) ??
+          app.company_name,
         logoUrl,
         candidateLevelLabel: candidateLevelLabel(app.candidate_level),
         candidateFields: app.candidate_fields,

@@ -187,30 +187,41 @@ async function attachStandBookingPreviews(slug: string, stands: RegistrationStan
       companyIds.length > 0
         ? supabase
             .from("companies")
-            .select("id, org_number, representation_text")
+            .select("id, name, org_number, representation_text")
             .in("id", companyIds)
         : Promise.resolve({
-            data: [] as Pick<Company, "id" | "org_number" | "representation_text">[],
+            data: [] as Pick<Company, "id" | "name" | "org_number" | "representation_text">[],
           }),
       orgNumbers.length > 0
         ? supabase
             .from("companies")
-            .select("id, org_number, representation_text")
+            .select("id, name, org_number, representation_text")
             .in("org_number", orgNumbers)
         : Promise.resolve({
-            data: [] as Pick<Company, "id" | "org_number" | "representation_text">[],
+            data: [] as Pick<Company, "id" | "name" | "org_number" | "representation_text">[],
           }),
     ]);
   const companyRepresentationRows = [
     ...((companiesById ?? []) as Pick<
       Company,
-      "id" | "org_number" | "representation_text"
+      "id" | "name" | "org_number" | "representation_text"
     >[]),
     ...((companiesByOrgNumber ?? []) as Pick<
       Company,
-      "id" | "org_number" | "representation_text"
+      "id" | "name" | "org_number" | "representation_text"
     >[]),
   ];
+  const companyNameByCompanyId = new Map(
+    companyRepresentationRows.map((company) => [company.id, company.name?.trim() || null]),
+  );
+  const companyNameByOrgNumber = new Map(
+    companyRepresentationRows
+      .filter((company) => company.org_number)
+      .map((company) => [
+        normalizeOrgNumber(company.org_number as string),
+        company.name?.trim() || null,
+      ]),
+  );
   const representationByCompanyId = new Map(
     companyRepresentationRows.map((company) => [
       company.id,
@@ -276,7 +287,14 @@ async function attachStandBookingPreviews(slug: string, stands: RegistrationStan
       return {
         ...stand,
         bookingPreview: {
-          companyName: application.company_name,
+          companyName:
+            (application.company_id
+              ? companyNameByCompanyId.get(application.company_id) ?? null
+              : null) ??
+            (application.org_number
+              ? companyNameByOrgNumber.get(normalizeOrgNumber(application.org_number)) ?? null
+              : null) ??
+            application.company_name,
           logoUrl: logoUrlMap.get(application.id) ?? null,
           candidateSummary: buildCandidateSummary(application),
           candidateLevelLabel: candidateLevelLabel(application.candidate_level),
