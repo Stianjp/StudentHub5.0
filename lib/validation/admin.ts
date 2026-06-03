@@ -94,6 +94,11 @@ export const approveCompanyAccessSchema = z.object({
   email: z.string().email().optional().or(z.literal("")),
 });
 
+export const rejectCompanyAccessSchema = z.object({
+  requestId: z.string().uuid(),
+  companyId: z.string().uuid().optional().or(z.literal("")),
+});
+
 export const deleteCompanySchema = z.object({
   companyId: z.string().uuid(),
   confirmationName: z.string().min(1, "Skriv inn bedriftsnavnet for å bekrefte sletting."),

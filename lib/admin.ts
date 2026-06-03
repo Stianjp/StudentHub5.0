@@ -347,8 +347,46 @@ export async function approveCompanyAccess(input: { requestId: string; companyId
       approvedAt: now,
       signInUrl,
     },
-    supabase,
-  });
+      supabase,
+    });
+}
+
+export async function rejectCompanyAccess(input: { requestId: string; companyId?: string | null }) {
+  const supabase = createAdminSupabaseClient();
+  const now = new Date().toISOString();
+  const { data: request, error: requestError } = await supabase
+    .from("company_user_requests")
+    .select("*")
+    .eq("id", input.requestId)
+    .single();
+
+  if (requestError) throw requestError;
+
+  const typedRequest = request as CompanyUserRequest;
+  const companyId = input.companyId ?? typedRequest.company_id;
+
+  if (companyId) {
+    const { error: revokeError } = await supabase.from("company_portal_invites").upsert(
+      {
+        company_id: companyId,
+        application_id: null,
+        email: typedRequest.email.toLowerCase().trim(),
+        status: "revoked",
+        invited_at: null,
+        accepted_at: null,
+        user_id: typedRequest.user_id,
+        updated_at: now,
+      },
+      { onConflict: "company_id,email" },
+    );
+    if (revokeError) throw revokeError;
+  }
+
+  const { error: deleteError } = await supabase
+    .from("company_user_requests")
+    .delete()
+    .eq("id", input.requestId);
+  if (deleteError) throw deleteError;
 }
 
 export async function listEventCompanies(eventId: string) {

@@ -13,6 +13,7 @@ import {
   approveCompanyAccessSchema,
   deleteCompanySchema,
   removeEventCompanySchema,
+  rejectCompanyAccessSchema,
 } from "@/lib/validation/admin";
 import {
   addCompanyDomain,
@@ -22,6 +23,7 @@ import {
   getCompanyWithDetails,
   inviteCompanyToEvent,
   removeCompanyFromEvent,
+  rejectCompanyAccess,
   registerCompanyForEvent,
   setPackageForCompany,
   updateEventCompanyPackageSettings,
@@ -590,9 +592,53 @@ export async function approveCompanyAccessAction(formData: FormData) {
       userId: parsed.data.userId,
     });
 
+    revalidatePath("/admin");
     revalidatePath("/admin/companies");
+    revalidatePath("/admin/companies/register");
+    revalidatePath("/admin/companies/overview");
+    if (companyId !== "new") {
+      revalidatePath(`/admin/companies/${companyId}`);
+    }
     if (typeof returnTo === "string" && returnTo.startsWith("/")) {
       redirect(`${returnTo}?saved=1`);
+    }
+  } catch (error) {
+    if (isNextRedirectError(error)) throw error;
+    if (typeof returnTo === "string" && returnTo.startsWith("/")) {
+      const message = getErrorMessage(error);
+      redirect(`${returnTo}?error=${encodeURIComponent(message)}`);
+    }
+    throw error;
+  }
+}
+
+export async function rejectCompanyAccessAction(formData: FormData) {
+  await requireRole("admin");
+  const returnTo = formData.get("returnTo");
+  try {
+    const parsed = rejectCompanyAccessSchema.safeParse({
+      requestId: getFormValue(formData, "requestId"),
+      companyId: getFormValue(formData, "companyId"),
+    });
+
+    if (!parsed.success) {
+      throw new Error(parsed.error.issues.map((issue) => issue.message).join(", "));
+    }
+
+    await rejectCompanyAccess({
+      requestId: parsed.data.requestId,
+      companyId: parsed.data.companyId || null,
+    });
+
+    revalidatePath("/admin");
+    revalidatePath("/admin/companies");
+    revalidatePath("/admin/companies/register");
+    if (parsed.data.companyId) {
+      revalidatePath(`/admin/companies/${parsed.data.companyId}`);
+    }
+
+    if (typeof returnTo === "string" && returnTo.startsWith("/")) {
+      redirect(`${returnTo}?rejected=1`);
     }
   } catch (error) {
     if (isNextRedirectError(error)) throw error;

@@ -266,6 +266,19 @@ export async function ensureCompanyAccessRequest(input: EnsureCompanyAccessReque
   const domain = getEmailDomain(normalizedEmail);
   const normalizedOrgNumber = normalizeOrgNumber(input.orgNumber);
 
+  const { data: revokedInvite, error: revokedInviteError } = await supabase
+    .from("company_portal_invites")
+    .select("id")
+    .eq("email", normalizedEmail)
+    .eq("status", "revoked")
+    .limit(1)
+    .maybeSingle();
+
+  if (revokedInviteError) throw revokedInviteError;
+  if (revokedInvite) {
+    throw new Error("Denne e-postadressen er blokkert for bedriftsportalen. Kontakt OSH hvis dette er feil.");
+  }
+
   const existingAuthUser = await findAuthUserByEmail(normalizedEmail);
   if (!existingAuthUser || existingAuthUser.id !== input.userId) {
     throw new Error("Fant ikke bruker i Auth ennå. Bekreft e-posten og prøv igjen.");

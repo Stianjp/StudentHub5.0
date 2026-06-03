@@ -3,7 +3,12 @@ import { Input } from "@/components/ui/input";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { createCompanyAction, addCompanyDomainAction, approveCompanyAccessAction } from "@/app/admin/actions";
+import {
+  addCompanyDomainAction,
+  approveCompanyAccessAction,
+  createCompanyAction,
+  rejectCompanyAccessAction,
+} from "@/app/admin/actions";
 import { listCompanies, listCompanyAccessRequests, listCompanyDomains } from "@/lib/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -14,6 +19,7 @@ type PageProps = {
 export default async function AdminRegisterCompanyPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const saved = params.saved === "1";
+  const rejected = params.rejected === "1";
   const errorMessage = typeof params.error === "string" ? params.error : "";
   const error = Boolean(errorMessage) && errorMessage !== "1";
 
@@ -51,6 +57,11 @@ export default async function AdminRegisterCompanyPage({ searchParams }: PagePro
       {saved ? (
         <Card className="border border-success/30 bg-success/10 text-sm text-success">
           Oppdatering lagret.
+        </Card>
+      ) : null}
+      {rejected ? (
+        <Card className="border border-warning/30 bg-warning/10 text-sm text-ink">
+          Tilgangsforespørselen ble avvist og blokkert.
         </Card>
       ) : null}
       {error ? (
@@ -146,26 +157,36 @@ export default async function AdminRegisterCompanyPage({ searchParams }: PagePro
                       <p className="text-xs text-ink/70">Org.nr: {request.org_number}</p>
                     ) : null}
                   </div>
-                  <form action={approveCompanyAccessAction} className="flex flex-col gap-2 md:flex-row md:items-center">
-                    <input type="hidden" name="returnTo" value="/admin/companies/register" />
-                    <input type="hidden" name="requestId" value={request.id} />
-                    <input type="hidden" name="domain" value={request.domain ?? ""} />
-                    <input type="hidden" name="orgNumber" value={request.org_number ?? ""} />
-                    <input type="hidden" name="email" value={request.email ?? ""} />
-                    <label className="text-xs font-semibold text-primary">
-                      Bedrift
-                      <Select name="companyId" required defaultValue={request.company_id ?? "new"}>
-                        <option value="new">Opprett ny bedrift</option>
-                        {typedCompanies.map((company) => (
-                          <option key={company.id} value={company.id}>
-                            {company.name}
-                          </option>
-                        ))}
-                      </Select>
-                    </label>
-                    <input type="hidden" name="userId" value={request.user_id} />
-                    <Button type="submit">Godkjenn</Button>
-                  </form>
+                  <div className="flex flex-col gap-2 md:flex-row md:items-end">
+                    <form action={rejectCompanyAccessAction} className="flex items-end">
+                      <input type="hidden" name="returnTo" value="/admin/companies/register" />
+                      <input type="hidden" name="requestId" value={request.id} />
+                      <input type="hidden" name="companyId" value={request.company_id ?? ""} />
+                      <Button variant="danger" type="submit">
+                        Avvis og blokker
+                      </Button>
+                    </form>
+                    <form action={approveCompanyAccessAction} className="flex flex-col gap-2 md:flex-row md:items-center">
+                      <input type="hidden" name="returnTo" value="/admin/companies/register" />
+                      <input type="hidden" name="requestId" value={request.id} />
+                      <input type="hidden" name="domain" value={request.domain ?? ""} />
+                      <input type="hidden" name="orgNumber" value={request.org_number ?? ""} />
+                      <input type="hidden" name="email" value={request.email ?? ""} />
+                      <label className="text-xs font-semibold text-primary">
+                        Bedrift
+                        <Select name="companyId" required defaultValue={request.company_id ?? "new"}>
+                          <option value="new">Opprett ny bedrift</option>
+                          {typedCompanies.map((company) => (
+                            <option key={company.id} value={company.id}>
+                              {company.name}
+                            </option>
+                          ))}
+                        </Select>
+                      </label>
+                      <input type="hidden" name="userId" value={request.user_id} />
+                      <Button type="submit">Godkjenn</Button>
+                    </form>
+                  </div>
                 </div>
               </div>
             ))}
