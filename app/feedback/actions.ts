@@ -51,6 +51,9 @@ export async function submitFeedbackForm(formData: FormData) {
     if (!form) {
       throw new Error("Skjemaet finnes ikke.");
     }
+    if (formData.get("shareConsent") !== "on") {
+      throw new Error("Du må samtykke til deling av svar før du kan sende inn skjemaet.");
+    }
 
     const answers = parseFeedbackAnswers((questions ?? []) as FeedbackQuestion[], formData);
     const now = new Date().toISOString();
@@ -62,6 +65,7 @@ export async function submitFeedbackForm(formData: FormData) {
       metadata: {
         folder_slug: folderSlug || null,
         form_slug: formSlug || null,
+        share_consent: true,
         host: requestHeaders.get("host"),
         user_agent: requestHeaders.get("user-agent"),
         referer: requestHeaders.get("referer"),

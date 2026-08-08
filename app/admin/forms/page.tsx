@@ -6,7 +6,11 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { createFeedbackFolderAction } from "@/app/admin/forms/actions";
-import { getAdminFeedbackOverview } from "@/lib/feedback";
+import {
+  buildAdminFeedbackSlugSuggestionGroups,
+  getAdminFeedbackOverview,
+} from "@/lib/feedback";
+import { SlugPicker } from "@/components/admin/slug-picker";
 
 type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -19,6 +23,7 @@ export default async function AdminFormsPage({ searchParams }: PageProps) {
   const error = Boolean(errorMessage) && errorMessage !== "1";
 
   const folders = await getAdminFeedbackOverview();
+  const slugGroups = buildAdminFeedbackSlugSuggestionGroups(folders);
   const totalForms = folders.reduce((sum, folder) => sum + folder.forms.length, 0);
   const totalQuestions = folders.reduce((sum, folder) => sum + folder.forms.reduce((count, form) => count + form.questionCount, 0), 0);
   const totalResponses = folders.reduce((sum, folder) => sum + folder.responseCount, 0);
@@ -75,10 +80,13 @@ export default async function AdminFormsPage({ searchParams }: PageProps) {
               Navn
               <Input name="name" required placeholder="Student Connect 2026" />
             </label>
-            <label className="text-sm font-semibold text-primary">
-              Slug
-              <Input name="slug" placeholder="student-connect-2026" />
-            </label>
+            <SlugPicker
+              name="slug"
+              label="Slug"
+              groups={slugGroups}
+              placeholder="student-connect-2026"
+              helpText="Velg en eksisterende slug eller legg til ny nederst i menyen."
+            />
             <label className="text-sm font-semibold text-primary">
               Beskrivelse
               <Textarea name="description" rows={4} placeholder="Kort beskrivelse av arrangementet." />
@@ -95,7 +103,7 @@ export default async function AdminFormsPage({ searchParams }: PageProps) {
           <div>
             <h3 className="text-lg font-bold text-primary">Lag skjema i ny side</h3>
             <p className="text-sm text-primary/70">
-              Opprett skjemaet i en egen, tydelig builder med spørsmålstyper, flere spørsmål og personvernbekreftelse.
+              Opprett skjemaet i en egen, tydelig builder med spørsmålstyper og flere spørsmål.
             </p>
           </div>
           <Link

@@ -89,26 +89,46 @@ function renderQuestionField(question: FeedbackQuestion) {
               </Select>
             ) : null}
             {question.kind === "yes_no" ? (
-              <Select id={question.id} name={question.id} required={question.required} defaultValue="">
-                <option value="" disabled>
-                  Velg et svar
-                </option>
-                <option value="yes">Ja</option>
-                <option value="no">Nei</option>
-              </Select>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                {[
+                  { value: "yes", label: "Ja" },
+                  { value: "no", label: "Nei" },
+                ].map((option) => (
+                  <label
+                    key={option.value}
+                    className="flex flex-1 items-center gap-3 rounded-2xl border border-primary/10 bg-surface px-4 py-3 text-sm font-semibold text-primary"
+                  >
+                    <input
+                      type="radio"
+                      name={question.id}
+                      value={option.value}
+                      required={question.required}
+                      className="size-4 border-primary/30 text-secondary focus:ring-secondary"
+                    />
+                    {option.label}
+                  </label>
+                ))}
+              </div>
             ) : null}
             {question.kind === "single_choice" ? (
               options.length > 0 ? (
-                <Select id={question.id} name={question.id} required={question.required} defaultValue="">
-                  <option value="" disabled>
-                    Velg et alternativ
-                  </option>
+                <div className="grid gap-2">
                   {options.map((option) => (
-                    <option key={option} value={option}>
+                    <label
+                      key={option}
+                      className="flex items-center gap-3 rounded-2xl border border-primary/10 bg-surface px-4 py-3 text-sm font-medium text-primary"
+                    >
+                      <input
+                        type="radio"
+                        name={question.id}
+                        value={option}
+                        required={question.required}
+                        className="size-4 border-primary/30 text-secondary focus:ring-secondary"
+                      />
                       {option}
-                    </option>
+                    </label>
                   ))}
-                </Select>
+                </div>
               ) : (
                 <p className="text-sm text-primary/60">Ingen alternativer er lagt inn ennå.</p>
               )
@@ -222,6 +242,21 @@ export default async function FeedbackFormPage({ params, searchParams }: PagePro
                 Dette skjemaet har ingen spørsmål ennå. Legg til spørsmål før skjemaet brukes.
               </Card>
             ) : questions.map((question) => renderQuestionField(question))}
+
+            <Card className="border border-primary/10 bg-white text-sm leading-6 text-primary/75">
+              <label className="flex items-start gap-3 rounded-2xl border border-primary/10 bg-[#FBF8F4] p-4 font-semibold text-primary">
+                <input
+                  type="checkbox"
+                  name="shareConsent"
+                  required
+                  className="mt-1 size-4 rounded border-primary/30 text-secondary focus:ring-secondary"
+                />
+                Jeg samtykker til at svarene kan deles med samarbeidende bedrifter i henhold til personvernreglene.
+              </label>
+              <p className="mt-3 text-xs text-primary/55">
+                Samtykket må gis før skjemaet kan sendes inn.
+              </p>
+            </Card>
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-xs text-primary/55">

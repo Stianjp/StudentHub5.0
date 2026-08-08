@@ -159,7 +159,6 @@ export async function createFeedbackFormAction(formData: FormData) {
     const ctaLabel = String(getFormValue(formData, "ctaLabel") ?? "").trim();
     const thankYouText = String(getFormValue(formData, "thankYouText") ?? "").trim();
     const sortOrderValue = String(getFormValue(formData, "sortOrder") ?? "").trim();
-    const canShareAnswersWithPartners = isChecked(formData, "canShareAnswersWithPartners");
 
     if (!isUuid(folderId)) {
       throw new Error("Velg en gyldig mappe.");
@@ -177,7 +176,6 @@ export async function createFeedbackFormAction(formData: FormData) {
       intro_text: introText || null,
       cta_label: ctaLabel || "Start",
       thank_you_text: thankYouText || "Takk for tilbakemeldingen.",
-      can_share_answers_with_partners: canShareAnswersWithPartners,
       sort_order: sortOrderValue ? Number(sortOrderValue) : 0,
       is_published: isChecked(formData, "isPublished"),
       created_at: new Date().toISOString(),
@@ -210,16 +208,12 @@ export async function createFeedbackFormWizardAction(formData: FormData) {
     const ctaLabel = String(getFormValue(formData, "ctaLabel") ?? "").trim();
     const thankYouText = String(getFormValue(formData, "thankYouText") ?? "").trim();
     const sortOrderValue = String(getFormValue(formData, "sortOrder") ?? "").trim();
-    const canShareAnswersWithPartners = isChecked(formData, "canShareAnswersWithPartners");
 
     if (!isUuid(folderId)) {
       throw new Error("Velg en gyldig mappe.");
     }
     if (!title) {
       throw new Error("Tittel er påkrevd.");
-    }
-    if (!canShareAnswersWithPartners) {
-      throw new Error("Du må bekrefte at svarene kan deles med samarbeidende bedrifter.");
     }
 
     const questions = parseBuilderQuestions(formData);
@@ -236,7 +230,6 @@ export async function createFeedbackFormWizardAction(formData: FormData) {
         intro_text: introText || null,
         cta_label: ctaLabel || "Start",
         thank_you_text: thankYouText || "Takk for tilbakemeldingen.",
-        can_share_answers_with_partners: canShareAnswersWithPartners,
         sort_order: sortOrderValue ? Number(sortOrderValue) : 0,
         is_published: isChecked(formData, "isPublished"),
         created_at: now,
@@ -297,7 +290,6 @@ export async function saveFeedbackFormAction(formData: FormData) {
     const ctaLabel = String(getFormValue(formData, "ctaLabel") ?? "").trim();
     const thankYouText = String(getFormValue(formData, "thankYouText") ?? "").trim();
     const sortOrderValue = String(getFormValue(formData, "sortOrder") ?? "").trim();
-    const canShareAnswersWithPartners = isChecked(formData, "canShareAnswersWithPartners");
 
     if (!isUuid(formId)) {
       throw new Error("Ugyldig skjema.");
@@ -320,7 +312,6 @@ export async function saveFeedbackFormAction(formData: FormData) {
         intro_text: introText || null,
         cta_label: ctaLabel || "Start",
         thank_you_text: thankYouText || "Takk for tilbakemeldingen.",
-        can_share_answers_with_partners: canShareAnswersWithPartners,
         sort_order: sortOrderValue ? Number(sortOrderValue) : 0,
         is_published: isChecked(formData, "isPublished"),
         updated_at: new Date().toISOString(),

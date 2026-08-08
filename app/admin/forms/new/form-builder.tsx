@@ -2,15 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import type { FeedbackFolder, FeedbackSlugSuggestionGroup } from "@/lib/feedback";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import type { FeedbackFolder } from "@/lib/feedback";
+import { SlugPicker } from "@/components/admin/slug-picker";
+import { Input } from "@/components/ui/input";
 
-type QuestionKind = "short_text" | "long_text" | "single_choice" | "multi_choice";
+type QuestionKind = "short_text" | "long_text" | "yes_no" | "single_choice" | "multi_choice";
 
 type QuestionDraft = {
   id: string;
@@ -33,15 +33,16 @@ function createQuestionDraft(): QuestionDraft {
 }
 
 function isChoiceKind(kind: QuestionKind) {
-  return kind === "single_choice" || kind === "multi_choice";
+  return kind === "yes_no" || kind === "single_choice" || kind === "multi_choice";
 }
 
 type BuilderProps = {
   folders: Pick<FeedbackFolder, "id" | "name" | "slug" | "description">[];
+  slugGroups: FeedbackSlugSuggestionGroup[];
   action: (formData: FormData) => void | Promise<void>;
 };
 
-export function FeedbackFormBuilder({ folders, action }: BuilderProps) {
+export function FeedbackFormBuilder({ folders, slugGroups, action }: BuilderProps) {
   const [questions, setQuestions] = useState<QuestionDraft[]>(() => [createQuestionDraft()]);
 
   function updateQuestion(id: string, patch: Partial<QuestionDraft>) {
@@ -55,6 +56,20 @@ export function FeedbackFormBuilder({ folders, action }: BuilderProps) {
       if (current.length === 1) return current;
       return current.filter((question) => question.id !== id);
     });
+  }
+
+  function updateQuestionKind(id: string, kind: QuestionKind) {
+    setQuestions((current) =>
+      current.map((question) =>
+        question.id === id
+          ? {
+              ...question,
+              kind,
+              options: kind === "yes_no" ? "Ja, Nei" : kind === "short_text" || kind === "long_text" ? "" : question.options || "",
+            }
+          : question,
+      ),
+    );
   }
 
   return (
@@ -86,10 +101,13 @@ export function FeedbackFormBuilder({ folders, action }: BuilderProps) {
             <Input name="title" required placeholder="Hva synes du om arrangementet?" />
           </label>
 
-          <label className="text-sm font-semibold text-primary">
-            Slug
-            <Input name="slug" placeholder="hva-synes-du-om-arrangementet" />
-          </label>
+          <SlugPicker
+            name="slug"
+            label="Slug"
+            groups={slugGroups}
+            placeholder="hva-synes-du-om-arrangementet"
+            helpText="Velg en eksisterende slug eller legg til ny nederst i menyen."
+          />
 
           <label className="text-sm font-semibold text-primary">
             Kort beskrivelse
@@ -180,14 +198,11 @@ export function FeedbackFormBuilder({ folders, action }: BuilderProps) {
                     <Select
                       name={`question_${question.id}_kind`}
                       value={question.kind}
-                      onChange={(event) =>
-                        updateQuestion(question.id, {
-                          kind: event.target.value as QuestionKind,
-                        })
-                      }
+                      onChange={(event) => updateQuestionKind(question.id, event.target.value as QuestionKind)}
                     >
                       <option value="short_text">Tekstsvar</option>
                       <option value="long_text">Langt tekstsvar</option>
+                      <option value="yes_no">Ja / nei</option>
                       <option value="single_choice">Radioknapper</option>
                       <option value="multi_choice">Flervalg</option>
                     </Select>
@@ -195,18 +210,25 @@ export function FeedbackFormBuilder({ folders, action }: BuilderProps) {
 
                   {isChoiceKind(question.kind) ? (
                     <label className="text-sm font-semibold text-primary">
-                      Alternativer
+                      Svaralternativer
                       <Textarea
                         name={`question_${question.id}_options`}
                         rows={3}
                         value={question.options}
                         onChange={(event) => updateQuestion(question.id, { options: event.target.value })}
-                        placeholder="Alternativ 1, Alternativ 2, Alternativ 3"
-                        required
+                        placeholder={question.kind === "yes_no" ? "Ja, Nei" : "Alternativ 1, Alternativ 2, Alternativ 3"}
+                        required={question.kind !== "yes_no"}
+                        readOnly={question.kind === "yes_no"}
                       />
-                      <span className="mt-1 block text-xs font-normal text-primary/55">
-                        Skriv alternativene separert med komma.
-                      </span>
+                      {question.kind === "yes_no" ? (
+                        <span className="mt-1 block text-xs font-normal text-primary/55">
+                          Ja / nei fylles inn automatisk.
+                        </span>
+                      ) : (
+                        <span className="mt-1 block text-xs font-normal text-primary/55">
+                          Skriv alternativene separert med komma.
+                        </span>
+                      )}
                     </label>
                   ) : null}
 
@@ -237,29 +259,6 @@ export function FeedbackFormBuilder({ folders, action }: BuilderProps) {
           </div>
         </Card>
       </div>
-
-      <Card className="bg-primary text-surface">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <Badge variant="info" className="w-fit bg-white/10 text-white">
-              Personvern
-            </Badge>
-            <h3 className="mt-3 text-xl font-black">Bekreft deling av svar</h3>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-surface/80">
-              Før skjemaet kan lagres må du bekrefte at svarene kan deles med samarbeidende bedrifter i tråd med personvern og samtykke.
-            </p>
-          </div>
-          <label className="flex max-w-xl items-start gap-3 rounded-2xl border border-white/10 bg-white/8 p-4 text-sm font-semibold text-surface">
-            <input
-              type="checkbox"
-              name="canShareAnswersWithPartners"
-              required
-              className="mt-1 size-4 rounded border-white/40 text-secondary"
-            />
-            Jeg bekrefter at svarene i dette skjemaet kan deles med samarbeidende bedrifter i henhold til personvernreglene.
-          </label>
-        </div>
-      </Card>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Link href="/admin/forms" className="button-link text-sm">

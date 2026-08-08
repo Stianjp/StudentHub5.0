@@ -16,9 +16,6 @@ export default async function FeedbackLandingPage() {
   const folders = await getPublicFeedbackLandingData();
   const hasForms = folders.some((folder) => folder.forms.length > 0);
 
-  const formsByFolder = folders.filter((folder) => folder.forms.length > 0);
-  const totalForms = formsByFolder.reduce((sum, folder) => sum + folder.forms.length, 0);
-
   return (
     <main className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(254,154,112,0.18),_transparent_38%),linear-gradient(180deg,_#140249_0%,_#21104f_34%,_#f7f2ec_34%,_#f7f2ec_100%)] text-primary">
       <div className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-4 sm:px-5 md:gap-8 md:px-8 md:py-8 lg:py-12">

@@ -6,18 +6,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  FEEDBACK_QUESTION_KINDS,
-  getAdminFeedbackForm,
-  questionOptions,
-} from "@/lib/feedback";
+import { getAdminFeedbackForm, getAdminFeedbackSlugSuggestionGroups, questionOptions } from "@/lib/feedback";
 import {
   createFeedbackQuestionAction,
   saveFeedbackFormAction,
 } from "@/app/admin/forms/actions";
+import { SlugPicker } from "@/components/admin/slug-picker";
+import { QuestionCreateForm } from "@/components/admin/question-create-form";
 
 type PageProps = {
   params: Promise<{ formId: string }>;
@@ -56,7 +53,10 @@ export default async function AdminFeedbackFormPage({ params, searchParams }: Pa
   const saved = query.saved === "1";
   const errorMessage = typeof query.error === "string" ? query.error : "";
   const error = Boolean(errorMessage) && errorMessage !== "1";
-  const result = await getAdminFeedbackForm(formId);
+  const [result, slugGroups] = await Promise.all([
+    getAdminFeedbackForm(formId),
+    getAdminFeedbackSlugSuggestionGroups(),
+  ]);
 
   if (!result) {
     notFound();
@@ -130,10 +130,14 @@ export default async function AdminFeedbackFormPage({ params, searchParams }: Pa
               Tittel
               <Input name="title" required defaultValue={form.title} />
             </label>
-            <label className="text-sm font-semibold text-primary">
-              Slug
-              <Input name="slug" defaultValue={form.slug} />
-            </label>
+            <SlugPicker
+              name="slug"
+              label="Slug"
+              groups={slugGroups}
+              defaultValue={form.slug}
+              placeholder="hva-synes-du-om-arrangementet"
+              helpText="Velg en eksisterende slug eller legg til ny nederst i menyen."
+            />
             <label className="text-sm font-semibold text-primary">
               Beskrivelse
               <Textarea name="description" rows={3} defaultValue={form.description ?? ""} />
@@ -154,15 +158,6 @@ export default async function AdminFeedbackFormPage({ params, searchParams }: Pa
               Sortering
               <Input name="sortOrder" type="number" defaultValue={form.sort_order} />
             </label>
-            <label className="flex items-start gap-3 rounded-2xl border border-primary/10 bg-[#FBF8F4] p-4 text-sm font-semibold text-primary">
-              <input
-                type="checkbox"
-                name="canShareAnswersWithPartners"
-                defaultChecked={form.can_share_answers_with_partners}
-                className="mt-1 size-4 rounded border-primary/30 text-secondary"
-              />
-              Svar kan deles med samarbeidende bedrifter
-            </label>
             <label className="flex items-center gap-3 text-sm font-semibold text-primary">
               <input type="checkbox" name="isPublished" defaultChecked={form.is_published} className="size-4 rounded border-primary/30 text-secondary" />
               Publiser skjemaet
@@ -171,54 +166,11 @@ export default async function AdminFeedbackFormPage({ params, searchParams }: Pa
           </form>
         </Card>
 
-        <Card className="flex flex-col gap-4">
-          <div>
-            <h3 className="text-lg font-bold text-primary">Nytt spørsmål</h3>
-            <p className="text-sm text-primary/70">
-              Legg til spørsmål under dette skjemaet. Velg alternativ-felt når du trenger svar som brukeren kan velge mellom.
-            </p>
-          </div>
-          <form action={createFeedbackQuestionAction} className="grid gap-3">
-            <input type="hidden" name="returnTo" value={`/admin/forms/${formId}`} />
-            <input type="hidden" name="formId" value={form.id} />
-            <label className="text-sm font-semibold text-primary">
-              Spørsmål
-              <Input name="label" required placeholder="Hvor fornøyd var du?" />
-            </label>
-            <label className="text-sm font-semibold text-primary">
-              Type
-              <Select name="kind" required defaultValue="short_text">
-                {FEEDBACK_QUESTION_KINDS.map((kind) => (
-                  <option key={kind} value={kind}>
-                    {kind}
-                  </option>
-                ))}
-              </Select>
-            </label>
-            <label className="text-sm font-semibold text-primary">
-              Hjelpetekst
-              <Textarea name="helpText" rows={3} placeholder="Kort forklaring eller instrukser." />
-            </label>
-            <label className="text-sm font-semibold text-primary">
-              Alternativer
-              <Textarea
-                name="options"
-                rows={3}
-                placeholder="Bra, middels, dårlig"
-                defaultValue=""
-              />
-            </label>
-            <label className="text-sm font-semibold text-primary">
-              Sortering
-              <Input name="sortOrder" type="number" defaultValue={0} />
-            </label>
-            <label className="flex items-center gap-3 text-sm font-semibold text-primary">
-              <input type="checkbox" name="required" className="size-4 rounded border-primary/30 text-secondary" />
-              Obligatorisk
-            </label>
-            <Button type="submit">Legg til spørsmål</Button>
-          </form>
-        </Card>
+        <QuestionCreateForm
+          action={createFeedbackQuestionAction}
+          formId={form.id}
+          returnTo={`/admin/forms/${formId}`}
+        />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1fr_0.95fr]">

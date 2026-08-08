@@ -2,7 +2,10 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { Card } from "@/components/ui/card";
 import { SectionHeader } from "@/components/ui/section-header";
-import { getAdminFeedbackOverview } from "@/lib/feedback";
+import {
+  getAdminFeedbackOverview,
+  getAdminFeedbackSlugSuggestionGroups,
+} from "@/lib/feedback";
 import { createFeedbackFormWizardAction } from "@/app/admin/forms/actions";
 import { FeedbackFormBuilder } from "./form-builder";
 
@@ -12,7 +15,7 @@ type PageProps = {
 
 export const metadata: Metadata = {
   title: "Lag skjema | Oslo Student Hub",
-  description: "Opprett et nytt feedback-skjema med spørsmål, svarvalg og personvernbekreftelse.",
+  description: "Opprett et nytt feedback-skjema med spørsmål, svarvalg og enkel struktur.",
 };
 
 export default async function NewFeedbackFormPage({ searchParams }: PageProps) {
@@ -20,7 +23,10 @@ export default async function NewFeedbackFormPage({ searchParams }: PageProps) {
   const errorMessage = typeof params.error === "string" ? params.error : "";
   const error = Boolean(errorMessage) && errorMessage !== "1";
 
-  const folders = await getAdminFeedbackOverview();
+  const [folders, slugGroups] = await Promise.all([
+    getAdminFeedbackOverview(),
+    getAdminFeedbackSlugSuggestionGroups(),
+  ]);
   const folderChoices = folders.map((folder) => ({
     id: folder.id,
     name: folder.name,
@@ -33,7 +39,7 @@ export default async function NewFeedbackFormPage({ searchParams }: PageProps) {
       <SectionHeader
         eyebrow="Skjemaer"
         title="Lag nytt skjema"
-        description="Bygg skjemaet i en egen side med tydelig struktur for tittel, spørsmål, svarvalg og personvern."
+        description="Bygg skjemaet i en egen side med tydelig struktur for tittel, spørsmål og svarvalg."
       />
 
       <div className="flex items-center justify-between gap-3">
@@ -53,7 +59,11 @@ export default async function NewFeedbackFormPage({ searchParams }: PageProps) {
           Du må opprette en arrangementmappe før du kan lage et skjema. Gå tilbake til oversikten og lag en mappe først.
         </Card>
       ) : (
-        <FeedbackFormBuilder folders={folderChoices} action={createFeedbackFormWizardAction} />
+        <FeedbackFormBuilder
+          folders={folderChoices}
+          slugGroups={slugGroups}
+          action={createFeedbackFormWizardAction}
+        />
       )}
     </div>
   );

@@ -26,6 +26,14 @@ export type FeedbackFormWithMeta = FeedbackForm & {
   responseCount: number;
 };
 
+export type FeedbackSlugSuggestionGroup = {
+  label: string;
+  options: Array<{
+    value: string;
+    label: string;
+  }>;
+};
+
 export type FeedbackFolderWithForms = FeedbackFolder & {
   forms: FeedbackFormWithMeta[];
   formCount: number;
@@ -80,6 +88,32 @@ function sortResponsesBySubmittedAt(rows: FeedbackResponse[]) {
     }
     return right.created_at.localeCompare(left.created_at);
   });
+}
+
+function buildFeedbackSlugSuggestions(
+  folders: Array<Pick<FeedbackFolder, "id" | "name" | "slug">>,
+  forms: Array<Pick<FeedbackForm, "title" | "slug" | "folder_id">>,
+) {
+  const folderOptions = folders.map((folder) => ({
+    value: folder.slug,
+    label: `${folder.name} · ${folder.slug}`,
+  }));
+  const folderNameById = new Map(folders.map((folder) => [folder.id, folder.name]));
+  const formOptions = forms.map((form) => ({
+    value: form.slug,
+    label: `${folderNameById.get(form.folder_id) ?? "Skjema"} · ${form.title} · ${form.slug}`,
+  }));
+
+  return [
+    {
+      label: "Arrangementsmapper",
+      options: folderOptions,
+    },
+    {
+      label: "Skjemaer",
+      options: formOptions,
+    },
+  ].filter((group) => group.options.length > 0);
 }
 
 function buildFolderOverview(
@@ -268,6 +302,46 @@ export async function getAdminFeedbackOverview() {
     (questionsResult.data ?? []) as FeedbackQuestion[],
     (responsesResult.data ?? []) as FeedbackResponse[],
   );
+}
+
+export async function getAdminFeedbackSlugSuggestionGroups() {
+  const supabase = createAdminSupabaseClient();
+  const [foldersResult, formsResult] = await Promise.all([
+    supabase.from("feedback_folders").select("id, name, slug").order("name", { ascending: true }),
+    supabase
+      .from("feedback_forms")
+      .select("id, title, slug, folder_id")
+      .order("title", { ascending: true }),
+  ]);
+
+  if (foldersResult.error) throw foldersResult.error;
+  if (formsResult.error) throw formsResult.error;
+
+  const folders = (foldersResult.data ?? []) as Array<Pick<FeedbackFolder, "name" | "slug" | "id">>;
+  const forms = (formsResult.data ?? []) as Array<Pick<FeedbackForm, "title" | "slug" | "folder_id">>;
+
+  return buildFeedbackSlugSuggestions(folders, forms);
+}
+
+export function buildAdminFeedbackSlugSuggestionGroups(folders: FeedbackFolderWithForms[]) {
+  return [
+    {
+      label: "Arrangementsmapper",
+      options: folders.map((folder) => ({
+        value: folder.slug,
+        label: `${folder.name} · ${folder.slug}`,
+      })),
+    },
+    {
+      label: "Skjemaer",
+      options: folders.flatMap((folder) =>
+        folder.forms.map((form) => ({
+          value: form.slug,
+          label: `${folder.name} · ${form.title} · ${form.slug}`,
+        })),
+      ),
+    },
+  ].filter((group) => group.options.length > 0);
 }
 
 export async function listAdminFeedbackResponses() {
