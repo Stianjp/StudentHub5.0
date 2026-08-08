@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
-import { ArrowRight, QrCode, Sparkles } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { SectionHeader } from "@/components/ui/section-header";
@@ -60,18 +60,6 @@ export default async function FeedbackLandingPage() {
                     sizes="(max-width: 1024px) 100vw, 40vw"
                     className="object-cover"
                   />
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <div className="flex size-12 items-center justify-center rounded-2xl bg-primary text-surface">
-                  <QrCode size={22} />
-                </div>
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary/60">
-                    Fast adresse
-                  </p>
-                  <p className="text-lg font-bold">feedback.oslostudenthub.no</p>
                 </div>
               </div>
 

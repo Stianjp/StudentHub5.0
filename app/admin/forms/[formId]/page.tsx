@@ -11,10 +11,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { getAdminFeedbackForm, getAdminFeedbackSlugSuggestionGroups, questionOptions } from "@/lib/feedback";
 import {
   createFeedbackQuestionAction,
+  deleteFeedbackFormAction,
   saveFeedbackFormAction,
 } from "@/app/admin/forms/actions";
 import { SlugPicker } from "@/components/admin/slug-picker";
 import { QuestionCreateForm } from "@/components/admin/question-create-form";
+import { DeleteFeedbackForm } from "@/components/admin/delete-feedback-form";
 
 type PageProps = {
   params: Promise<{ formId: string }>;
@@ -111,7 +113,7 @@ export default async function AdminFeedbackFormPage({ params, searchParams }: Pa
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
-        <Card className="flex flex-col gap-4">
+        <Card className="admin-light-surface flex flex-col gap-4">
           <div>
             <h3 className="text-lg font-bold text-primary">Skjemainnstillinger</h3>
             <p className="text-sm text-primary/70">
@@ -162,6 +164,9 @@ export default async function AdminFeedbackFormPage({ params, searchParams }: Pa
               <input type="checkbox" name="isPublished" defaultChecked={form.is_published} className="size-4 rounded border-primary/30 text-secondary" />
               Publiser skjemaet
             </label>
+            <p className="text-xs text-primary/60">
+              Fjern avkrysningen og lagre for å gjøre skjemaet upublisert.
+            </p>
             <Button type="submit">Lagre skjema</Button>
           </form>
         </Card>
@@ -174,7 +179,7 @@ export default async function AdminFeedbackFormPage({ params, searchParams }: Pa
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1fr_0.95fr]">
-        <Card className="flex flex-col gap-4">
+        <Card className="admin-light-surface flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-bold text-primary">Spørsmål</h3>
@@ -186,7 +191,7 @@ export default async function AdminFeedbackFormPage({ params, searchParams }: Pa
           ) : (
             <div className="grid gap-3">
               {questions.map((question) => (
-                <div key={question.id} className="rounded-2xl border border-primary/10 bg-[#FBF8F4] p-4">
+                <div key={question.id} className="rounded-2xl border border-primary/10 bg-[#FBF8F4] p-4 text-primary">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="font-bold text-primary">{question.label}</p>
                     <Badge variant="default">{question.kind}</Badge>
@@ -204,7 +209,7 @@ export default async function AdminFeedbackFormPage({ params, searchParams }: Pa
           )}
         </Card>
 
-        <Card className="flex flex-col gap-4">
+        <Card className="admin-light-surface flex flex-col gap-4">
           <div>
             <h3 className="text-lg font-bold text-primary">Svar</h3>
             <p className="text-sm text-primary/70">Viser siste innsendelser for skjemaet.</p>
@@ -217,7 +222,7 @@ export default async function AdminFeedbackFormPage({ params, searchParams }: Pa
                 const answerMap = response.answers as Record<string, unknown>;
 
                 return (
-                  <div key={response.id} className="rounded-2xl border border-primary/10 bg-[#FBF8F4] p-4">
+                  <div key={response.id} className="rounded-2xl border border-primary/10 bg-[#FBF8F4] p-4 text-primary">
                     <div className="flex items-center justify-between gap-3">
                       <p className="text-sm font-semibold text-primary">
                         {new Date(response.submitted_at).toLocaleString("nb-NO")}
@@ -226,7 +231,7 @@ export default async function AdminFeedbackFormPage({ params, searchParams }: Pa
                     </div>
                     <div className="mt-4 grid gap-3">
                       {questions.map((question) => (
-                        <div key={question.id} className="rounded-2xl bg-white p-3">
+                        <div key={question.id} className="rounded-2xl bg-white p-3 text-primary">
                           <p className="text-xs font-semibold uppercase tracking-wide text-primary/50">
                             {question.label}
                           </p>
@@ -241,6 +246,21 @@ export default async function AdminFeedbackFormPage({ params, searchParams }: Pa
           )}
         </Card>
       </div>
+
+      <Card className="admin-light-surface flex flex-col gap-4 border border-error/20 bg-white">
+        <div>
+          <h3 className="text-lg font-bold text-primary">Fjern skjema</h3>
+          <p className="text-sm text-primary/70">
+            Sletting fjerner skjemaet permanent sammen med spørsmål og svar.
+          </p>
+        </div>
+        <DeleteFeedbackForm
+          action={deleteFeedbackFormAction}
+          formId={form.id}
+          returnTo="/admin/forms"
+          title={form.title}
+        />
+      </Card>
     </div>
   );
 }

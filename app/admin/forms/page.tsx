@@ -27,18 +27,24 @@ export default async function AdminFormsPage({ searchParams }: PageProps) {
   const totalForms = folders.reduce((sum, folder) => sum + folder.forms.length, 0);
   const totalQuestions = folders.reduce((sum, folder) => sum + folder.forms.reduce((count, form) => count + form.questionCount, 0), 0);
   const totalResponses = folders.reduce((sum, folder) => sum + folder.responseCount, 0);
+  const deleted = params.deleted === "1";
 
   return (
     <div className="flex flex-col gap-8 text-primary">
       <SectionHeader
         eyebrow="Skjemaer"
         title="Skjemabygger for feedback"
-        description="Lag mapper per arrangement, opprett flere skjemaer per mappe, og bruk en fast QR-kode til feedback.oslostudenthub.no."
+        description="Lag mapper per arrangement, opprett flere skjemaer per mappe, og del dem via QR-kode eller lenke."
       />
 
       {saved ? (
         <Card className="border border-success/30 bg-success/10 text-sm text-success">
           Oppdatering lagret.
+        </Card>
+      ) : null}
+      {deleted ? (
+        <Card className="border border-success/30 bg-success/10 text-sm text-success">
+          Skjemaet ble slettet.
         </Card>
       ) : null}
       {error ? (
@@ -136,7 +142,7 @@ export default async function AdminFormsPage({ searchParams }: PageProps) {
         ) : (
           <div className="grid gap-4">
             {folders.map((folder) => (
-              <div key={folder.id} className="rounded-3xl border border-primary/10 bg-[#FBF8F4] p-5">
+              <div key={folder.id} className="admin-light-surface rounded-3xl border border-primary/10 bg-[#FBF8F4] p-5">
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
@@ -157,7 +163,7 @@ export default async function AdminFormsPage({ searchParams }: PageProps) {
                     folder.forms.map((form) => (
                       <div
                         key={form.id}
-                        className="flex flex-col gap-3 rounded-2xl border border-white/70 bg-white p-4 md:flex-row md:items-center md:justify-between"
+                        className="admin-light-surface flex flex-col gap-3 rounded-2xl border border-white/70 bg-white p-4 md:flex-row md:items-center md:justify-between"
                       >
                         <div>
                           <div className="flex flex-wrap items-center gap-2">

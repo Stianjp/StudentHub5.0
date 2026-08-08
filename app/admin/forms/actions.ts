@@ -331,6 +331,118 @@ export async function saveFeedbackFormAction(formData: FormData) {
   }
 }
 
+export async function setFeedbackFormPublishedAction(formData: FormData) {
+  await requireRole("admin");
+  const returnTo = formData.get("returnTo");
+
+  try {
+    const formId = String(getFormValue(formData, "formId") ?? "").trim();
+    const isPublished = isChecked(formData, "isPublished");
+
+    if (!isUuid(formId)) {
+      throw new Error("Ugyldig skjema.");
+    }
+
+    const supabase = createAdminSupabaseClient();
+    const { data: form, error: formError } = await supabase
+      .from("feedback_forms")
+      .select("id, slug, folder_id")
+      .eq("id", formId)
+      .maybeSingle();
+
+    if (formError) throw formError;
+    if (!form) {
+      throw new Error("Skjemaet finnes ikke.");
+    }
+
+    const { data: folder, error: folderError } = await supabase
+      .from("feedback_folders")
+      .select("slug")
+      .eq("id", form.folder_id)
+      .maybeSingle();
+
+    if (folderError) throw folderError;
+    if (!folder) {
+      throw new Error("Mappen til skjemaet ble ikke funnet.");
+    }
+
+    const { error } = await supabase
+      .from("feedback_forms")
+      .update({
+        is_published: isPublished,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", formId);
+    if (error) throw error;
+
+    revalidatePath("/admin/forms");
+    revalidatePath("/feedback");
+    revalidatePath(`/feedback/${folder.slug}`);
+    revalidatePath(`/feedback/${folder.slug}/${form.slug}`);
+    redirectBack(returnTo, `/admin/forms/${formId}`);
+  } catch (error) {
+    if (isNextRedirectError(error)) throw error;
+    if (typeof returnTo === "string" && returnTo.startsWith("/")) {
+      redirect(`${returnTo}?error=${encodeURIComponent(getErrorMessage(error))}`);
+    }
+    throw error;
+  }
+}
+
+export async function deleteFeedbackFormAction(formData: FormData) {
+  await requireRole("admin");
+  const returnTo = formData.get("returnTo");
+
+  try {
+    const formId = String(getFormValue(formData, "formId") ?? "").trim();
+
+    if (!isUuid(formId)) {
+      throw new Error("Ugyldig skjema.");
+    }
+
+    const supabase = createAdminSupabaseClient();
+    const { data: form, error: formError } = await supabase
+      .from("feedback_forms")
+      .select("id, slug, folder_id")
+      .eq("id", formId)
+      .maybeSingle();
+
+    if (formError) throw formError;
+    if (!form) {
+      throw new Error("Skjemaet finnes ikke.");
+    }
+
+    const { data: folder, error: folderError } = await supabase
+      .from("feedback_folders")
+      .select("slug")
+      .eq("id", form.folder_id)
+      .maybeSingle();
+
+    if (folderError) throw folderError;
+
+    const { error } = await supabase.from("feedback_forms").delete().eq("id", formId);
+    if (error) throw error;
+
+    revalidatePath("/admin/forms");
+    revalidatePath("/feedback");
+    if (folder?.slug) {
+      revalidatePath(`/feedback/${folder.slug}`);
+      revalidatePath(`/feedback/${folder.slug}/${form.slug}`);
+    }
+
+    if (typeof returnTo === "string" && returnTo.startsWith("/")) {
+      redirect(`${returnTo}?deleted=1`);
+    }
+    redirect("/admin/forms?deleted=1");
+  } catch (error) {
+    if (isNextRedirectError(error)) throw error;
+    if (typeof returnTo === "string" && returnTo.startsWith("/")) {
+      redirect(`${returnTo}?error=${encodeURIComponent(getErrorMessage(error))}`);
+    }
+    throw error;
+  }
+}
+
 export async function createFeedbackQuestionAction(formData: FormData) {
   await requireRole("admin");
   const returnTo = formData.get("returnTo");

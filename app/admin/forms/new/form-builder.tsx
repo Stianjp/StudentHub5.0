@@ -77,7 +77,7 @@ export function FeedbackFormBuilder({ folders, slugGroups, action }: BuilderProp
       <input type="hidden" name="questionOrder" value={questions.map((question) => question.id).join(",")} />
 
       <div className="grid gap-4 lg:grid-cols-[0.95fr_1.05fr]">
-        <Card className="flex flex-col gap-4">
+        <Card className="admin-light-surface flex flex-col gap-4">
           <div>
             <h3 className="text-lg font-bold text-primary">Skjemaoppsett</h3>
             <p className="text-sm text-primary/70">
@@ -129,12 +129,12 @@ export function FeedbackFormBuilder({ folders, slugGroups, action }: BuilderProp
             <Textarea name="thankYouText" rows={3} defaultValue="Takk for tilbakemeldingen." />
           </label>
 
-          <label className="text-sm font-semibold text-primary">
+          <label className="admin-light-surface text-sm font-semibold text-primary">
             Sortering
             <Input name="sortOrder" type="number" defaultValue={0} />
           </label>
 
-          <label className="flex items-start gap-3 rounded-2xl border border-primary/10 bg-[#FBF8F4] p-4 text-sm font-semibold text-primary">
+          <label className="admin-light-surface flex items-start gap-3 rounded-2xl border border-primary/10 bg-[#FBF8F4] p-4 text-sm font-semibold text-primary">
             <input
               type="checkbox"
               name="isPublished"
@@ -144,7 +144,7 @@ export function FeedbackFormBuilder({ folders, slugGroups, action }: BuilderProp
           </label>
         </Card>
 
-        <Card className="flex flex-col gap-4">
+        <Card className="admin-light-surface flex flex-col gap-4">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h3 className="text-lg font-bold text-primary">Spørsmål</h3>
@@ -163,7 +163,7 @@ export function FeedbackFormBuilder({ folders, slugGroups, action }: BuilderProp
 
           <div className="grid gap-4">
             {questions.map((question, index) => (
-              <Card key={question.id} className="border border-primary/10 bg-[#FBF8F4] p-4">
+              <Card key={question.id} className="admin-light-surface border border-primary/10 bg-[#FBF8F4] p-4">
                 <div className="flex flex-col gap-3">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
@@ -232,7 +232,7 @@ export function FeedbackFormBuilder({ folders, slugGroups, action }: BuilderProp
                     </label>
                   ) : null}
 
-                  <label className="text-sm font-semibold text-primary">
+                  <label className="admin-light-surface text-sm font-semibold text-primary">
                     Hjelpetekst
                     <Textarea
                       name={`question_${question.id}_helpText`}
@@ -243,7 +243,7 @@ export function FeedbackFormBuilder({ folders, slugGroups, action }: BuilderProp
                     />
                   </label>
 
-                  <label className="flex items-start gap-3 rounded-2xl border border-white/80 bg-white px-4 py-3 text-sm font-semibold text-primary">
+                  <label className="admin-light-surface flex items-start gap-3 rounded-2xl border border-white/80 bg-white px-4 py-3 text-sm font-semibold text-primary">
                     <input
                       type="checkbox"
                       name={`question_${question.id}_required`}

@@ -85,7 +85,7 @@ export function QuestionCreateForm({ action, formId, returnTo }: QuestionCreateF
   const optionValues = options.map((option) => option.value).filter(Boolean);
 
   return (
-    <Card className="flex flex-col gap-5">
+    <Card className="admin-light-surface flex flex-col gap-5">
       <div className="space-y-2">
         <h3 className="text-lg font-bold text-primary">Nytt spørsmål</h3>
         <p className="text-sm leading-6 text-primary/70">
@@ -134,7 +134,7 @@ export function QuestionCreateForm({ action, formId, returnTo }: QuestionCreateF
           </div>
         </div>
 
-        <Card className="border border-primary/10 bg-[#FBF8F4] p-4">
+        <Card className="admin-light-surface border border-primary/10 bg-[#FBF8F4] p-4">
           <p className="text-xs font-semibold uppercase tracking-wide text-primary/50">Forhåndsvisning</p>
           <div className="mt-3 rounded-2xl border border-primary/10 bg-white p-4">
             <p className="text-sm font-bold text-primary">{label || "Skriv spørsmålet her"}</p>
@@ -195,7 +195,7 @@ export function QuestionCreateForm({ action, formId, returnTo }: QuestionCreateF
         </Card>
 
         {kind === "yes_no" ? (
-          <Card className="border border-primary/10 bg-[#FBF8F4] p-4 text-sm text-primary/70">
+          <Card className="admin-light-surface border border-primary/10 bg-[#FBF8F4] p-4 text-sm text-primary/70">
             Ja / nei settes automatisk som svaralternativer.
           </Card>
         ) : null}
