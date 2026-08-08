@@ -6,10 +6,10 @@ export const metadata: Metadata = {
   description: "Screening, matching og events for studenter og bedrifter.",
   icons: {
     icon: [
-      { url: "/brand/osh-favicon.svg", type: "image/svg+xml" },
+      { url: "/brand/logo.svg", type: "image/svg+xml" },
     ],
-    shortcut: "/brand/osh-favicon.svg",
-    apple: "/brand/osh-favicon.svg",
+    shortcut: "/brand/logo.svg",
+    apple: "/apple-touch-icon.png",
   },
 };
 
