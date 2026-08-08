@@ -1072,6 +1072,7 @@ export type Database = {
           intro_text: string | null;
           cta_label: string;
           thank_you_text: string;
+          can_share_answers_with_partners: boolean;
           is_published: boolean;
           sort_order: number;
           created_at: string;
@@ -1086,6 +1087,7 @@ export type Database = {
           intro_text?: string | null;
           cta_label?: string;
           thank_you_text?: string;
+          can_share_answers_with_partners?: boolean;
           is_published?: boolean;
           sort_order?: number;
           created_at?: string;
@@ -1100,6 +1102,7 @@ export type Database = {
           intro_text?: string | null;
           cta_label?: string;
           thank_you_text?: string;
+          can_share_answers_with_partners?: boolean;
           is_published?: boolean;
           sort_order?: number;
           created_at?: string;

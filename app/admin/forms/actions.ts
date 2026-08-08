@@ -8,6 +8,7 @@ import {
   buildFeedbackSlug,
   FEEDBACK_QUESTION_KINDS,
   normalizeFeedbackOptions,
+  type FeedbackQuestion,
   type FeedbackQuestionKind,
 } from "@/lib/feedback";
 import { isUuid } from "@/lib/utils";
@@ -47,6 +48,58 @@ function getFormValue(formData: FormData, name: string) {
 function isChecked(formData: FormData, name: string) {
   const value = formData.get(name);
   return value === "on" || value === "true" || value === "1";
+}
+
+function getQuestionField(formData: FormData, questionId: string, field: string) {
+  const direct = formData.get(`question_${questionId}_${field}`);
+  if (direct !== null) return direct;
+
+  for (const [key, value] of formData.entries()) {
+    if (key === `${questionId}_${field}` || key === `question_${questionId}_${field}`) {
+      return value;
+    }
+  }
+
+  return null;
+}
+
+function parseBuilderQuestions(formData: FormData) {
+  const orderRaw = String(getFormValue(formData, "questionOrder") ?? "").trim();
+  const questionIds = orderRaw.split(",").map((item) => item.trim()).filter(Boolean);
+
+  if (questionIds.length === 0) {
+    throw new Error("Legg til minst ett spørsmål.");
+  }
+
+  return questionIds.map((questionId, index) => {
+    const label = String(getQuestionField(formData, questionId, "label") ?? "").trim();
+    const kind = String(getQuestionField(formData, questionId, "kind") ?? "").trim();
+    const helpText = String(getQuestionField(formData, questionId, "helpText") ?? "").trim();
+    const options = normalizeFeedbackOptions(String(getQuestionField(formData, questionId, "options") ?? ""));
+    const required = isChecked(formData, `question_${questionId}_required`);
+
+    if (!label) {
+      throw new Error(`Spørsmål ${index + 1} må ha en tittel.`);
+    }
+    if (!kind) {
+      throw new Error(`Spørsmål ${index + 1} må ha en type.`);
+    }
+    if (!FEEDBACK_QUESTION_KINDS.includes(kind as FeedbackQuestionKind)) {
+      throw new Error(`Spørsmål ${index + 1} har ugyldig type.`);
+    }
+    if ((kind === "single_choice" || kind === "multi_choice") && options.length === 0) {
+      throw new Error(`Spørsmål ${index + 1} må ha minst ett alternativ.`);
+    }
+
+    return {
+      label,
+      kind: kind as FeedbackQuestion["kind"],
+      help_text: helpText || null,
+      required,
+      options,
+      sort_order: index,
+    };
+  });
 }
 
 function redirectBack(returnTo: FormDataEntryValue | null, path: string) {
@@ -106,6 +159,7 @@ export async function createFeedbackFormAction(formData: FormData) {
     const ctaLabel = String(getFormValue(formData, "ctaLabel") ?? "").trim();
     const thankYouText = String(getFormValue(formData, "thankYouText") ?? "").trim();
     const sortOrderValue = String(getFormValue(formData, "sortOrder") ?? "").trim();
+    const canShareAnswersWithPartners = isChecked(formData, "canShareAnswersWithPartners");
 
     if (!isUuid(folderId)) {
       throw new Error("Velg en gyldig mappe.");
@@ -123,6 +177,7 @@ export async function createFeedbackFormAction(formData: FormData) {
       intro_text: introText || null,
       cta_label: ctaLabel || "Start",
       thank_you_text: thankYouText || "Takk for tilbakemeldingen.",
+      can_share_answers_with_partners: canShareAnswersWithPartners,
       sort_order: sortOrderValue ? Number(sortOrderValue) : 0,
       is_published: isChecked(formData, "isPublished"),
       created_at: new Date().toISOString(),
@@ -133,6 +188,92 @@ export async function createFeedbackFormAction(formData: FormData) {
     revalidatePath("/admin/forms");
     revalidatePath("/feedback");
     redirectBack(returnTo, "/admin/forms");
+  } catch (error) {
+    if (isNextRedirectError(error)) throw error;
+    if (typeof returnTo === "string" && returnTo.startsWith("/")) {
+      redirect(`${returnTo}?error=${encodeURIComponent(getErrorMessage(error))}`);
+    }
+    throw error;
+  }
+}
+
+export async function createFeedbackFormWizardAction(formData: FormData) {
+  await requireRole("admin");
+  const returnTo = formData.get("returnTo");
+
+  try {
+    const folderId = String(getFormValue(formData, "folderId") ?? "").trim();
+    const title = String(getFormValue(formData, "title") ?? "").trim();
+    const slugValue = String(getFormValue(formData, "slug") ?? "").trim();
+    const description = String(getFormValue(formData, "description") ?? "").trim();
+    const introText = String(getFormValue(formData, "introText") ?? "").trim();
+    const ctaLabel = String(getFormValue(formData, "ctaLabel") ?? "").trim();
+    const thankYouText = String(getFormValue(formData, "thankYouText") ?? "").trim();
+    const sortOrderValue = String(getFormValue(formData, "sortOrder") ?? "").trim();
+    const canShareAnswersWithPartners = isChecked(formData, "canShareAnswersWithPartners");
+
+    if (!isUuid(folderId)) {
+      throw new Error("Velg en gyldig mappe.");
+    }
+    if (!title) {
+      throw new Error("Tittel er påkrevd.");
+    }
+    if (!canShareAnswersWithPartners) {
+      throw new Error("Du må bekrefte at svarene kan deles med samarbeidende bedrifter.");
+    }
+
+    const questions = parseBuilderQuestions(formData);
+    const supabase = createAdminSupabaseClient();
+    const now = new Date().toISOString();
+
+    const [{ data: folder, error: folderError }, { data: form, error: formError }] = await Promise.all([
+      supabase.from("feedback_folders").select("id, slug").eq("id", folderId).maybeSingle(),
+      supabase.from("feedback_forms").insert({
+        folder_id: folderId,
+        title,
+        slug: slugValue ? buildFeedbackSlug(slugValue) : buildFeedbackSlug(title),
+        description: description || null,
+        intro_text: introText || null,
+        cta_label: ctaLabel || "Start",
+        thank_you_text: thankYouText || "Takk for tilbakemeldingen.",
+        can_share_answers_with_partners: canShareAnswersWithPartners,
+        sort_order: sortOrderValue ? Number(sortOrderValue) : 0,
+        is_published: isChecked(formData, "isPublished"),
+        created_at: now,
+        updated_at: now,
+      })
+      .select("*")
+      .single(),
+    ]);
+
+    if (folderError) throw folderError;
+    if (formError) throw formError;
+    if (!folder || !form) {
+      throw new Error("Kunne ikke opprette skjema.");
+    }
+
+    for (const question of questions) {
+      const { error } = await supabase.from("feedback_questions").insert({
+        form_id: form.id,
+        label: question.label,
+        kind: question.kind,
+        help_text: question.help_text,
+        required: question.required,
+        options: question.options,
+        sort_order: question.sort_order,
+        created_at: now,
+        updated_at: now,
+      });
+      if (error) throw error;
+    }
+
+    revalidatePath("/admin/forms");
+    revalidatePath("/feedback");
+    revalidatePath(`/feedback/${folder.slug}`);
+    if (form.is_published) {
+      revalidatePath(`/feedback/${folder.slug}/${form.slug}`);
+    }
+    redirect(`/admin/forms/${form.id}?saved=1`);
   } catch (error) {
     if (isNextRedirectError(error)) throw error;
     if (typeof returnTo === "string" && returnTo.startsWith("/")) {
@@ -156,6 +297,7 @@ export async function saveFeedbackFormAction(formData: FormData) {
     const ctaLabel = String(getFormValue(formData, "ctaLabel") ?? "").trim();
     const thankYouText = String(getFormValue(formData, "thankYouText") ?? "").trim();
     const sortOrderValue = String(getFormValue(formData, "sortOrder") ?? "").trim();
+    const canShareAnswersWithPartners = isChecked(formData, "canShareAnswersWithPartners");
 
     if (!isUuid(formId)) {
       throw new Error("Ugyldig skjema.");
@@ -178,6 +320,7 @@ export async function saveFeedbackFormAction(formData: FormData) {
         intro_text: introText || null,
         cta_label: ctaLabel || "Start",
         thank_you_text: thankYouText || "Takk for tilbakemeldingen.",
+        can_share_answers_with_partners: canShareAnswersWithPartners,
         sort_order: sortOrderValue ? Number(sortOrderValue) : 0,
         is_published: isChecked(formData, "isPublished"),
         updated_at: new Date().toISOString(),

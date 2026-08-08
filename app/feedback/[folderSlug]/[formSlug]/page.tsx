@@ -177,6 +177,12 @@ export default async function FeedbackFormPage({ params, searchParams }: PagePro
               <span>{questions.length} spørsmål</span>
               <span>•</span>
               <span>Fast QR-landing</span>
+              {form.can_share_answers_with_partners ? (
+                <>
+                  <span>•</span>
+                  <span>Svar kan deles med samarbeidspartnere</span>
+                </>
+              ) : null}
             </div>
           </div>
         </Card>

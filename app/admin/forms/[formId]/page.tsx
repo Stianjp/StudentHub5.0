@@ -154,6 +154,15 @@ export default async function AdminFeedbackFormPage({ params, searchParams }: Pa
               Sortering
               <Input name="sortOrder" type="number" defaultValue={form.sort_order} />
             </label>
+            <label className="flex items-start gap-3 rounded-2xl border border-primary/10 bg-[#FBF8F4] p-4 text-sm font-semibold text-primary">
+              <input
+                type="checkbox"
+                name="canShareAnswersWithPartners"
+                defaultChecked={form.can_share_answers_with_partners}
+                className="mt-1 size-4 rounded border-primary/30 text-secondary"
+              />
+              Svar kan deles med samarbeidende bedrifter
+            </label>
             <label className="flex items-center gap-3 text-sm font-semibold text-primary">
               <input type="checkbox" name="isPublished" defaultChecked={form.is_published} className="size-4 rounded border-primary/30 text-secondary" />
               Publiser skjemaet

@@ -78,20 +78,6 @@ export default async function FeedbackLandingPage() {
                 </div>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Card className="border border-primary/10 bg-white p-4 shadow-none">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-primary/50">
-                    Arrangement
-                  </p>
-                  <p className="mt-1 text-lg font-bold text-primary">{formsByFolder.length}</p>
-                </Card>
-                <Card className="border border-primary/10 bg-white p-4 shadow-none">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-primary/50">
-                    Skjemaer
-                  </p>
-                  <p className="mt-1 text-lg font-bold text-primary">{totalForms}</p>
-                </Card>
-              </div>
             </div>
           </div>
         </Card>

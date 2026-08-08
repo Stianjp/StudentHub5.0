@@ -1,12 +1,11 @@
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { SectionHeader } from "@/components/ui/section-header";
-import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { SectionHeader } from "@/components/ui/section-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { createFeedbackFolderAction, createFeedbackFormAction } from "@/app/admin/forms/actions";
+import { createFeedbackFolderAction } from "@/app/admin/forms/actions";
 import { getAdminFeedbackOverview } from "@/lib/feedback";
 
 type PageProps = {
@@ -24,10 +23,8 @@ export default async function AdminFormsPage({ searchParams }: PageProps) {
   const totalQuestions = folders.reduce((sum, folder) => sum + folder.forms.reduce((count, form) => count + form.questionCount, 0), 0);
   const totalResponses = folders.reduce((sum, folder) => sum + folder.responseCount, 0);
 
-  const firstFolderId = folders[0]?.id ?? "";
-
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-8 text-primary">
       <SectionHeader
         eyebrow="Skjemaer"
         title="Skjemabygger for feedback"
@@ -96,60 +93,20 @@ export default async function AdminFormsPage({ searchParams }: PageProps) {
 
         <Card className="flex flex-col gap-4">
           <div>
-            <h3 className="text-lg font-bold text-primary">Nytt skjema</h3>
+            <h3 className="text-lg font-bold text-primary">Lag skjema i ny side</h3>
             <p className="text-sm text-primary/70">
-              Velg en mappe først, og opprett deretter ett eller flere skjemaer for arrangementet.
+              Opprett skjemaet i en egen, tydelig builder med spørsmålstyper, flere spørsmål og personvernbekreftelse.
             </p>
           </div>
-          <form action={createFeedbackFormAction} className="grid gap-3">
-            <input type="hidden" name="returnTo" value="/admin/forms" />
-            <label className="text-sm font-semibold text-primary">
-              Mappe
-              <Select name="folderId" required defaultValue={firstFolderId}>
-                {folders.length === 0 ? <option value="">Ingen mapper ennå</option> : null}
-                {folders.map((folder) => (
-                  <option key={folder.id} value={folder.id}>
-                    {folder.name}
-                  </option>
-                ))}
-              </Select>
-            </label>
-            <label className="text-sm font-semibold text-primary">
-              Tittel
-              <Input name="title" required placeholder="Hva synes du om arrangementet?" />
-            </label>
-            <label className="text-sm font-semibold text-primary">
-              Slug
-              <Input name="slug" placeholder="hva-synes-du-om-arrangementet" />
-            </label>
-            <label className="text-sm font-semibold text-primary">
-              Introtekst
-              <Textarea name="introText" rows={4} placeholder="Forklar kort hva skjemaet brukes til." />
-            </label>
-            <label className="text-sm font-semibold text-primary">
-              Beskrivelse
-              <Textarea name="description" rows={3} placeholder="Litt mer kontekst om skjemaet." />
-            </label>
-            <label className="text-sm font-semibold text-primary">
-              CTA-tekst
-              <Input name="ctaLabel" defaultValue="Start" />
-            </label>
-            <label className="text-sm font-semibold text-primary">
-              Takk-tekst
-              <Textarea name="thankYouText" rows={3} defaultValue="Takk for tilbakemeldingen." />
-            </label>
-            <label className="text-sm font-semibold text-primary">
-              Sortering
-              <Input name="sortOrder" type="number" defaultValue={0} />
-            </label>
-            <label className="flex items-center gap-3 text-sm font-semibold text-primary">
-              <input type="checkbox" name="isPublished" className="size-4 rounded border-primary/30 text-secondary" />
-              Publiser skjemaet
-            </label>
-            <Button type="submit" disabled={folders.length === 0}>
-              Opprett skjema
-            </Button>
-          </form>
+          <Link
+            href="/admin/forms/new"
+            className="inline-flex min-h-11 items-center justify-center rounded-full bg-secondary px-6 py-3 text-sm font-bold text-primary transition hover:-translate-y-0.5 hover:bg-secondary/80"
+          >
+            Gå til skjemabygger
+          </Link>
+          <p className="text-sm text-primary/70">
+            Du lager fortsatt arrangementmapper her dersom du trenger en ny mappe først.
+          </p>
         </Card>
       </div>
 
