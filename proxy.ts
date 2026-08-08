@@ -11,6 +11,7 @@ const HOST_TARGETS: HostTarget[] = [
   { match: "www.", basePath: "/hovedside" },
   { match: "test-hovedside.", basePath: "/hovedside" },
   { match: "eventregister.", basePath: "/event-register" },
+  { match: "feedback.", basePath: "/feedback" },
   { match: "bedrift.", basePath: "/company" },
   { match: "admin.", basePath: "/admin" },
   { match: "student.", basePath: "/student" },

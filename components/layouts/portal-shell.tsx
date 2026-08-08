@@ -40,6 +40,7 @@ function resolveIcon(item: NavItem): LucideIcon {
   if (href.includes("/companies") || label.includes("bedrift")) return Building2;
   if (href.includes("/students") || label.includes("student")) return Users;
   if (href.includes("/leads") || label.includes("lead")) return ClipboardList;
+  if (href.includes("/forms") || label.includes("skjema")) return ClipboardList;
   if (href.includes("/jobs") || label.includes("job")) return BriefcaseBusiness;
   if (href.includes("/thesis") || label.includes("thesis")) return GraduationCap;
   if (href.includes("/crm") || label.includes("crm")) return ClipboardList;

@@ -42,6 +42,14 @@ const nav = [
       { href: "/admin/email/templates", label: "Maler" },
     ],
   },
+  {
+    href: "/admin/forms",
+    label: "Skjemaer",
+    children: [
+      { href: "/admin/forms", label: "Oversikt" },
+      { href: "/admin/forms/responses", label: "Svar" },
+    ],
+  },
   { href: "/admin/tickets", label: "Billetter" },
 ];
 

@@ -1029,6 +1029,174 @@ export type Database = {
         };
         Relationships: [];
       };
+      feedback_folders: {
+        Row: {
+          id: string;
+          name: string;
+          slug: string;
+          description: string | null;
+          is_active: boolean;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          slug: string;
+          description?: string | null;
+          is_active?: boolean;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          slug?: string;
+          description?: string | null;
+          is_active?: boolean;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      feedback_forms: {
+        Row: {
+          id: string;
+          folder_id: string;
+          title: string;
+          slug: string;
+          description: string | null;
+          intro_text: string | null;
+          cta_label: string;
+          thank_you_text: string;
+          is_published: boolean;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          folder_id: string;
+          title: string;
+          slug: string;
+          description?: string | null;
+          intro_text?: string | null;
+          cta_label?: string;
+          thank_you_text?: string;
+          is_published?: boolean;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          folder_id?: string;
+          title?: string;
+          slug?: string;
+          description?: string | null;
+          intro_text?: string | null;
+          cta_label?: string;
+          thank_you_text?: string;
+          is_published?: boolean;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      feedback_questions: {
+        Row: {
+          id: string;
+          form_id: string;
+          label: string;
+          help_text: string | null;
+          kind:
+            | "short_text"
+            | "long_text"
+            | "rating"
+            | "single_choice"
+            | "multi_choice"
+            | "number"
+            | "email"
+            | "yes_no";
+          required: boolean;
+          options: Json;
+          sort_order: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          form_id: string;
+          label: string;
+          help_text?: string | null;
+          kind?:
+            | "short_text"
+            | "long_text"
+            | "rating"
+            | "single_choice"
+            | "multi_choice"
+            | "number"
+            | "email"
+            | "yes_no";
+          required?: boolean;
+          options?: Json;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          form_id?: string;
+          label?: string;
+          help_text?: string | null;
+          kind?:
+            | "short_text"
+            | "long_text"
+            | "rating"
+            | "single_choice"
+            | "multi_choice"
+            | "number"
+            | "email"
+            | "yes_no";
+          required?: boolean;
+          options?: Json;
+          sort_order?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      feedback_responses: {
+        Row: {
+          id: string;
+          form_id: string;
+          answers: Json;
+          metadata: Json;
+          submitted_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          form_id: string;
+          answers?: Json;
+          metadata?: Json;
+          submitted_at?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          form_id?: string;
+          answers?: Json;
+          metadata?: Json;
+          submitted_at?: string;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       match_scores: {
         Row: {
           id: string;
