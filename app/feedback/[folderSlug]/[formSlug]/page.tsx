@@ -213,13 +213,13 @@ export default async function FeedbackFormPage({ params, searchParams }: PagePro
 
             {questions.length === 0 ? (
               <Card className="text-sm text-primary/70">
-                Dette skjemaet har ingen spørsmål ennå. Opprett spørsmål i admin først.
+                Dette skjemaet har ingen spørsmål ennå. Legg til spørsmål før skjemaet brukes.
               </Card>
             ) : questions.map((question) => renderQuestionField(question))}
 
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-xs text-primary/55">
-                Svarene lagres anonymt eller med metadata som er nødvendig for administrasjon av skjemaet.
+                Svarene lagres anonymt eller med nødvendig metadata for skjemaet.
               </p>
               <Button type="submit" className="sm:self-end">
                 {form.cta_label}

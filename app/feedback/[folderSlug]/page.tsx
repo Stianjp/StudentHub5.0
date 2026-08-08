@@ -81,32 +81,23 @@ export default async function FeedbackFolderPage({ params }: PageProps) {
               <Link
                 key={form.id}
                 href={`/feedback/${folder.slug}/${form.slug}`}
-                className="group rounded-3xl border border-primary/10 bg-white p-6 shadow-soft transition hover:-translate-y-0.5 hover:border-secondary/60 hover:shadow-lg"
+                className="group flex min-h-20 w-full items-center justify-between rounded-3xl border border-primary/10 bg-white px-4 py-4 text-left shadow-soft transition hover:-translate-y-0.5 hover:border-secondary/60 hover:shadow-lg sm:px-6"
               >
-                <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                  <div>
-                    <h2 className="text-2xl font-bold text-primary">{form.title}</h2>
-                    {form.description ? (
-                      <p className="mt-2 max-w-3xl text-sm leading-6 text-primary/70">
-                        {form.description}
-                      </p>
-                    ) : null}
-                    {form.intro_text ? (
-                      <p className="mt-3 max-w-3xl text-sm leading-6 text-primary/60">
-                        {form.intro_text}
-                      </p>
-                    ) : null}
-                  </div>
-                  <div className="flex flex-col items-start gap-2 md:items-end">
-                    <Badge variant="success">{form.cta_label}</Badge>
-                    <span className="text-xs text-primary/55">
-                      {form.questionCount} spørsmål
-                    </span>
-                  </div>
+                <div className="min-w-0">
+                  <h2 className="text-lg font-bold text-primary sm:text-2xl">{form.title}</h2>
+                  {form.description ? (
+                    <p className="mt-1 max-w-3xl text-sm leading-6 text-primary/70">
+                      {form.description}
+                    </p>
+                  ) : null}
                 </div>
-                <div className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-primary">
-                  Åpne skjema
-                  <ArrowRight size={16} className="transition group-hover:translate-x-1" />
+                <div className="ml-4 flex shrink-0 flex-col items-end gap-2">
+                  <Badge variant="success">{form.cta_label}</Badge>
+                  <span className="text-xs text-primary/55">{form.questionCount} spørsmål</span>
+                  <span className="inline-flex items-center gap-2 text-xs font-semibold text-primary">
+                    Åpne
+                    <ArrowRight size={14} className="transition group-hover:translate-x-1" />
+                  </span>
                 </div>
               </Link>
             ))
