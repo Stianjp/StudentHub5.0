@@ -73,6 +73,15 @@ function sortByOrderThenCreated<T extends { sort_order: number; created_at: stri
   });
 }
 
+function sortResponsesBySubmittedAt(rows: FeedbackResponse[]) {
+  return [...rows].sort((left, right) => {
+    if (left.submitted_at !== right.submitted_at) {
+      return right.submitted_at.localeCompare(left.submitted_at);
+    }
+    return right.created_at.localeCompare(left.created_at);
+  });
+}
+
 function buildFolderOverview(
   folders: FeedbackFolder[],
   forms: FeedbackForm[],
@@ -86,7 +95,7 @@ function buildFolderOverview(
   return sortByOrderThenCreated(folders).map((folder) => {
     const folderForms = sortByOrderThenCreated(formsByFolder.get(folder.id) ?? []).map((form) => {
       const folderQuestions = sortByOrderThenCreated(questionsByForm.get(form.id) ?? []);
-      const folderResponses = sortByOrderThenCreated(responsesByForm.get(form.id) ?? []);
+      const folderResponses = sortResponsesBySubmittedAt(responsesByForm.get(form.id) ?? []);
 
       return {
         ...form,
@@ -219,7 +228,7 @@ export async function getPublicFeedbackForm(folderSlug: string, formSlug: string
   return {
     folder: folder as FeedbackFolder,
     form: form as FeedbackForm,
-    questions: (questions ?? []) as FeedbackQuestion[],
+    questions: sortByOrderThenCreated((questions ?? []) as FeedbackQuestion[]),
   };
 }
 
