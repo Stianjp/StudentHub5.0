@@ -7,6 +7,27 @@ import { getCompanyRegistrations, getLatestCompanyRegistrationLogos, hasPremiumP
 type OpportunityType = "job" | "thesis";
 type CompanyOpportunity = TableRow<"company_opportunities">;
 
+function getDateKeyInOslo(date = new Date()) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Oslo",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(date);
+}
+
+function getDeadlineKey(value: string | null | undefined) {
+  if (!value) return null;
+  const match = value.match(/^(\d{4}-\d{2}-\d{2})/);
+  return match?.[1] ?? null;
+}
+
+function isOpportunityExpired(value: string | null | undefined, now = new Date()) {
+  const deadlineKey = getDeadlineKey(value);
+  if (!deadlineKey) return false;
+  return deadlineKey < getDateKeyInOslo(now);
+}
+
 export function hasJobPublishingAccessForRegistration(input: {
   package: string | null | undefined;
   can_publish_jobs?: boolean | null;
@@ -74,12 +95,13 @@ export async function listPublishedOpportunities(opportunityType: OpportunityTyp
       company?: { id: string; name: string } | null;
     }
   >;
+  const activeRows = typedRows.filter((row) => !isOpportunityExpired(row.application_deadline));
 
   const logos = await getLatestCompanyRegistrationLogos(
-    typedRows.map((row) => row.company_id).filter(Boolean),
+    activeRows.map((row) => row.company_id).filter(Boolean),
   );
 
-  return typedRows.map((row) => ({
+  return activeRows.map((row) => ({
     ...row,
     companyName: row.company?.name ?? "Company",
     logoUrl: logos[row.company_id] ?? null,
@@ -106,7 +128,10 @@ export function getOpportunityStudySummary(opportunity: Pick<CompanyOpportunity,
   };
 }
 
-export function getOpportunityPrimaryAction(opportunity: Pick<CompanyOpportunity, "application_url" | "contact_email">) {
+export function getOpportunityPrimaryAction(
+  opportunity: Pick<CompanyOpportunity, "application_url" | "contact_email" | "title">,
+  mode: OpportunityType,
+) {
   if (opportunity.application_url) {
     return {
       href: opportunity.application_url,
@@ -115,9 +140,12 @@ export function getOpportunityPrimaryAction(opportunity: Pick<CompanyOpportunity
     };
   }
   if (opportunity.contact_email) {
+    const subject = encodeURIComponent(
+      mode === "job" ? `Application for ${opportunity.title}` : `Interest in ${opportunity.title}`,
+    );
     return {
-      href: `mailto:${opportunity.contact_email}`,
-      label: "Contact company",
+      href: `mailto:${opportunity.contact_email}?subject=${subject}`,
+      label: mode === "job" ? "Send your application" : "Contact company",
       external: false,
     };
   }

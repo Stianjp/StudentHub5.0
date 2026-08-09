@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Textarea } from "@/components/ui/textarea";
 import { getAdminFeedbackForm, getAdminFeedbackSlugSuggestionGroups, questionOptions } from "@/lib/feedback";
+import { buildFeedbackQuestionSummaries, formatFeedbackAnswer } from "@/lib/feedback-report";
 import {
   createFeedbackQuestionAction,
   deleteFeedbackFormAction,
@@ -39,16 +40,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-function formatAnswer(value: unknown) {
-  if (Array.isArray(value)) {
-    return value.join(", ");
-  }
-  if (value === true) return "Ja";
-  if (value === false) return "Nei";
-  if (value === null || value === undefined || value === "") return "Ingen verdi";
-  return String(value);
-}
-
 export default async function AdminFeedbackFormPage({ params, searchParams }: PageProps) {
   const { formId } = await params;
   const query = await searchParams;
@@ -65,11 +56,15 @@ export default async function AdminFeedbackFormPage({ params, searchParams }: Pa
   }
 
   const { folder, form, questions, responses } = result;
+  const questionSummaries = buildFeedbackQuestionSummaries(questions, responses);
   const publicUrl = `/feedback/${folder.slug}/${form.slug}`;
 
   return (
     <div className="flex flex-col gap-8">
-      <Link href="/admin/forms" className="inline-flex w-fit items-center gap-2 text-sm font-semibold text-primary/70 transition hover:text-primary">
+      <Link
+        href="/admin/forms"
+        className="inline-flex w-fit items-center gap-2 text-sm font-semibold text-primary/70 transition hover:text-primary"
+      >
         <ArrowLeft size={16} />
         Tilbake til oversikt
       </Link>
@@ -85,6 +80,27 @@ export default async function AdminFeedbackFormPage({ params, searchParams }: Pa
           </Link>
         }
       />
+
+      <div className="flex flex-wrap gap-2">
+        <a
+          href="#innstillinger"
+          className="inline-flex min-h-10 items-center justify-center rounded-full bg-secondary px-4 py-2 text-sm font-bold text-primary transition hover:-translate-y-0.5 hover:bg-secondary/80"
+        >
+          Skjemainnstillinger
+        </a>
+        <a
+          href="#sporsmal"
+          className="inline-flex min-h-10 items-center justify-center rounded-full border border-primary/10 bg-white px-4 py-2 text-sm font-bold text-primary transition hover:-translate-y-0.5 hover:bg-[#FBF8F4]"
+        >
+          Spørsmål
+        </a>
+        <a
+          href="#svar"
+          className="inline-flex min-h-10 items-center justify-center rounded-full border border-primary/10 bg-white px-4 py-2 text-sm font-bold text-primary transition hover:-translate-y-0.5 hover:bg-[#FBF8F4]"
+        >
+          Svar
+        </a>
+      </div>
 
       {saved ? (
         <Card className="border border-success/30 bg-success/10 text-sm text-success">
@@ -113,7 +129,7 @@ export default async function AdminFeedbackFormPage({ params, searchParams }: Pa
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
-        <Card className="admin-light-surface flex flex-col gap-4">
+        <Card id="innstillinger" className="admin-light-surface scroll-mt-24 flex flex-col gap-4">
           <div>
             <h3 className="text-lg font-bold text-primary">Skjemainnstillinger</h3>
             <p className="text-sm text-primary/70">
@@ -161,7 +177,12 @@ export default async function AdminFeedbackFormPage({ params, searchParams }: Pa
               <Input name="sortOrder" type="number" defaultValue={form.sort_order} />
             </label>
             <label className="flex items-center gap-3 text-sm font-semibold text-primary">
-              <input type="checkbox" name="isPublished" defaultChecked={form.is_published} className="size-4 rounded border-primary/30 text-secondary" />
+              <input
+                type="checkbox"
+                name="isPublished"
+                defaultChecked={form.is_published}
+                className="size-4 rounded border-primary/30 text-secondary"
+              />
               Publiser skjemaet
             </label>
             <p className="text-xs text-primary/60">
@@ -178,20 +199,21 @@ export default async function AdminFeedbackFormPage({ params, searchParams }: Pa
         />
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1fr_0.95fr]">
-        <Card className="admin-light-surface flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-lg font-bold text-primary">Spørsmål</h3>
-              <p className="text-sm text-primary/70">Rekkefølgen følger sortering og opprettelsestid.</p>
-            </div>
+      <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+        <Card id="sporsmal" className="admin-light-surface scroll-mt-24 flex flex-col gap-4">
+          <div>
+            <h3 className="text-lg font-bold text-primary">Spørsmål</h3>
+            <p className="text-sm text-primary/70">Rekkefølgen følger sortering og opprettelsestid.</p>
           </div>
           {questions.length === 0 ? (
             <p className="text-sm text-primary/70">Ingen spørsmål er lagt til ennå.</p>
           ) : (
             <div className="grid gap-3">
               {questions.map((question) => (
-                <div key={question.id} className="rounded-2xl border border-primary/10 bg-[#FBF8F4] p-4 text-primary">
+                <div
+                  key={question.id}
+                  className="rounded-2xl border border-primary/10 bg-[#FBF8F4] p-4 text-primary"
+                >
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="font-bold text-primary">{question.label}</p>
                     <Badge variant="default">{question.kind}</Badge>
@@ -209,37 +231,121 @@ export default async function AdminFeedbackFormPage({ params, searchParams }: Pa
           )}
         </Card>
 
-        <Card className="admin-light-surface flex flex-col gap-4">
+        <Card id="svar" className="admin-light-surface scroll-mt-24 flex flex-col gap-4">
+          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+            <div>
+              <h3 className="text-lg font-bold text-primary">Svaroversikt</h3>
+              <p className="text-sm text-primary/70">
+                Se hvor mange som har svart på hvert spørsmål, og hvordan svarene fordeler seg.
+              </p>
+            </div>
+            <Link
+              href={`/admin/forms/${form.id}/export`}
+              className="inline-flex min-h-11 items-center justify-center rounded-full bg-secondary px-5 py-3 text-sm font-bold text-primary transition hover:-translate-y-0.5 hover:bg-secondary/80"
+            >
+              Last ned CSV
+            </Link>
+          </div>
+
+          {responses.length === 0 ? (
+            <p className="text-sm text-primary/70">Ingen svar er mottatt ennå.</p>
+          ) : (
+            <div className="grid gap-3">
+              {questionSummaries.map((summary) => {
+                const { question } = summary;
+                const hasCounts = summary.counts.length > 0;
+
+                return (
+                  <div
+                    key={question.id}
+                    className="rounded-2xl border border-primary/10 bg-[#FBF8F4] p-4 text-primary"
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="font-bold text-primary">{question.label}</p>
+                      <Badge variant="default">{question.kind}</Badge>
+                      {question.required ? <Badge variant="warning">Påkrevd</Badge> : null}
+                    </div>
+                    {question.help_text ? <p className="mt-1 text-sm text-primary/65">{question.help_text}</p> : null}
+                    <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                      <span className="rounded-full bg-primary/5 px-3 py-1 font-semibold text-primary/70">
+                        Besvart {summary.answeredCount} / {summary.totalCount}
+                      </span>
+                      {summary.missingCount > 0 ? (
+                        <span className="rounded-full bg-error/10 px-3 py-1 font-semibold text-error">
+                          Mangler {summary.missingCount}
+                        </span>
+                      ) : null}
+                      {summary.average !== null ? (
+                        <span className="rounded-full bg-secondary/20 px-3 py-1 font-semibold text-primary">
+                          Snitt {summary.average.toFixed(1)}
+                        </span>
+                      ) : null}
+                    </div>
+                    {hasCounts ? (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {summary.counts.map((count) => (
+                          <span
+                            key={`${question.id}-${count.label}`}
+                            className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-xs font-semibold text-primary shadow-none ring-1 ring-primary/10"
+                          >
+                            <span>{count.label}</span>
+                            <span className="rounded-full bg-primary/5 px-2 py-0.5 text-primary">
+                              {count.count}
+                            </span>
+                          </span>
+                        ))}
+                      </div>
+                    ) : null}
+                    {!hasCounts && summary.examples.length > 0 ? (
+                      <p className="mt-3 text-sm text-primary/70">
+                        Eksempler: {summary.examples.join(" · ")}
+                      </p>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </Card>
+
+        <Card className="admin-light-surface flex flex-col gap-4 xl:col-span-2">
           <div>
-            <h3 className="text-lg font-bold text-primary">Svar</h3>
-            <p className="text-sm text-primary/70">Viser siste innsendelser for skjemaet.</p>
+            <h3 className="text-lg font-bold text-primary">Enkeltbesvarelser</h3>
+            <p className="text-sm text-primary/70">Trykk på hver besvarelse for å se svarene én og én.</p>
           </div>
           {responses.length === 0 ? (
             <p className="text-sm text-primary/70">Ingen svar er mottatt ennå.</p>
           ) : (
             <div className="grid gap-4">
-              {responses.map((response) => {
+              {responses.map((response, index) => {
                 const answerMap = response.answers as Record<string, unknown>;
 
                 return (
-                  <div key={response.id} className="rounded-2xl border border-primary/10 bg-[#FBF8F4] p-4 text-primary">
-                    <div className="flex items-center justify-between gap-3">
-                      <p className="text-sm font-semibold text-primary">
-                        {new Date(response.submitted_at).toLocaleString("nb-NO")}
-                      </p>
-                      <Badge variant="info">Svar</Badge>
-                    </div>
+                  <details
+                    key={response.id}
+                    className="group rounded-2xl border border-primary/10 bg-[#FBF8F4] p-4 text-primary"
+                    open={index === 0}
+                  >
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-semibold text-primary">
+                          {new Date(response.submitted_at).toLocaleString("nb-NO")}
+                        </p>
+                        <p className="text-xs text-primary/60">Klikk for å åpne svarene</p>
+                      </div>
+                      <Badge variant="info">Svar {responses.length - index}</Badge>
+                    </summary>
                     <div className="mt-4 grid gap-3">
                       {questions.map((question) => (
                         <div key={question.id} className="rounded-2xl bg-white p-3 text-primary">
                           <p className="text-xs font-semibold uppercase tracking-wide text-primary/50">
                             {question.label}
                           </p>
-                          <p className="mt-1 text-sm text-primary">{formatAnswer(answerMap[question.id])}</p>
+                          <p className="mt-1 text-sm text-primary">{formatFeedbackAnswer(answerMap[question.id])}</p>
                         </div>
                       ))}
                     </div>
-                  </div>
+                  </details>
                 );
               })}
             </div>
@@ -254,12 +360,7 @@ export default async function AdminFeedbackFormPage({ params, searchParams }: Pa
             Sletting fjerner skjemaet permanent sammen med spørsmål og svar.
           </p>
         </div>
-        <DeleteFeedbackForm
-          action={deleteFeedbackFormAction}
-          formId={form.id}
-          returnTo="/admin/forms"
-          title={form.title}
-        />
+        <DeleteFeedbackForm action={deleteFeedbackFormAction} formId={form.id} returnTo="/admin/forms" title={form.title} />
       </Card>
     </div>
   );

@@ -152,7 +152,7 @@ export function OpportunityBoard({
             ) : (
               filtered.map((opportunity) => {
                 const summary = getOpportunityStudySummary(opportunity);
-                const primaryAction = getOpportunityPrimaryAction(opportunity);
+                const primaryAction = getOpportunityPrimaryAction(opportunity, mode);
                 return (
                   <Card key={opportunity.id} className="rounded-[32px] bg-white/85 p-6 shadow-[0_24px_60px_rgba(49,23,94,0.08)]">
                     <div className="flex flex-col gap-5">

@@ -80,6 +80,12 @@ export default async function AdminFeedbackResponsesPage({ searchParams }: PageP
                   <p className="text-sm text-primary/70">{folder.name}</p>
                 </div>
                 <div className="flex flex-wrap gap-2">
+                  <Link href={`/admin/forms/${form.id}#svar`} className="button-link text-sm">
+                    Se svar
+                  </Link>
+                  <Link href={`/admin/forms/${form.id}/export`} className="button-link text-sm">
+                    CSV
+                  </Link>
                   <Link href={`/admin/forms/${form.id}`} className="button-link text-sm">
                     Rediger
                   </Link>
