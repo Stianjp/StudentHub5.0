@@ -303,8 +303,6 @@ export function SignInClient({
       hostNext = "/student/dashboard";
     } else if (host.startsWith("bedrift.")) {
       hostNext = "/company";
-    } else if (host.startsWith("checkin.")) {
-      hostNext = "/checkin";
     } else if (host.startsWith("admin.")) {
       hostNext = "/admin";
     }

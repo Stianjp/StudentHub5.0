@@ -17,10 +17,6 @@ describe("roleFromHost", () => {
     expect(roleFromHost("admin.localhost:3000")).toBe("admin");
   });
 
-  it("returnerer 'admin' for checkin-subdomene", () => {
-    expect(roleFromHost("checkin.oslostudenthub.no")).toBe("admin");
-  });
-
   it("returnerer null for ukjent host", () => {
     expect(roleFromHost("oslostudenthub.no")).toBeNull();
     expect(roleFromHost("eventregister.oslostudenthub.no")).toBeNull();
@@ -46,9 +42,5 @@ describe("defaultPathForRole", () => {
   it("sender admin til /admin", () => {
     expect(defaultPathForRole("admin")).toBe("/admin");
     expect(defaultPathForRole("admin", "admin.oslostudenthub.no")).toBe("/admin");
-  });
-
-  it("sender admin til /checkin på checkin-host", () => {
-    expect(defaultPathForRole("admin", "checkin.oslostudenthub.no")).toBe("/checkin");
   });
 });

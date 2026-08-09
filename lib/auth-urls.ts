@@ -13,8 +13,7 @@ export function getBaseUrlForRole(role: Role, fallback?: string) {
 
 export function getDefaultNextPath(role: Role, hostname?: string | null) {
   if (role === "admin") {
-    const host = hostname?.toLowerCase() ?? "";
-    return host.startsWith("checkin.") ? "/checkin" : "/admin";
+    return "/admin";
   }
   if (role === "company") return "/company";
   return "/student/dashboard";

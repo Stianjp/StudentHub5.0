@@ -1,100 +1,46 @@
 import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { SectionHeader } from "@/components/ui/section-header";
-import { requireRole } from "@/lib/auth";
-import { listActiveEvents } from "@/lib/events";
-import { getOrCreateStudentForUser } from "@/lib/student";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { CheckinRegistrationEmbed } from "@/components/event/checkin-registration-embed";
 
-type StudentTicket = {
-  id: string;
-  event_id: string;
-  ticket_number: string;
-  checked_in_at: string | null;
-  status: string;
-};
+const CHECKIN_EVENT_ID = 228140;
 
 export default async function StudentEventsPage() {
-  const profile = await requireRole("student");
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) throw new Error("User not found");
-
-  const student = await getOrCreateStudentForUser(profile.id, user.email);
-  const [events, { data: ticketRows }] = await Promise.all([
-    listActiveEvents(),
-    supabase
-      .from("event_tickets")
-      .select("id, event_id, student_id, ticket_number, checked_in_at, status")
-      .eq("student_id", student.id),
-  ]);
-  const typedEvents = events as Array<{
-    id: string;
-    name: string;
-    starts_at: string;
-    ends_at: string;
-  }>;
-
-  const ticketByEvent = new Map(
-    ((ticketRows ?? []) as StudentTicket[]).map((ticket) => [ticket.event_id, ticket]),
-  );
-
   return (
     <div className="flex flex-col gap-8">
       <SectionHeader
         eyebrow="Student"
-        title="Påmelding til event"
-        description="Du kan ha en billett per event. Du kan være påmeldt flere ulike event samtidig."
+        title="Hent gratis billett"
+        description="Logg inn og bruk skjemaet under for å hente ut billetten din. Har du allerede en konto, kan du gå direkte til profilen din og fortsette derfra."
+        actions={
+          <Link className="button-link text-xs" href="/student/dashboard">
+            Tilbake til oversikt
+          </Link>
+        }
       />
 
-      {typedEvents.length === 0 ? (
-        <Card>
-          <p className="text-sm text-ink/70">Ingen aktive events tilgjengelig.</p>
-        </Card>
-      ) : (
-        <div className="grid gap-3 md:grid-cols-2">
-          {typedEvents.map((event) => {
-            const ticket = ticketByEvent.get(event.id);
-            return (
-              <Card key={event.id} className="flex flex-col gap-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-lg font-bold text-primary">{event.name}</p>
-                    <p className="text-xs text-ink/70">
-                      {new Date(event.starts_at).toLocaleString("nb-NO")} -{" "}
-                      {new Date(event.ends_at).toLocaleString("nb-NO")}
-                    </p>
-                  </div>
-                  {ticket ? (
-                    <Badge variant={ticket.checked_in_at ? "success" : "info"}>
-                      {ticket.checked_in_at ? "Sjekket inn" : "Har billett"}
-                    </Badge>
-                  ) : null}
-                </div>
-
-                {ticket ? (
-                  <div className="rounded-xl border border-success/20 bg-success/10 px-3 py-2 text-xs text-success">
-                    Billett: <span className="font-semibold">{ticket.ticket_number}</span>
-                    {ticket.checked_in_at ? (
-                      <span> - Innsjekket {new Date(ticket.checked_in_at).toLocaleString("nb-NO")}</span>
-                    ) : null}
-                  </div>
-                ) : (
-                  <p className="text-xs text-ink/70">Ingen billett registrert ennå.</p>
-                )}
-
-                <Link className="button-link text-xs" href={`/student/events/${event.id}`}>
-                  {ticket ? "Se billett" : "Åpen påmelding"}
-                </Link>
-              </Card>
-            );
-          })}
+      <Card className="grid gap-4 border border-secondary/20 bg-[linear-gradient(135deg,#FFF8EF_0%,#FFFFFF_48%,#FFF4F8_100%)] md:grid-cols-[0.85fr_1.15fr] md:items-start">
+        <div className="grid gap-3">
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-secondary">Slik fungerer det</p>
+          <h2 className="text-2xl font-bold text-primary">Logg inn, fyll ut skjemaet, og hent billetten.</h2>
+          <p className="text-sm leading-relaxed text-ink/70">
+            Dette er den nye billettløsningen for studenter. Du registrerer deg i embed-skjemaet, og
+            deretter kan vi bruke informasjonen til oppfølging og leads der det er relevant.
+          </p>
+          <div className="rounded-2xl bg-white/80 p-4 text-sm text-ink/75 ring-1 ring-primary/8">
+            <p className="font-semibold text-primary">Har du konto fra før?</p>
+            <p className="mt-1">
+              Logg inn og gå videre til profilen din. Skjemaet er bygget for mobil, nettbrett og desktop.
+            </p>
+          </div>
         </div>
-      )}
+
+        <CheckinRegistrationEmbed
+          eventId={CHECKIN_EVENT_ID}
+          title="Gratis studentbillett"
+          description="Fyll inn opplysningene dine under. Når skjemaet er sendt inn, kan billetten hentes og informasjonen kobles til studentprofilen."
+        />
+      </Card>
     </div>
   );
 }

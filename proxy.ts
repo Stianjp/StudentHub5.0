@@ -15,7 +15,6 @@ const HOST_TARGETS: HostTarget[] = [
   { match: "bedrift.", basePath: "/company" },
   { match: "admin.", basePath: "/admin" },
   { match: "student.", basePath: "/student" },
-  { match: "checkin.", basePath: "/checkin" },
   { match: "connecthub.", basePath: "/event" },
   { match: "studentconnect.", basePath: "/event" },
   { match: "event.", basePath: "/event" },

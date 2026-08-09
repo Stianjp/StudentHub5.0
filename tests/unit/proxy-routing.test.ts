@@ -10,7 +10,6 @@ const HOST_TARGETS = [
   { match: "bedrift.", basePath: "/company" },
   { match: "admin.", basePath: "/admin" },
   { match: "student.", basePath: "/student" },
-  { match: "checkin.", basePath: "/checkin" },
   { match: "connecthub.", basePath: "/event" },
   { match: "studentconnect.", basePath: "/event" },
   { match: "event.", basePath: "/event" },
@@ -46,10 +45,6 @@ describe("Subdomain routing (proxy.ts HOST_TARGETS)", () => {
 
   it("ruter student til /student", () => {
     expect(resolveBasePath("student.oslostudenthub.no")).toBe("/student");
-  });
-
-  it("ruter checkin til /checkin", () => {
-    expect(resolveBasePath("checkin.oslostudenthub.no")).toBe("/checkin");
   });
 
   it("returnerer null for ukjent subdomene", () => {

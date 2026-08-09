@@ -363,7 +363,6 @@ export async function cancelStudentEventTicket(formData: FormData) {
   if (error) throw error;
 
   revalidatePath("/student/events");
-  revalidatePath(`/student/events/${eventId}`);
   revalidatePath(`/event/events/${eventId}`);
 
   if (returnTo) {

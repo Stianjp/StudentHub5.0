@@ -259,7 +259,7 @@ export default async function StudentDashboardPage() {
             </p>
           </div>
           <Link
-            href={nextEvent ? `/student/events/${nextEvent.id}` : "/student/events"}
+            href="/student/events"
             className="mt-10 inline-flex w-full items-center justify-center rounded-2xl bg-[#FE9A70] py-5 text-sm font-black text-[#140249] shadow-lg shadow-[#FE9A70]/20 transition-[background-color,transform,box-shadow] hover:bg-[#F7A67E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70] focus-visible:ring-offset-2 focus-visible:ring-offset-[#140249] active:scale-[0.98]"
           >
             Meld deg på

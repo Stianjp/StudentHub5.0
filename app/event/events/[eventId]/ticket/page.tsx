@@ -1,10 +1,7 @@
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { SectionHeader } from "@/components/ui/section-header";
-import { PublicStudentTicketForm } from "@/components/event/public-student-ticket-form";
-import { getEvent, getEventCompanies } from "@/lib/events";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { getOrCreateStudentForUser } from "@/lib/student";
+import { getEvent } from "@/lib/events";
 
 type TicketPageProps = {
   params: Promise<{ eventId: string }>;
@@ -12,35 +9,14 @@ type TicketPageProps = {
 
 export default async function EventTicketPage({ params }: TicketPageProps) {
   const { eventId } = await params;
-  const supabase = await createServerSupabaseClient();
-  const [
-    event,
-    registrations,
-    {
-      data: { user },
-    },
-  ] = await Promise.all([getEvent(eventId), getEventCompanies(eventId), supabase.auth.getUser()]);
-
-  const { data: profile } = user
-    ? await supabase.from("profiles").select("id, role").eq("id" as never, user.id as never).maybeSingle()
-    : { data: null };
-  const typedProfile = profile as { role?: string } | null;
-
-  const student =
-    user && typedProfile?.role === "student" ? await getOrCreateStudentForUser(user.id, user.email) : null;
-
-  const companyOptions = registrations.map((registration) => ({
-    id: registration.company_id,
-    name: registration.company.name,
-    industry: registration.company.industry ?? null,
-  }));
+  const event = await getEvent(eventId);
 
   return (
     <div className="flex flex-col gap-8">
       <SectionHeader
         eyebrow="Event"
-        title={`Studentregistrering for ${event.name}`}
-        description="Én side for billett, studentprofil og valgfri kontoopprettelse."
+        title={`Hent billett til ${event.name}`}
+        description="Billetten hentes nå i studentportalen. Hvis du allerede har en konto, logger du inn og fortsetter der."
         actions={
           <Link
             className="rounded-xl border border-primary/20 px-4 py-2 text-sm font-semibold text-primary"
@@ -51,38 +27,34 @@ export default async function EventTicketPage({ params }: TicketPageProps) {
         }
       />
 
-      <Card className="text-sm text-ink/75">
-        Fyll ut skjemaet under for å sikre deg plass. Etter registrering får du billetten på e-post, og hvis du velger konto, sender vi også bekreftelse for innlogging.
-      </Card>
+      <Card className="grid gap-4 border border-secondary/20 bg-[linear-gradient(135deg,#FFF7EE_0%,#FFFFFF_50%,#FFF1F4_100%)] md:grid-cols-[0.9fr_1.1fr]">
+        <div className="grid gap-3">
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-secondary">Ny flyt</p>
+          <h2 className="text-2xl font-bold text-primary">Logg inn og gå til studentprofilen din</h2>
+          <p className="text-sm leading-relaxed text-ink/75">
+            Vi bruker nå en tredjeparts registrering for gratis billetter. Når du logger inn i studentportalen,
+            kan du hente ut billetten og samtidig holde profilen din oppdatert.
+          </p>
+          <p className="text-sm leading-relaxed text-ink/75">
+            Har du ikke konto fra før, registrerer du deg først og bruker deretter samme innlogging videre.
+          </p>
+        </div>
 
-      <PublicStudentTicketForm
-        eventId={eventId}
-        eventName={event.name}
-        companies={companyOptions}
-        initialValues={
-          student
-            ? {
-                fullName: student.full_name,
-                email: student.email ?? user?.email ?? null,
-                phone: student.phone,
-                school: student.school,
-                studyProgram: student.study_program,
-                studyLevel: student.study_level,
-                studyYear: student.study_year,
-                jobTypes: student.job_types,
-                interests: student.interests,
-                values: student.values,
-                preferredLocations: student.preferred_locations,
-                willingToRelocate: student.willing_to_relocate,
-                about: student.about,
-                workStyle: student.work_style,
-                socialProfile: student.social_profile,
-                teamSize: student.team_size,
-                likedCompanyIds: student.liked_company_ids,
-              }
-            : null
-        }
-      />
+        <div className="flex flex-col justify-between gap-4 rounded-[24px] bg-white p-5 ring-1 ring-primary/8">
+          <div className="grid gap-2">
+            <p className="text-sm font-semibold text-primary">Neste steg</p>
+            <p className="text-sm leading-relaxed text-ink/70">
+              Åpne studentportalen og fortsett til billettskjemaet der.
+            </p>
+          </div>
+          <Link
+            className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-bold text-surface transition hover:bg-primary/90"
+            href="/auth/sign-in?role=student&next=%2Fstudent%2Fevents"
+          >
+            Logg inn og hent billett
+          </Link>
+        </div>
+      </Card>
     </div>
   );
 }
