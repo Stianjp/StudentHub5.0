@@ -296,7 +296,7 @@ export async function saveCompanyRepresentation(formData: FormData) {
 
 export async function uploadCompanyLogoForCompanyAction(formData: FormData) {
   try {
-    const { company } = await getCompanyContext();
+    const { company, user } = await getCompanyContext();
     const file = formData.get("logo");
 
     if (!(file instanceof File) || file.size === 0) {
@@ -420,13 +420,15 @@ export async function signupForEvent(formData: FormData) {
 export async function saveCompanyOpportunity(formData: FormData) {
   const opportunityType = String(formData.get("opportunityType") ?? "") === "thesis" ? "thesis" : "job";
   try {
+    const normalizedApplicationUrl = String(formData.get("applicationUrl") ?? "").trim();
+    const normalizedContactEmail = String(formData.get("contactEmail") ?? "").trim().toLowerCase();
     const parsed = companyOpportunitySchema.safeParse({
       id: String(formData.get("id") ?? ""),
       opportunityType,
       title: String(formData.get("title") ?? ""),
       location: String(formData.get("location") ?? ""),
-      applicationUrl: String(formData.get("applicationUrl") ?? ""),
-      contactEmail: String(formData.get("contactEmail") ?? ""),
+      applicationUrl: normalizedApplicationUrl,
+      contactEmail: normalizedContactEmail,
       applicationDeadline: String(formData.get("applicationDeadline") ?? ""),
       fieldTags: formData.getAll("fieldTags"),
       levels: formData.getAll("levels"),
@@ -441,18 +443,20 @@ export async function saveCompanyOpportunity(formData: FormData) {
       throw new Error(parsed.error.issues.map((issue) => issue.message).join(", "));
     }
 
-    const { company } = await getCompanyContext();
+    const { company, user } = await getCompanyContext();
     await ensureOpportunityAccess(company.id, parsed.data.opportunityType);
 
     const supabase = createAdminSupabaseClient();
     const now = new Date().toISOString();
+    const fallbackContactEmail = user.email?.trim().toLowerCase() ?? null;
+    const resolvedContactEmail = parsed.data.contactEmail || fallbackContactEmail;
     const payload = {
       company_id: company.id,
       opportunity_type: parsed.data.opportunityType,
       title: parsed.data.title,
       location: parsed.data.location,
       application_url: parsed.data.applicationUrl || null,
-      contact_email: parsed.data.contactEmail || null,
+      contact_email: resolvedContactEmail,
       application_deadline: parsed.data.applicationDeadline,
       field_tags: parsed.data.fieldTags,
       levels: parsed.data.levels,

@@ -94,7 +94,8 @@ function OpportunityEditor({
           </label>
         </div>
         <p className="text-xs text-ink/60">
-          Application link is optional. If you leave it blank, students will apply by email via the contact email instead.
+          Application link is optional. If you leave it blank, students will apply by email via the contact email,
+          or the company account email if no contact email is entered.
         </p>
 
         <fieldset className="grid gap-3">

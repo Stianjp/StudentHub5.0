@@ -146,13 +146,6 @@ export const companyOpportunitySchema = z
     isPublished: z.boolean().default(true),
   })
   .superRefine((value, ctx) => {
-    if (!value.applicationUrl && !value.contactEmail) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["contactEmail"],
-        message: "Fyll ut enten søknadslenke eller kontaktmail.",
-      });
-    }
     if (value.fieldTags.length === 0) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
