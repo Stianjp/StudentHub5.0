@@ -152,13 +152,6 @@ export function FeedbackFormBuilder({ folders, slugGroups, action }: BuilderProp
                 Legg til ett eller flere spørsmål. Velg type, fyll inn alternativer når det trengs, og marker obligatorisk svar.
               </p>
             </div>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => setQuestions((current) => [...current, createQuestionDraft()])}
-            >
-              Legg til spørsmål
-            </Button>
           </div>
 
           <div className="grid gap-4">
@@ -256,6 +249,16 @@ export function FeedbackFormBuilder({ folders, slugGroups, action }: BuilderProp
                 </div>
               </Card>
             ))}
+          </div>
+
+          <div className="flex items-center justify-end border-t border-primary/10 pt-2">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setQuestions((current) => [...current, createQuestionDraft()])}
+            >
+              Legg til spørsmål
+            </Button>
           </div>
         </Card>
       </div>
