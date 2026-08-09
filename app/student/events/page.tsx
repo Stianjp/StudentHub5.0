@@ -19,17 +19,17 @@ export default async function StudentEventsPage() {
         }
       />
 
-      <Card className="grid gap-4 border border-secondary/20 bg-[linear-gradient(135deg,#FFF8EF_0%,#FFFFFF_48%,#FFF4F8_100%)] md:grid-cols-[0.85fr_1.15fr] md:items-start">
-        <div className="grid gap-3">
-          <p className="text-xs font-bold uppercase tracking-[0.28em] text-secondary">Slik fungerer det</p>
-          <h2 className="text-2xl font-bold text-primary">Logg inn, fyll ut skjemaet, og hent billetten.</h2>
-          <p className="text-sm leading-relaxed text-ink/70">
+      <Card className="grid gap-4 border border-secondary/20 bg-[linear-gradient(135deg,#FFF8EF_0%,#FFFFFF_48%,#FFF4F8_100%)] text-[#140249] md:grid-cols-[0.85fr_1.15fr] md:items-start">
+        <div className="grid gap-3 text-[#140249]">
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#FE9A70]">Slik fungerer det</p>
+          <h2 className="text-2xl font-bold text-[#140249]">Logg inn, fyll ut skjemaet, og hent billetten.</h2>
+          <p className="text-sm leading-relaxed text-[#140249]/80">
             Dette er den nye billettløsningen for studenter. Du registrerer deg i embed-skjemaet, og
             deretter kan vi bruke informasjonen til oppfølging og leads der det er relevant.
           </p>
-          <div className="rounded-2xl bg-white/80 p-4 text-sm text-ink/75 ring-1 ring-primary/8">
-            <p className="font-semibold text-primary">Har du konto fra før?</p>
-            <p className="mt-1">
+          <div className="rounded-2xl bg-white/80 p-4 text-sm text-[#140249] ring-1 ring-primary/8">
+            <p className="font-semibold text-[#140249]">Har du konto fra før?</p>
+            <p className="mt-1 text-[#140249]/80">
               Logg inn og gå videre til profilen din. Skjemaet er bygget for mobil, nettbrett og desktop.
             </p>
           </div>

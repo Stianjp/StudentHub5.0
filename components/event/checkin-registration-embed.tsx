@@ -15,10 +15,10 @@ export function CheckinRegistrationEmbed({
 }: CheckinRegistrationEmbedProps) {
   return (
     <div className="grid gap-4">
-      <div className="rounded-[28px] border border-primary/10 bg-white p-4 shadow-[0_18px_50px_rgba(20,2,73,0.08)] md:p-6">
+      <div className="rounded-[28px] border border-primary/10 bg-white p-4 text-[#140249] shadow-[0_18px_50px_rgba(20,2,73,0.08)] md:p-6">
         <div className="mb-4 space-y-1">
-          <p className="text-sm font-semibold uppercase tracking-[0.24em] text-secondary">{title}</p>
-          <p className="text-sm leading-relaxed text-ink/70">{description}</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#FE9A70]">{title}</p>
+          <p className="text-sm leading-relaxed text-[#140249]/80">{description}</p>
         </div>
         <div
           id="checkin_registration"
