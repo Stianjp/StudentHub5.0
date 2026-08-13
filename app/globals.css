@@ -191,7 +191,9 @@ table {
 }
 
 .student-scope #checkin_registration button,
-.student-scope #checkin_registration [role="button"] {
+.student-scope #checkin_registration button *,
+.student-scope #checkin_registration [role="button"],
+.student-scope #checkin_registration [role="button"] * {
   color: #ffffff !important;
   -webkit-text-fill-color: #ffffff !important;
 }
@@ -203,7 +205,9 @@ table {
 }
 
 .student-scope #checkin_registration button:hover,
-.student-scope #checkin_registration [role="button"]:hover {
+.student-scope #checkin_registration button:hover *,
+.student-scope #checkin_registration [role="button"]:hover,
+.student-scope #checkin_registration [role="button"]:hover * {
   color: #FE9A70 !important;
 }
 
