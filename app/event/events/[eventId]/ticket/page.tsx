@@ -3,6 +3,9 @@ import { Card } from "@/components/ui/card";
 import { SectionHeader } from "@/components/ui/section-header";
 import { getEvent } from "@/lib/events";
 
+const STUDENT_APP_URL =
+  process.env.NEXT_PUBLIC_STUDENT_APP_URL?.trim() || "https://student.oslostudenthub.no";
+
 type TicketPageProps = {
   params: Promise<{ eventId: string }>;
 };
@@ -49,7 +52,7 @@ export default async function EventTicketPage({ params }: TicketPageProps) {
           </div>
           <Link
             className="inline-flex items-center justify-center rounded-full bg-primary px-6 py-3 text-sm font-bold text-surface transition hover:bg-primary/90"
-            href="/auth/sign-in?role=student&next=%2Fstudent%2Fevents"
+            href={`${STUDENT_APP_URL}/auth/sign-in?role=student&next=%2Fstudent%2Fevents`}
           >
             Logg inn og hent billett
           </Link>

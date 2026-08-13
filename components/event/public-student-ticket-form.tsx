@@ -204,9 +204,9 @@ export function PublicStudentTicketForm({
               Registrer deg én gang for {eventName}. Du får billett på e-post, og kan samtidig gjøre profilen klar for matching mot relevante bedrifter.
             </p>
           </div>
-          <div className="rounded-2xl border border-primary/10 bg-white/90 p-4 text-sm text-ink/75">
-            <p className="font-semibold text-primary">Anbefalt flyt</p>
-            <p className="mt-1">Velg kontoopprettelse for å slippe å fylle inn alt på nytt senere.</p>
+          <div className="rounded-2xl border border-primary/10 bg-white/90 p-4 text-sm text-[#140249]">
+            <p className="font-semibold text-[#140249]">Anbefalt flyt</p>
+            <p className="mt-1 text-[#140249]/80">Velg kontoopprettelse for å slippe å fylle inn alt på nytt senere.</p>
           </div>
         </div>
       </Card>
@@ -228,7 +228,7 @@ export function PublicStudentTicketForm({
       <Card className="grid gap-4">
         <div>
           <h3 className="text-lg font-bold text-primary">Kontaktinformasjon</h3>
-          <p className="text-sm text-ink/70">Dette trenger vi for billetten og for å kunne følge opp registreringen din.</p>
+          <p className="text-sm text-[#140249]/78">Dette trenger vi for billetten og for å kunne følge opp registreringen din.</p>
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           <label className="text-sm font-semibold text-primary">
@@ -253,7 +253,7 @@ export function PublicStudentTicketForm({
       <Card className="grid gap-4">
         <div>
           <h3 className="text-lg font-bold text-primary">Studieprofil</h3>
-          <p className="text-sm text-ink/70">Samme type informasjon som i studentprofilen, men samlet i en enklere registreringsflyt.</p>
+          <p className="text-sm text-[#140249]/78">Samme type informasjon som i studentprofilen, men samlet i en enklere registreringsflyt.</p>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
@@ -429,10 +429,10 @@ export function PublicStudentTicketForm({
       <Card className="grid gap-4">
         <div>
           <h3 className="text-lg font-bold text-primary">Bedrifter du vil bli matchet mot</h3>
-          <p className="text-sm text-ink/70">Valgfritt, men dette gjør oppfølgingen mer relevant og øker kvaliteten på matchingen.</p>
+          <p className="text-sm text-[#140249]/78">Valgfritt, men dette gjør oppfølgingen mer relevant og øker kvaliteten på matchingen.</p>
         </div>
         {companies.length === 0 ? (
-          <p className="text-sm text-ink/65">Ingen bedrifter er publisert på dette eventet ennå.</p>
+          <p className="text-sm text-[#140249]/70">Ingen bedrifter er publisert på dette eventet ennå.</p>
         ) : (
           <div className="grid gap-2 md:grid-cols-2">
             {companies.map((company) => {
@@ -464,7 +464,7 @@ export function PublicStudentTicketForm({
         <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
           <div>
             <h3 className="text-lg font-bold text-primary">Vil du opprette bruker hos Oslo Student Hub?</h3>
-            <p className="text-sm text-ink/70">Anbefalt hvis du vil logge inn senere, oppdatere profilen din og bruke registreringen videre.</p>
+            <p className="text-sm text-[#140249]/78">Anbefalt hvis du vil logge inn senere, oppdatere profilen din og bruke registreringen videre.</p>
           </div>
           <label className="inline-flex items-center gap-3 rounded-full bg-white px-4 py-3 text-sm font-semibold text-primary shadow-soft">
             <input
@@ -499,25 +499,25 @@ export function PublicStudentTicketForm({
                 required={createAccount}
               />
             </label>
-            <div className="md:col-span-2 grid gap-2 rounded-2xl border border-primary/10 bg-primary/5 p-4 text-sm text-ink/75">
+            <div className="md:col-span-2 grid gap-2 rounded-2xl border border-primary/10 bg-primary/5 p-4 text-sm text-[#140249]/80">
               <div className="flex items-center justify-between">
                 <span className="font-semibold text-primary">Passordstyrke</span>
-                <span>{passwordSummary.metCount}/4 krav oppfylt</span>
+                <span className="text-[#140249]/80">{passwordSummary.metCount}/4 krav oppfylt</span>
               </div>
               {passwordSummary.requirements.map((requirement) => (
-                <p key={requirement.key} className={requirement.met ? "text-success" : "text-ink/65"}>
+                <p key={requirement.key} className={requirement.met ? "text-success" : "text-[#140249]/70"}>
                   {requirement.met ? "Oppfylt" : "Mangler"}: {requirement.label}
                 </p>
               ))}
             </div>
           </div>
         ) : (
-          <p className="text-sm text-ink/70">Du får fortsatt billetten din på e-post, men kontoen opprettes ikke.</p>
+          <p className="text-sm text-[#140249]/78">Du får fortsatt billetten din på e-post, men kontoen opprettes ikke.</p>
         )}
       </Card>
 
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <p className="text-sm text-ink/65">Ved å sende inn godtar du at Oslo Student Hub lagrer registreringen din for billett, oppfølging og relevant matching.</p>
+        <p className="text-sm text-[#140249]/70">Ved å sende inn godtar du at Oslo Student Hub lagrer registreringen din for billett, oppfølging og relevant matching.</p>
         <Button type="submit" className="min-w-[240px]" disabled={submissionState.kind === "loading"}>
           {submissionState.kind === "loading" ? "Registrerer..." : "Hent din gratis student billett her"}
         </Button>
