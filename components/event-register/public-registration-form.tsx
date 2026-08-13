@@ -731,30 +731,30 @@ export function PublicRegistrationForm({
 
       <div className="grid gap-4 xl:sticky xl:top-8 xl:self-start">
         <Card className="bg-[#140249] text-white shadow-md">
-          <p className="text-xs font-bold uppercase tracking-widest text-white/60">Application summary</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-white/80">Application summary</p>
           <div className="mt-4 grid gap-4 text-sm">
             <div>
-              <p className="text-white/60">Contact</p>
+              <p className="text-white/78">Contact</p>
               <p className="font-semibold text-white">
                 {[contactFirstName, contactLastName].filter(Boolean).join(" ") || "Not filled in"}
               </p>
             </div>
             <div>
-              <p className="text-white/60">Company</p>
+              <p className="text-white/78">Company</p>
               <p className="font-semibold text-white">{companyName || "Not filled in"}</p>
             </div>
             <div>
-              <p className="text-white/60">Package</p>
+              <p className="text-white/78">Package</p>
               <p className="font-semibold text-white">{selectedPackage ? selectedPackage.public_name : "Not selected"}</p>
             </div>
             <div>
-              <p className="text-white/60">Stand</p>
+              <p className="text-white/78">Stand</p>
               <p className="font-semibold text-white">
                 {stands.find((stand) => stand.id === requestedStandId)?.stand_code ?? "Not selected"}
               </p>
             </div>
             <div>
-              <p className="text-white/60">Portal emails</p>
+              <p className="text-white/78">Portal emails</p>
               <p className="font-semibold text-white">
                 {portalEmails.map((value) => value.trim()).filter(Boolean).length} of 5 added
               </p>

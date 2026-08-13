@@ -159,6 +159,37 @@ table {
   box-shadow: 0 0 0 2px rgba(254, 154, 112, 0.7);
 }
 
+.student-scope #checkin_registration {
+  color: #140249;
+}
+
+.student-scope #checkin_registration :is(h1, h2, h3, h4, h5, h6, p, label, legend, li, span, small, strong, td, th) {
+  color: #140249 !important;
+}
+
+.student-scope #checkin_registration :is(input, textarea, select) {
+  background-color: #ffffff !important;
+  color: #140249 !important;
+  caret-color: #140249;
+  border-color: rgba(20, 2, 73, 0.22) !important;
+  -webkit-text-fill-color: #140249;
+}
+
+.student-scope #checkin_registration :is(input, textarea, select)::placeholder {
+  color: rgba(20, 2, 73, 0.62) !important;
+  opacity: 1;
+}
+
+.student-scope #checkin_registration :is(input, textarea, select):focus {
+  border-color: #FE9A70 !important;
+  box-shadow: 0 0 0 2px rgba(254, 154, 112, 0.35) !important;
+}
+
+.student-scope #checkin_registration :is(input, textarea, select):-webkit-autofill {
+  -webkit-text-fill-color: #140249 !important;
+  box-shadow: 0 0 0 1000px #ffffff inset !important;
+}
+
 .student-scope .osh-card select,
 .admin-scope .osh-card select,
 .company-scope .osh-card select {
