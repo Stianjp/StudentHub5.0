@@ -190,6 +190,23 @@ table {
   box-shadow: 0 0 0 1000px #ffffff inset !important;
 }
 
+.student-scope #checkin_registration button,
+.student-scope #checkin_registration [role="button"] {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.student-scope #checkin_registration button :is(svg, path, circle, rect, line, polyline, polygon),
+.student-scope #checkin_registration [role="button"] :is(svg, path, circle, rect, line, polyline, polygon) {
+  fill: currentColor !important;
+  stroke: currentColor !important;
+}
+
+.student-scope #checkin_registration button:hover,
+.student-scope #checkin_registration [role="button"]:hover {
+  color: #FE9A70 !important;
+}
+
 .student-scope .osh-card select,
 .admin-scope .osh-card select,
 .company-scope .osh-card select {
