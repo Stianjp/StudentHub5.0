@@ -159,6 +159,23 @@ table {
   box-shadow: 0 0 0 2px rgba(254, 154, 112, 0.7);
 }
 
+.company-scope .osh-card :is(input, textarea, select) {
+  color: #F8F6FF !important;
+  caret-color: #F8F6FF;
+  -webkit-text-fill-color: #F8F6FF !important;
+  color-scheme: dark;
+}
+
+.company-scope .osh-card :is(input, textarea, select):-webkit-autofill {
+  -webkit-text-fill-color: #F8F6FF !important;
+  box-shadow: 0 0 0 1000px #1B0858 inset !important;
+}
+
+.company-scope .osh-card input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.85;
+}
+
 .student-scope #checkin_registration {
   color: #140249;
 }
@@ -367,8 +384,21 @@ table {
 
 .company-scope .company-light-surface :is(input, textarea, select) {
   background-color: #FFFFFF;
-  color: #1A1626;
+  color: #1A1626 !important;
+  caret-color: #1A1626;
   border-color: rgba(20, 2, 73, 0.18);
+  -webkit-text-fill-color: #1A1626 !important;
+  color-scheme: light;
+}
+
+.company-scope .company-light-surface :is(input, textarea, select):-webkit-autofill {
+  -webkit-text-fill-color: #1A1626 !important;
+  box-shadow: 0 0 0 1000px #FFFFFF inset !important;
+}
+
+.company-scope .company-light-surface input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: none;
+  opacity: 1;
 }
 
 .company-scope .company-light-surface :is(input, textarea, select)::placeholder {
