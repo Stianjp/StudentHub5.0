@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore } from "react";
 import {
   BarChart3,
   BriefcaseBusiness,
@@ -12,10 +12,13 @@ import {
   ClipboardList,
   GraduationCap,
   LayoutDashboard,
+  LogOut,
+  Menu,
   Package,
   Settings,
   Ticket,
   Users,
+  X,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -109,6 +112,7 @@ export function PortalShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname() ?? "/";
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isCollapsed = useSyncExternalStore(
     subscribeToCollapsedSidebar,
     getCollapsedSidebarSnapshot,
@@ -132,7 +136,7 @@ export function PortalShell({
   }
 
   return (
-    <div className={cn("min-h-screen text-[#EDE8F5] font-['Ubuntu']", backgroundClass)} style={backgroundStyle}>
+    <div className={cn("min-h-screen overflow-x-clip text-[#EDE8F5] font-['Ubuntu']", backgroundClass)} style={backgroundStyle}>
       <a
         href="#portal-main"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-[#FE9A70] focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-[#140249]"
@@ -140,9 +144,116 @@ export function PortalShell({
         Hopp til innhold
       </a>
       <SessionGuard />
-      <div className="flex min-h-screen">
+      <header className="sticky top-0 z-50 flex min-h-16 items-center justify-between border-b border-white/10 bg-[#140249]/95 px-4 py-2.5 text-white shadow-lg backdrop-blur lg:hidden">
+        <Link
+          href={normalizeHref(`/${roleKey}`)}
+          onClick={() => setMobileMenuOpen(false)}
+          className="flex min-w-0 items-center gap-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70]"
+        >
+          <Image
+            src="/brand/Logo_OSH_Gradient_whitetext.svg"
+            alt="Oslo Student Hub"
+            width={132}
+            height={36}
+            className="h-auto w-[116px] shrink-0 sm:w-[132px]"
+            priority
+          />
+          <span className="min-w-0 border-l border-white/15 pl-3">
+            <span className="block text-[10px] font-black uppercase tracking-wider text-[#FE9A70]">{roleLabel}</span>
+            <span className="block max-w-28 truncate text-xs font-bold text-white sm:max-w-48">{title}</span>
+          </span>
+        </Link>
+        <button
+          type="button"
+          aria-expanded={mobileMenuOpen}
+          aria-controls="portal-mobile-menu"
+          aria-label={mobileMenuOpen ? "Lukk meny" : "Åpne meny"}
+          onClick={() => setMobileMenuOpen((current) => !current)}
+          className="ml-3 flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-white transition-colors hover:border-[#FE9A70]/70 hover:text-[#FE9A70] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70]"
+        >
+          {mobileMenuOpen ? <X size={22} aria-hidden="true" /> : <Menu size={22} aria-hidden="true" />}
+        </button>
+      </header>
+
+      {mobileMenuOpen ? (
+        <div className="fixed inset-x-0 bottom-0 top-16 z-40 lg:hidden">
+          <button
+            type="button"
+            aria-label="Lukk meny"
+            onClick={() => setMobileMenuOpen(false)}
+            className="portal-mobile-overlay absolute inset-0 h-full w-full border-0 bg-[#0B0130]/65 backdrop-blur-sm"
+          />
+          <div
+            id="portal-mobile-menu"
+            className="relative z-10 flex h-full w-[min(22rem,calc(100%-2rem))] flex-col overflow-y-auto border-r border-white/10 bg-[#140249] px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-5 text-white shadow-2xl"
+          >
+            <p className="mb-3 px-3 text-[11px] font-black uppercase tracking-widest text-white/55">Navigasjon</p>
+            <nav className="grid gap-1" aria-label={`${roleLabel}-navigasjon`}>
+              {nav.map((item) => {
+                const Icon = resolveIcon(item);
+                const itemHref = normalizeHref(item.href);
+                const children = (item.children ?? []).map((child) => ({ ...child, href: normalizeHref(child.href) }));
+                const isActive =
+                  isActivePath(pathname, itemHref, item.exact ?? false) ||
+                  children.some((child) => isActivePath(pathname, child.href));
+
+                return (
+                  <div key={item.href} className="grid gap-1">
+                    <Link
+                      href={itemHref}
+                      aria-current={isActive ? "page" : undefined}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={cn(
+                        "flex min-h-12 items-center gap-3 rounded-xl border px-3 py-2.5 text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70]",
+                        isActive
+                          ? "border-[#FE9A70] bg-[#FE9A70] text-[#140249]"
+                          : "border-transparent text-white/85 hover:border-white/15 hover:bg-white/10 hover:text-white",
+                      )}
+                    >
+                      <Icon size={19} className="shrink-0" aria-hidden="true" />
+                      <span>{item.label}</span>
+                    </Link>
+                    {children.length > 0 ? (
+                      <div className="mb-1 ml-6 grid gap-1 border-l border-white/15 pl-3">
+                        {children.map((child) => {
+                          const childIsActive = isActivePath(pathname, child.href);
+                          return (
+                            <Link
+                              key={child.href}
+                              href={child.href}
+                              aria-current={childIsActive ? "page" : undefined}
+                              onClick={() => setMobileMenuOpen(false)}
+                              className={cn(
+                                "rounded-lg px-3 py-2 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70]",
+                                childIsActive ? "bg-[#FE9A70]/20 text-[#FE9A70]" : "text-white/65 hover:bg-white/10 hover:text-white",
+                              )}
+                            >
+                              {child.label}
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </nav>
+            <div className="mt-auto border-t border-white/10 pt-4">
+              <LogoutButton
+                role={roleKey}
+                className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/20 px-4 py-2 text-sm font-bold text-white/80 hover:border-[#FE9A70]/70 hover:text-[#FE9A70] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70]"
+              >
+                <LogOut size={18} aria-hidden="true" />
+                <span>Logg ut</span>
+              </LogoutButton>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      <div className="flex min-h-[calc(100svh-4rem)] lg:min-h-screen">
         <aside className={cn(
-          "shrink-0 border-r border-white/10 bg-[#140249] text-[#EDE8F5] shadow-2xl shadow-black/30 transition-[width,padding] duration-200",
+          "hidden shrink-0 border-r border-white/10 bg-[#140249] text-[#EDE8F5] shadow-2xl shadow-black/30 transition-[width,padding] duration-200 lg:block",
           isCollapsed ? "w-24 p-4" : "w-72 p-8",
         )}>
           <div className={cn("flex", isCollapsed ? "justify-center" : "justify-start")}>
@@ -255,7 +366,7 @@ export function PortalShell({
           </div>
         </aside>
 
-        <main id="portal-main" className="relative flex-1 overflow-y-auto bg-[#846AE6] p-6 md:p-10">
+        <main id="portal-main" className="relative min-w-0 flex-1 overflow-x-clip bg-[#846AE6] px-4 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-6 sm:px-6 sm:pt-8 lg:p-10">
           <div
             className="pointer-events-none absolute inset-0 opacity-10"
             style={{
@@ -264,7 +375,7 @@ export function PortalShell({
             }}
           />
           <div className="relative z-10">
-            <div className="mb-10 flex justify-end">
+            <div className="mb-10 hidden justify-end lg:flex">
               <div className="flex items-center gap-3 rounded-2xl bg-[#140249] px-4 py-2 text-white shadow-xl ring-1 ring-white/15">
                 <span className="rounded-full bg-[#FE9A70] px-3 py-1 text-xs font-black uppercase tracking-wide text-[#140249]">
                   {roleLabel}

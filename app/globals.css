@@ -212,8 +212,34 @@ table {
 }
 
 @media (max-width: 767px) {
-  .student-scope .osh-card :is(input, textarea, select) {
+  .student-scope .osh-card :is(input, textarea, select),
+  .admin-scope .osh-card :is(input, textarea, select),
+  .company-scope .osh-card :is(input, textarea, select) {
     font-size: 16px;
+  }
+
+  .admin-scope,
+  .company-scope,
+  .admin-scope .osh-card,
+  .company-scope .osh-card {
+    min-width: 0;
+  }
+
+  .admin-scope :is(h1, h2, h3, h4, p, a, span),
+  .company-scope :is(h1, h2, h3, h4, p, a, span) {
+    overflow-wrap: anywhere;
+  }
+
+  .admin-scope :is(.overflow-x-auto, table),
+  .company-scope :is(.overflow-x-auto, table) {
+    overscroll-behavior-inline: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-scope table,
+  .company-scope table {
+    width: max-content;
+    min-width: 100%;
   }
 
   .student-scope #checkin_registration {
@@ -249,6 +275,13 @@ table {
   .student-scope #checkin_registration :is(button, [role="button"]) {
     min-height: 44px;
   }
+}
+
+.portal-mobile-overlay:hover:not(:disabled),
+.portal-mobile-overlay:active:not(:disabled) {
+  border-color: transparent;
+  box-shadow: none;
+  transform: none;
 }
 
 .student-scope .osh-card select,

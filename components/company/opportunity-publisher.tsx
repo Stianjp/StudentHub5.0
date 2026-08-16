@@ -178,18 +178,18 @@ function OpportunityEditor({
           Publish immediately
         </label>
 
-        <div className="flex flex-wrap gap-3">
-          <Button type="submit" variant="secondary">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+          <Button className="w-full sm:w-auto" type="submit" variant="secondary">
             {opportunity ? "Update" : "Publish"}
           </Button>
         </div>
       </form>
 
       {opportunity ? (
-        <form action={deleteCompanyOpportunity}>
+        <form action={deleteCompanyOpportunity} className="w-full sm:w-auto">
           <input type="hidden" name="id" value={opportunity.id} />
           <input type="hidden" name="opportunityType" value={opportunityType} />
-          <Button type="submit" variant="ghost" className="border border-primary/10">
+          <Button type="submit" variant="ghost" className="w-full border border-primary/10 sm:w-auto">
             Remove
           </Button>
         </form>
@@ -252,8 +252,8 @@ export function OpportunityPublisher({
                   {opportunities.length === 1 ? "" : "s"}.
                 </p>
               </div>
-              <a href={`#new-${opportunityType}`} className="inline-flex">
-                <Button type="button" variant="secondary">Create new</Button>
+              <a href={`#new-${opportunityType}`} className="inline-flex w-full sm:w-auto">
+                <Button className="w-full sm:w-auto" type="button" variant="secondary">Create new</Button>
               </a>
             </div>
             {opportunities.length === 0 ? (
@@ -266,8 +266,8 @@ export function OpportunityPublisher({
                     href={`#opportunity-${opportunity.id}`}
                     className="rounded-2xl border border-primary/10 bg-primary/5 px-4 py-3 transition hover:border-secondary/60 hover:bg-primary/10"
                   >
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
+                    <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+                      <div className="min-w-0">
                         <p className="text-sm font-bold text-primary">{opportunity.title}</p>
                         <p className="mt-1 text-xs text-ink/65">
                           {opportunity.location || "No location"} •{" "}

@@ -230,7 +230,7 @@ export default async function StudentDashboardPage() {
             <h3 className="mb-4 text-3xl font-black leading-tight text-white sm:text-4xl lg:text-5xl">
               Gjør deg klar til
               <br className="hidden sm:block" />
-              <span className="text-[#FE9A70]">Student Connect.</span>
+              <span className="text-[#FE9A70]"><span className="sm:hidden"> </span>Student Connect.</span>
             </h3>
             <p className="mb-8 max-w-sm text-base font-medium text-white/80 sm:mb-12 sm:text-lg">
               Profilen din er {completion}% fullført og synlig for våre partnere.

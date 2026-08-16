@@ -55,7 +55,7 @@ export default async function EmailTemplatesPage() {
           {typedTemplates.map((template) => (
             <Card key={template.id} className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
               <div className="flex flex-col gap-1">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className="font-semibold text-primary">{template.name}</span>
                   <Badge variant={template.is_active ? "success" : "default"}>
                     {template.is_active ? "Aktiv" : "Inaktiv"}
@@ -78,9 +78,9 @@ export default async function EmailTemplatesPage() {
                   </div>
                 )}
               </div>
-              <div className="flex shrink-0 gap-2">
-                <Link href={`/admin/email/templates/${template.id}`}>
-                  <Button variant="ghost">Rediger</Button>
+              <div className="flex w-full shrink-0 gap-2 md:w-auto">
+                <Link className="w-full md:w-auto" href={`/admin/email/templates/${template.id}`}>
+                  <Button className="w-full md:w-auto" variant="ghost">Rediger</Button>
                 </Link>
               </div>
             </Card>

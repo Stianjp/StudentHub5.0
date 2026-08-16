@@ -270,7 +270,7 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
       </Card>
 
       <Card className="flex flex-col gap-4">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
           <h3 className="text-lg font-bold text-primary">Registrerte bedrifter</h3>
           <Link className="text-xs font-semibold text-primary/70 hover:text-primary" href={`/admin/company-packages?eventId=${eventId}`}>
             Administrer pakker

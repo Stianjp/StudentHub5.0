@@ -52,14 +52,14 @@ export default async function CompanyDashboardPage({ searchParams }: PageProps) 
   const saved = params.saved === "1";
 
   return (
-    <div className="flex flex-col gap-10">
+    <div className="flex flex-col gap-6 sm:gap-8 lg:gap-10">
       <SectionHeader
         eyebrow="Bedriftsdashboard"
         title={`Hei ${company.name}`}
         description="Her får du oversikt og neste steg. Registreringen er delt opp for å gjøre det enklere."
         actions={
-          <Link href="/company/onboarding">
-            <Button variant="secondary">Gå til registrering</Button>
+          <Link href="/company/onboarding" className="w-full sm:w-auto">
+            <Button className="w-full sm:w-auto" variant="secondary">Gå til registrering</Button>
           </Link>
         }
       />
@@ -84,7 +84,7 @@ export default async function CompanyDashboardPage({ searchParams }: PageProps) 
       {registrationLogo?.logoUrl ? (
         <Card className="flex flex-col gap-6">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
               <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-2xl border border-primary/10 bg-white p-3">
                 <Image
                   src={registrationLogo.logoUrl}
@@ -94,7 +94,7 @@ export default async function CompanyDashboardPage({ searchParams }: PageProps) 
                   className="h-full w-full object-contain"
                 />
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="text-xs font-semibold uppercase tracking-wide text-primary/60">Bedriftslogo</p>
                 <p className="text-lg font-bold text-primary">{company.name}</p>
                 <p className="text-sm text-ink/75">
@@ -102,8 +102,8 @@ export default async function CompanyDashboardPage({ searchParams }: PageProps) 
                 </p>
               </div>
             </div>
-            <Link href="/company/events">
-              <Button variant="secondary">Se eventpåmeldinger</Button>
+            <Link href="/company/events" className="w-full md:w-auto">
+              <Button className="w-full md:w-auto" variant="secondary">Se eventpåmeldinger</Button>
             </Link>
           </div>
 
@@ -125,7 +125,7 @@ export default async function CompanyDashboardPage({ searchParams }: PageProps) 
               Last opp ny logo
               <Input name="logo" type="file" accept="image/*" required className="mt-2 rounded-2xl" />
             </label>
-            <Button type="submit" variant="secondary">Oppdater logo</Button>
+            <Button className="w-full md:w-auto" type="submit" variant="secondary">Oppdater logo</Button>
           </form>
         </Card>
       ) : (
@@ -142,7 +142,7 @@ export default async function CompanyDashboardPage({ searchParams }: PageProps) 
               Last opp logo
               <Input name="logo" type="file" accept="image/*" required className="mt-2 rounded-2xl" />
             </label>
-            <Button type="submit" variant="secondary">Lagre logo</Button>
+            <Button className="w-full md:w-auto" type="submit" variant="secondary">Lagre logo</Button>
           </form>
         </Card>
       )}
@@ -157,7 +157,7 @@ export default async function CompanyDashboardPage({ searchParams }: PageProps) 
           />
           <div className="absolute inset-0 bg-gradient-to-br from-primary/95 via-primary/90 to-primary/84" />
           <div className="relative z-10 flex flex-col gap-4 rounded-2xl border border-surface/25 bg-primary/55 p-4 text-surface shadow-soft backdrop-blur-md">
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <h3 className="text-lg font-bold text-surface drop-shadow-[0_1px_2px_rgba(0,0,0,0.65)]">Registreringsstatus</h3>
               <span className="rounded-full bg-secondary px-3 py-1 text-sm font-bold text-primary">{onboarding.progress}% fullført</span>
             </div>
@@ -168,7 +168,7 @@ export default async function CompanyDashboardPage({ searchParams }: PageProps) 
               {onboarding.sections.map((section) => (
                 <li
                   key={section.key}
-                  className="flex items-center justify-between rounded-xl border border-surface/20 bg-primary/78 px-3 py-2 shadow-sm backdrop-blur-sm"
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-surface/20 bg-primary/78 px-3 py-2 shadow-sm backdrop-blur-sm"
                 >
                   <span className="font-semibold text-surface">{section.label}</span>
                   <span className={section.completed ? "font-semibold text-success" : "font-semibold text-secondary"}>
@@ -193,8 +193,8 @@ export default async function CompanyDashboardPage({ searchParams }: PageProps) 
             <li>Admin setter pakke (Standard/Sølv/Gull/Platinum).</li>
             <li>Se leads og ROI i dashboardet.</li>
           </ol>
-          <Link href="/company/events">
-            <Button variant="secondary">Se eventpåmeldinger</Button>
+          <Link href="/company/events" className="w-full sm:w-auto">
+              <Button className="w-full sm:w-auto" variant="secondary">Se eventpåmeldinger</Button>
           </Link>
         </Card>
       </section>
@@ -210,7 +210,7 @@ export default async function CompanyDashboardPage({ searchParams }: PageProps) 
               className="object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-primary/85 via-primary/45 to-transparent" />
-            <div className="absolute inset-x-0 bottom-0 p-6 text-surface">
+            <div className="absolute inset-x-0 bottom-0 p-4 text-surface sm:p-6">
               <h3 className="text-xl font-bold">Bygg relasjoner med riktige kandidater</h3>
               <p className="mt-1 text-sm text-surface/80">
                 Bruk dashboardet til å følge opp påmeldinger, leads og neste aktiviteter.

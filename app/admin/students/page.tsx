@@ -116,7 +116,7 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
         </table>
       </Card>
 
-      <div className="flex items-center justify-between text-sm text-ink/70">
+      <div className="flex flex-col items-start justify-between gap-3 text-sm text-ink/70 sm:flex-row sm:items-center">
         <span>Side {page} av {totalPages}</span>
         <div className="flex gap-2">
           {page > 1 ? (
