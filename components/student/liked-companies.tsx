@@ -48,7 +48,7 @@ export function LikedCompanies({
               type="button"
               aria-pressed={active}
               onClick={() => toggle(company.id)}
-              className={`flex items-center justify-between gap-3 rounded-xl border px-3 py-3 text-left text-sm transition-[background-color,border-color,color,box-shadow,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70] focus-visible:ring-offset-2 focus-visible:ring-offset-[#140249] ${
+              className={`flex min-w-0 flex-col items-stretch justify-between gap-3 rounded-xl border px-3 py-3 text-left text-sm transition-[background-color,border-color,color,box-shadow,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70] focus-visible:ring-offset-2 focus-visible:ring-offset-[#140249] sm:flex-row sm:items-center ${
                 active
                   ? "!border-secondary bg-secondary/20 text-surface shadow-[0_0_0_3px_#FE9A70]"
                   : "border-surface/20 bg-primary/20 text-surface hover:border-secondary/60 hover:bg-primary/30 hover:shadow-soft"
@@ -92,7 +92,7 @@ export function LikedCompanies({
                   </span>
                 </span>
               </div>
-              <Badge variant={active ? "success" : "default"}>
+              <Badge className="self-start sm:self-auto" variant={active ? "success" : "default"}>
                 {active ? "Favoritt" : "Bedrift"}
               </Badge>
             </button>

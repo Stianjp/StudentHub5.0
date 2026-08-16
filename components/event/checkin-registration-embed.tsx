@@ -14,15 +14,15 @@ export function CheckinRegistrationEmbed({
   description = "Skjemaet under lastes fra Checkin og brukes til å hente ut gratis billett i studentportalen.",
 }: CheckinRegistrationEmbedProps) {
   return (
-    <div className="grid gap-4">
-      <div className="rounded-[28px] border border-primary/10 bg-white p-4 text-[#140249] shadow-[0_18px_50px_rgba(20,2,73,0.08)] md:p-6">
+    <div className="grid min-w-0 gap-4">
+      <div className="min-w-0 overflow-hidden rounded-2xl border border-primary/10 bg-white p-2 text-[#140249] shadow-[0_18px_50px_rgba(20,2,73,0.08)] sm:p-4 md:rounded-[28px] md:p-6">
         <div className="mb-4 space-y-1">
           <p className="text-sm font-semibold uppercase tracking-[0.24em] text-[#FE9A70]">{title}</p>
           <p className="text-sm leading-relaxed text-[#140249]/80">{description}</p>
         </div>
         <div
           id="checkin_registration"
-          className="min-h-[620px] rounded-[22px] bg-mist/40 p-3 md:p-4"
+          className="min-h-[620px] min-w-0 overflow-x-auto rounded-xl bg-mist/40 p-0 sm:p-3 md:rounded-[22px] md:p-4"
         />
       </div>
       <Script

@@ -211,6 +211,46 @@ table {
   color: #FE9A70 !important;
 }
 
+@media (max-width: 767px) {
+  .student-scope .osh-card :is(input, textarea, select) {
+    font-size: 16px;
+  }
+
+  .student-scope #checkin_registration {
+    width: 100%;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .student-scope #checkin_registration *,
+  .student-scope #checkin_registration *::before,
+  .student-scope #checkin_registration *::after {
+    box-sizing: border-box;
+  }
+
+  .student-scope #checkin_registration :is(form, section, fieldset, iframe, table) {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .student-scope #checkin_registration :is(input, textarea, select) {
+    min-width: 0;
+    max-width: 100% !important;
+    font-size: 16px !important;
+  }
+
+  .student-scope #checkin_registration table {
+    display: block;
+    overflow-x: auto;
+    overscroll-behavior-inline: contain;
+  }
+
+  .student-scope #checkin_registration :is(button, [role="button"]) {
+    min-height: 44px;
+  }
+}
+
 .student-scope .osh-card select,
 .admin-scope .osh-card select,
 .company-scope .osh-card select {

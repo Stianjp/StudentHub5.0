@@ -105,7 +105,7 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
 
   return (
     <div className="flex flex-col gap-8 text-surface">
-      <div className="rounded-3xl border border-surface/10 bg-primary p-6 md:p-10">
+      <div className="rounded-3xl border border-surface/10 bg-primary p-4 sm:p-6 md:p-10">
         <SectionHeader
           eyebrow="Samtykker"
           title="Dine samtykker"
@@ -143,8 +143,8 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
                 <option value={STATUS_NOT_CONSENTED}>Ikke samtykket</option>
               </Select>
             </label>
-            <div className="flex items-end gap-3">
-              <Button variant="secondary" type="submit">
+            <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-end">
+              <Button className="w-full sm:w-auto" variant="secondary" type="submit">
                 Oppdater filter
               </Button>
               <Link className="button-link text-xs" href="/student/consents">
@@ -161,14 +161,14 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
             </span>
           </div>
 
-          <div className="flex flex-wrap gap-3">
-            <form action={giveConsentToAll}>
-              <Button type="submit">Gi samtykke til alle bedrifter</Button>
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <form action={giveConsentToAll} className="w-full sm:w-auto">
+              <Button className="w-full sm:w-auto" type="submit">Gi samtykke til alle bedrifter</Button>
             </form>
             {selectedIndustry !== INDUSTRY_ALL ? (
-              <form action={giveConsentToAll}>
+              <form action={giveConsentToAll} className="w-full sm:w-auto">
                 <input type="hidden" name="industry" value={selectedIndustry} />
-                <Button variant="secondary" type="submit">
+                <Button className="w-full sm:w-auto" variant="secondary" type="submit">
                   Gi samtykke til alle {selectedIndustry}-bedrifter
                 </Button>
               </form>
@@ -232,13 +232,13 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
                       <Badge variant={hasConsent ? "success" : "warning"}>
                         {hasConsent ? "Samtykke gitt" : "Ikke samtykket"}
                       </Badge>
-                      <form action={action}>
+                      <form action={action} className="w-full sm:w-auto">
                         <input type="hidden" name="companyId" value={company.id} />
-                        <Button variant={hasConsent ? "ghost" : "secondary"} type="submit">
+                        <Button className="w-full sm:w-auto" variant={hasConsent ? "ghost" : "secondary"} type="submit">
                           {hasConsent ? "Fjern samtykke" : "Gi samtykke"}
                         </Button>
                       </form>
@@ -251,7 +251,7 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
         </Card>
       </div>
 
-      <div className="rounded-3xl border border-surface/10 bg-primary p-6 md:p-10">
+      <div className="rounded-3xl border border-surface/10 bg-primary p-4 sm:p-6 md:p-10">
         <SectionHeader
           eyebrow="Konto"
           title="Innstillinger"

@@ -19,8 +19,8 @@ export default async function StudentEventsPage() {
         }
       />
 
-      <Card className="grid gap-4 border border-secondary/20 bg-[linear-gradient(135deg,#FFF8EF_0%,#FFFFFF_48%,#FFF4F8_100%)] text-[#140249] md:grid-cols-[0.85fr_1.15fr] md:items-start">
-        <div className="grid gap-3 text-[#140249]">
+      <Card className="-mx-2 grid min-w-0 gap-6 overflow-hidden border border-secondary/20 bg-[linear-gradient(135deg,#FFF8EF_0%,#FFFFFF_48%,#FFF4F8_100%)] p-3 text-[#140249] sm:mx-0 sm:p-6 xl:grid-cols-[0.85fr_1.15fr] xl:items-start">
+        <div className="grid min-w-0 gap-3 text-[#140249]">
           <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#FE9A70]">Slik fungerer det</p>
           <h2 className="text-2xl font-bold text-[#140249]">Logg inn, fyll ut skjemaet, og hent billetten.</h2>
           <p className="text-sm leading-relaxed text-[#140249]/80">

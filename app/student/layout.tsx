@@ -7,7 +7,7 @@ const nav = [
   { href: "/student/dashboard", label: "Oversikt", icon: "dashboard" },
   { href: "/student", label: "Min profil", icon: "profile" },
   { href: "/student/events", label: "Events", icon: "events" },
-  { href: "/student/consents", label: "Dine samtykker", icon: "settings" },
+  { href: "/student/consents", label: "Samtykker", icon: "settings" },
 ] satisfies Array<{ href: string; label: string; icon: "dashboard" | "profile" | "events" | "companies" | "settings" }>;
 
 export const dynamic = "force-dynamic";

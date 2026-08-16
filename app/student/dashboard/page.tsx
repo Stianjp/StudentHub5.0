@@ -201,15 +201,15 @@ export default async function StudentDashboardPage() {
   const showCheck = completion === 100;
 
   return (
-    <div className="space-y-10">
-      <header className="flex flex-wrap items-center justify-between gap-6">
-        <div>
-          <h2 className="text-4xl font-black text-white drop-shadow-sm">
+    <div className="space-y-6 sm:space-y-8 lg:space-y-10">
+      <header className="flex items-start justify-between gap-4 sm:items-center">
+        <div className="min-w-0">
+          <h2 className="break-words text-3xl font-black text-white drop-shadow-sm sm:text-4xl">
             Hei, {student.full_name ?? "student"}! 👋
           </h2>
           <div className="mt-3 h-1.5 w-16 rounded-full bg-[#FE9A70]" />
         </div>
-        <div className="flex flex-wrap items-center gap-4">
+        <div className="flex shrink-0 items-center gap-4">
           <button
             type="button"
             aria-label="Åpne varsler"
@@ -221,23 +221,23 @@ export default async function StudentDashboardPage() {
         </div>
       </header>
 
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
-        <div className="relative overflow-hidden rounded-[3.5rem] bg-[#140249] p-12 shadow-2xl lg:col-span-8">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-12 lg:gap-8">
+        <div className="relative overflow-hidden rounded-[2rem] bg-[#140249] p-6 shadow-2xl sm:p-8 lg:col-span-8 lg:rounded-[3.5rem] lg:p-12">
           <div className="relative z-10">
-            <span className="mb-8 inline-block rounded-xl bg-[#FE9A70] px-4 py-2 text-[11px] font-black uppercase tracking-widest text-[#140249] shadow-lg shadow-[#FE9A70]/20">
+            <span className="mb-5 inline-block rounded-xl bg-[#FE9A70] px-4 py-2 text-[11px] font-black uppercase tracking-widest text-[#140249] shadow-lg shadow-[#FE9A70]/20 sm:mb-8">
               Status
             </span>
-            <h3 className="mb-4 text-5xl font-black leading-tight text-white">
+            <h3 className="mb-4 text-3xl font-black leading-tight text-white sm:text-4xl lg:text-5xl">
               Gjør deg klar for
-              <br />
+              <br className="hidden sm:block" />
               <span className="text-[#FE9A70]">karrieredagene.</span>
             </h3>
-            <p className="mb-12 max-w-sm text-lg font-medium text-white/80">
+            <p className="mb-8 max-w-sm text-base font-medium text-white/80 sm:mb-12 sm:text-lg">
               Profilen din er {completion}% fullført og synlig for våre partnere.
             </p>
             <Link
               href="/student"
-              className="inline-flex items-center rounded-2xl bg-[#FE9A70] px-10 py-5 text-sm font-black text-[#140249] shadow-xl shadow-[#FE9A70]/30 transition-[background-color,transform,box-shadow] hover:bg-[#F7A67E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70] focus-visible:ring-offset-2 focus-visible:ring-offset-[#140249] active:scale-95"
+              className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-[#FE9A70] px-6 py-4 text-center text-sm font-black text-[#140249] shadow-xl shadow-[#FE9A70]/30 transition-[background-color,transform,box-shadow] hover:bg-[#F7A67E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70] focus-visible:ring-offset-2 focus-visible:ring-offset-[#140249] active:scale-95 sm:w-auto sm:px-10 sm:py-5"
             >
               {needsOnboarding ? "Fullfør profil" : "Se din profil"}
             </Link>
@@ -247,9 +247,9 @@ export default async function StudentDashboardPage() {
           </div>
         </div>
 
-        <div className="flex flex-col justify-between rounded-[3.5rem] border border-white/15 bg-[#140249] p-12 shadow-2xl lg:col-span-4">
+        <div className="flex flex-col justify-between rounded-[2rem] border border-white/15 bg-[#140249] p-6 shadow-2xl sm:p-8 lg:col-span-4 lg:rounded-[3.5rem] lg:p-12">
           <div>
-            <div className="mb-10 flex h-16 w-16 items-center justify-center rounded-3xl bg-[#FE9A70] text-[#140249] shadow-xl shadow-[#FE9A70]/30">
+            <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#FE9A70] text-[#140249] shadow-xl shadow-[#FE9A70]/30 sm:mb-10 sm:h-16 sm:w-16 sm:rounded-3xl">
               <Calendar size={32} aria-hidden="true" />
             </div>
             <h4 className="mb-4 text-2xl font-black text-[#EDE8F5]">Neste Event</h4>
@@ -260,28 +260,28 @@ export default async function StudentDashboardPage() {
           </div>
           <Link
             href="/student/events"
-            className="mt-10 inline-flex w-full items-center justify-center rounded-2xl bg-[#FE9A70] py-5 text-sm font-black text-[#140249] shadow-lg shadow-[#FE9A70]/20 transition-[background-color,transform,box-shadow] hover:bg-[#F7A67E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70] focus-visible:ring-offset-2 focus-visible:ring-offset-[#140249] active:scale-[0.98]"
+            className="mt-8 inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-[#FE9A70] px-4 py-4 text-sm font-black text-[#140249] shadow-lg shadow-[#FE9A70]/20 transition-[background-color,transform,box-shadow] hover:bg-[#F7A67E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70] focus-visible:ring-offset-2 focus-visible:ring-offset-[#140249] active:scale-[0.98] sm:mt-10 sm:py-5"
           >
             Meld deg på
           </Link>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-        <div className="rounded-[3rem] border border-white/15 bg-[#140249] p-10 shadow-xl">
-          <div className="mb-10 flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-2 xl:gap-8">
+        <div className="rounded-[2rem] border border-white/15 bg-[#140249] p-5 shadow-xl sm:p-8 lg:rounded-[3rem] lg:p-10">
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3 sm:mb-10">
+            <div className="flex min-w-0 items-center gap-3 sm:gap-4">
               <div className="rounded-2xl bg-[#FE9A70] p-3 text-[#140249] shadow-lg shadow-[#FE9A70]/20">
                 <Briefcase size={24} aria-hidden="true" />
               </div>
-              <h4 className="text-xl font-black text-white">Anbefalte bedrifter</h4>
+              <h4 className="text-lg font-black text-white sm:text-xl">Anbefalte bedrifter</h4>
             </div>
             <Link href="/student/companies" className="text-xs font-black uppercase tracking-wider text-[#FE9A70] hover:underline">
               Se alle
             </Link>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-3 sm:space-y-6">
             {recommendedCompanies.length > 0 ? (
               recommendedCompanies.map((company) => {
                 const logoUrl = recommendedCompanyLogos[company.company.id] ?? null;
@@ -290,10 +290,10 @@ export default async function StudentDashboardPage() {
                   <Link
                     key={company.company.id}
                   href={`/student/companies?q=${encodeURIComponent(company.company.name)}`}
-                  className="group flex items-center justify-between rounded-3xl border border-white/10 bg-[#1B0858] p-6 shadow-sm transition-[background-color,border-color,color,box-shadow] hover:border-[#FE9A70]/40 hover:bg-[#220C6C] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70] focus-visible:ring-offset-2 focus-visible:ring-offset-[#140249]"
+                  className="group flex min-w-0 items-center justify-between gap-2 rounded-2xl border border-white/10 bg-[#1B0858] p-4 shadow-sm transition-[background-color,border-color,color,box-shadow] hover:border-[#FE9A70]/40 hover:bg-[#220C6C] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70] focus-visible:ring-offset-2 focus-visible:ring-offset-[#140249] sm:rounded-3xl sm:p-6"
                 >
-                  <div className="flex items-center space-x-5">
-                    <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border border-white/15 bg-white/95 p-2 shadow-inner">
+                  <div className="flex min-w-0 items-start gap-3 sm:items-center sm:gap-5">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/15 bg-white/95 p-2 shadow-inner sm:h-14 sm:w-14 sm:rounded-2xl">
                       {logoUrl ? (
                         <Image
                           src={logoUrl}
@@ -308,7 +308,7 @@ export default async function StudentDashboardPage() {
                         </span>
                       )}
                     </div>
-                    <div className="space-y-1.5">
+                    <div className="min-w-0 space-y-1.5">
                       <div className="flex flex-wrap items-center gap-2">
                         <p className="font-black text-white transition-colors group-hover:text-[#FE9A70]">
                           {company.company.name}
@@ -328,25 +328,25 @@ export default async function StudentDashboardPage() {
                       </p>
                     </div>
                   </div>
-                  <ChevronRight size={18} className="text-white/50 group-hover:text-[#FE9A70]" aria-hidden="true" />
+                  <ChevronRight size={18} className="shrink-0 text-white/50 group-hover:text-[#FE9A70]" aria-hidden="true" />
                 </Link>
                 );
               })
             ) : (
-              <div className="rounded-3xl border border-white/10 bg-[#1B0858] p-6 text-sm font-medium text-white/72">
+              <div className="rounded-2xl border border-white/10 bg-[#1B0858] p-4 text-sm font-medium text-white/72 sm:rounded-3xl sm:p-6">
                 Vi fant ingen tydelige bedriftsmatcher akkurat nå. Oppdater studieprogram, interesser eller jobbtyper for bedre anbefalinger.
               </div>
             )}
           </div>
         </div>
 
-        <div className="flex flex-col rounded-[3rem] border border-white/15 bg-[#140249] p-10 shadow-xl">
-          <div className="mb-10 flex items-center justify-between gap-4">
-            <div className="flex items-center space-x-4">
+        <div className="flex flex-col rounded-[2rem] border border-white/15 bg-[#140249] p-5 shadow-xl sm:p-8 lg:rounded-[3rem] lg:p-10">
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3 sm:mb-10">
+            <div className="flex min-w-0 items-center gap-3 sm:gap-4">
               <div className="rounded-2xl bg-[#FE9A70] p-3 text-[#140249] shadow-lg shadow-[#FE9A70]/20">
                 <Heart size={24} aria-hidden="true" />
               </div>
-              <h4 className="text-xl font-black text-white">Dine favoritter</h4>
+              <h4 className="text-lg font-black text-white sm:text-xl">Dine favoritter</h4>
             </div>
             <Link
               href="/student/companies"
@@ -365,7 +365,7 @@ export default async function StudentDashboardPage() {
               (company) => (
                 <div
                   key={company.id}
-                  className="rounded-2xl border border-white/15 bg-[#1B0858] px-6 py-3 text-sm font-black text-[#EDE8F5]/85 shadow-sm"
+                  className="max-w-full break-words rounded-2xl border border-white/15 bg-[#1B0858] px-4 py-3 text-sm font-black text-[#EDE8F5]/85 shadow-sm sm:px-6"
                 >
                   {company.name}
                 </div>
@@ -373,9 +373,9 @@ export default async function StudentDashboardPage() {
             )}
           </div>
 
-          <div className="mt-auto rounded-[2.5rem] bg-[#140249] p-1">
-            <div className="flex items-center space-x-6 p-8">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#846AE6] text-white shadow-inner">
+          <div className="mt-auto rounded-[2rem] bg-[#140249] p-1 sm:rounded-[2.5rem]">
+            <div className="flex flex-wrap items-center gap-4 p-4 sm:flex-nowrap sm:gap-6 sm:p-8">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#846AE6] text-white shadow-inner sm:h-16 sm:w-16">
                 {showCheck ? <Check size={30} strokeWidth={3} aria-hidden="true" /> : <span className="text-xl font-black">%</span>}
               </div>
               <div>
@@ -384,7 +384,7 @@ export default async function StudentDashboardPage() {
                   Sist oppdatert i dag
                 </p>
               </div>
-              <span className="ml-auto text-xl font-black" style={{ color }}>
+              <span className="ml-auto text-lg font-black sm:text-xl" style={{ color }}>
                 {completion}% {showCheck ? "✓" : ""}
               </span>
             </div>

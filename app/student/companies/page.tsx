@@ -124,8 +124,8 @@ export default async function StudentCompaniesPage({ searchParams }: PageProps) 
               ))}
             </Select>
           </label>
-          <div className="flex flex-wrap gap-2 md:col-span-3">
-            <Button type="submit" variant="secondary">
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap md:col-span-3">
+            <Button className="w-full sm:w-auto" type="submit" variant="secondary">
               Oppdater filter
             </Button>
             <Link href="/student/companies" className="button-link text-xs">
@@ -150,8 +150,8 @@ export default async function StudentCompaniesPage({ searchParams }: PageProps) 
               }))}
               initialSelected={student.liked_company_ids ?? []}
             />
-            <div className="flex flex-wrap gap-3">
-              <Button type="submit">Lagre favoritter</Button>
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <Button className="w-full sm:w-auto" type="submit">Lagre favoritter</Button>
               <Link className="button-link text-xs" href="/student">
                 Gå til profil
               </Link>
