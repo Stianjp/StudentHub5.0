@@ -13,7 +13,6 @@ import {
   buildCrmMetrics,
   CRM_OUTREACH_STAGES,
   CRM_PIPELINE_STAGES,
-  CRM_REGISTRATION_STAGES,
   getLeadAgeInDays,
   getMissingReplyLeads,
   type CrmDataset,
@@ -22,6 +21,12 @@ import {
 import { loadCrmEntriesFromSupabase } from "@/lib/crm-supabase";
 import { deleteCrmCompanyEntries, updateCrmCompanyPipeline, updateCrmLead } from "./actions";
 import { CrmRefreshControls } from "./refresh-controls";
+import { CrmPipelineManager } from "@/components/admin/crm-pipeline-manager";
+import {
+  buildCrmPipelineBoards,
+  loadCrmPipelineConfiguration,
+  type CrmPipelineConfiguration,
+} from "@/lib/crm-pipelines";
 
 type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -204,11 +209,28 @@ export default async function AdminCrmPage({ searchParams }: PageProps) {
 
   let datasetError = "";
   let dataset: CrmDataset | null = null;
+  let pipelineConfiguration: CrmPipelineConfiguration | null = null;
+  let pipelineError = "";
 
-  try {
-    dataset = await loadCrmEntriesFromSupabase();
-  } catch (error) {
-    datasetError = error instanceof Error ? error.message : "Kunne ikke laste CRM-data.";
+  const [datasetResult, pipelineResult] = await Promise.allSettled([
+    loadCrmEntriesFromSupabase(),
+    loadCrmPipelineConfiguration(),
+  ]);
+
+  if (datasetResult.status === "fulfilled") {
+    dataset = datasetResult.value;
+  } else {
+    datasetError = datasetResult.reason instanceof Error
+      ? datasetResult.reason.message
+      : "Kunne ikke laste CRM-data.";
+  }
+
+  if (pipelineResult.status === "fulfilled") {
+    pipelineConfiguration = pipelineResult.value;
+  } else {
+    pipelineError = pipelineResult.reason instanceof Error
+      ? pipelineResult.reason.message
+      : "Kunne ikke laste CRM-pipelines.";
   }
 
   if (!dataset) {
@@ -238,6 +260,9 @@ export default async function AdminCrmPage({ searchParams }: PageProps) {
   });
   const metrics = buildCrmMetrics(filteredLeads);
   const companyCards = buildCrmCompanyCards(filteredLeads);
+  const pipelineBoards = pipelineConfiguration
+    ? buildCrmPipelineBoards(pipelineConfiguration, dataset.companyCards)
+    : [];
   const missingReplyLeads = getMissingReplyLeads(filteredLeads);
 
   const apiParams = new URLSearchParams();
@@ -390,15 +415,14 @@ export default async function AdminCrmPage({ searchParams }: PageProps) {
         deleteAction={deleteCrmCompanyEntries}
       />
 
-      <PipelineBoard
-        title="Registrerte bedrifter"
-        description="Bedrifter som har meldt seg på. Følg opp kontrakt og faktura."
-        stages={[...CRM_REGISTRATION_STAGES]}
-        companyCards={companyCards}
-        updateAction={updateCrmCompanyPipeline}
-        deleteAction={deleteCrmCompanyEntries}
-        highlight
-      />
+      {pipelineError ? (
+        <Card className="border border-warning/30 bg-warning/10 text-sm text-ink/90">
+          <p className="font-semibold text-primary">Kunne ikke laste pipelinebyggeren</p>
+          <p className="mt-2">{pipelineError}</p>
+        </Card>
+      ) : (
+        <CrmPipelineManager pipelines={pipelineBoards} />
+      )}
 
       <Card className="flex flex-col gap-4">
         <form method="get" className="grid gap-3 md:grid-cols-8 md:items-end">

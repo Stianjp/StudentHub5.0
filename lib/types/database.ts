@@ -1572,6 +1572,99 @@ export type Database = {
         };
         Relationships: [];
       };
+      crm_pipelines: {
+        Row: {
+          id: string;
+          name: string;
+          position: number;
+          is_default: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          position?: number;
+          is_default?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          position?: number;
+          is_default?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      crm_pipeline_stages: {
+        Row: {
+          id: string;
+          pipeline_id: string;
+          name: string;
+          position: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          pipeline_id: string;
+          name: string;
+          position?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          pipeline_id?: string;
+          name?: string;
+          position?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      crm_pipeline_company_positions: {
+        Row: {
+          id: string;
+          pipeline_id: string;
+          stage_id: string;
+          company_key: string;
+          company_id: string | null;
+          event_id: string | null;
+          company_name: string;
+          event_name: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          pipeline_id: string;
+          stage_id: string;
+          company_key: string;
+          company_id?: string | null;
+          event_id?: string | null;
+          company_name: string;
+          event_name?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          pipeline_id?: string;
+          stage_id?: string;
+          company_key?: string;
+          company_id?: string | null;
+          event_id?: string | null;
+          company_name?: string;
+          event_name?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       email_groups: {
         Row: {
           id: string;
