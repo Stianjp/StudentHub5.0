@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { ConfirmActionForm } from "@/components/admin/confirm-action-form";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -151,6 +154,10 @@ function PipelineBoard({ pipeline }: { pipeline: CrmPipelineBoard }) {
 }
 
 export function CrmPipelineManager({ pipelines }: CrmPipelineManagerProps) {
+  const [selectedPipelineId, setSelectedPipelineId] = useState(pipelines[0]?.id ?? "");
+  const selectedPipeline =
+    pipelines.find((pipeline) => pipeline.id === selectedPipelineId) ?? pipelines[0];
+
   return (
     <section className="flex flex-col gap-5" aria-labelledby="crm-pipelines-heading">
       <Card className="flex flex-col gap-5">
@@ -162,31 +169,51 @@ export function CrmPipelineManager({ pipelines }: CrmPipelineManagerProps) {
           </p>
         </div>
 
-        <form action={createCustomCrmPipeline} className="grid gap-4 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)_auto] xl:items-end">
-          <label className="text-sm font-semibold text-primary">
-            Navn på pipeline
-            <Input name="name" placeholder="For eksempel Pipeline 3" required maxLength={120} />
+        {pipelines.length > 0 ? (
+          <label className="max-w-xl text-sm font-semibold text-primary">
+            Pipeline som skal vises
+            <Select
+              value={selectedPipeline?.id ?? ""}
+              onChange={(event) => setSelectedPipelineId(event.target.value)}
+              aria-label="Velg pipeline som skal vises"
+            >
+              {pipelines.map((pipeline) => (
+                <option key={pipeline.id} value={pipeline.id}>
+                  {pipeline.name}
+                </option>
+              ))}
+            </Select>
           </label>
-          <label className="text-sm font-semibold text-primary">
-            Kolonner, én per linje
-            <Textarea
-              name="stageNames"
-              defaultValue={"Bedrift\nPågår\nFerdig"}
-              required
-              rows={4}
-              className="min-h-28"
-            />
-          </label>
-          <Button type="submit" variant="secondary" className="xl:mb-1">
-            Lag ny pipeline
-          </Button>
-        </form>
+        ) : null}
+
+        <details className="rounded-2xl border border-white/15 bg-primary/5 p-4">
+          <summary className="cursor-pointer text-sm font-bold text-primary">Lag ny pipeline</summary>
+          <form action={createCustomCrmPipeline} className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)_auto] xl:items-end">
+            <label className="text-sm font-semibold text-primary">
+              Navn på pipeline
+              <Input name="name" placeholder="For eksempel Pipeline 3" required maxLength={120} />
+            </label>
+            <label className="text-sm font-semibold text-primary">
+              Kolonner, én per linje
+              <Textarea
+                name="stageNames"
+                defaultValue={"Bedrift\nPågår\nFerdig"}
+                required
+                rows={4}
+                className="min-h-28"
+              />
+            </label>
+            <Button type="submit" variant="secondary" className="xl:mb-1">
+              Opprett pipeline
+            </Button>
+          </form>
+        </details>
       </Card>
 
-      {pipelines.length === 0 ? (
+      {!selectedPipeline ? (
         <Card className="text-sm text-ink/80">Ingen pipelines er opprettet ennå.</Card>
       ) : (
-        pipelines.map((pipeline) => <PipelineBoard key={pipeline.id} pipeline={pipeline} />)
+        <PipelineBoard key={selectedPipeline.id} pipeline={selectedPipeline} />
       )}
     </section>
   );
