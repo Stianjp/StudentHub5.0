@@ -96,15 +96,15 @@ export default async function AdminFeedbackResponsesPage({ searchParams }: PageP
               </div>
 
               <div className="grid gap-3 md:grid-cols-3">
-                <Card className="bg-[#FBF8F4] p-4 shadow-none">
+                <Card className="admin-light-surface bg-[#FBF8F4] p-4 shadow-none">
                   <p className="text-xs font-semibold uppercase tracking-wide text-primary/50">Svar</p>
                   <p className="mt-1 text-2xl font-black text-primary">{items.length}</p>
                 </Card>
-                <Card className="bg-[#FBF8F4] p-4 shadow-none">
+                <Card className="admin-light-surface bg-[#FBF8F4] p-4 shadow-none">
                   <p className="text-xs font-semibold uppercase tracking-wide text-primary/50">Spørsmål</p>
                   <p className="mt-1 text-2xl font-black text-primary">{form.questionCount}</p>
                 </Card>
-                <Card className="bg-[#FBF8F4] p-4 shadow-none">
+                <Card className="admin-light-surface bg-[#FBF8F4] p-4 shadow-none">
                   <p className="text-xs font-semibold uppercase tracking-wide text-primary/50">Siste svar</p>
                   <p className="mt-1 text-sm font-semibold text-primary">
                     {items[0] ? new Date(items[0].submitted_at).toLocaleString("nb-NO") : "Ingen"}

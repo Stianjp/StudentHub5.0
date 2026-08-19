@@ -176,6 +176,46 @@ table {
   opacity: 0.85;
 }
 
+/* Admin cards are dark by default. These rules must override the inline light-theme
+   colors used by the shared form components. */
+.admin-scope .osh-card :is(input, textarea, select) {
+  color: #F8F6FF !important;
+  caret-color: #F8F6FF;
+  -webkit-text-fill-color: #F8F6FF !important;
+  color-scheme: dark;
+}
+
+.admin-scope .osh-card :is(input, textarea, select)::placeholder {
+  color: #C8C1D6 !important;
+  -webkit-text-fill-color: #C8C1D6 !important;
+  opacity: 1;
+}
+
+.admin-scope .osh-card :is(input, textarea, select):-webkit-autofill {
+  -webkit-text-fill-color: #F8F6FF !important;
+  box-shadow: 0 0 0 1000px #1B0858 inset !important;
+}
+
+.admin-scope .osh-card :is(input, textarea, select):disabled {
+  background-color: #241166;
+  color: #C8C1D6 !important;
+  -webkit-text-fill-color: #C8C1D6 !important;
+  opacity: 1;
+}
+
+.admin-scope .osh-card input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 0.85;
+}
+
+.admin-scope .osh-card :is(h1, h2, h3, h4, h5, h6, p, label, legend, li, span, a, small, strong, div, section, article, summary, dt, dd)[class*="text-primary"] {
+  color: #EDE8F5 !important;
+}
+
+.admin-scope .osh-card :is(h1, h2, h3, h4, h5, h6, p, label, legend, li, span, a, small, strong, div, section, article, summary, dt, dd)[class*="text-ink"] {
+  color: #D8D1E5 !important;
+}
+
 .student-scope #checkin_registration {
   color: #140249;
 }
@@ -317,6 +357,13 @@ table {
   color: #EDE8F5;
 }
 
+.admin-scope .osh-card select option,
+.admin-scope .osh-card select optgroup {
+  background-color: #140249 !important;
+  color: #F8F6FF !important;
+  -webkit-text-fill-color: #F8F6FF !important;
+}
+
 .student-scope .osh-card :is(label, div, section)[class*="bg-primary/5"],
 .admin-scope .osh-card :is(label, div, section)[class*="bg-primary/5"],
 .company-scope .osh-card :is(label, div, section)[class*="bg-primary/5"] {
@@ -326,27 +373,54 @@ table {
 }
 
 .admin-scope .admin-light-surface {
-  background-color: #FBF8F4;
+  background-color: #FBF8F4 !important;
   border-color: rgba(26, 22, 38, 0.08);
-  color: #1A1626;
+  color: #1A1626 !important;
 }
 
-.admin-scope .admin-light-surface :is(h1, h2, h3, h4, h5, h6, p, label, legend, li, span, a, small, strong)[class*="text-primary"] {
-  color: #1A1626;
+.admin-scope .admin-light-surface :is(h1, h2, h3, h4, h5, h6, p, label, legend, li, span, a, small, strong, div, section, article, summary, dt, dd)[class*="text-primary"] {
+  color: #1A1626 !important;
 }
 
-.admin-scope .admin-light-surface :is(h1, h2, h3, h4, h5, h6, p, label, legend, li, span, a, small, strong)[class*="text-ink"] {
-  color: rgba(26, 22, 38, 0.75);
+.admin-scope .admin-light-surface :is(h1, h2, h3, h4, h5, h6, p, label, legend, li, span, a, small, strong, div, section, article, summary, dt, dd)[class*="text-ink"] {
+  color: #4F485B !important;
 }
 
 .admin-scope .admin-light-surface :is(input, textarea, select) {
-  background-color: #FFFFFF;
-  color: #1A1626;
+  background-color: #FFFFFF !important;
+  color: #1A1626 !important;
+  caret-color: #1A1626;
   border-color: rgba(26, 22, 38, 0.18);
+  -webkit-text-fill-color: #1A1626 !important;
+  color-scheme: light;
 }
 
 .admin-scope .admin-light-surface :is(input, textarea, select)::placeholder {
-  color: rgba(26, 22, 38, 0.35);
+  color: #665D73 !important;
+  -webkit-text-fill-color: #665D73 !important;
+  opacity: 1;
+}
+
+.admin-scope .admin-light-surface :is(input, textarea, select):-webkit-autofill {
+  -webkit-text-fill-color: #1A1626 !important;
+  box-shadow: 0 0 0 1000px #FFFFFF inset !important;
+}
+
+.admin-scope .admin-light-surface :is(input, textarea, select):disabled {
+  background-color: #F1EDF4 !important;
+  color: #665D73 !important;
+  -webkit-text-fill-color: #665D73 !important;
+}
+
+.admin-scope .admin-light-surface input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: none;
+  opacity: 1;
+}
+
+.admin-scope .admin-light-surface select option,
+.admin-scope .admin-light-surface select optgroup {
+  background-color: #FFFFFF;
+  color: #1A1626;
 }
 
 .admin-scope .admin-light-surface :is(input, textarea, select):hover {
@@ -436,21 +510,42 @@ table {
 }
 
 .admin-scope .contact-overview-page .osh-card :is(h1, h2, h3, h4, h5, h6, p, label, legend, li, span, a, small, strong)[class*="text-primary"] {
-  color: #140249;
+  color: #140249 !important;
 }
 
 .admin-scope .contact-overview-page .osh-card :is(h1, h2, h3, h4, h5, h6, p, label, legend, li, span, a, small, strong)[class*="text-ink"] {
-  color: #443465;
+  color: #443465 !important;
 }
 
 .admin-scope .contact-overview-page .osh-card :is(input, textarea, select) {
-  background-color: #FFFFFF;
-  color: #1A1626;
+  background-color: #FFFFFF !important;
+  color: #1A1626 !important;
+  caret-color: #1A1626;
   border-color: rgba(20, 2, 73, 0.18);
+  -webkit-text-fill-color: #1A1626 !important;
+  color-scheme: light;
 }
 
 .admin-scope .contact-overview-page .osh-card :is(input, textarea, select)::placeholder {
-  color: rgba(26, 22, 38, 0.62);
+  color: #665D73 !important;
+  -webkit-text-fill-color: #665D73 !important;
+  opacity: 1;
+}
+
+.admin-scope .contact-overview-page .osh-card :is(input, textarea, select):-webkit-autofill {
+  -webkit-text-fill-color: #1A1626 !important;
+  box-shadow: 0 0 0 1000px #FFFFFF inset !important;
+}
+
+.admin-scope .contact-overview-page .osh-card :is(input, textarea, select):disabled {
+  background-color: #F1EDF4 !important;
+  color: #665D73 !important;
+  -webkit-text-fill-color: #665D73 !important;
+}
+
+.admin-scope .contact-overview-page .osh-card input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: none;
+  opacity: 1;
 }
 
 .admin-scope .contact-overview-page .osh-card :is(input, textarea, select):hover {
