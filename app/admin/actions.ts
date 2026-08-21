@@ -14,18 +14,23 @@ import {
   deleteCompanySchema,
   removeEventCompanySchema,
   rejectCompanyAccessSchema,
+  companyContactEmailSchema,
+  companyContactEmailIdSchema,
 } from "@/lib/validation/admin";
 import {
+  addCompanyContactEmail,
   addCompanyDomain,
   approveCompanyAccess,
   createCompany,
   deleteCompany,
+  deleteCompanyContactEmail,
   getCompanyWithDetails,
   inviteCompanyToEvent,
   removeCompanyFromEvent,
   rejectCompanyAccess,
   registerCompanyForEvent,
   setPackageForCompany,
+  setPrimaryCompanyContactEmail,
   updateEventCompanyPackageSettings,
   updateEventCompanyStandType,
   upsertEvent,
@@ -390,6 +395,95 @@ export async function updateCompanyDetailsAction(formData: FormData) {
     if (typeof returnTo === "string" && returnTo.startsWith("/")) {
       const message = getErrorMessage(error);
       redirect(`${returnTo}?error=${encodeURIComponent(message)}`);
+    }
+    throw error;
+  }
+}
+
+function revalidateCompanyContactEmails(companyId: string) {
+  revalidatePath("/admin/companies");
+  revalidatePath("/admin/companies/overview");
+  revalidatePath(`/admin/companies/${companyId}`);
+  revalidatePath("/admin/email");
+  revalidatePath("/admin/email/contact-overview");
+}
+
+function redirectToCompanyContactEmails(companyId: string, query: string) {
+  redirect(`/admin/companies/${companyId}?${query}#bedrifts-epost`);
+}
+
+export async function addCompanyContactEmailAction(formData: FormData) {
+  await requireRole("admin");
+  const companyId = String(getFormValue(formData, "companyId") ?? "").trim();
+
+  try {
+    const parsed = companyContactEmailSchema.safeParse({
+      companyId,
+      email: getFormValue(formData, "email"),
+      label: getFormValue(formData, "label"),
+      isPrimary: getFormValue(formData, "isPrimary") === "on",
+    });
+    if (!parsed.success) {
+      throw new Error(parsed.error.issues.map((issue) => issue.message).join(", "));
+    }
+
+    await addCompanyContactEmail(parsed.data);
+    revalidateCompanyContactEmails(parsed.data.companyId);
+    redirectToCompanyContactEmails(parsed.data.companyId, "saved=1");
+  } catch (error) {
+    if (isNextRedirectError(error)) throw error;
+    if (isUuid(companyId)) {
+      redirectToCompanyContactEmails(companyId, `error=${encodeURIComponent(getErrorMessage(error))}`);
+    }
+    throw error;
+  }
+}
+
+export async function setPrimaryCompanyContactEmailAction(formData: FormData) {
+  await requireRole("admin");
+  const companyId = String(getFormValue(formData, "companyId") ?? "").trim();
+
+  try {
+    const parsed = companyContactEmailIdSchema.safeParse({
+      companyId,
+      emailId: getFormValue(formData, "emailId"),
+    });
+    if (!parsed.success) {
+      throw new Error(parsed.error.issues.map((issue) => issue.message).join(", "));
+    }
+
+    await setPrimaryCompanyContactEmail(parsed.data.companyId, parsed.data.emailId);
+    revalidateCompanyContactEmails(parsed.data.companyId);
+    redirectToCompanyContactEmails(parsed.data.companyId, "saved=1");
+  } catch (error) {
+    if (isNextRedirectError(error)) throw error;
+    if (isUuid(companyId)) {
+      redirectToCompanyContactEmails(companyId, `error=${encodeURIComponent(getErrorMessage(error))}`);
+    }
+    throw error;
+  }
+}
+
+export async function deleteCompanyContactEmailAction(formData: FormData) {
+  await requireRole("admin");
+  const companyId = String(getFormValue(formData, "companyId") ?? "").trim();
+
+  try {
+    const parsed = companyContactEmailIdSchema.safeParse({
+      companyId,
+      emailId: getFormValue(formData, "emailId"),
+    });
+    if (!parsed.success) {
+      throw new Error(parsed.error.issues.map((issue) => issue.message).join(", "));
+    }
+
+    await deleteCompanyContactEmail(parsed.data.companyId, parsed.data.emailId);
+    revalidateCompanyContactEmails(parsed.data.companyId);
+    redirectToCompanyContactEmails(parsed.data.companyId, "saved=1");
+  } catch (error) {
+    if (isNextRedirectError(error)) throw error;
+    if (isUuid(companyId)) {
+      redirectToCompanyContactEmails(companyId, `error=${encodeURIComponent(getErrorMessage(error))}`);
     }
     throw error;
   }

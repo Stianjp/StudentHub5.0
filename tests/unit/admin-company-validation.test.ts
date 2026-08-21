@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { updateCompanyDetailsSchema } from "@/lib/validation/admin";
+import { companyContactEmailSchema, updateCompanyDetailsSchema } from "@/lib/validation/admin";
 
 describe("updateCompanyDetailsSchema", () => {
   it("normalizes org numbers and websites", () => {
@@ -41,5 +41,34 @@ describe("updateCompanyDetailsSchema", () => {
     });
 
     expect(result.success).toBe(true);
+  });
+});
+
+describe("companyContactEmailSchema", () => {
+  it("normalizes the address and accepts an optional label", () => {
+    const result = companyContactEmailSchema.safeParse({
+      companyId: "912b94bb-48f2-44ac-8782-b80d365fc36c",
+      email: " Kontakt@Bedrift.NO ",
+      label: " Faktura ",
+      isPrimary: true,
+    });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.email).toBe("kontakt@bedrift.no");
+      expect(result.data.label).toBe("Faktura");
+      expect(result.data.isPrimary).toBe(true);
+    }
+  });
+
+  it("rejects invalid email addresses", () => {
+    const result = companyContactEmailSchema.safeParse({
+      companyId: "912b94bb-48f2-44ac-8782-b80d365fc36c",
+      email: "ikke-en-epost",
+      label: "",
+      isPrimary: false,
+    });
+
+    expect(result.success).toBe(false);
   });
 });

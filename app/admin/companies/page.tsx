@@ -49,7 +49,7 @@ export default async function AdminCompaniesLandingPage({ searchParams }: PagePr
         </Card>
         <Card className="flex flex-col gap-3">
           <h3 className="text-lg font-bold text-primary">Oversikt bedrifter</h3>
-          <p className="text-sm text-ink/70">Søk, sorter og administrer alle bedrifter.</p>
+          <p className="text-sm text-ink/70">Søk, sorter og administrer bedrifter og e-postadresser.</p>
           <Link className="button-link text-xs" href="/admin/companies/overview">
             Åpne
           </Link>

@@ -23,7 +23,12 @@ export default async function AdminCompaniesOverviewPage({ searchParams }: PageP
   const pageSize = 20;
 
   const filteredCompanies = companies.filter((company) =>
-    query.length === 0 ? true : company.name.toLowerCase().includes(query),
+    query.length === 0
+      ? true
+      : [company.name, ...company.contactEmails.map((contactEmail) => contactEmail.email)]
+          .join(" ")
+          .toLowerCase()
+          .includes(query),
   );
 
   const sortedCompanies = [...filteredCompanies].sort((a, b) => {
@@ -74,7 +79,7 @@ export default async function AdminCompaniesOverviewPage({ searchParams }: PageP
         <form className="grid gap-3 md:grid-cols-4" method="get">
           <label className="text-sm font-semibold text-primary md:col-span-2">
             Søk
-            <Input name="q" defaultValue={query} placeholder="Søk på bedriftsnavn" />
+            <Input name="q" defaultValue={query} placeholder="Søk på bedriftsnavn eller e-post" />
           </label>
           <label className="text-sm font-semibold text-primary">
             Sortering
@@ -102,6 +107,7 @@ export default async function AdminCompaniesOverviewPage({ searchParams }: PageP
           <thead>
             <tr className="text-left text-xs font-semibold uppercase tracking-wide text-primary/60">
               <th className="px-4 py-3">Bedrift</th>
+              <th className="px-4 py-3">E-post</th>
               <th className="px-4 py-3">Org.nr</th>
               <th className="px-4 py-3">Bransje</th>
               <th className="px-4 py-3">Lokasjon</th>
@@ -116,6 +122,26 @@ export default async function AdminCompaniesOverviewPage({ searchParams }: PageP
                   <Link href={`/admin/companies/${company.id}`} className="hover:underline">
                     {company.name}
                   </Link>
+                </td>
+                <td className="px-4 py-3 text-ink/80">
+                  {company.contactEmails.length > 0 ? (
+                    <div className="grid gap-1">
+                      {company.contactEmails.slice(0, 2).map((contactEmail) => (
+                        <a key={contactEmail.id} href={`mailto:${contactEmail.email}`} className="break-all hover:underline">
+                          {contactEmail.email}{contactEmail.is_primary ? " · primær" : ""}
+                        </a>
+                      ))}
+                      {company.contactEmails.length > 2 ? (
+                        <Link href={`/admin/companies/${company.id}#bedrifts-epost`} className="text-xs font-semibold text-primary hover:underline">
+                          +{company.contactEmails.length - 2} flere
+                        </Link>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <Link href={`/admin/companies/${company.id}#bedrifts-epost`} className="text-xs font-semibold text-primary hover:underline">
+                      Legg til e-post
+                    </Link>
+                  )}
                 </td>
                 <td className="px-4 py-3 text-ink/80">{company.org_number ?? "—"}</td>
                 <td className="px-4 py-3 text-ink/80">{company.industry ?? "—"}</td>
