@@ -147,36 +147,6 @@ export type Database = {
         };
         Relationships: [];
       };
-      company_contact_emails: {
-        Row: {
-          id: string;
-          company_id: string;
-          email: string;
-          label: string;
-          is_primary: boolean;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          company_id: string;
-          email: string;
-          label?: string;
-          is_primary?: boolean;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          company_id?: string;
-          email?: string;
-          label?: string;
-          is_primary?: boolean;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Relationships: [];
-      };
       company_users: {
         Row: {
           id: string;

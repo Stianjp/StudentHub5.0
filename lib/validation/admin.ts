@@ -85,16 +85,14 @@ export const companyDomainSchema = z.object({
   domain: z.string().min(3, "Domene er påkrevd."),
 });
 
-export const companyContactEmailSchema = z.object({
+export const companyPortalInviteSchema = z.object({
   companyId: z.string().uuid(),
   email: z.string().trim().toLowerCase().email("Skriv inn en gyldig e-postadresse."),
-  label: z.string().trim().max(80, "Etiketten kan ikke være lengre enn 80 tegn.").optional().or(z.literal("")),
-  isPrimary: z.coerce.boolean().default(false),
 });
 
-export const companyContactEmailIdSchema = z.object({
+export const companyPortalAccessUserSchema = z.object({
   companyId: z.string().uuid(),
-  emailId: z.string().uuid(),
+  userId: z.string().uuid(),
 });
 
 export const approveCompanyAccessSchema = z.object({

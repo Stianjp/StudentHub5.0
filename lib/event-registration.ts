@@ -1960,6 +1960,29 @@ export async function reconcileApprovedCompanyPortalInvites(userId: string, emai
         company: company as Company,
         application: application as RegistrationApplication,
       });
+    } else if (company && !invite.application_id) {
+      const now = new Date().toISOString();
+      const { error: membershipError } = await supabase.from("company_users").upsert(
+        {
+          company_id: invite.company_id,
+          user_id: userId,
+          role: invite.role || "member",
+          approved_at: now,
+        },
+        { onConflict: "company_id,user_id" },
+      );
+      if (membershipError) throw membershipError;
+
+      const { error: acceptedError } = await supabase
+        .from("company_portal_invites")
+        .update({
+          status: "accepted",
+          accepted_at: now,
+          user_id: userId,
+          updated_at: now,
+        })
+        .eq("id", invite.id);
+      if (acceptedError) throw acceptedError;
     }
 
     const { error: inviteUpdateError } = await supabase

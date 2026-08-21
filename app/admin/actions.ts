@@ -14,23 +14,22 @@ import {
   deleteCompanySchema,
   removeEventCompanySchema,
   rejectCompanyAccessSchema,
-  companyContactEmailSchema,
-  companyContactEmailIdSchema,
+  companyPortalInviteSchema,
+  companyPortalAccessUserSchema,
 } from "@/lib/validation/admin";
 import {
-  addCompanyContactEmail,
   addCompanyDomain,
   approveCompanyAccess,
   createCompany,
   deleteCompany,
-  deleteCompanyContactEmail,
+  grantCompanyPortalAccess,
   getCompanyWithDetails,
   inviteCompanyToEvent,
   removeCompanyFromEvent,
   rejectCompanyAccess,
   registerCompanyForEvent,
+  revokeCompanyPortalAccess,
   setPackageForCompany,
-  setPrimaryCompanyContactEmail,
   updateEventCompanyPackageSettings,
   updateEventCompanyStandType,
   upsertEvent,
@@ -400,90 +399,61 @@ export async function updateCompanyDetailsAction(formData: FormData) {
   }
 }
 
-function revalidateCompanyContactEmails(companyId: string) {
+function revalidateCompanyPortalAccess(companyId: string) {
   revalidatePath("/admin/companies");
   revalidatePath("/admin/companies/overview");
   revalidatePath(`/admin/companies/${companyId}`);
-  revalidatePath("/admin/email");
-  revalidatePath("/admin/email/contact-overview");
 }
 
-function redirectToCompanyContactEmails(companyId: string, query: string) {
-  redirect(`/admin/companies/${companyId}?${query}#bedrifts-epost`);
+function redirectToCompanyPortalAccess(companyId: string, query: string) {
+  redirect(`/admin/companies/${companyId}?${query}#portaltilganger`);
 }
 
-export async function addCompanyContactEmailAction(formData: FormData) {
+export async function grantCompanyPortalAccessAction(formData: FormData) {
   await requireRole("admin");
   const companyId = String(getFormValue(formData, "companyId") ?? "").trim();
 
   try {
-    const parsed = companyContactEmailSchema.safeParse({
+    const parsed = companyPortalInviteSchema.safeParse({
       companyId,
       email: getFormValue(formData, "email"),
-      label: getFormValue(formData, "label"),
-      isPrimary: getFormValue(formData, "isPrimary") === "on",
     });
     if (!parsed.success) {
       throw new Error(parsed.error.issues.map((issue) => issue.message).join(", "));
     }
 
-    await addCompanyContactEmail(parsed.data);
-    revalidateCompanyContactEmails(parsed.data.companyId);
-    redirectToCompanyContactEmails(parsed.data.companyId, "saved=1");
+    await grantCompanyPortalAccess(parsed.data);
+    revalidateCompanyPortalAccess(parsed.data.companyId);
+    redirectToCompanyPortalAccess(parsed.data.companyId, "accessGranted=1");
   } catch (error) {
     if (isNextRedirectError(error)) throw error;
     if (isUuid(companyId)) {
-      redirectToCompanyContactEmails(companyId, `error=${encodeURIComponent(getErrorMessage(error))}`);
+      redirectToCompanyPortalAccess(companyId, `error=${encodeURIComponent(getErrorMessage(error))}`);
     }
     throw error;
   }
 }
 
-export async function setPrimaryCompanyContactEmailAction(formData: FormData) {
+export async function revokeCompanyPortalAccessAction(formData: FormData) {
   await requireRole("admin");
   const companyId = String(getFormValue(formData, "companyId") ?? "").trim();
 
   try {
-    const parsed = companyContactEmailIdSchema.safeParse({
+    const parsed = companyPortalAccessUserSchema.safeParse({
       companyId,
-      emailId: getFormValue(formData, "emailId"),
+      userId: getFormValue(formData, "userId"),
     });
     if (!parsed.success) {
       throw new Error(parsed.error.issues.map((issue) => issue.message).join(", "));
     }
 
-    await setPrimaryCompanyContactEmail(parsed.data.companyId, parsed.data.emailId);
-    revalidateCompanyContactEmails(parsed.data.companyId);
-    redirectToCompanyContactEmails(parsed.data.companyId, "saved=1");
+    await revokeCompanyPortalAccess(parsed.data);
+    revalidateCompanyPortalAccess(parsed.data.companyId);
+    redirectToCompanyPortalAccess(parsed.data.companyId, "accessRevoked=1");
   } catch (error) {
     if (isNextRedirectError(error)) throw error;
     if (isUuid(companyId)) {
-      redirectToCompanyContactEmails(companyId, `error=${encodeURIComponent(getErrorMessage(error))}`);
-    }
-    throw error;
-  }
-}
-
-export async function deleteCompanyContactEmailAction(formData: FormData) {
-  await requireRole("admin");
-  const companyId = String(getFormValue(formData, "companyId") ?? "").trim();
-
-  try {
-    const parsed = companyContactEmailIdSchema.safeParse({
-      companyId,
-      emailId: getFormValue(formData, "emailId"),
-    });
-    if (!parsed.success) {
-      throw new Error(parsed.error.issues.map((issue) => issue.message).join(", "));
-    }
-
-    await deleteCompanyContactEmail(parsed.data.companyId, parsed.data.emailId);
-    revalidateCompanyContactEmails(parsed.data.companyId);
-    redirectToCompanyContactEmails(parsed.data.companyId, "saved=1");
-  } catch (error) {
-    if (isNextRedirectError(error)) throw error;
-    if (isUuid(companyId)) {
-      redirectToCompanyContactEmails(companyId, `error=${encodeURIComponent(getErrorMessage(error))}`);
+      redirectToCompanyPortalAccess(companyId, `error=${encodeURIComponent(getErrorMessage(error))}`);
     }
     throw error;
   }

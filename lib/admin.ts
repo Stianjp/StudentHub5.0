@@ -5,12 +5,13 @@ import { sendTransactionalEmail } from "@/lib/resend";
 import { getBaseUrlForRole } from "@/lib/auth-urls";
 import { syncDynamicEmailGroups } from "@/lib/email-groups";
 import { deleteCrmEntriesForCompanyEvent } from "@/lib/crm-supabase";
+import { findAuthUserByEmail } from "@/lib/company-access";
+import { normalizeEmailAddress } from "@/lib/auth-registration";
 
 type Event = TableRow<"events">;
 type Company = TableRow<"companies">;
 type EventCompany = TableRow<"event_companies">;
 type CompanyDomain = TableRow<"company_domains">;
-type CompanyContactEmail = TableRow<"company_contact_emails">;
 type CompanyUser = TableRow<"company_users">;
 type CompanyUserRequest = TableRow<"company_user_requests">;
 type CompanyPortalInvite = TableRow<"company_portal_invites">;
@@ -132,7 +133,8 @@ export async function listCompanies() {
 export type CompanyWithApprovalOverview = Company & {
   approvedApplicationCount: number;
   latestApprovedAt: string | null;
-  contactEmails: CompanyContactEmail[];
+  portalAccessEmails: string[];
+  activePortalAccessCount: number;
 };
 
 export async function listCompaniesWithApprovalOverview(): Promise<CompanyWithApprovalOverview[]> {
@@ -140,7 +142,8 @@ export async function listCompaniesWithApprovalOverview(): Promise<CompanyWithAp
   const [
     { data: companies, error: companiesError },
     { data: approvedApplications, error: applicationsError },
-    { data: contactEmails, error: contactEmailsError },
+    { data: portalInvites, error: portalInvitesError },
+    { data: companyUsers, error: companyUsersError },
   ] =
     await Promise.all([
       supabase.from("companies").select("*").order("name"),
@@ -150,21 +153,31 @@ export async function listCompaniesWithApprovalOverview(): Promise<CompanyWithAp
         .eq("status", "approved")
         .not("approved_at", "is", null),
       supabase
-        .from("company_contact_emails")
-        .select("*")
-        .order("is_primary", { ascending: false })
-        .order("created_at", { ascending: true }),
+        .from("company_portal_invites")
+        .select("company_id, email, status")
+        .neq("status", "revoked")
+        .order("updated_at", { ascending: false }),
+      supabase.from("company_users").select("company_id"),
     ]);
 
   if (companiesError) throw companiesError;
   if (applicationsError) throw applicationsError;
-  if (contactEmailsError) throw contactEmailsError;
+  if (portalInvitesError) throw portalInvitesError;
+  if (companyUsersError) throw companyUsersError;
 
-  const contactEmailsByCompany = new Map<string, CompanyContactEmail[]>();
-  for (const contactEmail of (contactEmails ?? []) as CompanyContactEmail[]) {
-    const current = contactEmailsByCompany.get(contactEmail.company_id) ?? [];
-    current.push(contactEmail);
-    contactEmailsByCompany.set(contactEmail.company_id, current);
+  const portalEmailsByCompany = new Map<string, string[]>();
+  for (const invite of portalInvites ?? []) {
+    const current = portalEmailsByCompany.get(invite.company_id) ?? [];
+    if (!current.includes(invite.email)) current.push(invite.email);
+    portalEmailsByCompany.set(invite.company_id, current);
+  }
+
+  const activePortalUsersByCompany = new Map<string, number>();
+  for (const membership of companyUsers ?? []) {
+    activePortalUsersByCompany.set(
+      membership.company_id,
+      (activePortalUsersByCompany.get(membership.company_id) ?? 0) + 1,
+    );
   }
 
   const approvedByCompanyId = new Map<string, { count: number; latestApprovedAt: string | null }>();
@@ -219,126 +232,10 @@ export async function listCompaniesWithApprovalOverview(): Promise<CompanyWithAp
       ...company,
       approvedApplicationCount,
       latestApprovedAt,
-      contactEmails: contactEmailsByCompany.get(company.id) ?? [],
+      portalAccessEmails: portalEmailsByCompany.get(company.id) ?? [],
+      activePortalAccessCount: activePortalUsersByCompany.get(company.id) ?? 0,
     };
   });
-}
-
-export async function listCompanyContactEmails(companyId: string) {
-  const supabase = createAdminSupabaseClient();
-  const { data, error } = await supabase
-    .from("company_contact_emails")
-    .select("*")
-    .eq("company_id", companyId)
-    .order("is_primary", { ascending: false })
-    .order("created_at", { ascending: true });
-  if (error) throw error;
-  return (data ?? []) as CompanyContactEmail[];
-}
-
-export async function addCompanyContactEmail(input: {
-  companyId: string;
-  email: string;
-  label?: string;
-  isPrimary?: boolean;
-}) {
-  const supabase = createAdminSupabaseClient();
-  const [{ count, error: countError }, { data: existing, error: existingError }] = await Promise.all([
-    supabase
-      .from("company_contact_emails")
-      .select("id", { count: "exact", head: true })
-      .eq("company_id", input.companyId),
-    supabase
-      .from("company_contact_emails")
-      .select("is_primary")
-      .eq("company_id", input.companyId)
-      .eq("email", input.email.trim().toLowerCase())
-      .maybeSingle(),
-  ]);
-  if (countError) throw countError;
-  if (existingError) throw existingError;
-
-  const isPrimary = input.isPrimary || existing?.is_primary === true || (count ?? 0) === 0;
-  if (isPrimary) {
-    const { error } = await supabase
-      .from("company_contact_emails")
-      .update({ is_primary: false })
-      .eq("company_id", input.companyId)
-      .eq("is_primary", true);
-    if (error) throw error;
-  }
-
-  const { error } = await supabase.from("company_contact_emails").upsert(
-    {
-      company_id: input.companyId,
-      email: input.email.trim().toLowerCase(),
-      label: input.label?.trim() ?? "",
-      is_primary: isPrimary,
-    },
-    { onConflict: "company_id,email" },
-  );
-  if (error) throw error;
-}
-
-export async function setPrimaryCompanyContactEmail(companyId: string, emailId: string) {
-  const supabase = createAdminSupabaseClient();
-  const { data: email, error: lookupError } = await supabase
-    .from("company_contact_emails")
-    .select("id")
-    .eq("id", emailId)
-    .eq("company_id", companyId)
-    .single();
-  if (lookupError || !email) throw new Error("Fant ikke e-postadressen.");
-
-  const { error: resetError } = await supabase
-    .from("company_contact_emails")
-    .update({ is_primary: false })
-    .eq("company_id", companyId)
-    .eq("is_primary", true);
-  if (resetError) throw resetError;
-
-  const { error } = await supabase
-    .from("company_contact_emails")
-    .update({ is_primary: true })
-    .eq("id", emailId)
-    .eq("company_id", companyId);
-  if (error) throw error;
-}
-
-export async function deleteCompanyContactEmail(companyId: string, emailId: string) {
-  const supabase = createAdminSupabaseClient();
-  const { data: email, error: lookupError } = await supabase
-    .from("company_contact_emails")
-    .select("id, is_primary")
-    .eq("id", emailId)
-    .eq("company_id", companyId)
-    .single();
-  if (lookupError || !email) throw new Error("Fant ikke e-postadressen.");
-
-  const { error } = await supabase
-    .from("company_contact_emails")
-    .delete()
-    .eq("id", emailId)
-    .eq("company_id", companyId);
-  if (error) throw error;
-
-  if (email.is_primary) {
-    const { data: replacement, error: replacementError } = await supabase
-      .from("company_contact_emails")
-      .select("id")
-      .eq("company_id", companyId)
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle();
-    if (replacementError) throw replacementError;
-    if (replacement) {
-      const { error: primaryError } = await supabase
-        .from("company_contact_emails")
-        .update({ is_primary: true })
-        .eq("id", replacement.id);
-      if (primaryError) throw primaryError;
-    }
-  }
 }
 
 export async function createCompany(input: {
@@ -733,19 +630,135 @@ export async function getCompanyPortalAccessOverview(companyId: string): Promise
   };
 }
 
+export async function grantCompanyPortalAccess(input: { companyId: string; email: string }) {
+  const supabase = createAdminSupabaseClient();
+  const normalizedEmail = normalizeEmailAddress(input.email);
+  const now = new Date().toISOString();
+  const companyPortalUrl =
+    getBaseUrlForRole("company", COMPANY_PORTAL_FALLBACK_URL) || COMPANY_PORTAL_FALLBACK_URL;
+  const signInUrl = `${companyPortalUrl}/auth/sign-in?role=company&next=%2Fcompany`;
+  const redirectTo = `${companyPortalUrl}/auth/callback?role=company&mode=verify&next=%2Fcompany`;
+
+  const { data: company, error: companyError } = await supabase
+    .from("companies")
+    .select("id, name")
+    .eq("id", input.companyId)
+    .single();
+  if (companyError) throw companyError;
+
+  let authUser = await findAuthUserByEmail(normalizedEmail);
+  let createdAuthUser = false;
+
+  if (!authUser) {
+    const inviteResponse = await supabase.auth.admin.inviteUserByEmail(normalizedEmail, {
+      redirectTo,
+      data: { role: "company", company_id: input.companyId },
+    });
+
+    if (inviteResponse.error) {
+      authUser = await findAuthUserByEmail(normalizedEmail);
+      if (!authUser) throw inviteResponse.error;
+    } else {
+      authUser = inviteResponse.data.user ?? (await findAuthUserByEmail(normalizedEmail));
+      createdAuthUser = true;
+    }
+  }
+
+  if (!authUser?.id) {
+    throw new Error("Kunne ikke opprette eller finne brukeren for denne e-postadressen.");
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", authUser.id)
+    .maybeSingle();
+  if (profileError) throw profileError;
+  if (profile && profile.role !== "company") {
+    throw new Error(
+      "E-postadressen er allerede knyttet til en annen kontotype. Bruk en egen e-postadresse for bedriftsportalen.",
+    );
+  }
+
+  const { error: membershipError } = await supabase.from("company_users").upsert(
+    {
+      company_id: input.companyId,
+      user_id: authUser.id,
+      role: "member",
+      approved_at: now,
+    },
+    { onConflict: "company_id,user_id" },
+  );
+  if (membershipError) throw membershipError;
+
+  const { error: inviteError } = await supabase.from("company_portal_invites").upsert(
+    {
+      company_id: input.companyId,
+      application_id: null,
+      email: normalizedEmail,
+      role: "member",
+      status: createdAuthUser ? "invited" : "accepted",
+      invited_at: now,
+      accepted_at: createdAuthUser ? null : now,
+      user_id: authUser.id,
+      updated_at: now,
+    },
+    { onConflict: "company_id,email" },
+  );
+  if (inviteError) throw inviteError;
+
+  const { error: requestDeleteError } = await supabase
+    .from("company_user_requests")
+    .delete()
+    .eq("user_id", authUser.id)
+    .eq("company_id", input.companyId);
+  if (requestDeleteError) throw requestDeleteError;
+
+  if (!createdAuthUser) {
+    await sendTransactionalEmail({
+      to: normalizedEmail,
+      subject: `Du har fått tilgang til ${company.name}`,
+      type: "company_portal_access_granted",
+      html: `<p>Hei,</p>
+<p>Oslo Student Hub har gitt deg tilgang til bedriftsprofilen for <strong>${company.name}</strong>.</p>
+<p>Logg inn med <strong>${normalizedEmail}</strong> her:</p>
+<p><a href="${signInUrl}">${signInUrl}</a></p>`,
+      payload: { companyId: input.companyId, userId: authUser.id, signInUrl },
+      supabase,
+    });
+  }
+
+  return { createdAuthUser };
+}
+
+export async function revokeCompanyPortalAccess(input: { companyId: string; userId: string }) {
+  const supabase = createAdminSupabaseClient();
+  const now = new Date().toISOString();
+
+  const { error: membershipError } = await supabase
+    .from("company_users")
+    .delete()
+    .eq("company_id", input.companyId)
+    .eq("user_id", input.userId);
+  if (membershipError) throw membershipError;
+
+  const { error: inviteError } = await supabase
+    .from("company_portal_invites")
+    .update({ status: "revoked", accepted_at: null, updated_at: now })
+    .eq("company_id", input.companyId)
+    .eq("user_id", input.userId);
+  if (inviteError) throw inviteError;
+
+  const { error: requestError } = await supabase
+    .from("company_user_requests")
+    .delete()
+    .eq("company_id", input.companyId)
+    .eq("user_id", input.userId);
+  if (requestError) throw requestError;
+}
+
 export async function getPreferredCompanyContactEmail(companyId: string) {
   const supabase = createAdminSupabaseClient();
-  const { data: managedEmail, error: managedEmailError } = await supabase
-    .from("company_contact_emails")
-    .select("email")
-    .eq("company_id", companyId)
-    .order("is_primary", { ascending: false })
-    .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-  if (managedEmailError) throw managedEmailError;
-  if (managedEmail?.email) return managedEmail.email;
-
   const overview = await getCompanyPortalAccessOverview(companyId);
 
   const candidateEmails = [

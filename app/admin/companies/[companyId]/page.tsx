@@ -7,18 +7,16 @@ import { Input } from "@/components/ui/input";
 import { CompanyProfileEditor } from "@/components/admin/company-profile-editor";
 import { ConfirmActionForm } from "@/components/admin/confirm-action-form";
 import {
-  addCompanyContactEmailAction,
   deleteCompanyAction,
-  deleteCompanyContactEmailAction,
+  grantCompanyPortalAccessAction,
   removeCompanyFromEventAction,
-  setPrimaryCompanyContactEmailAction,
+  revokeCompanyPortalAccessAction,
   uploadCompanyLogoAction,
 } from "@/app/admin/actions";
 import { requireRole } from "@/lib/auth";
 import {
   getCompanyPortalAccessOverview,
   getCompanyWithDetails,
-  listCompanyContactEmails,
   listCompanyLeads,
   listCompanyRegistrationApplications,
   listCompanyRegistrations,
@@ -93,13 +91,12 @@ export default async function AdminCompanyDetailPage({ params, searchParams }: P
   const errorMessage = firstValue(resolvedSearchParams.error);
   const removed = firstValue(resolvedSearchParams.removed) === "1";
 
-  const [company, registrations, leads, portalAccess, registrationApplications, companyContactEmails] = await Promise.all([
+  const [company, registrations, leads, portalAccess, registrationApplications] = await Promise.all([
     getCompanyWithDetails(companyId),
     listCompanyRegistrations(companyId),
     listCompanyLeads(companyId),
     getCompanyPortalAccessOverview(companyId),
     listCompanyRegistrationApplications(companyId),
-    listCompanyContactEmails(companyId),
   ]);
   const companyLogo = await getLatestCompanyRegistrationLogo(companyId);
 
@@ -168,74 +165,6 @@ export default async function AdminCompanyDetailPage({ params, searchParams }: P
           website: company.website,
         }}
       />
-
-      <Card id="bedrifts-epost" className="flex scroll-mt-24 flex-col gap-5">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-primary/60">Bedriftskontakt</p>
-          <h2 className="text-xl font-bold text-primary">E-postadresser</h2>
-          <p className="text-sm text-ink/70">
-            Legg til adressene Oslo Student Hub skal bruke for kontakt med bedriften. Primæradressen brukes først av interne kontaktfunksjoner.
-          </p>
-        </div>
-
-        {companyContactEmails.length === 0 ? (
-          <p className="rounded-2xl border border-dashed border-white/15 p-4 text-sm text-ink/70">
-            Ingen e-postadresser er lagt til ennå.
-          </p>
-        ) : (
-          <ul className="grid gap-3">
-            {companyContactEmails.map((contactEmail) => (
-              <li key={contactEmail.id} className="flex flex-col gap-3 rounded-2xl border border-white/15 bg-primary/5 p-4 lg:flex-row lg:items-center lg:justify-between">
-                <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <a href={`mailto:${contactEmail.email}`} className="break-all font-semibold text-primary hover:underline">
-                      {contactEmail.email}
-                    </a>
-                    {contactEmail.is_primary ? <Badge variant="success">Primær</Badge> : null}
-                  </div>
-                  <p className="text-xs text-ink/70">{contactEmail.label || "Ingen etikett"}</p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {!contactEmail.is_primary ? (
-                    <form action={setPrimaryCompanyContactEmailAction}>
-                      <input type="hidden" name="companyId" value={companyId} />
-                      <input type="hidden" name="emailId" value={contactEmail.id} />
-                      <Button type="submit" variant="secondary" className="min-h-9 rounded-xl px-4 py-2 text-xs">
-                        Sett som primær
-                      </Button>
-                    </form>
-                  ) : null}
-                  <ConfirmActionForm
-                    action={deleteCompanyContactEmailAction}
-                    fields={{ companyId, emailId: contactEmail.id }}
-                    label="Fjern"
-                    confirmMessage={`Fjerne e-postadressen ${contactEmail.email} fra ${company.name}?`}
-                  />
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        <form action={addCompanyContactEmailAction} className="grid gap-4 border-t border-white/15 pt-5 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.7fr)_auto] lg:items-end">
-          <input type="hidden" name="companyId" value={companyId} />
-          <label className="text-sm font-semibold text-primary">
-            E-postadresse
-            <Input name="email" type="email" inputMode="email" autoComplete="off" placeholder="kontakt@bedrift.no" required />
-          </label>
-          <label className="text-sm font-semibold text-primary">
-            Etikett
-            <Input name="label" placeholder="Kontakt, faktura, marked ..." maxLength={80} />
-          </label>
-          <Button type="submit" variant="secondary">
-            Legg til e-post
-          </Button>
-          <label className="flex items-center gap-3 text-sm font-semibold text-primary lg:col-span-3">
-            <input name="isPrimary" type="checkbox" className="h-5 w-5 accent-[#FE9A70]" />
-            Bruk som primæradresse
-          </label>
-        </form>
-      </Card>
 
       <Card className="grid gap-3 text-sm text-ink/80 md:grid-cols-2">
         <div>
@@ -419,13 +348,46 @@ export default async function AdminCompanyDetailPage({ params, searchParams }: P
         )}
       </Card>
 
-      <Card className="flex flex-col gap-5">
+      <Card id="portaltilganger" className="flex scroll-mt-24 flex-col gap-5">
         <div className="flex flex-col gap-1">
           <h3 className="text-lg font-bold text-primary">Portaltilganger</h3>
           <p className="text-sm text-ink/70">
-            Her ser du hvilke e-postadresser som har tilgang til bedriftsportalen, hva som venter på godkjenning og invite-historikken fra registrering.
+            Gi personer tilgang til bedriftssiden på bedrift.oslostudenthub.no. Nye brukere får en invitasjon på e-post, mens eksisterende brukere får tilgang med en gang.
           </p>
         </div>
+
+        {firstValue(resolvedSearchParams.accessGranted) === "1" ? (
+          <div className="rounded-2xl border border-success/30 bg-success/10 p-4 text-sm font-semibold text-success">
+            Tilgang er opprettet, og brukeren er varslet på e-post.
+          </div>
+        ) : null}
+        {firstValue(resolvedSearchParams.accessRevoked) === "1" ? (
+          <div className="rounded-2xl border border-warning/30 bg-warning/10 p-4 text-sm font-semibold text-warning">
+            Portaltilgangen er fjernet.
+          </div>
+        ) : null}
+
+        <form
+          action={grantCompanyPortalAccessAction}
+          className="grid gap-3 rounded-2xl border border-[#CDBEE8] bg-[#F7F3FF] p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end"
+        >
+          <input type="hidden" name="companyId" value={companyId} />
+          <label className="text-sm font-semibold text-[#140249]">
+            E-postadresse som skal få tilgang
+            <Input
+              name="email"
+              type="email"
+              inputMode="email"
+              autoComplete="off"
+              placeholder="navn@bedrift.no"
+              required
+            />
+          </label>
+          <Button type="submit">Gi tilgang</Button>
+          <p className="text-xs text-[#4F4568] sm:col-span-2">
+            E-postadressen knyttes direkte til {company.name} og kan deretter logge inn i bedriftsportalen.
+          </p>
+        </form>
 
         <div className="grid gap-4 xl:grid-cols-3">
           <div className="rounded-2xl border border-[#CDBEE8] bg-[#F7F3FF] p-4 text-[#1A1626]">
@@ -449,6 +411,14 @@ export default async function AdminCompanyDetailPage({ params, searchParams }: P
                     <div className="mt-2 space-y-1 text-xs text-[#4F4568]">
                       <p>Rolle: {user.role || "member"}</p>
                       <p>Godkjent: {formatDateTime(user.approved_at)}</p>
+                    </div>
+                    <div className="mt-3">
+                      <ConfirmActionForm
+                        action={revokeCompanyPortalAccessAction}
+                        fields={{ companyId, userId: user.user_id }}
+                        label="Fjern tilgang"
+                        confirmMessage={`Fjerne tilgangen til ${user.email ?? "denne brukeren"} fra ${company.name}?`}
+                      />
                     </div>
                   </li>
                 ))}

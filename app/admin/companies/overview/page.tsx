@@ -25,7 +25,7 @@ export default async function AdminCompaniesOverviewPage({ searchParams }: PageP
   const filteredCompanies = companies.filter((company) =>
     query.length === 0
       ? true
-      : [company.name, ...company.contactEmails.map((contactEmail) => contactEmail.email)]
+      : [company.name, ...company.portalAccessEmails]
           .join(" ")
           .toLowerCase()
           .includes(query),
@@ -79,7 +79,7 @@ export default async function AdminCompaniesOverviewPage({ searchParams }: PageP
         <form className="grid gap-3 md:grid-cols-4" method="get">
           <label className="text-sm font-semibold text-primary md:col-span-2">
             Søk
-            <Input name="q" defaultValue={query} placeholder="Søk på bedriftsnavn eller e-post" />
+            <Input name="q" defaultValue={query} placeholder="Søk på bedriftsnavn eller portalbruker" />
           </label>
           <label className="text-sm font-semibold text-primary">
             Sortering
@@ -107,7 +107,7 @@ export default async function AdminCompaniesOverviewPage({ searchParams }: PageP
           <thead>
             <tr className="text-left text-xs font-semibold uppercase tracking-wide text-primary/60">
               <th className="px-4 py-3">Bedrift</th>
-              <th className="px-4 py-3">E-post</th>
+              <th className="px-4 py-3">Portaltilgang</th>
               <th className="px-4 py-3">Org.nr</th>
               <th className="px-4 py-3">Bransje</th>
               <th className="px-4 py-3">Lokasjon</th>
@@ -124,22 +124,23 @@ export default async function AdminCompaniesOverviewPage({ searchParams }: PageP
                   </Link>
                 </td>
                 <td className="px-4 py-3 text-ink/80">
-                  {company.contactEmails.length > 0 ? (
+                  {company.portalAccessEmails.length > 0 ? (
                     <div className="grid gap-1">
-                      {company.contactEmails.slice(0, 2).map((contactEmail) => (
-                        <a key={contactEmail.id} href={`mailto:${contactEmail.email}`} className="break-all hover:underline">
-                          {contactEmail.email}{contactEmail.is_primary ? " · primær" : ""}
-                        </a>
+                      {company.portalAccessEmails.slice(0, 2).map((email) => (
+                        <span key={email} className="break-all">
+                          {email}
+                        </span>
                       ))}
-                      {company.contactEmails.length > 2 ? (
-                        <Link href={`/admin/companies/${company.id}#bedrifts-epost`} className="text-xs font-semibold text-primary hover:underline">
-                          +{company.contactEmails.length - 2} flere
+                      {company.portalAccessEmails.length > 2 ? (
+                        <Link href={`/admin/companies/${company.id}#portaltilganger`} className="text-xs font-semibold text-primary hover:underline">
+                          +{company.portalAccessEmails.length - 2} flere
                         </Link>
                       ) : null}
+                      <span className="text-xs text-ink/60">{company.activePortalAccessCount} aktive brukere</span>
                     </div>
                   ) : (
-                    <Link href={`/admin/companies/${company.id}#bedrifts-epost`} className="text-xs font-semibold text-primary hover:underline">
-                      Legg til e-post
+                    <Link href={`/admin/companies/${company.id}#portaltilganger`} className="text-xs font-semibold text-primary hover:underline">
+                      Gi portaltilgang
                     </Link>
                   )}
                 </td>
