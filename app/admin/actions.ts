@@ -16,12 +16,15 @@ import {
   rejectCompanyAccessSchema,
   companyPortalInviteSchema,
   companyPortalAccessUserSchema,
+  companyContactSchema,
+  companyContactIdSchema,
 } from "@/lib/validation/admin";
 import {
   addCompanyDomain,
   approveCompanyAccess,
   createCompany,
   deleteCompany,
+  deleteCompanyContact,
   grantCompanyPortalAccess,
   getCompanyWithDetails,
   inviteCompanyToEvent,
@@ -30,6 +33,7 @@ import {
   registerCompanyForEvent,
   revokeCompanyPortalAccess,
   setPackageForCompany,
+  upsertCompanyContact,
   updateEventCompanyPackageSettings,
   updateEventCompanyStandType,
   upsertEvent,
@@ -454,6 +458,68 @@ export async function revokeCompanyPortalAccessAction(formData: FormData) {
     if (isNextRedirectError(error)) throw error;
     if (isUuid(companyId)) {
       redirectToCompanyPortalAccess(companyId, `error=${encodeURIComponent(getErrorMessage(error))}`);
+    }
+    throw error;
+  }
+}
+
+function redirectToCompanyContacts(companyId: string, query: string) {
+  redirect(`/admin/companies/${companyId}?${query}#kontaktpersoner`);
+}
+
+export async function saveCompanyContactAction(formData: FormData) {
+  await requireRole("admin");
+  const companyId = String(getFormValue(formData, "companyId") ?? "").trim();
+
+  try {
+    const parsed = companyContactSchema.safeParse({
+      companyId,
+      contactType: getFormValue(formData, "contactType"),
+      name: getFormValue(formData, "name"),
+      jobTitle: getFormValue(formData, "jobTitle"),
+      email: getFormValue(formData, "email"),
+      phone: getFormValue(formData, "phone"),
+    });
+    if (!parsed.success) {
+      throw new Error(parsed.error.issues.map((issue) => issue.message).join(", "));
+    }
+
+    await upsertCompanyContact(parsed.data);
+    revalidatePath(`/admin/companies/${parsed.data.companyId}`);
+    revalidatePath("/admin/companies/overview");
+    revalidatePath("/admin/crm");
+    redirectToCompanyContacts(parsed.data.companyId, "contactSaved=1");
+  } catch (error) {
+    if (isNextRedirectError(error)) throw error;
+    if (isUuid(companyId)) {
+      redirectToCompanyContacts(companyId, `error=${encodeURIComponent(getErrorMessage(error))}`);
+    }
+    throw error;
+  }
+}
+
+export async function deleteCompanyContactAction(formData: FormData) {
+  await requireRole("admin");
+  const companyId = String(getFormValue(formData, "companyId") ?? "").trim();
+
+  try {
+    const parsed = companyContactIdSchema.safeParse({
+      companyId,
+      contactId: getFormValue(formData, "contactId"),
+    });
+    if (!parsed.success) {
+      throw new Error(parsed.error.issues.map((issue) => issue.message).join(", "));
+    }
+
+    await deleteCompanyContact(parsed.data.companyId, parsed.data.contactId);
+    revalidatePath(`/admin/companies/${parsed.data.companyId}`);
+    revalidatePath("/admin/companies/overview");
+    revalidatePath("/admin/crm");
+    redirectToCompanyContacts(parsed.data.companyId, "contactDeleted=1");
+  } catch (error) {
+    if (isNextRedirectError(error)) throw error;
+    if (isUuid(companyId)) {
+      redirectToCompanyContacts(companyId, `error=${encodeURIComponent(getErrorMessage(error))}`);
     }
     throw error;
   }

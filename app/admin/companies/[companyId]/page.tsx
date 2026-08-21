@@ -8,15 +8,18 @@ import { CompanyProfileEditor } from "@/components/admin/company-profile-editor"
 import { ConfirmActionForm } from "@/components/admin/confirm-action-form";
 import {
   deleteCompanyAction,
+  deleteCompanyContactAction,
   grantCompanyPortalAccessAction,
   removeCompanyFromEventAction,
   revokeCompanyPortalAccessAction,
+  saveCompanyContactAction,
   uploadCompanyLogoAction,
 } from "@/app/admin/actions";
 import { requireRole } from "@/lib/auth";
 import {
   getCompanyPortalAccessOverview,
   getCompanyWithDetails,
+  listCompanyContacts,
   listCompanyLeads,
   listCompanyRegistrationApplications,
   listCompanyRegistrations,
@@ -29,6 +32,19 @@ const packageLabel: Record<string, string> = {
   gold: "Gull",
   platinum: "Platinum",
 };
+
+const contactSlots = [
+  {
+    type: "primary" as const,
+    title: "Primærkontakt",
+    description: "Hovedpersonen Oslo Student Hub følger opp.",
+  },
+  {
+    type: "secondary" as const,
+    title: "Sekundærkontakt",
+    description: "Alternativ kontakt dersom primærkontakten ikke er tilgjengelig.",
+  },
+];
 
 type PageProps = {
   params: Promise<{ companyId: string }>;
@@ -91,12 +107,13 @@ export default async function AdminCompanyDetailPage({ params, searchParams }: P
   const errorMessage = firstValue(resolvedSearchParams.error);
   const removed = firstValue(resolvedSearchParams.removed) === "1";
 
-  const [company, registrations, leads, portalAccess, registrationApplications] = await Promise.all([
+  const [company, registrations, leads, portalAccess, registrationApplications, companyContacts] = await Promise.all([
     getCompanyWithDetails(companyId),
     listCompanyRegistrations(companyId),
     listCompanyLeads(companyId),
     getCompanyPortalAccessOverview(companyId),
     listCompanyRegistrationApplications(companyId),
+    listCompanyContacts(companyId),
   ]);
   const companyLogo = await getLatestCompanyRegistrationLogo(companyId);
 
@@ -165,6 +182,79 @@ export default async function AdminCompanyDetailPage({ params, searchParams }: P
           website: company.website,
         }}
       />
+
+      <Card id="kontaktpersoner" className="flex scroll-mt-24 flex-col gap-5">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-primary/60">Bedriftsoppfølging</p>
+          <h2 className="text-xl font-bold text-primary">Kontaktpersoner</h2>
+          <p className="text-sm text-ink/70">
+            Kontaktpersonene vises automatisk under bedriftsnavnet i CRM-pipelinene. De gir ikke tilgang til bedriftsportalen.
+          </p>
+        </div>
+
+        {firstValue(resolvedSearchParams.contactSaved) === "1" ? (
+          <div className="rounded-2xl border border-success/30 bg-success/10 p-4 text-sm font-semibold text-success">
+            Kontaktpersonen er lagret og oppdatert i CRM.
+          </div>
+        ) : null}
+        {firstValue(resolvedSearchParams.contactDeleted) === "1" ? (
+          <div className="rounded-2xl border border-warning/30 bg-warning/10 p-4 text-sm font-semibold text-warning">
+            Kontaktpersonen er fjernet.
+          </div>
+        ) : null}
+
+        <div className="grid gap-4 xl:grid-cols-2">
+          {contactSlots.map((slot) => {
+            const contact = companyContacts.find((entry) => entry.contact_type === slot.type);
+            return (
+              <section key={slot.type} className="rounded-2xl border border-[#CDBEE8] bg-[#F7F3FF] p-5 text-[#1A1626]">
+                <div className="mb-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="text-lg font-bold text-[#140249]">{slot.title}</h3>
+                    {contact ? <Badge variant={slot.type === "primary" ? "success" : "info"}>Registrert</Badge> : null}
+                  </div>
+                  <p className="text-sm text-[#4F4568]">{slot.description}</p>
+                </div>
+
+                <form action={saveCompanyContactAction} className="grid gap-4 sm:grid-cols-2">
+                  <input type="hidden" name="companyId" value={companyId} />
+                  <input type="hidden" name="contactType" value={slot.type} />
+                  <label className="text-sm font-semibold text-[#140249]">
+                    Navn
+                    <Input name="name" defaultValue={contact?.name ?? ""} placeholder="Navn på kontaktperson" required maxLength={120} />
+                  </label>
+                  <label className="text-sm font-semibold text-[#140249]">
+                    Stilling eller rolle
+                    <Input name="jobTitle" defaultValue={contact?.job_title ?? ""} placeholder="For eksempel HR-leder" maxLength={120} />
+                  </label>
+                  <label className="text-sm font-semibold text-[#140249]">
+                    E-post
+                    <Input name="email" type="email" inputMode="email" defaultValue={contact?.email ?? ""} placeholder="navn@bedrift.no" />
+                  </label>
+                  <label className="text-sm font-semibold text-[#140249]">
+                    Telefon
+                    <Input name="phone" type="tel" inputMode="tel" defaultValue={contact?.phone ?? ""} placeholder="+47 900 00 000" maxLength={40} />
+                  </label>
+                  <div className="flex flex-wrap gap-3 sm:col-span-2">
+                    <Button type="submit">Lagre {slot.title.toLowerCase()}</Button>
+                  </div>
+                </form>
+
+                {contact ? (
+                  <div className="mt-3">
+                    <ConfirmActionForm
+                      action={deleteCompanyContactAction}
+                      fields={{ companyId, contactId: contact.id }}
+                      label={`Fjern ${slot.title.toLowerCase()}`}
+                      confirmMessage={`Fjerne ${contact.name} som ${slot.title.toLowerCase()} for ${company.name}?`}
+                    />
+                  </div>
+                ) : null}
+              </section>
+            );
+          })}
+        </div>
+      </Card>
 
       <Card className="grid gap-3 text-sm text-ink/80 md:grid-cols-2">
         <div>

@@ -147,6 +147,42 @@ export type Database = {
         };
         Relationships: [];
       };
+      company_contacts: {
+        Row: {
+          id: string;
+          company_id: string;
+          contact_type: "primary" | "secondary";
+          name: string;
+          job_title: string;
+          email: string;
+          phone: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          company_id: string;
+          contact_type: "primary" | "secondary";
+          name: string;
+          job_title?: string;
+          email?: string;
+          phone?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          company_id?: string;
+          contact_type?: "primary" | "secondary";
+          name?: string;
+          job_title?: string;
+          email?: string;
+          phone?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       company_users: {
         Row: {
           id: string;

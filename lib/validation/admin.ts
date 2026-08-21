@@ -95,6 +95,23 @@ export const companyPortalAccessUserSchema = z.object({
   userId: z.string().uuid(),
 });
 
+export const companyContactSchema = z.object({
+  companyId: z.string().uuid(),
+  contactType: z.enum(["primary", "secondary"]),
+  name: z.string().trim().min(2, "Navn er påkrevd.").max(120, "Navnet er for langt."),
+  jobTitle: z.string().trim().max(120, "Stillingstittelen er for lang.").optional().or(z.literal("")),
+  email: z.union([
+    z.string().trim().toLowerCase().email("Skriv inn en gyldig e-postadresse."),
+    z.literal(""),
+  ]),
+  phone: z.string().trim().max(40, "Telefonnummeret er for langt.").optional().or(z.literal("")),
+});
+
+export const companyContactIdSchema = z.object({
+  companyId: z.string().uuid(),
+  contactId: z.string().uuid(),
+});
+
 export const approveCompanyAccessSchema = z.object({
   requestId: z.string().uuid(),
   companyId: z.union([z.string().uuid(), z.literal("new")]),

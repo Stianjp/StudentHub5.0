@@ -11,6 +11,7 @@ import type { TableRow } from "@/lib/types/database";
 type PipelineRow = TableRow<"crm_pipelines">;
 type StageRow = TableRow<"crm_pipeline_stages">;
 type PositionRow = TableRow<"crm_pipeline_company_positions">;
+type ContactRow = TableRow<"company_contacts">;
 
 type ParticipantRow = {
   company_id: string;
@@ -34,7 +35,13 @@ export type CrmPipelineParticipant = {
   pipelineValueTotal: number;
   lastUpdatedAtIso: string;
   legacyPipelineStage: CrmPipelineStage | "";
+  contacts: CrmPipelineContact[];
 };
+
+export type CrmPipelineContact = Pick<
+  ContactRow,
+  "id" | "contact_type" | "name" | "job_title" | "email" | "phone"
+>;
 
 export type CrmPipelineStageBoard = Pick<StageRow, "id" | "name" | "position"> & {
   companies: CrmPipelineParticipant[];
@@ -55,6 +62,7 @@ export type CrmPipelineConfiguration = {
     company: string;
     eventName: string;
     updatedAt: string;
+    contacts: CrmPipelineContact[];
   }>;
 };
 
@@ -79,7 +87,7 @@ function crmCardLookupKey(company: string, eventName: string) {
 
 export async function loadCrmPipelineConfiguration(): Promise<CrmPipelineConfiguration> {
   const supabase = createAdminSupabaseClient();
-  const [pipelineResult, stageResult, positionResult, participantResult, companyResult, eventResult] =
+  const [pipelineResult, stageResult, positionResult, participantResult, companyResult, eventResult, contactResult] =
     await Promise.all([
       supabase.from("crm_pipelines").select("*").order("position", { ascending: true }),
       supabase.from("crm_pipeline_stages").select("*").order("position", { ascending: true }),
@@ -87,6 +95,10 @@ export async function loadCrmPipelineConfiguration(): Promise<CrmPipelineConfigu
       supabase.from("event_companies").select("company_id, event_id, updated_at"),
       supabase.from("companies").select("id, name"),
       supabase.from("events").select("id, name"),
+      supabase
+        .from("company_contacts")
+        .select("id, company_id, contact_type, name, job_title, email, phone")
+        .order("contact_type", { ascending: true }),
     ]);
 
   const error =
@@ -95,7 +107,8 @@ export async function loadCrmPipelineConfiguration(): Promise<CrmPipelineConfigu
     positionResult.error ??
     participantResult.error ??
     companyResult.error ??
-    eventResult.error;
+    eventResult.error ??
+    contactResult.error;
   if (error) throw new Error(`Kunne ikke laste CRM-pipelines: ${error.message}`);
 
   const companies = new Map(
@@ -104,6 +117,19 @@ export async function loadCrmPipelineConfiguration(): Promise<CrmPipelineConfigu
   const events = new Map(
     ((eventResult.data ?? []) as NamedRow[]).map((event) => [event.id, event.name]),
   );
+  const contactsByCompany = new Map<string, CrmPipelineContact[]>();
+  for (const contact of (contactResult.data ?? []) as Array<CrmPipelineContact & { company_id: string }>) {
+    const current = contactsByCompany.get(contact.company_id) ?? [];
+    current.push({
+      id: contact.id,
+      contact_type: contact.contact_type,
+      name: contact.name,
+      job_title: contact.job_title,
+      email: contact.email,
+      phone: contact.phone,
+    });
+    contactsByCompany.set(contact.company_id, current);
+  }
 
   const participants = ((participantResult.data ?? []) as ParticipantRow[])
     .map((participant) => {
@@ -118,6 +144,7 @@ export async function loadCrmPipelineConfiguration(): Promise<CrmPipelineConfigu
         company,
         eventName,
         updatedAt: participant.updated_at,
+        contacts: contactsByCompany.get(participant.company_id) ?? [],
       };
     })
     .filter((participant): participant is NonNullable<typeof participant> => Boolean(participant));
@@ -156,6 +183,7 @@ export function buildCrmPipelineBoards(
       pipelineValueTotal: crmCard?.pipelineValueTotal ?? 0,
       lastUpdatedAtIso: crmCard?.lastUpdatedAtIso || participant.updatedAt,
       legacyPipelineStage: crmCard?.pipelineStage ?? "",
+      contacts: participant.contacts,
     };
   });
 
@@ -174,6 +202,7 @@ export function buildCrmPipelineBoards(
       pipelineValueTotal: card.pipelineValueTotal,
       lastUpdatedAtIso: card.lastUpdatedAtIso,
       legacyPipelineStage: card.pipelineStage,
+      contacts: [],
     });
   }
 

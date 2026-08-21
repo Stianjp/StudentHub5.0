@@ -12,6 +12,7 @@ type Event = TableRow<"events">;
 type Company = TableRow<"companies">;
 type EventCompany = TableRow<"event_companies">;
 type CompanyDomain = TableRow<"company_domains">;
+type CompanyContact = TableRow<"company_contacts">;
 type CompanyUser = TableRow<"company_users">;
 type CompanyUserRequest = TableRow<"company_user_requests">;
 type CompanyPortalInvite = TableRow<"company_portal_invites">;
@@ -128,6 +129,51 @@ export async function listCompanies() {
   const { data, error } = await supabase.from("companies").select("*").order("name");
   if (error) throw error;
   return (data ?? []) as Company[];
+}
+
+export async function listCompanyContacts(companyId: string) {
+  const supabase = createAdminSupabaseClient();
+  const { data, error } = await supabase
+    .from("company_contacts")
+    .select("*")
+    .eq("company_id", companyId)
+    .order("contact_type", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as CompanyContact[];
+}
+
+export async function upsertCompanyContact(input: {
+  companyId: string;
+  contactType: "primary" | "secondary";
+  name: string;
+  jobTitle?: string;
+  email?: string;
+  phone?: string;
+}) {
+  const supabase = createAdminSupabaseClient();
+  const { error } = await supabase.from("company_contacts").upsert(
+    {
+      company_id: input.companyId,
+      contact_type: input.contactType,
+      name: input.name.trim(),
+      job_title: input.jobTitle?.trim() ?? "",
+      email: input.email?.trim().toLowerCase() ?? "",
+      phone: input.phone?.trim() ?? "",
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "company_id,contact_type" },
+  );
+  if (error) throw error;
+}
+
+export async function deleteCompanyContact(companyId: string, contactId: string) {
+  const supabase = createAdminSupabaseClient();
+  const { error } = await supabase
+    .from("company_contacts")
+    .delete()
+    .eq("id", contactId)
+    .eq("company_id", companyId);
+  if (error) throw error;
 }
 
 export type CompanyWithApprovalOverview = Company & {
@@ -759,6 +805,15 @@ export async function revokeCompanyPortalAccess(input: { companyId: string; user
 
 export async function getPreferredCompanyContactEmail(companyId: string) {
   const supabase = createAdminSupabaseClient();
+  const { data: contacts, error: contactsError } = await supabase
+    .from("company_contacts")
+    .select("email, contact_type")
+    .eq("company_id", companyId)
+    .neq("email", "")
+    .order("contact_type", { ascending: true });
+  if (contactsError) throw contactsError;
+  if (contacts?.[0]?.email) return contacts[0].email.trim().toLowerCase();
+
   const overview = await getCompanyPortalAccessOverview(companyId);
 
   const candidateEmails = [

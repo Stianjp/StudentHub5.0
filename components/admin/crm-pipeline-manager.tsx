@@ -116,6 +116,30 @@ function PipelineBoard({ pipeline }: { pipeline: CrmPipelineBoard }) {
                   stage.companies.map((company) => (
                     <article key={company.key} className="rounded-2xl border border-white/15 bg-[#1B0858] p-4">
                       <h4 className="text-sm font-bold text-primary">{company.company}</h4>
+                      {company.contacts.length > 0 ? (
+                        <div className="mt-2 grid gap-2 rounded-xl border border-white/15 bg-white/5 p-3">
+                          {company.contacts.map((contact) => (
+                            <div key={contact.id} className="text-xs text-white/80">
+                              <p className="font-semibold text-white">
+                                {contact.contact_type === "primary" ? "Primærkontakt" : "Sekundærkontakt"}: {contact.name}
+                              </p>
+                              {contact.job_title ? <p className="text-white/65">{contact.job_title}</p> : null}
+                              <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1">
+                                {contact.email ? (
+                                  <a className="break-all font-semibold text-[#FFC4AA] hover:underline" href={`mailto:${contact.email}`}>
+                                    {contact.email}
+                                  </a>
+                                ) : null}
+                                {contact.phone ? (
+                                  <a className="font-semibold text-[#FFC4AA] hover:underline" href={`tel:${contact.phone.replace(/\s+/g, "")}`}>
+                                    {contact.phone}
+                                  </a>
+                                ) : null}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : null}
                       <p className="text-xs text-ink/70">{company.eventName || "Uten event"}</p>
                       {company.totalContacts > 0 ? (
                         <p className="mt-2 text-xs text-ink/70">
