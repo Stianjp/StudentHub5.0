@@ -13,6 +13,7 @@ type HeroProps = {
   backgroundImageSrc?: string;
   backgroundImageAlt?: string;
   backgroundImagePosition?: string;
+  imagePriority?: boolean;
 };
 
 export function HeroSection({
@@ -25,6 +26,7 @@ export function HeroSection({
   backgroundImageSrc,
   backgroundImageAlt = "",
   backgroundImagePosition = "center",
+  imagePriority = false,
 }: HeroProps) {
   return (
     <section className="relative flex min-h-[58vh] items-center overflow-hidden bg-primary md:min-h-[70vh]">
@@ -35,7 +37,7 @@ export function HeroSection({
               src={backgroundImageSrc}
               alt={backgroundImageAlt}
               fill
-              priority
+              priority={imagePriority}
               className="object-cover"
               style={{ objectPosition: backgroundImagePosition }}
               sizes="100vw"

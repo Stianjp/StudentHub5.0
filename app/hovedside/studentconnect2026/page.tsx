@@ -15,7 +15,7 @@ import { HeroSection } from "@/components/hovedside/hero-section";
 import { SectionWrapper } from "@/components/hovedside/section-wrapper";
 import { FeatureCard } from "@/components/hovedside/feature-card";
 import { CompanyGrid } from "@/components/hovedside/company-grid";
-import { StandShowcase } from "@/components/hovedside/stand-showcase";
+import { DesktopStandShowcase } from "@/components/hovedside/desktop-stand-showcase";
 import { getPublicRegistrationCampaignBySlug } from "@/lib/event-registration";
 import { STUDENT_CONNECT_2026_FLOORPLAN } from "@/lib/event-registration-fixtures";
 import { getApprovedCompaniesForCampaign } from "@/lib/hovedside/approved-companies";
@@ -310,7 +310,7 @@ export default async function StudentConnect2026Page() {
         </div>
         <div className="hidden md:block">
           {registrationDetail ? (
-            <StandShowcase
+            <DesktopStandShowcase
               floorplanImagePath={
                 STUDENT_CONNECT_2026_FLOORPLAN.imagePath
               }
