@@ -6,10 +6,9 @@ import { HeroSection } from "@/components/hovedside/hero-section";
 import { SectionWrapper } from "@/components/hovedside/section-wrapper";
 import { FeatureCard } from "@/components/hovedside/feature-card";
 import { CtaSection } from "@/components/hovedside/cta-section";
+import { StudentConnectEventCallout } from "@/components/hovedside/student-connect-event-callout";
 import {
-  formatWebsiteEventMonth,
   listWebsiteEvents,
-  resolveWebsiteEventHref,
   splitWebsiteEvents,
 } from "@/lib/hovedside/public-events";
 import { SITE_IMAGES } from "@/lib/hovedside/site-images";
@@ -26,7 +25,10 @@ const STUDENT_EVENTS_URL = "https://student.oslostudenthub.no/student/events";
 export default async function ForStudenterPage() {
   const events = await listWebsiteEvents();
   const { upcoming } = splitWebsiteEvents(events);
-  const featuredEvent = upcoming[0] ?? null;
+  const featuredEvent =
+    upcoming.find((event) => event.slug === "student-connect-2026") ??
+    upcoming[0] ??
+    null;
 
   return (
     <>
@@ -153,53 +155,7 @@ export default async function ForStudenterPage() {
       </SectionWrapper>
 
       {/* ── Upcoming event ───────────────────────────────────── */}
-      <SectionWrapper bg="primary">
-        <div className="mx-auto max-w-lg text-center">
-          {featuredEvent ? (
-            <>
-              <p className="text-sm font-bold uppercase tracking-wider text-secondary">
-                {formatWebsiteEventMonth(featuredEvent.starts_at)}
-              </p>
-              <h3 className="mt-2 text-2xl font-bold text-surface">
-                {featuredEvent.name}
-              </h3>
-              <p className="mt-3 text-sm text-mist/60">
-                Student Connect 2026 is our main event for students and companies,
-                with networking, employer conversations, and free student tickets.
-              </p>
-              <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-                <Link
-                  href={resolveWebsiteEventHref(featuredEvent)}
-                  className="inline-flex items-center rounded-full border-2 border-secondary px-7 py-3 text-sm font-bold uppercase tracking-wider text-secondary transition-colors hover:bg-secondary hover:text-primary"
-                >
-                  Learn more
-                </Link>
-                <Link
-                  href={STUDENT_EVENTS_URL}
-                  className="inline-flex items-center rounded-full bg-secondary px-7 py-3 text-sm font-bold uppercase tracking-wider text-primary transition-colors hover:bg-secondary/90"
-                >
-                  Get your free ticket here
-                </Link>
-              </div>
-            </>
-          ) : (
-            <>
-              <h3 className="mt-2 text-2xl font-bold text-surface">
-                Upcoming events
-              </h3>
-              <p className="mt-3 text-sm text-mist/60">
-                No upcoming events have been added in admin yet.
-              </p>
-              <Link
-                href={STUDENT_EVENTS_URL}
-                className="mt-6 inline-flex items-center rounded-full bg-secondary px-7 py-3 text-sm font-bold uppercase tracking-wider text-primary transition-colors hover:bg-secondary/90"
-              >
-                Get your free ticket here
-              </Link>
-            </>
-          )}
-        </div>
-      </SectionWrapper>
+      <StudentConnectEventCallout event={featuredEvent} />
 
       {/* ── University stats ─────────────────────────────────── */}
       <SectionWrapper>

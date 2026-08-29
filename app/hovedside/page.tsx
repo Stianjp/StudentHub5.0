@@ -13,6 +13,7 @@ import { FeatureCard } from "@/components/hovedside/feature-card";
 import { StatsBanner } from "@/components/hovedside/stats-banner";
 import { CtaSection } from "@/components/hovedside/cta-section";
 import { CompanyGrid } from "@/components/hovedside/company-grid";
+import { StudentConnectEventCallout } from "@/components/hovedside/student-connect-event-callout";
 import { getApprovedCompaniesForCampaign } from "@/lib/hovedside/approved-companies";
 import {
   formatWebsiteEventMonth,
@@ -30,6 +31,8 @@ export default async function HomePage() {
   ]);
   const { upcoming } = splitWebsiteEvents(events);
   const featuredEvents = upcoming.slice(0, 2);
+  const studentConnectEvent =
+    upcoming.find((event) => event.slug === "student-connect-2026") ?? null;
 
   return (
     <>
@@ -145,6 +148,9 @@ export default async function HomePage() {
           />
         </div>
       </SectionWrapper>
+
+      {/* ── Student Connect ticket ───────────────────────────── */}
+      <StudentConnectEventCallout event={studentConnectEvent} />
 
       {/* ── Partners ─────────────────────────────────────────── */}
       <SectionWrapper bg="primary">
