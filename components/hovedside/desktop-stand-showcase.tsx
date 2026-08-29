@@ -1,8 +1,12 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import type { PublicRegistrationStand } from "@/lib/event-registration";
+
+const MOBILE_FLOORPLAN_IMAGE =
+  "/event-register/student-connect-2026-floorplan-mobile.webp";
 
 const StandShowcase = dynamic(
   () => import("@/components/hovedside/stand-showcase").then((mod) => mod.StandShowcase),
@@ -34,17 +38,15 @@ export function DesktopStandShowcase(props: Props) {
     return () => mediaQuery.removeEventListener("change", handleChange);
   }, []);
 
-  const showFloorplan = canShowFloorplanAutomatically || floorplanRequested;
-
-  if (!showFloorplan) {
+  if (!canShowFloorplanAutomatically && !floorplanRequested) {
     return (
       <div className="rounded-[28px] border border-white/12 bg-white/8 p-5 text-center shadow-[0_18px_48px_rgba(20,2,73,0.18)]">
         <p className="text-base font-semibold text-surface">
           See the full floor plan
         </p>
         <p className="mt-2 text-sm leading-relaxed text-mist/72">
-          The interactive map and stand logos load only when you request them,
-          keeping the page stable on mobile phones and tablets.
+          The mobile floor plan loads only when you request it, keeping the
+          page stable on mobile phones and tablets.
         </p>
         <button
           type="button"
@@ -57,9 +59,9 @@ export function DesktopStandShowcase(props: Props) {
     );
   }
 
-  return (
-    <div>
-      {!canShowFloorplanAutomatically ? (
+  if (!canShowFloorplanAutomatically) {
+    return (
+      <div className="rounded-[28px] border border-white/12 bg-white/8 p-3 shadow-[0_18px_48px_rgba(20,2,73,0.18)] sm:p-5">
         <div className="mb-4 flex justify-center">
           <button
             type="button"
@@ -69,7 +71,26 @@ export function DesktopStandShowcase(props: Props) {
             Skjul plantegning
           </button>
         </div>
-      ) : null}
+        <div className="mx-auto max-w-[688px] overflow-hidden rounded-[22px] bg-white p-2 shadow-[0_18px_50px_rgba(20,2,73,0.2)] sm:p-3">
+          <Image
+            src={MOBILE_FLOORPLAN_IMAGE}
+            alt={props.floorplanAlt}
+            width={688}
+            height={1312}
+            sizes="(max-width: 767px) calc(100vw - 56px), 688px"
+            className="h-auto w-full rounded-[16px]"
+          />
+        </div>
+        <p className="mx-auto mt-4 max-w-xl text-center text-sm leading-relaxed text-mist/72">
+          Company logos and details are available five at a time under
+          Attending Companies below.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div>
       <StandShowcase {...props} />
     </div>
   );
