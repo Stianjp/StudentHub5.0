@@ -93,16 +93,16 @@ export function LikedCompanies({
                 </span>
               </div>
               <Badge className="self-start sm:self-auto" variant={active ? "success" : "default"}>
-                {active ? "Favoritt" : "Bedrift"}
+                {active ? "Favourite" : "Company"}
               </Badge>
             </button>
           );
         })}
       </div>
       {selected.length > 0 ? (
-        <p className="text-xs text-surface/70">Valgt: {selected.length} bedrifter</p>
+        <p className="text-xs text-surface/70">Selected: {selected.length} companies</p>
       ) : (
-        <p className="text-xs text-surface/70">Ingen favoritter valgt ennå.</p>
+        <p className="text-xs text-surface/70">No favourites selected yet.</p>
       )}
     </div>
   );

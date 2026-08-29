@@ -11,12 +11,12 @@ export async function POST(request: Request) {
 
   if (!parsed.success) {
     const message = parsed.error.issues.map((issue) => issue.message).join(", ");
-    return NextResponse.json({ error: message || "Ugyldig input" }, { status: 400 });
+    return NextResponse.json({ error: message || "Invalid input" }, { status: 400 });
   }
 
   const { email, role, next } = parsed.data;
   if (role === "admin") {
-    return NextResponse.json({ error: "Admin-tilgang opprettes kun av OSH." }, { status: 403 });
+    return NextResponse.json({ error: "Admin access can only be created by OSH." }, { status: 403 });
   }
 
   const hostValidationError = validateMagicLinkRoleForHost(request.headers.get("host"), role);

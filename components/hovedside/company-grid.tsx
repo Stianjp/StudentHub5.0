@@ -107,9 +107,7 @@ export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
   const [mobilePage, setMobilePage] = useState(0);
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia(
-      "(min-width: 1200px) and (hover: hover) and (pointer: fine)",
-    );
+    const mediaQuery = window.matchMedia("(min-width: 640px)");
     const handleChange = () => setShowFullCompanyGrid(mediaQuery.matches);
 
     handleChange();
@@ -179,6 +177,9 @@ export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
           <div className="grid gap-3 sm:grid-cols-2">
             {mobileCompanies.map((company) => {
               const meta = TIER_META[company.packageTier];
+              const displaysLogo = shouldDisplayCompanyLogo(
+                company.packageTier,
+              );
               return (
                 <button
                   key={company.id}
@@ -189,23 +190,24 @@ export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
                     meta.sectionClassName,
                   )}
                 >
-                  <div className="relative h-24 overflow-hidden rounded-[18px] border border-primary/10 bg-white">
-                    {company.logoUrl &&
-                    shouldDisplayCompanyLogo(company.packageTier) ? (
-                      <Image
-                        src={company.logoUrl}
-                        alt={`Logo for ${company.companyName}`}
-                        fill
-                        sizes="(max-width: 639px) calc(100vw - 64px), 45vw"
-                        className="object-contain p-3"
-                      />
-                    ) : (
-                      <Building2
-                        size={34}
-                        className="absolute inset-0 m-auto text-primary/35"
-                      />
-                    )}
-                  </div>
+                  {displaysLogo ? (
+                    <div className="relative h-24 overflow-hidden rounded-[18px] border border-primary/10 bg-white">
+                      {company.logoUrl ? (
+                        <Image
+                          src={company.logoUrl}
+                          alt={`Logo for ${company.companyName}`}
+                          fill
+                          sizes="calc(100vw - 64px)"
+                          className="object-contain p-3"
+                        />
+                      ) : (
+                        <Building2
+                          size={34}
+                          className="absolute inset-0 m-auto text-primary/35"
+                        />
+                      )}
+                    </div>
+                  ) : null}
                   <p className="mt-3 text-xs font-bold uppercase tracking-[0.2em] text-secondary">
                     {meta.label}
                   </p>
@@ -368,7 +370,7 @@ export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
                     key={company.id}
                     role="button"
                     tabIndex={0}
-                    aria-label={`Les mer om ${company.companyName}`}
+                    aria-label={`Read more about ${company.companyName}`}
                     onClick={() => setSelectedCompanyId(company.id)}
                     onKeyDown={(event) => {
                       if (event.key === "Enter" || event.key === " ") {
@@ -384,8 +386,7 @@ export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
                       meta.logoFrameClassName,
                     )}
                   >
-                    {company.logoUrl &&
-                    shouldDisplayCompanyLogo(company.packageTier) ? (
+                    {company.logoUrl ? (
                       <div
                         className={cn(
                           "relative w-full",
@@ -473,11 +474,7 @@ export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
       {selectedCompany ? (
         <CompanyInfoModal
           companyName={selectedCompany.companyName}
-          logoUrl={
-            shouldDisplayCompanyLogo(selectedCompany.packageTier)
-              ? selectedCompany.logoUrl
-              : null
-          }
+          logoUrl={selectedCompany.logoUrl}
           representationText={selectedCompany.representationText}
           candidateSummary={selectedCompany.candidateSummary}
           candidateLevelLabel={selectedCompany.candidateLevelLabel}

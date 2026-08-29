@@ -3,11 +3,11 @@ import { STUDY_CATEGORIES } from "@/components/event/study-categories";
 
 export const OSH_ADMIN_EMAIL_DOMAIN = "@oslostudenthub.no";
 export const PASSWORD_POLICY_MESSAGE =
-  "Passord må være minst 8 tegn og inneholde stor bokstav, tall og spesialtegn.";
+  "Password must be at least 8 characters and include an uppercase letter, a number and a special character.";
 
 export const STUDY_LEVEL_OPTIONS = [
-  { value: "Bachelor", label: "Bachelorstudent" },
-  { value: "Master", label: "Masterstudent" },
+  { value: "Bachelor", label: "Bachelor student" },
+  { value: "Master", label: "Master student" },
 ] as const;
 
 export type StudyLevel = (typeof STUDY_LEVEL_OPTIONS)[number]["value"];
@@ -29,15 +29,15 @@ export type PasswordStrengthSummary = {
   requirements: PasswordRequirement[];
   metCount: number;
   filledSegments: 0 | 1 | 2 | 3;
-  label: "Ingen" | "Svak" | "Middels" | "Sterkt";
+  label: "None" | "Weak" | "Medium" | "Strong";
 };
 
 const STUDENT_JOB_TYPE_DEFINITIONS = [
-  { value: "Deltidsjobb", label: "Deltidsjobb", levels: ["Bachelor", "Master"] },
-  { value: "Fast jobb", label: "Fulltidsjobb", levels: ["Bachelor", "Master"] },
-  { value: "Bacheloroppgave", label: "Bacheloroppgave", levels: ["Bachelor"] },
-  { value: "Masteroppgave", label: "Masteroppgave", levels: ["Master"] },
-  { value: "Sommerjobb", label: "Sommerjobb", levels: ["Bachelor", "Master"] },
+  { value: "Deltidsjobb", label: "Part-time job", levels: ["Bachelor", "Master"] },
+  { value: "Fast jobb", label: "Full-time job", levels: ["Bachelor", "Master"] },
+  { value: "Bacheloroppgave", label: "Bachelor thesis", levels: ["Bachelor"] },
+  { value: "Masteroppgave", label: "Master thesis", levels: ["Master"] },
+  { value: "Sommerjobb", label: "Summer internship", levels: ["Bachelor", "Master"] },
 ] as const;
 
 export const STUDENT_JOB_TYPE_OPTIONS = STUDENT_JOB_TYPE_DEFINITIONS.map(({ value, label }) => ({
@@ -50,9 +50,12 @@ export const STUDENT_JOB_TYPE_OPTIONS = STUDENT_JOB_TYPE_DEFINITIONS.map(({ valu
 
 const STUDENT_JOB_TYPE_ALIASES = new Map<string, string>(
   STUDENT_JOB_TYPE_DEFINITIONS.flatMap((option) => {
-    const aliases = [option.value, option.label];
+    const aliases: string[] = [option.value, option.label];
     if (option.value === "Fast jobb") {
-      aliases.push("Fulltidsjobb");
+      aliases.push("Fulltidsjobb", "Full-time position");
+    }
+    if (option.value === "Deltidsjobb") {
+      aliases.push("Part-time position");
     }
     return aliases.map((alias) => [alias.trim().toLowerCase(), option.value]);
   }),
@@ -104,24 +107,24 @@ export function validateStudentStudyChoices({
 }) {
   const normalizedStudyLevel = normalizeStudyLevel(studyLevel);
   if (!normalizedStudyLevel) {
-    return { studyLevel: "Velg bachelor eller master." };
+    return { studyLevel: "Select bachelor or master." };
   }
 
   if (!getStudyYearOptions(normalizedStudyLevel).includes(Number(studyYear))) {
     return {
       studyYear:
         normalizedStudyLevel === "Bachelor"
-          ? "Bachelorstudenter kan bare velge 1.-3. år."
-          : "Masterstudenter kan bare velge 1.-5. år.",
+          ? "Bachelor students can only select years 1-3."
+          : "Master students can only select years 1-5.",
     };
   }
 
   const normalizedJobTypes = mapStudentJobTypes(jobTypes ?? []);
   if (normalizedStudyLevel === "Bachelor" && normalizedJobTypes.includes("Masteroppgave")) {
-    return { jobTypes: "Masteroppgave vises bare for masterstudenter." };
+    return { jobTypes: "Master thesis is only available to master students." };
   }
   if (normalizedStudyLevel === "Master" && normalizedJobTypes.includes("Bacheloroppgave")) {
-    return { jobTypes: "Bacheloroppgave vises bare for bachelorstudenter." };
+    return { jobTypes: "Bachelor thesis is only available to bachelor students." };
   }
 
   return null;
@@ -146,7 +149,7 @@ export function validatePasswordStrength(password: string, confirmPassword?: str
     return PASSWORD_POLICY_MESSAGE;
   }
   if (confirmPassword !== undefined && confirmPassword !== null && password !== confirmPassword) {
-    return "Passordene må være like.";
+    return "The passwords must match.";
   }
   return null;
 }
@@ -158,27 +161,27 @@ export function getPasswordStrengthSummary(
   const requirements: PasswordRequirement[] = [
     {
       key: "length",
-      label: "Minst 8 tegn",
+      label: "At least 8 characters",
       met: password.length >= 8,
     },
     {
       key: "uppercase",
-      label: "Minst én stor bokstav",
+      label: "At least one uppercase letter",
       met: /[A-ZÆØÅ]/.test(password),
     },
     {
       key: "number",
-      label: "Minst ett tall",
+      label: "At least one number",
       met: /\d/.test(password),
     },
     {
       key: "special",
-      label: "Minst ett spesialtegn",
+      label: "At least one special character",
       met: /[^\p{L}\p{N}\s]/u.test(password),
     },
     {
       key: "match",
-      label: "Passordene er like",
+      label: "Passwords match",
       met: Boolean(confirmPassword) && password.length > 0 && password === confirmPassword,
     },
   ];
@@ -190,7 +193,7 @@ export function getPasswordStrengthSummary(
       requirements,
       metCount,
       filledSegments: 0,
-      label: "Ingen",
+      label: "None",
     };
   }
 
@@ -199,7 +202,7 @@ export function getPasswordStrengthSummary(
       requirements,
       metCount,
       filledSegments: 1,
-      label: "Svak",
+      label: "Weak",
     };
   }
 
@@ -208,7 +211,7 @@ export function getPasswordStrengthSummary(
       requirements,
       metCount,
       filledSegments: 2,
-      label: "Middels",
+      label: "Medium",
     };
   }
 
@@ -216,7 +219,7 @@ export function getPasswordStrengthSummary(
     requirements,
     metCount,
     filledSegments: 3,
-    label: "Sterkt",
+    label: "Strong",
   };
 }
 
@@ -232,12 +235,12 @@ export function validateHostRoleLock(hostname: string | null | undefined, expect
   const hostRole = roleFromHost(hostname ?? null);
   if (!hostRole) return null;
   if (hostRole === "admin") {
-    return "Registrering er ikke tilgjengelig på admin-domenet.";
+    return "Registration is not available on the admin domain.";
   }
   if (hostRole !== expectedRole) {
     return expectedRole === "student"
-      ? "Studentregistrering kan bare brukes på student-domenet."
-      : "Bedriftsregistrering kan bare brukes på bedrift-domenet.";
+      ? "Student registration is only available on the student domain."
+      : "Company registration is only available on the company domain.";
   }
   return null;
 }
@@ -246,12 +249,12 @@ export function validateMagicLinkRoleForHost(hostname: string | null | undefined
   const hostRole = roleFromHost(hostname ?? null);
   if (!hostRole) return null;
   if (hostRole === "admin") {
-    return "Magic link er ikke tilgjengelig på admin-domenet.";
+    return "Magic links are not available on the admin domain.";
   }
   if (hostRole !== requestedRole) {
     return hostRole === "student"
-      ? "Dette domenet støtter bare student-innlogging."
-      : "Dette domenet støtter bare bedriftsinnlogging.";
+      ? "This domain only supports student sign-in."
+      : "This domain only supports company sign-in.";
   }
   return null;
 }

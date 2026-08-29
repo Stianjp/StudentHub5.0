@@ -10,6 +10,7 @@ import { requireRole } from "@/lib/auth";
 import { getLatestCompanyRegistrationLogos } from "@/lib/company";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getOrCreateStudentForUser } from "@/lib/student";
+import { getStudentCategoryLabel } from "@/lib/student-company-display";
 
 const INDUSTRY_ALL = "all";
 const INDUSTRY_OPTIONS = [
@@ -20,7 +21,7 @@ const INDUSTRY_OPTIONS = [
   "Biotek/Kjemi",
   "Maskin",
   "Økonomi",
-  "Øedeøse",
+  "Ledelse",
   "HR",
 ];
 
@@ -80,62 +81,62 @@ export default async function StudentCompaniesPage({ searchParams }: PageProps) 
     <div className="flex flex-col gap-8">
       <SectionHeader
         eyebrow="Student"
-        title="Utforsk Bedrifter"
-        description="Finn flere bedrifter og oppdater favorittene dine."
+        title="Explore companies"
+        description="Discover companies and update your favourites."
         actions={
           <Link className="button-link text-xs" href="/student/dashboard">
-            Tilbake til oversikt
+            Back to dashboard
           </Link>
         }
       />
 
       {saved ? (
         <Card className="border border-success/30 bg-success/10 text-sm text-success">
-          Favoritter oppdatert.
+          Favourites updated.
         </Card>
       ) : null}
 
       <Card className="flex flex-col gap-5">
         <p className="text-sm text-ink/80">
-          Velg bedrifter du vil følge. Du kan oppdatere listen når som helst.
+          Select the companies you want to follow. You can update the list at any time.
         </p>
         <p className="text-xs font-semibold text-secondary">
-          Når du favorittmarkerer en bedrift, gir du også samtykke til at bedriften kan kontakte deg.
+          Adding a company to your favourites also gives it permission to contact you.
         </p>
 
         <form method="get" className="grid gap-3 md:grid-cols-3">
           <label className="text-sm font-semibold text-primary md:col-span-2">
-            Søk etter bedrift
+            Search for a company
             <Input
               name="q"
               defaultValue={search}
-              placeholder="Søk på navn eller bransje…"
+              placeholder="Search by name or industry..."
               autoComplete="off"
             />
           </label>
           <label className="text-sm font-semibold text-primary">
-            Bransje
+            Industry
             <Select name="industry" defaultValue={selectedIndustry}>
-              <option value={INDUSTRY_ALL}>Alle bransjer</option>
+              <option value={INDUSTRY_ALL}>All industries</option>
               {industryOptions.map((industry) => (
                 <option key={industry} value={industry}>
-                  {industry}
+                  {getStudentCategoryLabel(industry)}
                 </option>
               ))}
             </Select>
           </label>
           <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap md:col-span-3">
             <Button className="w-full sm:w-auto" type="submit" variant="secondary">
-              Oppdater filter
+              Apply filters
             </Button>
             <Link href="/student/companies" className="button-link text-xs">
-              Nullstill
+              Reset
             </Link>
           </div>
         </form>
 
         <p className="text-xs text-ink/70">
-          Viser {filteredCompanies.length} av {allCompanies.length} bedrifter.
+          Showing {filteredCompanies.length} of {allCompanies.length} companies.
         </p>
 
         {allCompanies.length > 0 ? (
@@ -151,14 +152,14 @@ export default async function StudentCompaniesPage({ searchParams }: PageProps) 
               initialSelected={student.liked_company_ids ?? []}
             />
             <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <Button className="w-full sm:w-auto" type="submit">Lagre favoritter</Button>
+              <Button className="w-full sm:w-auto" type="submit">Save favourites</Button>
               <Link className="button-link text-xs" href="/student">
-                Gå til profil
+                Go to profile
               </Link>
             </div>
           </form>
         ) : (
-          <p className="text-sm text-ink/70">Ingen bedrifter er registrert ennå.</p>
+          <p className="text-sm text-ink/70">No companies have been registered yet.</p>
         )}
       </Card>
     </div>

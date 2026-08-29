@@ -70,7 +70,7 @@ export async function saveStudentProfile(formData: FormData) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    throw new Error("Du må være logget inn");
+    throw new Error("You must be signed in");
   }
 
   const student = await getOrCreateStudentForUser(profile.id, user.email);
@@ -179,7 +179,7 @@ export async function saveLikedCompanies(formData: FormData) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    throw new Error("Du må være logget inn");
+    throw new Error("You must be signed in");
   }
 
   const student = await getOrCreateStudentForUser(profile.id, user.email);

@@ -41,7 +41,7 @@ export function StudentShell({ nav, userName, userInitials, children }: StudentS
         href="#student-main"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-[#FE9A70] focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-[#140249]"
       >
-        Hopp til innhold
+        Skip to content
       </a>
       <SessionGuard />
       <header className="sticky top-0 z-40 flex min-h-16 items-center justify-between border-b border-white/10 bg-[#140249]/95 px-4 py-2.5 text-white shadow-lg backdrop-blur lg:hidden">
@@ -53,11 +53,11 @@ export function StudentShell({ nav, userName, userInitials, children }: StudentS
             <span className="block truncate text-[10px] font-black uppercase tracking-[0.16em] text-white/60">
               Oslo Student Hub
             </span>
-            <span className="block text-base font-black text-white">Studentportal</span>
+            <span className="block text-base font-black text-white">Student portal</span>
           </span>
         </Link>
         <div className="ml-3 flex shrink-0 items-center gap-2">
-          <div className="flex h-10 min-w-10 items-center justify-center rounded-xl bg-[#FE9A70] px-2 text-xs font-black text-[#140249]" aria-label={`Innlogget som ${userName}`}>
+          <div className="flex h-10 min-w-10 items-center justify-center rounded-xl bg-[#FE9A70] px-2 text-xs font-black text-[#140249]" aria-label={`Signed in as ${userName}`}>
             {userInitials || "SH"}
           </div>
           <LogoutButton
@@ -65,7 +65,7 @@ export function StudentShell({ nav, userName, userInitials, children }: StudentS
             className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 text-white/80 transition-colors hover:border-[#FE9A70]/60 hover:text-[#FE9A70] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70]"
           >
             <LogOut size={18} aria-hidden="true" />
-            <span className="sr-only">Logg ut</span>
+            <span className="sr-only">Log out</span>
           </LogoutButton>
         </div>
       </header>
@@ -85,7 +85,7 @@ export function StudentShell({ nav, userName, userInitials, children }: StudentS
 
           <nav className="mt-12">
             <p className="mb-6 px-4 text-[11px] font-black uppercase tracking-widest text-[#EDE8F5]/55">
-              Navigasjon
+              Navigation
             </p>
             {nav.map((item) => {
               const Icon = iconMap[item.icon];
@@ -113,7 +113,7 @@ export function StudentShell({ nav, userName, userInitials, children }: StudentS
               role="student"
               className="flex w-full items-center space-x-3 text-sm font-bold text-[#EDE8F5]/70 transition-colors hover:text-[#FE9A70]"
             >
-              <span>Logg ut</span>
+              <span>Log out</span>
             </LogoutButton>
           </div>
         </aside>
@@ -139,7 +139,7 @@ export function StudentShell({ nav, userName, userInitials, children }: StudentS
           </div>
         </main>
       </div>
-      <nav aria-label="Mobilnavigasjon" className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-50 grid grid-cols-4 gap-1 rounded-2xl border border-white/15 bg-[#140249]/95 p-1.5 text-white shadow-2xl backdrop-blur lg:hidden">
+      <nav aria-label="Mobile navigation" className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-50 grid grid-cols-4 gap-1 rounded-2xl border border-white/15 bg-[#140249]/95 p-1.5 text-white shadow-2xl backdrop-blur lg:hidden">
         {nav.map((item) => {
           const Icon = iconMap[item.icon];
           const isActive = activeHref === item.href;

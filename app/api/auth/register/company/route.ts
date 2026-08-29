@@ -34,7 +34,7 @@ export async function POST(request: Request) {
 
   const formData = await request.formData().catch(() => null);
   if (!formData) {
-    return NextResponse.json({ error: "Fant ikke registreringsdata." }, { status: 400 });
+    return NextResponse.json({ error: "Registration data was not found." }, { status: 400 });
   }
 
   const parsed = companyRegistrationSchema.safeParse({
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
 
   if (!parsed.success) {
     const message = parsed.error.issues.map((issue) => issue.message).join(" ");
-    return NextResponse.json({ error: message || "Ugyldig registreringsdata." }, { status: 400 });
+    return NextResponse.json({ error: message || "Invalid registration data." }, { status: 400 });
   }
 
   const supabase = createRouteSupabaseClient();
@@ -75,8 +75,8 @@ export async function POST(request: Request) {
       const existingRole = (existingProfile as { role?: string } | null)?.role ?? null;
       const message =
         existingRole === "admin"
-          ? "Denne e-posten finnes allerede som en OSH-konto. Logg inn i stedet for å registrere en ny bedriftskonto."
-          : "Denne e-posten finnes allerede. Logg inn i stedet, eller bruk en annen e-post for en ny bedriftsbruker.";
+          ? "This email already belongs to an OSH account. Sign in instead of registering a new company account."
+          : "This email already exists. Sign in instead, or use another email for a new company user.";
       return NextResponse.json({ error: message }, { status: 409 });
     }
 
@@ -90,23 +90,23 @@ export async function POST(request: Request) {
 
     if (error) {
       return NextResponse.json(
-        { error: "Kunne ikke opprette bedriftskonto. Sjekk e-post og prøv igjen." },
+        { error: "The company account could not be created. Check your email and try again." },
         { status: 400 },
       );
     }
 
     if (!data.user?.id) {
-      return NextResponse.json({ error: "Mangler brukerdata fra Auth." }, { status: 500 });
+      return NextResponse.json({ error: "User data is missing from Auth." }, { status: 500 });
     }
 
     createdUserId = data.user.id;
 
     if (logoFile instanceof File && logoFile.size > 0) {
       if (!logoFile.type.startsWith("image/")) {
-        return NextResponse.json({ error: "Logo må være et bildefilformat." }, { status: 400 });
+        return NextResponse.json({ error: "The logo must be an image file." }, { status: 400 });
       }
       if (logoFile.size > 6 * 1024 * 1024) {
-        return NextResponse.json({ error: "Logo må være 6 MB eller mindre." }, { status: 400 });
+        return NextResponse.json({ error: "The logo must be 6 MB or smaller." }, { status: 400 });
       }
 
       logoPath = await uploadCompanyLogo({

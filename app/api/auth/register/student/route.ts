@@ -18,7 +18,7 @@ export async function POST(request: Request) {
   const parsed = studentRegistrationSchema.safeParse(body);
   if (!parsed.success) {
     const message = parsed.error.issues.map((issue) => issue.message).join(" ");
-    return NextResponse.json({ error: message || "Ugyldig registreringsdata." }, { status: 400 });
+    return NextResponse.json({ error: message || "Invalid registration data." }, { status: 400 });
   }
 
   const supabase = createRouteSupabaseClient();
@@ -39,13 +39,13 @@ export async function POST(request: Request) {
 
     if (error) {
       return NextResponse.json(
-        { error: "Kunne ikke opprette studentkonto. Sjekk e-post og prøv igjen." },
+        { error: "The student account could not be created. Check your email and try again." },
         { status: 400 },
       );
     }
 
     if (!data.user?.id) {
-      return NextResponse.json({ error: "Mangler brukerdata fra Auth." }, { status: 500 });
+      return NextResponse.json({ error: "User data is missing from Auth." }, { status: 500 });
     }
 
     createdUserId = data.user.id;

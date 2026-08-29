@@ -85,7 +85,7 @@ function compareRecommendations(a: RecommendedCompanyCard, b: RecommendedCompany
     b.jobTypeScore - a.jobTypeScore ||
     b.matchScore - a.matchScore ||
     b.likedScore - a.likedScore ||
-    a.company.name.localeCompare(b.company.name, "nb-NO")
+    a.company.name.localeCompare(b.company.name, "en-GB")
   );
 }
 
@@ -188,7 +188,7 @@ export default async function StudentDashboardPage() {
 
   const nextEvent = events[0];
   const eventDate = nextEvent?.starts_at
-    ? new Date(nextEvent.starts_at).toLocaleDateString("nb-NO", {
+    ? new Date(nextEvent.starts_at).toLocaleDateString("en-GB", {
         weekday: "long",
         day: "2-digit",
         month: "long",

@@ -8,7 +8,7 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { Select } from "@/components/ui/select";
 import { requireRole } from "@/lib/auth";
 import { getLatestCompanyRegistrationLogos } from "@/lib/company";
-import { getCompanyAudienceLabel } from "@/lib/student-company-display";
+import { getCompanyAudienceLabel, getStudentCategoryLabel } from "@/lib/student-company-display";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getOrCreateStudentForUser, listStudentConsents } from "@/lib/student";
 import {
@@ -72,7 +72,7 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
         .map((company) => company.industry)
         .filter((industry): industry is string => Boolean(industry)),
     ),
-  ).sort((a, b) => a.localeCompare(b, "nb"));
+  ).sort((a, b) => getStudentCategoryLabel(a).localeCompare(getStudentCategoryLabel(b), "en"));
 
   const latestConsentByCompanyId = new Map<string, (typeof consents)[number]>();
   for (const consent of consents) {
@@ -107,69 +107,69 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
     <div className="flex flex-col gap-8 text-surface">
       <div className="rounded-3xl border border-surface/10 bg-primary p-4 sm:p-6 md:p-10">
         <SectionHeader
-          eyebrow="Samtykker"
-          title="Dine samtykker"
-          description="Oversikt over dine samtykker hos bedriftene."
+          eyebrow="Consents"
+          title="Your consents"
+          description="An overview of the companies you have given permission to contact you."
           tone="light"
         />
 
         <Card className="mt-8 flex flex-col gap-4 bg-primary text-surface ring-1 ring-white/10">
           <form className="grid gap-3 md:grid-cols-3" method="get">
             <label className="text-sm font-semibold text-surface md:col-span-2">
-              Søk
+              Search
               <Input
                 name="q"
                 defaultValue={search}
-                placeholder="Søk på bedriftsnavn eller bransje..."
+                placeholder="Search by company name or industry..."
                 autoComplete="off"
               />
             </label>
             <label className="text-sm font-semibold text-surface">
-              Bransje
+              Industry
               <Select name="industry" defaultValue={selectedIndustry}>
-                <option value={INDUSTRY_ALL}>Alle bransjer</option>
+                <option value={INDUSTRY_ALL}>All industries</option>
                 {industries.map((industry) => (
                   <option key={industry} value={industry}>
-                    {industry}
+                    {getStudentCategoryLabel(industry)}
                   </option>
                 ))}
               </Select>
             </label>
             <label className="text-sm font-semibold text-surface">
-              Samtykkestatus
+              Consent status
               <Select name="status" defaultValue={selectedStatus}>
-                <option value={STATUS_ALL}>Alle</option>
-                <option value={STATUS_CONSENTED}>Samtykke gitt</option>
-                <option value={STATUS_NOT_CONSENTED}>Ikke samtykket</option>
+                <option value={STATUS_ALL}>All</option>
+                <option value={STATUS_CONSENTED}>Consent given</option>
+                <option value={STATUS_NOT_CONSENTED}>No consent</option>
               </Select>
             </label>
             <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-end">
               <Button className="w-full sm:w-auto" variant="secondary" type="submit">
-                Oppdater filter
+                Apply filters
               </Button>
               <Link className="button-link text-xs" href="/student/consents">
-                Nullstill
+                Reset
               </Link>
             </div>
           </form>
 
           <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="success">{consentedCount} med samtykke</Badge>
-            <Badge variant="warning">{Math.max(totalCompanies - consentedCount, 0)} uten samtykke</Badge>
+            <Badge variant="success">{consentedCount} with consent</Badge>
+            <Badge variant="warning">{Math.max(totalCompanies - consentedCount, 0)} without consent</Badge>
             <span className="text-xs text-surface/70">
-              Viser {filteredCompanies.length} av {totalCompanies} bedrifter.
+              Showing {filteredCompanies.length} of {totalCompanies} companies.
             </span>
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <form action={giveConsentToAll} className="w-full sm:w-auto">
-              <Button className="w-full sm:w-auto" type="submit">Gi samtykke til alle bedrifter</Button>
+              <Button className="w-full sm:w-auto" type="submit">Give consent to all companies</Button>
             </form>
             {selectedIndustry !== INDUSTRY_ALL ? (
               <form action={giveConsentToAll} className="w-full sm:w-auto">
                 <input type="hidden" name="industry" value={selectedIndustry} />
                 <Button className="w-full sm:w-auto" variant="secondary" type="submit">
-                  Gi samtykke til alle {selectedIndustry}-bedrifter
+                  Give consent to all {getStudentCategoryLabel(selectedIndustry)} companies
                 </Button>
               </form>
             ) : null}
@@ -177,9 +177,9 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
         </Card>
 
         <Card className="mt-6 flex flex-col gap-6 bg-primary text-surface ring-1 ring-white/10">
-          <h3 className="text-lg font-bold text-surface">Dine samtykker ({filteredCompanies.length})</h3>
+          <h3 className="text-lg font-bold text-surface">Your consents ({filteredCompanies.length})</h3>
           {filteredCompanies.length === 0 ? (
-            <p className="text-sm text-surface/70">Ingen treff for valgt søk eller filter.</p>
+            <p className="text-sm text-surface/70">No companies match your search or filters.</p>
           ) : (
             <ul className="grid gap-6 text-sm text-surface/80">
               {filteredCompanies.map((company) => {
@@ -227,19 +227,19 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
                         </p>
                         <p className="mt-1 text-xs text-surface/70">
                           {updatedAt
-                            ? `Sist oppdatert ${new Date(updatedAt).toLocaleString("nb-NO")}`
-                            : "Ingen registrert samtykkehistorikk ennå."}
+                            ? `Last updated ${new Date(updatedAt).toLocaleString("en-GB")}`
+                            : "No consent history has been recorded yet."}
                         </p>
                       </div>
                     </div>
                     <div className="flex flex-col items-stretch gap-2 sm:flex-row sm:items-center">
                       <Badge variant={hasConsent ? "success" : "warning"}>
-                        {hasConsent ? "Samtykke gitt" : "Ikke samtykket"}
+                        {hasConsent ? "Consent given" : "No consent"}
                       </Badge>
                       <form action={action} className="w-full sm:w-auto">
                         <input type="hidden" name="companyId" value={company.id} />
                         <Button className="w-full sm:w-auto" variant={hasConsent ? "ghost" : "secondary"} type="submit">
-                          {hasConsent ? "Fjern samtykke" : "Gi samtykke"}
+                          {hasConsent ? "Withdraw consent" : "Give consent"}
                         </Button>
                       </form>
                     </div>
@@ -253,15 +253,15 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
 
       <div className="rounded-3xl border border-surface/10 bg-primary p-4 sm:p-6 md:p-10">
         <SectionHeader
-          eyebrow="Konto"
-          title="Innstillinger"
-          description="Endre passord eller slett profilen din."
+          eyebrow="Account"
+          title="Settings"
+          description="Change your password or delete your profile."
           tone="light"
         />
 
         {passwordUpdated ? (
           <Card className="mt-8 border border-success/30 bg-success/10 text-sm text-success">
-            Passordet er oppdatert.
+            Your password has been updated.
           </Card>
         ) : null}
         {accountError ? (
@@ -272,55 +272,55 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
 
         <div className="mt-8 grid gap-6 lg:grid-cols-2">
           <Card className="flex flex-col gap-4 bg-primary text-surface ring-1 ring-white/10">
-            <h3 className="text-lg font-bold text-surface">Endre Passord</h3>
+            <h3 className="text-lg font-bold text-surface">Change password</h3>
             <form action={changeStudentPassword} className="grid gap-3">
               <label className="text-sm font-semibold text-surface">
-                Nytt passord
+                New password
                 <Input
                   name="newPassword"
                   type="password"
                   required
                   minLength={8}
                   autoComplete="new-password"
-                  placeholder="Minst 8 tegn"
+                  placeholder="At least 8 characters"
                 />
               </label>
               <label className="text-sm font-semibold text-surface">
-                Bekreft nytt passord
+                Confirm new password
                 <Input
                   name="confirmPassword"
                   type="password"
                   required
                   minLength={8}
                   autoComplete="new-password"
-                  placeholder="Gjenta passordet"
+                  placeholder="Repeat the password"
                 />
               </label>
               <div>
-                <Button type="submit">Oppdater passord</Button>
+                <Button type="submit">Update password</Button>
               </div>
             </form>
           </Card>
 
           <Card className="flex flex-col gap-4 bg-primary text-surface ring-1 ring-white/10">
-            <h3 className="text-lg font-bold text-surface">Slett Profil</h3>
+            <h3 className="text-lg font-bold text-surface">Delete profile</h3>
             <p className="text-sm text-surface/80">
-              Denne handlingen kan ikke angres. Konto, profil og tilknyttede studentdata blir slettet.
+              This action cannot be undone. Your account, profile and associated student data will be deleted.
             </p>
             <form action={deleteStudentAccount} className="grid gap-3">
               <label className="text-sm font-semibold text-surface">
-                Skriv <span className="font-black">SLETT</span> for å bekrefte
+                Type <span className="font-black">DELETE</span> to confirm
                 <Input
                   name="confirmDelete"
                   required
                   autoComplete="off"
                   spellCheck={false}
-                  placeholder="SLETT"
+                  placeholder="DELETE"
                 />
               </label>
               <div>
                 <Button variant="danger" type="submit">
-                  Slett profil
+                  Delete profile
                 </Button>
               </div>
             </form>

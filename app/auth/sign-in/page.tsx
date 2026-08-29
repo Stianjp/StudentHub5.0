@@ -15,7 +15,7 @@ export default async function SignInPage() {
               className="border border-white/75 !bg-[#140249] text-center text-sm text-surface/85 shadow-none ring-0"
               style={{ backgroundColor: "#140249" }}
             >
-              Laster inn…
+              Loading...
             </Card>
           </div>
         </main>

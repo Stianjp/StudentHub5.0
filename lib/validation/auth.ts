@@ -22,15 +22,15 @@ const stringArray = z.preprocess((value) => {
 
 export const studentRegistrationSchema = z
   .object({
-    email: z.string().email("Ugyldig e-post"),
-    fullName: z.string().min(2, "Fullt navn er påkrevd."),
-    school: z.string().min(2, "Studiested er påkrevd."),
+    email: z.string().email("Invalid email address"),
+    fullName: z.string().min(2, "Full name is required."),
+    school: z.string().min(2, "University or educational institution is required."),
     studyProgram: z
       .string()
-      .min(2, "Studieretning er påkrevd.")
-      .refine((value) => isValidStudyProgram(value), "Velg en gyldig studieretning."),
-    studyLevel: z.string().min(2, "Velg bachelor eller master."),
-    studyYear: z.coerce.number().int().min(1, "År må være minst 1.").max(5, "År må være 5 eller lavere."),
+      .min(2, "Field of study is required.")
+      .refine((value) => isValidStudyProgram(value), "Select a valid field of study."),
+    studyLevel: z.string().min(2, "Select bachelor or master."),
+    studyYear: z.coerce.number().int().min(1, "Year must be at least 1.").max(5, "Year must be 5 or lower."),
     jobTypes: stringArray.transform((values) => mapStudentJobTypes(values)),
     password: z.string(),
     confirmPassword: z.string(),
@@ -76,15 +76,15 @@ export const studentRegistrationSchema = z
 
 export const companyRegistrationSchema = z
   .object({
-    email: z.string().email("Ugyldig e-post"),
-    companyName: z.string().min(2, "Firmanavn er påkrevd."),
+    email: z.string().email("Invalid email address"),
+    companyName: z.string().min(2, "Company name is required."),
     orgNumber: z
       .string()
-      .regex(/^\d{9}$/, "Organisasjonsnummer må være 9 siffer."),
-    address: z.string().min(2, "Adresse er påkrevd."),
-    postalCode: z.string().min(2, "Postnummer er påkrevd."),
-    city: z.string().min(2, "By er påkrevd."),
-    country: z.string().min(2, "Land er påkrevd."),
+      .regex(/^\d{9}$/, "The organisation number must contain 9 digits."),
+    address: z.string().min(2, "Address is required."),
+    postalCode: z.string().min(2, "Postal code is required."),
+    city: z.string().min(2, "City is required."),
+    country: z.string().min(2, "Country is required."),
     recruitmentFields: stringArray.transform((values) => normalizeStudyCategories(values)),
     password: z.string(),
     confirmPassword: z.string(),

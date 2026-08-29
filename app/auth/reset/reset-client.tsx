@@ -29,16 +29,16 @@ export function ResetClient() {
       : "/auth/sign-in";
   const requestNewResetUrl = `${signInUrl}${signInUrl.includes("?") ? "&" : "?"}mode=reset`;
   const expiredLink = errorCode === "otp_expired";
-  const expiredLinkMessage = "Passordlenken er utløpt eller allerede brukt. Be om en ny lenke.";
+  const expiredLinkMessage = "The password link has expired or has already been used. Request a new link.";
   const hasTokenHashRecovery = Boolean(tokenHash && recoveryType === "recovery");
 
   function formatPasswordUpdateError(message: string) {
     const normalized = message.trim();
     if (!normalized) {
-      return "Kunne ikke oppdatere passord. Prøv å åpne lenken på nytt.";
+      return "The password could not be updated. Try opening the link again.";
     }
     if (/same password/i.test(normalized)) {
-      return "Nytt passord må være forskjellig fra det gamle.";
+      return "Your new password must be different from your old password.";
     }
     return normalized;
   }
@@ -67,7 +67,7 @@ export function ResetClient() {
         });
         if (sessionError) {
           setStatus("error");
-          setError("Reset-lenken er ugyldig eller utløpt. Be om en ny lenke.");
+          setError("The reset link is invalid or has expired. Request a new link.");
           return;
         }
         setSessionReady(true);
@@ -78,7 +78,7 @@ export function ResetClient() {
         const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
         if (exchangeError) {
           setStatus("error");
-          setError("Reset-lenken er ugyldig eller utløpt. Be om en ny lenke.");
+          setError("The reset link is invalid or has expired. Request a new link.");
           return;
         }
         setSessionReady(true);
@@ -92,7 +92,7 @@ export function ResetClient() {
       }
 
       setStatus("error");
-      setError("Mangler gyldig reset-lenke. Be om en ny lenke.");
+      setError("A valid reset link is missing. Request a new link.");
     }
 
     void prepareRecoverySession();
@@ -113,7 +113,7 @@ export function ResetClient() {
 
     if (verifyError) {
       setStatus("error");
-      setError("Passordlenken er ugyldig, utløpt eller allerede brukt. Be om en ny lenke.");
+      setError("The password link is invalid, has expired or has already been used. Request a new link.");
       setVerifyingRecovery(false);
       return;
     }
@@ -132,7 +132,7 @@ export function ResetClient() {
     }
     if (!sessionReady) {
       setStatus("error");
-      setError("Reset-lenken er ikke klar ennå. Prøv igjen om et øyeblikk.");
+      setError("The reset link is not ready yet. Try again in a moment.");
       return;
     }
     setStatus("loading");
@@ -154,7 +154,7 @@ export function ResetClient() {
     }
 
     setStatus("success");
-    setError("Passord oppdatert. Logg inn på nytt.");
+    setError("Password updated. Sign in again.");
     router.push(signInUrl);
   }
 
@@ -174,38 +174,38 @@ export function ResetClient() {
               className="h-auto w-[220px] object-contain"
               priority
             />
-            <h1 className="text-2xl font-bold text-surface">Sett nytt passord</h1>
-            <p className="text-sm text-surface/85">Velg et sterkt passord (minst 8 tegn).</p>
+            <h1 className="text-2xl font-bold text-surface">Set a new password</h1>
+            <p className="text-sm text-surface/85">Choose a strong password with at least 8 characters.</p>
           </div>
 
           {hasTokenHashRecovery && !sessionReady && !expiredLink ? (
             <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-4 text-sm text-surface/85">
-              <p>Denne lenken må bekreftes før du kan sette nytt passord.</p>
+              <p>This link must be verified before you can set a new password.</p>
               <Button
                 type="button"
                 className="mt-4"
                 onClick={() => void activateRecoverySession()}
                 disabled={verifyingRecovery}
               >
-                {verifyingRecovery ? "Klargjør lenke…" : "Fortsett til passordbytte"}
+                {verifyingRecovery ? "Preparing link..." : "Continue to password reset"}
               </Button>
             </div>
           ) : null}
 
           <form className="flex flex-col gap-4" onSubmit={onSubmit}>
             <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
-              Nytt passord
+              New password
               <Input name="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
             </label>
             <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
-              Bekreft passord
+              Confirm password
               <Input name="confirm" type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
             </label>
             <Button
               type="submit"
               disabled={status === "loading" || !sessionReady || expiredLink || (hasTokenHashRecovery && !sessionReady)}
             >
-              {status === "loading" ? "Oppdaterer…" : "Oppdater passord"}
+              {status === "loading" ? "Updating..." : "Update password"}
             </Button>
           </form>
 
@@ -216,7 +216,7 @@ export function ResetClient() {
                 href={requestNewResetUrl}
                 className="mt-3 inline-flex items-center justify-center rounded-full border border-error/40 px-4 py-2 text-xs font-semibold text-error hover:bg-error/10"
               >
-                Be om ny passordlenke
+                Request a new password link
               </a>
             </div>
           ) : null}

@@ -9,10 +9,10 @@ export default async function StudentEventsPage() {
     <div className="flex min-w-0 flex-col gap-5 sm:gap-7">
       <SectionHeader
         eyebrow="Student"
-        title="Hent gratis billett"
+        title="Get your free ticket"
         actions={
           <Link className="button-link text-xs" href="/student/dashboard">
-            Tilbake til oversikt
+            Back to dashboard
           </Link>
         }
       />

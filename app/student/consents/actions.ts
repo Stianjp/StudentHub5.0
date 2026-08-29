@@ -35,7 +35,7 @@ export async function giveConsentToCompany(formData: FormData) {
   const companyId = getFormValue(formData, "companyId");
 
   if (!companyId) {
-    throw new Error("Bedrift må være valgt.");
+    throw new Error("A company must be selected.");
   }
 
   const consent = await upsertConsentForStudent({
@@ -46,7 +46,7 @@ export async function giveConsentToCompany(formData: FormData) {
   });
 
   if (!consent) {
-    throw new Error("Bedriften finnes ikke lenger.");
+    throw new Error("This company is no longer available.");
   }
 
   await createLead({
@@ -77,7 +77,7 @@ export async function withdrawConsent(formData: FormData) {
   const companyId = getFormValue(formData, "companyId");
 
   if (!companyId) {
-    throw new Error("Bedrift må være valgt.");
+    throw new Error("A company must be selected.");
   }
 
   const consent = await upsertConsentForStudent({
@@ -87,7 +87,7 @@ export async function withdrawConsent(formData: FormData) {
     source: "student_portal",
   });
   if (!consent) {
-    throw new Error("Bedriften finnes ikke lenger.");
+    throw new Error("This company is no longer available.");
   }
   revalidatePath("/student/consents");
 }
@@ -155,15 +155,15 @@ export async function changeStudentPassword(formData: FormData) {
   const confirmPassword = String(formData.get("confirmPassword") ?? "");
 
   if (password.length < 8) {
-    redirect(`/student/consents?accountError=${encodeURIComponent("Passord må være minst 8 tegn.")}`);
+    redirect(`/student/consents?accountError=${encodeURIComponent("Password must be at least 8 characters.")}`);
   }
   if (password !== confirmPassword) {
-    redirect(`/student/consents?accountError=${encodeURIComponent("Passordene er ikke like.")}`);
+    redirect(`/student/consents?accountError=${encodeURIComponent("The passwords do not match.")}`);
   }
 
   const { error } = await supabase.auth.updateUser({ password });
   if (error) {
-    redirect(`/student/consents?accountError=${encodeURIComponent("Kunne ikke endre passord akkurat nå.")}`);
+    redirect(`/student/consents?accountError=${encodeURIComponent("The password could not be changed right now.")}`);
   }
 
   revalidatePath("/student/consents");
@@ -182,8 +182,8 @@ export async function deleteStudentAccount(formData: FormData) {
   }
 
   const confirmDelete = String(formData.get("confirmDelete") ?? "").trim().toUpperCase();
-  if (confirmDelete !== "SLETT") {
-    redirect(`/student/consents?accountError=${encodeURIComponent("Skriv SLETT for å bekrefte sletting.")}`);
+  if (confirmDelete !== "DELETE") {
+    redirect(`/student/consents?accountError=${encodeURIComponent("Type DELETE to confirm account deletion.")}`);
   }
 
   let admin;
@@ -191,7 +191,7 @@ export async function deleteStudentAccount(formData: FormData) {
     admin = createAdminSupabaseClient();
   } catch {
     redirect(
-      `/student/consents?accountError=${encodeURIComponent("Sletting er midlertidig utilgjengelig. Kontakt support.")}`,
+      `/student/consents?accountError=${encodeURIComponent("Account deletion is temporarily unavailable. Please contact support.")}`,
     );
   }
 

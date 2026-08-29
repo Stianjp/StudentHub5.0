@@ -23,7 +23,7 @@ describe("validatePasswordStrength", () => {
   });
 
   it("avviser korte passord", () => {
-    expect(validatePasswordStrength("Kort1!", "Kort1!")).toMatch(/Passord må være minst 8 tegn/i);
+    expect(validatePasswordStrength("Kort1!", "Kort1!")).toMatch(/Password must be at least 8 characters/i);
   });
 
   it("avviser passord uten stor bokstav, tall eller spesialtegn", () => {
@@ -33,18 +33,18 @@ describe("validatePasswordStrength", () => {
   });
 
   it("avviser ulike passord", () => {
-    expect(validatePasswordStrength("Sterkt!123", "Sterkt!124")).toBe("Passordene må være like.");
+    expect(validatePasswordStrength("Sterkt!123", "Sterkt!124")).toBe("The passwords must match.");
   });
 
   it("beregner styrkenivå for UI", () => {
-    expect(getPasswordStrengthSummary("", "").label).toBe("Ingen");
-    expect(getPasswordStrengthSummary("svak", "").label).toBe("Svak");
-    expect(getPasswordStrengthSummary("Sterk123", "").label).toBe("Middels");
+    expect(getPasswordStrengthSummary("", "").label).toBe("None");
+    expect(getPasswordStrengthSummary("svak", "").label).toBe("Weak");
+    expect(getPasswordStrengthSummary("Sterk123", "").label).toBe("Medium");
     const matchRequirement = getPasswordStrengthSummary("Sterk!123", "Sterk!123").requirements.find(
       (item) => item.key === "match",
     );
     expect(matchRequirement?.met).toBe(true);
-    expect(getPasswordStrengthSummary("Sterk!123", "Sterk!123").label).toBe("Sterkt");
+    expect(getPasswordStrengthSummary("Sterk!123", "Sterk!123").label).toBe("Strong");
   });
 });
 
@@ -55,14 +55,14 @@ describe("host-låsing", () => {
   });
 
   it("avviser registrering på feil domene", () => {
-    expect(validateHostRoleLock("student.oslostudenthub.no", "company")).toMatch(/bedrift-domenet/i);
-    expect(validateHostRoleLock("bedrift.oslostudenthub.no", "student")).toMatch(/student-domenet/i);
-    expect(validateHostRoleLock("admin.oslostudenthub.no", "student")).toMatch(/ikke tilgjengelig/i);
+    expect(validateHostRoleLock("student.oslostudenthub.no", "company")).toMatch(/company domain/i);
+    expect(validateHostRoleLock("bedrift.oslostudenthub.no", "student")).toMatch(/student domain/i);
+    expect(validateHostRoleLock("admin.oslostudenthub.no", "student")).toMatch(/not available/i);
   });
 
   it("låser magic link til gjeldende domene", () => {
     expect(validateMagicLinkRoleForHost("student.oslostudenthub.no", "student")).toBeNull();
-    expect(validateMagicLinkRoleForHost("bedrift.oslostudenthub.no", "student")).toMatch(/bare bedriftsinnlogging/i);
+    expect(validateMagicLinkRoleForHost("bedrift.oslostudenthub.no", "student")).toMatch(/only supports company sign-in/i);
   });
 });
 
@@ -94,7 +94,7 @@ describe("email og felt-normalisering", () => {
         jobTypes: ["Deltidsjobb"],
       }),
     ).toEqual({
-      studyYear: "Bachelorstudenter kan bare velge 1.-3. år.",
+      studyYear: "Bachelor students can only select years 1-3.",
     });
 
     expect(
@@ -104,7 +104,7 @@ describe("email og felt-normalisering", () => {
         jobTypes: ["Masteroppgave"],
       }),
     ).toEqual({
-      jobTypes: "Masteroppgave vises bare for masterstudenter.",
+      jobTypes: "Master thesis is only available to master students.",
     });
   });
 

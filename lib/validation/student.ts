@@ -32,15 +32,15 @@ const stringArray = z.preprocess((value) => {
 
 export const studentProfileSchema = z
   .object({
-    fullName: z.string().min(2, "Navn er påkrevd"),
-    email: z.string().email("Ugyldig e-post"),
+    fullName: z.string().min(2, "Name is required"),
+    email: z.string().email("Invalid email address"),
     phone: z.string().optional().or(z.literal("")),
-    school: z.string().min(2, "Studiested er påkrevd"),
+    school: z.string().min(2, "University or educational institution is required"),
     studyProgram: z
       .string()
-      .min(2, "Studie/program er påkrevd")
-      .refine((value) => isValidStudyProgram(value), "Velg en gyldig studieretning"),
-    studyLevel: z.string().min(2, "Nivå er påkrevd"),
+      .min(2, "Field of study is required")
+      .refine((value) => isValidStudyProgram(value), "Select a valid field of study"),
+    studyLevel: z.string().min(2, "Study level is required"),
     studyYear: z.coerce.number().int().min(1).max(5),
     jobTypes: commaSeparated.transform((values) => mapStudentJobTypes(values)),
     interests: stringArray,

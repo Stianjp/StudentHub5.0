@@ -4,10 +4,10 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getOrCreateStudentForUser } from "@/lib/student";
 
 const nav = [
-  { href: "/student/dashboard", label: "Oversikt", icon: "dashboard" },
-  { href: "/student", label: "Min profil", icon: "profile" },
+  { href: "/student/dashboard", label: "Dashboard", icon: "dashboard" },
+  { href: "/student", label: "My profile", icon: "profile" },
   { href: "/student/events", label: "Events", icon: "events" },
-  { href: "/student/consents", label: "Samtykker", icon: "settings" },
+  { href: "/student/consents", label: "Consents", icon: "settings" },
 ] satisfies Array<{ href: string; label: string; icon: "dashboard" | "profile" | "events" | "companies" | "settings" }>;
 
 export const dynamic = "force-dynamic";
@@ -23,7 +23,7 @@ export default async function StudentLayout({ children }: { children: React.Reac
   }
 
   const student = await getOrCreateStudentForUser(user.id, user.email);
-  const userName = student?.full_name ?? "Studentportal";
+  const userName = student?.full_name ?? "Student portal";
   const userInitials = userName
     .split(" ")
     .filter(Boolean)

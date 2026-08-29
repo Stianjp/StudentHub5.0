@@ -7,7 +7,7 @@ export default function AuthCallbackPage() {
     <Suspense
       fallback={
         <main className="mx-auto flex min-h-screen w-full max-w-md flex-col justify-center px-6 py-16">
-          <Card className="text-center text-sm text-ink/80">Fullfører innlogging…</Card>
+          <Card className="text-center text-sm text-ink/80">Completing sign-in...</Card>
         </main>
       }
     >

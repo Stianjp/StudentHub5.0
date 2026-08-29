@@ -20,34 +20,35 @@ import {
   validatePasswordStrength,
 } from "@/lib/auth-registration";
 import { STUDY_CATEGORIES } from "@/components/event/study-categories";
+import { getStudentCategoryLabel } from "@/lib/student-company-display";
 
 type Role = "student" | "company" | "admin";
 type Mode = "login" | "register" | "reset";
 
 function getRoleTitle(mode: Mode, role: Role) {
-  if (mode === "reset") return "Gjenopprett passord";
+  if (mode === "reset") return "Reset password";
   if (mode === "register") {
-    return role === "student" ? "Registrer student" : "Registrer bedrift";
+    return role === "student" ? "Register as a student" : "Register a company";
   }
-  if (role === "student") return "Logg inn som student";
-  if (role === "admin") return "Logg inn som admin";
-  return "Logg inn som bedrift";
+  if (role === "student") return "Student sign-in";
+  if (role === "admin") return "Admin sign-in";
+  return "Company sign-in";
 }
 
 function getRoleDescription(mode: Mode, role: Role) {
   if (mode === "reset") {
-    return "Få tilsendt lenke for å sette nytt passord.";
+    return "Receive a link by email to set a new password.";
   }
   if (mode === "register") {
     if (role === "student") {
-      return "Opprett studentkonto med studiested, studieretning og jobbpreferanser.";
+      return "Create a student account with your university, field of study and job preferences.";
     }
-    return "Opprett bedriftskonto. Tilgang til portalen godkjennes manuelt av OSH.";
+    return "Create a company account. Portal access is approved manually by OSH.";
   }
   if (role === "admin") {
-    return "Kun @oslostudenthub.no-brukere kan logge inn her.";
+    return "Only @oslostudenthub.no users can sign in here.";
   }
-  return "Logg inn med e-post og passord.";
+  return "Sign in with your email and password.";
 }
 
 export function SignInClient({
@@ -97,7 +98,7 @@ export function SignInClient({
     const timeout = window.setTimeout(() => {
       setMode("login");
       setStatus("sent");
-      setError("Registrering OK. Bekreft e-posten din før du logger inn.");
+      setError("Registration complete. Confirm your email before signing in.");
       setPasswordInput("");
       setConfirmPasswordInput("");
       setStudentStudyLevel("");
@@ -148,7 +149,7 @@ export function SignInClient({
 
     if (!emailValue) {
       setStatus("error");
-      setError("E-post er påkrevd.");
+      setError("Email is required.");
       return;
     }
 
@@ -171,18 +172,18 @@ export function SignInClient({
       if (!response.ok) {
         const payload = await response.json().catch(() => null);
         setStatus("error");
-        setError(payload?.error ?? "Kunne ikke sende e-post. Sjekk adressen og prøv igjen.");
+        setError(payload?.error ?? "The email could not be sent. Check the address and try again.");
         return;
       }
       setStatus("sent");
-      setError("Vi har sendt en lenke for å sette nytt passord.");
+      setError("We have sent you a link to set a new password.");
       return;
     }
 
     if (mode === "register") {
       if (roleValue === "admin") {
         setStatus("error");
-        setError("Admin-tilgang settes manuelt av OSH.");
+        setError("Admin access is assigned manually by OSH.");
         return;
       }
 
@@ -213,12 +214,12 @@ export function SignInClient({
         const payload = await response.json().catch(() => null);
         if (!response.ok) {
           setStatus("error");
-          setError(payload?.error ?? "Kunne ikke opprette studentkonto.");
+          setError(payload?.error ?? "The student account could not be created.");
           return;
         }
 
         setStatus("sent");
-        setError("Registrering OK. Bekreft e-posten din før du kan logge inn. Du sendes til innlogging om 5 sekunder.");
+        setError("Registration complete. Confirm your email before signing in. You will return to sign-in in 5 seconds.");
         return;
       }
 
@@ -235,20 +236,20 @@ export function SignInClient({
       const payload = await response.json().catch(() => null);
       if (!response.ok) {
         setStatus("error");
-        setError(payload?.error ?? "Kunne ikke opprette bedriftskonto.");
+        setError(payload?.error ?? "The company account could not be created.");
         return;
       }
 
       setStatus("sent");
       setError(
-        "Registrering OK. Bekreft e-posten din. Når e-posten er verifisert, havner tilgangen i admin sin godkjenningsliste. Du sendes til innlogging om 5 sekunder.",
+        "Registration complete. Confirm your email. Once verified, your access request will be sent to the admin approval list. You will return to sign-in in 5 seconds.",
       );
       return;
     }
 
     if (roleValue === "admin" && !isOshAdminEmail(emailValue)) {
       setStatus("error");
-      setError("Admin-innlogging krever en @oslostudenthub.no-adresse.");
+      setError("Admin sign-in requires an @oslostudenthub.no address.");
       return;
     }
 
@@ -265,10 +266,10 @@ export function SignInClient({
         (signInError as { code?: string })?.code === "over_email_send_rate_limit" ||
         lower.includes("rate limit");
       const message = rateLimited
-        ? "For mange forsøk på kort tid. Vent litt og prøv igjen."
+        ? "Too many attempts in a short period. Wait a moment and try again."
         : lower.includes("confirm") || lower.includes("verified")
-          ? "Bekreft e-posten din før du kan logge inn."
-          : "Feil e-post eller passord. Prøv igjen.";
+          ? "Confirm your email before signing in."
+          : "Incorrect email or password. Try again.";
       setError(message);
       return;
     }
@@ -292,7 +293,7 @@ export function SignInClient({
       ) {
         await supabase.auth.signOut();
         setStatus("error");
-        setError("Denne kontoen har ikke tilgang til dette domenet.");
+        setError("This account does not have access to this domain.");
         return;
       }
     }
@@ -334,7 +335,7 @@ export function SignInClient({
             <h1 className="mt-2 text-2xl font-bold text-surface">{title}</h1>
             <p className="mt-1 max-w-xl text-sm text-surface/85">{description}</p>
             {deleted ? (
-              <p className="mt-1 text-xs font-semibold text-success">Profilen din er slettet.</p>
+              <p className="mt-1 text-xs font-semibold text-success">Your profile has been deleted.</p>
             ) : null}
           </div>
 
@@ -348,7 +349,7 @@ export function SignInClient({
                     mode === "login" ? "bg-secondary text-primary" : "bg-surface/10 text-surface"
                   }`}
                 >
-                  Logg inn
+                  Sign in
                 </button>
                 <button
                   type="button"
@@ -357,28 +358,28 @@ export function SignInClient({
                     mode === "register" ? "bg-secondary text-primary" : "bg-surface/10 text-surface"
                   }`}
                 >
-                  Registrer deg
+                  Register
                 </button>
               </div>
             ) : null}
 
             {effectiveAllowedRole ? null : (
               <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
-                Rolle
+                Role
                 <Select name="role" value={role} onChange={(currentEvent) => setRole(currentEvent.target.value as Role)}>
-                  <option value="company">Bedrift</option>
+                  <option value="company">Company</option>
                   <option value="student">Student</option>
                 </Select>
               </label>
             )}
 
             <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
-              E-post
+              Email
               <Input
                 name="email"
                 required
                 type="email"
-                placeholder={selectedRole === "student" ? "navn@student.no" : "navn@bedrift.no"}
+                placeholder={selectedRole === "student" ? "name@student.no" : "name@company.no"}
                 aria-invalid={status === "error"}
                 aria-describedby={status === "error" ? errorId : undefined}
               />
@@ -386,12 +387,12 @@ export function SignInClient({
 
             {mode === "login" ? (
               <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
-                Passord
+                Password
                 <Input
                   name="password"
                   required
                   type="password"
-                  placeholder="Minst 8 tegn"
+                  placeholder="At least 8 characters"
                   value={passwordInput}
                   onChange={(currentEvent) => setPasswordInput(currentEvent.target.value)}
                   aria-invalid={status === "error"}
@@ -404,29 +405,29 @@ export function SignInClient({
               <>
                 <div className="grid gap-4 md:grid-cols-2">
                   <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
-                    Fullt navn
-                    <Input name="fullName" required placeholder="Fornavn Etternavn" />
+                    Full name
+                    <Input name="fullName" required placeholder="First name Last name" />
                   </label>
                   <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
-                    Studiested
-                    <Input name="school" required placeholder="F.eks. NTNU" />
+                    University or educational institution
+                    <Input name="school" required placeholder="For example, NTNU" />
                   </label>
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2">
                   <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
-                    Studieretning
+                    Field of study
                     <Select name="studyProgram" required defaultValue="">
-                      <option value="">Velg studieretning</option>
+                      <option value="">Select field of study</option>
                       {STUDY_CATEGORIES.map((category) => (
                         <option key={category} value={category}>
-                          {category}
+                          {getStudentCategoryLabel(category)}
                         </option>
                       ))}
                     </Select>
                   </label>
                   <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
-                    Studenttype
+                    Student type
                     <Select
                       name="studyLevel"
                       required
@@ -439,7 +440,7 @@ export function SignInClient({
                         }
                       }}
                     >
-                      <option value="">Velg bachelor eller master</option>
+                      <option value="">Select bachelor or master</option>
                       {STUDY_LEVEL_OPTIONS.map((option) => (
                         <option key={option.value} value={option.value}>
                           {option.label}
@@ -451,7 +452,7 @@ export function SignInClient({
 
                 <div className="grid gap-4 md:grid-cols-2">
                   <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
-                    År
+                    Year
                     <Select
                       name="studyYear"
                       required
@@ -460,26 +461,26 @@ export function SignInClient({
                       disabled={studentStudyYearOptions.length === 0}
                     >
                       <option value="">
-                        {studentStudyLevel ? "Velg år" : "Velg studenttype først"}
+                        {studentStudyLevel ? "Select year" : "Select student type first"}
                       </option>
                       {studentStudyYearOptions.map((year) => (
                         <option key={year} value={year}>
-                          {year}. år
+                          Year {year}
                         </option>
                       ))}
                     </Select>
                   </label>
                   <div className="rounded-2xl border border-white/15 bg-surface/5 px-4 py-4 text-sm text-surface/78">
-                    <p className="font-semibold text-surface">Matching mot bedrift</p>
+                    <p className="font-semibold text-surface">Company matching</p>
                     <p className="mt-2">
-                      Studieretning bruker de samme kategoriene som bedriftene velger som bransje og
-                      rekrutteringsfelt.
+                      Your field of study uses the same categories companies select for their industry and
+                      recruitment fields.
                     </p>
                   </div>
                 </div>
 
                 <fieldset className="grid gap-3 rounded-2xl border border-white/15 bg-surface/5 p-4">
-                  <legend className="px-1 text-sm font-semibold text-surface">Jeg er interessert i</legend>
+                  <legend className="px-1 text-sm font-semibold text-surface">I am interested in</legend>
                   <div className="grid gap-2 md:grid-cols-2">
                     {studentJobTypeOptions.map((option) => (
                       <label
@@ -497,7 +498,7 @@ export function SignInClient({
                     ))}
                   </div>
                   <p className="text-xs text-surface/70">
-                    Du kan velge flere alternativer eller la alle stå tomme. Oppgavevalg tilpasses om du er bachelor- eller masterstudent.
+                    You can select several options or leave all of them blank. Thesis options depend on whether you are a bachelor or master student.
                   </p>
                 </fieldset>
 
@@ -508,38 +509,38 @@ export function SignInClient({
               <>
                 <div className="grid gap-4 md:grid-cols-2">
                   <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
-                    Firmanavn
-                    <Input name="companyName" required placeholder="F.eks. Equinor" />
+                    Company name
+                    <Input name="companyName" required placeholder="For example, Equinor" />
                   </label>
                   <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
-                    Organisasjonsnummer
+                    Organisation number
                     <Input
                       name="orgNumber"
                       required
                       inputMode="numeric"
                       pattern="[0-9]{9}"
-                      placeholder="9 siffer"
+                      placeholder="9 digits"
                     />
                   </label>
                 </div>
 
                 <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
-                  Adresse
-                  <Input name="address" required placeholder="Gateadresse" />
+                  Address
+                  <Input name="address" required placeholder="Street address" />
                 </label>
 
                 <div className="grid gap-4 md:grid-cols-3">
                   <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
-                    Postnummer
+                    Postal code
                     <Input name="postalCode" required placeholder="0000" />
                   </label>
                   <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
-                    By
+                    City
                     <Input name="city" required placeholder="Oslo" />
                   </label>
                   <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
-                    Land
-                    <Input name="country" required placeholder="Norge" />
+                    Country
+                    <Input name="country" required placeholder="Norway" />
                   </label>
                 </div>
 
@@ -555,7 +556,7 @@ export function SignInClient({
 
                 <fieldset className="grid gap-3 rounded-2xl border border-white/15 bg-surface/5 p-4">
                   <legend className="px-1 text-sm font-semibold text-surface">
-                    Hvilke studieretninger er dere ute etter?
+                    Which fields of study are you recruiting from?
                   </legend>
                   <div className="grid gap-2 md:grid-cols-2">
                     {STUDY_CATEGORIES.map((category) => (
@@ -569,7 +570,7 @@ export function SignInClient({
                           value={category}
                           className="h-4 w-4 rounded border-white/40 text-secondary focus:ring-secondary"
                         />
-                        <span>{category}</span>
+                        <span>{getStudentCategoryLabel(category)}</span>
                       </label>
                     ))}
                   </div>
@@ -582,12 +583,12 @@ export function SignInClient({
               <div className="grid gap-4">
                 <div className="grid gap-4 md:grid-cols-2">
                   <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
-                    Passord
+                    Password
                     <Input
                       name="password"
                       required
                       type="password"
-                      placeholder="Velg et passord"
+                      placeholder="Choose a password"
                       value={passwordInput}
                       onChange={(currentEvent) => setPasswordInput(currentEvent.target.value)}
                       aria-invalid={status === "error"}
@@ -595,12 +596,12 @@ export function SignInClient({
                     />
                   </label>
                   <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
-                    Gjenta passord
+                    Repeat password
                     <Input
                       name="confirmPassword"
                       required
                       type="password"
-                      placeholder="Skriv passordet på nytt"
+                      placeholder="Enter the password again"
                       value={confirmPasswordInput}
                       onChange={(currentEvent) => setConfirmPasswordInput(currentEvent.target.value)}
                       aria-invalid={status === "error"}
@@ -615,7 +616,7 @@ export function SignInClient({
                   aria-live="polite"
                 >
                   <p className="text-sm font-medium text-surface/90">
-                    Bruk minst 8 tegn med både bokstaver, tall og spesialtegn.
+                    Use at least 8 characters with letters, numbers and special characters.
                   </p>
                   <div className="mt-4 grid grid-cols-3 gap-2" aria-hidden="true">
                     {[1, 2, 3].map((segment) => (
@@ -628,8 +629,8 @@ export function SignInClient({
                     ))}
                   </div>
                   <div className="mt-3 flex items-center justify-between text-xs font-semibold text-surface/82">
-                    <span>{passwordSummary.metCount}/4 passordkrav oppfylt</span>
-                    <span>{passwordSummary.label === "Ingen" ? "Start å skrive" : passwordSummary.label}</span>
+                    <span>{passwordSummary.metCount}/4 password requirements met</span>
+                    <span>{passwordSummary.label === "None" ? "Start typing" : passwordSummary.label}</span>
                   </div>
                   <div className="mt-4 grid gap-2 md:grid-cols-2">
                     {passwordSummary.requirements.map((requirement) => (
@@ -660,19 +661,19 @@ export function SignInClient({
             <div className="flex flex-col gap-2">
               <Button disabled={status === "loading" || isSessionResetting} type="submit">
                 {isSessionResetting
-                  ? "Klargjør innlogging…"
+                  ? "Preparing sign-in..."
                   : status === "loading"
-                  ? "Jobber…"
+                  ? "Working..."
                   : mode === "register"
-                    ? "Registrer"
+                    ? "Register"
                     : mode === "reset"
-                      ? "Send lenke"
-                      : "Logg inn"}
+                      ? "Send link"
+                      : "Sign in"}
               </Button>
 
               {mode === "register" ? (
                 <p className="text-xs text-surface/75">
-                  Du får en bekreftelses-e-post. Sjekk også søppelpost hvis du ikke ser den med en gang.
+                  You will receive a confirmation email. Check your spam folder if you do not see it right away.
                 </p>
               ) : null}
 
@@ -682,7 +683,7 @@ export function SignInClient({
                   className="text-xs font-semibold text-surface/75 hover:text-surface"
                   onClick={() => switchMode("reset")}
                 >
-                  Glemt passord?
+                  Forgot your password?
                 </button>
               ) : null}
 
@@ -692,7 +693,7 @@ export function SignInClient({
                   className="text-xs font-semibold text-surface/75 hover:text-surface"
                   onClick={() => switchMode("login")}
                 >
-                  Tilbake til innlogging
+                  Back to sign-in
                 </button>
               ) : null}
             </div>
@@ -703,7 +704,7 @@ export function SignInClient({
               className="rounded-xl bg-success/15 px-4 py-3 text-sm font-medium text-success"
               aria-live="polite"
             >
-              {error ?? "Ferdig."}
+              {error ?? "Complete."}
             </div>
           ) : null}
 
@@ -719,14 +720,14 @@ export function SignInClient({
 
           {reason === "admin-required" ? (
             <div className="rounded-xl bg-warning/15 px-4 py-3 text-xs font-semibold text-warning">
-              Admin-tilgang må settes manuelt i Supabase (
+              Admin access must be assigned manually in Supabase (
               <code className="rounded bg-warning/20 px-1 py-0.5 text-warning">profiles.role=&apos;admin&apos;</code>).
             </div>
           ) : null}
 
           {reason === "admin-domain" ? (
             <div className="rounded-xl bg-warning/15 px-4 py-3 text-xs font-semibold text-warning">
-              Admin-domenet tillater bare innlogging med @oslostudenthub.no.
+              The admin domain only allows sign-in with @oslostudenthub.no.
             </div>
           ) : null}
         </Card>

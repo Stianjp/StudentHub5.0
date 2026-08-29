@@ -17,7 +17,7 @@ export function CallbackClient() {
   const nextPath = params.get("next") ?? defaultNext;
   const successDestination = mode === "verify" ? `/auth/sign-in?role=${role}` : nextPath;
   const shouldAutoRedirect = params.get("next") !== null && mode !== "verify";
-  const [message, setMessage] = useState(() => "Fullfører innlogging…");
+  const [message, setMessage] = useState(() => "Completing sign-in...");
   const [successLink, setSuccessLink] = useState<string | null>(null);
 
   function isExternal(url: string) {
@@ -51,7 +51,7 @@ export function CallbackClient() {
           }
           return;
         }
-        setMessage("Din konto er nå verifisert. Du kan logge inn her:");
+        setMessage("Your account has been verified. You can sign in here:");
         setSuccessLink(successDestination);
         return;
       }
@@ -70,16 +70,16 @@ export function CallbackClient() {
           }
           return;
         }
-        setMessage("Din konto er nå verifisert. Du kan logge inn her:");
+        setMessage("Your account has been verified. You can sign in here:");
         setSuccessLink(successDestination);
         return;
       }
 
-      setMessage("Mangler kode i magic link. Prøv igjen.");
+      setMessage("The magic link is missing a code. Try again.");
     }
 
     void completeAuth().catch((error) => {
-      setMessage(error instanceof Error ? error.message : "Ukjent feil under innlogging.");
+      setMessage(error instanceof Error ? error.message : "An unknown error occurred during sign-in.");
     });
   }, [code, router, shouldAutoRedirect, successDestination, nextPath]);
 
@@ -98,14 +98,14 @@ export function CallbackClient() {
             className="mx-auto h-auto w-[220px] object-contain"
             priority
           />
-          <h1 className="mt-4 text-2xl font-bold text-surface">Innlogging</h1>
+          <h1 className="mt-4 text-2xl font-bold text-surface">Sign-in</h1>
           <p className="mt-3 text-sm text-surface/85">{message}</p>
         {successLink ? (
           <a
             href={successLink}
             className="mt-4 inline-flex items-center justify-center rounded-full bg-primary px-4 py-2 text-xs font-semibold text-surface"
           >
-            Gå til innlogging
+            Go to sign-in
           </a>
         ) : null}
         </Card>

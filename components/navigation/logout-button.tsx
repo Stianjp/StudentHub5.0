@@ -43,7 +43,7 @@ export function LogoutButton({
       onClick={handleLogout}
       disabled={isPending}
     >
-      {children ?? "Logg ut"}
+      {children ?? "Log out"}
     </button>
   );
 }
