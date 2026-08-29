@@ -296,7 +296,7 @@ export default async function StudentConnect2026Page() {
           with their logo, and tapping or hovering a logo shows a short
           company summary.
         </p>
-        <div className="md:hidden">
+        <div className="min-[1200px]:hidden">
           <div className="rounded-[28px] border border-white/12 bg-white/8 p-5 text-center shadow-[0_18px_48px_rgba(20,2,73,0.18)]">
             <MapPin size={36} className="mx-auto text-secondary" />
             <p className="mt-4 text-base font-semibold text-surface">
@@ -308,7 +308,7 @@ export default async function StudentConnect2026Page() {
             </p>
           </div>
         </div>
-        <div className="hidden md:block">
+        <div className="hidden min-[1200px]:block">
           {registrationDetail ? (
             <DesktopStandShowcase
               floorplanImagePath={

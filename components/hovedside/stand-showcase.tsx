@@ -37,13 +37,6 @@ const BOOKED_STAND_STYLES: Record<ApprovedCompanyPackageTier, string> = {
   standard: "border-[#7ecf91] shadow-[0_8px_24px_rgba(126,207,145,0.28)]",
 };
 
-const MOBILE_BOOKED_MARKER_SIZE: Record<ApprovedCompanyPackageTier, string> = {
-  platinum: "clamp(34px, 10vw, 44px)",
-  gold: "clamp(31px, 9vw, 40px)",
-  silver: "clamp(28px, 8vw, 36px)",
-  standard: "clamp(24px, 7vw, 30px)",
-};
-
 function getPackageTier(stand: PublicRegistrationStand): ApprovedCompanyPackageTier {
   if (stand.package_tier === "platinum") return "platinum";
   if (stand.package_tier === "gold") return "gold";
@@ -79,13 +72,6 @@ function getTooltipPosition(stand: PublicRegistrationStand) {
     left: `${left}%`,
     top: `${top}%`,
     transform: "translateY(-50%)",
-  } as const;
-}
-
-function getStandCenter(stand: PublicRegistrationStand) {
-  return {
-    left: `${stand.x + stand.width / 2}%`,
-    top: `${stand.y + stand.height / 2}%`,
   } as const;
 }
 
@@ -175,9 +161,8 @@ export function StandShowcase({
             src={floorplanImagePath}
             alt={floorplanAlt}
             fill
-            sizes="(max-width: 639px) 420px, (max-width: 768px) 100vw, 860px"
+            sizes="860px"
             className="object-contain"
-            priority
             unoptimized
           />
 
@@ -266,58 +251,6 @@ export function StandShowcase({
             );
           })}
 
-          {visibleStands.map((stand) => {
-            if (!stand.assigned_application_id || !stand.bookingPreview) {
-              return null;
-            }
-
-            const packageTier = getPackageTier(stand);
-            const center = getStandCenter(stand);
-
-            return (
-              <button
-                key={`${stand.id}-mobile-marker`}
-                type="button"
-                aria-label={`Booked stand: ${stand.bookingPreview.companyName}`}
-                aria-pressed={activeStandId === stand.id}
-                onClick={() => {
-                  setActiveStandId(stand.id);
-                  setSelectedStandId(stand.id);
-                }}
-                style={{
-                  ...center,
-                  width: `calc(${MOBILE_BOOKED_MARKER_SIZE[packageTier]} * 0.98)`,
-                  height: `calc(${MOBILE_BOOKED_MARKER_SIZE[packageTier]} * 0.88)`,
-                  transform: "translate(-50%, -50%)",
-                }}
-                className={cn(
-                  "absolute z-30 flex items-center justify-center overflow-hidden rounded-[12px] border-2 bg-white p-0.5 shadow-[0_8px_18px_rgba(20,2,73,0.16)] outline-none transition-transform duration-150 md:hidden",
-                  BOOKED_STAND_STYLES[packageTier],
-                  activeStandId === stand.id
-                    ? "scale-[1.04] ring-2 ring-[#FE9A70] ring-offset-2 ring-offset-[#f6f0ff]"
-                    : undefined,
-                )}
-              >
-                {stand.bookingPreview.logoUrl ? (
-                    <Image
-                      src={stand.bookingPreview.logoUrl}
-                      alt={`Logo for ${stand.bookingPreview.companyName}`}
-                      fill
-                      sizes="40px"
-                      className="object-contain p-0.5"
-                      unoptimized={shouldUseDirectImageUrl(
-                        stand.bookingPreview.logoUrl,
-                      )}
-                    />
-                  ) : (
-                  <span className="px-1 text-[10px] font-bold uppercase tracking-tight text-primary">
-                    {getCompanyInitials(stand.bookingPreview.companyName)}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-
             {activeStand?.bookingPreview ? (
               <div
                 style={getTooltipPosition(activeStand)}
@@ -349,55 +282,6 @@ export function StandShowcase({
           </div>
         </div>
       </div>
-
-      {activeStand?.bookingPreview ? (
-        <div className="mt-4 rounded-[24px] border border-white/14 bg-white/96 p-4 shadow-[0_18px_50px_rgba(20,2,73,0.22)] md:hidden">
-          <div className="flex items-start gap-3">
-            <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-primary/10 bg-white shadow-[0_8px_24px_rgba(20,2,73,0.12)]">
-              {activeStand.bookingPreview.logoUrl ? (
-                <Image
-                  src={activeStand.bookingPreview.logoUrl}
-                  alt={`Logo for ${activeStand.bookingPreview.companyName}`}
-                  fill
-                  sizes="64px"
-                  className="object-contain p-2"
-                  unoptimized={shouldUseDirectImageUrl(
-                    activeStand.bookingPreview.logoUrl,
-                  )}
-                />
-              ) : (
-                <span className="px-2 text-center text-[11px] font-bold uppercase tracking-tight text-primary">
-                  {getCompanyInitials(activeStand.bookingPreview.companyName)}
-                </span>
-              )}
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#6d28d9]">
-                {TIER_TEXT[getPackageTier(activeStand)]}
-              </p>
-              <h4 className="text-sm font-bold leading-tight text-primary">
-                {activeStand.bookingPreview.companyName}
-              </h4>
-              <p className="text-xs font-semibold text-ink/65">
-                {getStandLabel(activeStand)}
-              </p>
-            </div>
-          </div>
-          {getBookingDescription(activeStand.bookingPreview) ? (
-            <p className="mt-3 text-sm leading-relaxed text-ink/80">
-              {getBookingDescription(activeStand.bookingPreview)}
-            </p>
-          ) : null}
-          <p className="mt-2 text-sm leading-relaxed text-ink/82">
-            <span className="font-bold">Looking for:</span>{" "}
-            {getLookingForText(activeStand.bookingPreview)}
-          </p>
-        </div>
-      ) : (
-        <div className="mt-4 rounded-[20px] border border-white/12 bg-white/10 px-4 py-3 text-sm text-mist/72 md:hidden">
-          Swipe the map if needed, then tap one of the booked logos to see company details.
-        </div>
-      )}
 
       {selectedStand?.bookingPreview ? (
         <CompanyInfoModal

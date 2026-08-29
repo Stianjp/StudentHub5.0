@@ -97,12 +97,14 @@ function truncateWords(value: string, maxWords: number) {
 
 export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
   const [activeField, setActiveField] = useState<string | null>(null);
-  const [isDesktop, setIsDesktop] = useState(false);
+  const [showFullCompanyGrid, setShowFullCompanyGrid] = useState(false);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia("(min-width: 768px)");
-    const handleChange = () => setIsDesktop(mediaQuery.matches);
+    const mediaQuery = window.matchMedia(
+      "(min-width: 1200px) and (hover: hover) and (pointer: fine)",
+    );
+    const handleChange = () => setShowFullCompanyGrid(mediaQuery.matches);
 
     handleChange();
     mediaQuery.addEventListener("change", handleChange);
@@ -140,7 +142,7 @@ export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
     );
   }
 
-  if (compactOnMobile && !isDesktop) {
+  if (compactOnMobile && !showFullCompanyGrid) {
     return (
       <>
         <div className="space-y-4">
