@@ -16,6 +16,8 @@ type Props = {
   compactOnMobile?: boolean;
 };
 
+const MOBILE_COMPANIES_PER_PAGE = 5;
+
 const TIER_ORDER: ApprovedCompanyPackageTier[] = [
   "platinum",
   "gold",
@@ -99,6 +101,7 @@ export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
   const [activeField, setActiveField] = useState<string | null>(null);
   const [showFullCompanyGrid, setShowFullCompanyGrid] = useState(false);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
+  const [mobilePage, setMobilePage] = useState(0);
 
   useEffect(() => {
     const mediaQuery = window.matchMedia(
@@ -115,7 +118,19 @@ export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
     () => collectCandidateFields(companies),
     [companies],
   );
-  const groupedAllCompanies = useMemo(() => groupCompanies(companies), [companies]);
+  const orderedCompanies = useMemo(
+    () => groupCompanies(companies).flatMap((group) => group.companies),
+    [companies],
+  );
+  const mobilePageCount = Math.max(
+    1,
+    Math.ceil(orderedCompanies.length / MOBILE_COMPANIES_PER_PAGE),
+  );
+  const safeMobilePage = Math.min(mobilePage, mobilePageCount - 1);
+  const mobileCompanies = orderedCompanies.slice(
+    safeMobilePage * MOBILE_COMPANIES_PER_PAGE,
+    (safeMobilePage + 1) * MOBILE_COMPANIES_PER_PAGE,
+  );
   const visibleCompanies = useMemo(() => {
     if (!activeField) return companies;
     return companies.filter((company) =>
@@ -154,43 +169,83 @@ export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
               Student Connect 2026 partners
             </h3>
             <p className="mt-2 text-sm leading-relaxed text-mist/75">
-              Trykk på en bedrift for å lese en kort presentasjon.
+              Five company logos are loaded at a time. Tap a company to read a
+              short presentation.
             </p>
           </div>
 
-          <div className="grid gap-3">
-            {groupedAllCompanies.map(({ tier, companies: tierCompanies }) => {
-              const meta = TIER_META[tier];
+          <div className="grid gap-3 sm:grid-cols-2">
+            {mobileCompanies.map((company) => {
+              const meta = TIER_META[company.packageTier];
               return (
-                <section
-                  key={tier}
+                <button
+                  key={company.id}
+                  type="button"
+                  onClick={() => setSelectedCompanyId(company.id)}
                   className={cn(
-                    "rounded-[24px] border p-4 shadow-[0_16px_42px_rgba(20,2,73,0.16)]",
+                    "rounded-[24px] border p-4 text-left shadow-[0_16px_42px_rgba(20,2,73,0.16)] transition hover:border-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary",
                     meta.sectionClassName,
                   )}
                 >
-                  <div className="flex items-center justify-between gap-3">
-                    <h4 className="text-lg font-bold text-surface">{meta.label}</h4>
-                    <span className="text-sm font-semibold text-mist/70">
-                      {tierCompanies.length} companies
-                    </span>
+                  <div className="relative h-24 overflow-hidden rounded-[18px] border border-primary/10 bg-white">
+                    {company.logoUrl ? (
+                      <Image
+                        src={company.logoUrl}
+                        alt={`Logo for ${company.companyName}`}
+                        fill
+                        sizes="(max-width: 639px) calc(100vw - 64px), 45vw"
+                        className="object-contain p-3"
+                        unoptimized={shouldUseDirectImageUrl(company.logoUrl)}
+                      />
+                    ) : (
+                      <Building2
+                        size={34}
+                        className="absolute inset-0 m-auto text-primary/35"
+                      />
+                    )}
                   </div>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {tierCompanies.map((company) => (
-                      <button
-                        key={company.id}
-                        type="button"
-                        onClick={() => setSelectedCompanyId(company.id)}
-                        className="inline-flex rounded-full border border-white/14 bg-white/10 px-3 py-1 text-xs font-semibold text-mist/90 transition hover:border-secondary hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary"
-                      >
-                        {company.companyName}
-                      </button>
-                    ))}
-                  </div>
-                </section>
+                  <p className="mt-3 text-xs font-bold uppercase tracking-[0.2em] text-secondary">
+                    {meta.label}
+                  </p>
+                  <h4 className="mt-1 text-base font-bold text-surface">
+                    {company.companyName}
+                  </h4>
+                </button>
               );
             })}
           </div>
+
+          {mobilePageCount > 1 ? (
+            <div className="flex items-center justify-between gap-3 rounded-full border border-white/12 bg-white/8 p-2">
+              <button
+                type="button"
+                disabled={safeMobilePage === 0}
+                onClick={() => {
+                  setSelectedCompanyId(null);
+                  setMobilePage((current) => Math.max(0, current - 1));
+                }}
+                className="min-h-11 rounded-full border border-white/16 px-4 text-xs font-bold uppercase tracking-wider text-surface transition hover:border-secondary disabled:cursor-not-allowed disabled:opacity-35"
+              >
+                Previous
+              </button>
+              <p className="text-xs font-semibold text-mist/75">
+                {safeMobilePage + 1} / {mobilePageCount}
+              </p>
+              <button
+                type="button"
+                disabled={safeMobilePage >= mobilePageCount - 1}
+                onClick={() => {
+                  setSelectedCompanyId(null);
+                  setMobilePage((current) =>
+                    Math.min(mobilePageCount - 1, current + 1),
+                  );
+                }}
+                className="min-h-11 rounded-full bg-secondary px-4 text-xs font-bold uppercase tracking-wider text-primary transition hover:bg-secondary/90 disabled:cursor-not-allowed disabled:opacity-35"
+              >
+                Next
+              </button>
+            </div>
+          ) : null}
         </div>
 
         {selectedCompany ? (

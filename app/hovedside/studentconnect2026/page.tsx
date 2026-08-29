@@ -296,40 +296,24 @@ export default async function StudentConnect2026Page() {
           with their logo, and tapping or hovering a logo shows a short
           company summary.
         </p>
-        <div className="min-[1200px]:hidden">
-          <div className="rounded-[28px] border border-white/12 bg-white/8 p-5 text-center shadow-[0_18px_48px_rgba(20,2,73,0.18)]">
-            <MapPin size={36} className="mx-auto text-secondary" />
-            <p className="mt-4 text-base font-semibold text-surface">
-              The interactive stand map is shown on desktop.
-            </p>
-            <p className="mt-2 text-sm leading-relaxed text-mist/72">
-              We have hidden the full floor plan on mobile to keep this page
-              stable on iPhone and Android.
-            </p>
-          </div>
-        </div>
-        <div className="hidden min-[1200px]:block">
-          {registrationDetail ? (
-            <DesktopStandShowcase
-              floorplanImagePath={
-                STUDENT_CONNECT_2026_FLOORPLAN.imagePath
-              }
-              floorplanAlt={STUDENT_CONNECT_2026_FLOORPLAN.alt}
-              floorplanWidth={STUDENT_CONNECT_2026_FLOORPLAN.width}
-              floorplanHeight={STUDENT_CONNECT_2026_FLOORPLAN.height}
-              stands={registrationDetail.stands}
-            />
-          ) : (
-            <div className="flex items-center justify-center rounded-2xl bg-white/5 py-16 ring-1 ring-white/10">
-              <div className="text-center text-mist/40">
-                <MapPin size={40} className="mx-auto" />
-                <p className="mt-3 text-sm">
-                  Stand map and floor plan will be shown here
-                </p>
-              </div>
+        {registrationDetail ? (
+          <DesktopStandShowcase
+            floorplanImagePath={STUDENT_CONNECT_2026_FLOORPLAN.imagePath}
+            floorplanAlt={STUDENT_CONNECT_2026_FLOORPLAN.alt}
+            floorplanWidth={STUDENT_CONNECT_2026_FLOORPLAN.width}
+            floorplanHeight={STUDENT_CONNECT_2026_FLOORPLAN.height}
+            stands={registrationDetail.stands}
+          />
+        ) : (
+          <div className="flex items-center justify-center rounded-2xl bg-white/5 py-16 ring-1 ring-white/10">
+            <div className="text-center text-mist/40">
+              <MapPin size={40} className="mx-auto" />
+              <p className="mt-3 text-sm">
+                Stand map and floor plan will be shown here
+              </p>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </SectionWrapper>
 
       {/* ── Approved companies (dynamic) ─────────────────────── */}
