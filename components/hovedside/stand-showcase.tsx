@@ -43,10 +43,6 @@ function getPackageTier(stand: PublicRegistrationStand): ApprovedCompanyPackageT
   return "standard";
 }
 
-function shouldDisplayCompanyLogo(tier: ApprovedCompanyPackageTier) {
-  return tier === "platinum" || tier === "gold";
-}
-
 function getStandLabel(stand: PublicRegistrationStand) {
   return stand.display_label ?? stand.stand_code;
 }
@@ -231,8 +227,7 @@ export function StandShowcase({
               >
                 {isBooked && stand.bookingPreview ? (
                   <div className="relative flex h-full w-full items-center justify-center rounded-[5px] bg-white px-1">
-                    {stand.bookingPreview.logoUrl &&
-                    shouldDisplayCompanyLogo(packageTier) ? (
+                    {stand.bookingPreview.logoUrl ? (
                       <Image
                         src={stand.bookingPreview.logoUrl}
                         alt={`Logo for ${stand.bookingPreview.companyName}`}
@@ -287,11 +282,7 @@ export function StandShowcase({
       {selectedStand?.bookingPreview ? (
         <CompanyInfoModal
           companyName={selectedStand.bookingPreview.companyName}
-          logoUrl={
-            shouldDisplayCompanyLogo(getPackageTier(selectedStand))
-              ? selectedStand.bookingPreview.logoUrl
-              : null
-          }
+          logoUrl={selectedStand.bookingPreview.logoUrl}
           representationText={selectedStand.bookingPreview.representationText}
           candidateSummary={selectedStand.bookingPreview.candidateSummary}
           candidateLevelLabel={selectedStand.bookingPreview.candidateLevelLabel}
