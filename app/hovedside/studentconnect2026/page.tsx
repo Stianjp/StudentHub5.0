@@ -82,16 +82,6 @@ export default async function StudentConnect2026Page() {
           </h2>
         </div>
         <div className="grid gap-4 md:hidden">
-          <div className="rounded-[28px] border border-primary/8 bg-white p-5 shadow-[0_18px_48px_rgba(20,2,73,0.08)]">
-            <h3 className="text-lg font-bold text-primary">
-              A focused mobile overview
-            </h3>
-            <p className="mt-2 text-sm leading-relaxed text-ink/70">
-              On mobile we keep this page lighter so it stays stable while you
-              browse. The full photo gallery and stand experience are still
-              available on desktop.
-            </p>
-          </div>
           <div className="grid gap-3 sm:grid-cols-3">
             <div className="rounded-[24px] border border-primary/8 bg-white p-4 shadow-[0_16px_40px_rgba(20,2,73,0.08)]">
               <p className="text-xs font-bold uppercase tracking-[0.24em] text-secondary">
@@ -253,15 +243,6 @@ export default async function StudentConnect2026Page() {
             title="Industry Representation"
             description="Companies from various sectors participate, showcasing the diversity of opportunities available for students."
           />
-        </div>
-        <div className="mt-6 rounded-[28px] border border-primary/8 bg-white p-5 shadow-[0_18px_48px_rgba(20,2,73,0.08)] md:hidden">
-          <p className="text-xs font-bold uppercase tracking-[0.24em] text-secondary">
-            Mobile note
-          </p>
-          <p className="mt-2 text-sm leading-relaxed text-ink/70">
-            The image gallery is hidden on mobile to reduce crashes in Safari
-            and Chrome on iPhone.
-          </p>
         </div>
         <div className="mt-6 hidden gap-4 md:grid md:grid-cols-2">
           <div className="relative aspect-[16/10] overflow-hidden rounded-[28px] bg-primary shadow-[0_20px_50px_rgba(20,2,73,0.14)] ring-1 ring-primary/6">

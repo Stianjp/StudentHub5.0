@@ -45,8 +45,8 @@ export function DesktopStandShowcase(props: Props) {
           See the full floor plan
         </p>
         <p className="mt-2 text-sm leading-relaxed text-mist/72">
-          The mobile floor plan loads only when you request it, keeping the
-          page stable on mobile phones and tablets.
+          Explore the venue and see where the participating companies will be
+          located during Student Connect 2026.
         </p>
         <button
           type="button"
@@ -81,10 +81,6 @@ export function DesktopStandShowcase(props: Props) {
             className="h-auto w-full rounded-[16px]"
           />
         </div>
-        <p className="mx-auto mt-4 max-w-xl text-center text-sm leading-relaxed text-mist/72">
-          Company logos and details are available five at a time under
-          Attending Companies below.
-        </p>
       </div>
     );
   }

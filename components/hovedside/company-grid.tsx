@@ -76,6 +76,10 @@ function groupCompanies(companies: ApprovedCompanyPreview[]) {
   })).filter((group) => group.companies.length > 0);
 }
 
+function shouldDisplayCompanyLogo(tier: ApprovedCompanyPackageTier) {
+  return tier === "platinum" || tier === "gold";
+}
+
 function collectCandidateFields(companies: ApprovedCompanyPreview[]) {
   return [...new Set(companies.flatMap((company) => company.candidateFields))]
     .filter(Boolean)
@@ -162,14 +166,13 @@ export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
         <div className="space-y-4">
           <div className="rounded-[28px] border border-white/12 bg-white/8 p-5 shadow-[0_16px_42px_rgba(20,2,73,0.18)]">
             <p className="text-xs font-bold uppercase tracking-[0.28em] text-secondary/85">
-              Mobile overview
+              Attending companies
             </p>
             <h3 className="mt-2 text-xl font-bold text-surface">
               Student Connect 2026 partners
             </h3>
             <p className="mt-2 text-sm leading-relaxed text-mist/75">
-              Five company logos are loaded at a time. Tap a company to read a
-              short presentation.
+              Tap a company to read a short presentation.
             </p>
           </div>
 
@@ -187,7 +190,8 @@ export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
                   )}
                 >
                   <div className="relative h-24 overflow-hidden rounded-[18px] border border-primary/10 bg-white">
-                    {company.logoUrl ? (
+                    {company.logoUrl &&
+                    shouldDisplayCompanyLogo(company.packageTier) ? (
                       <Image
                         src={company.logoUrl}
                         alt={`Logo for ${company.companyName}`}
@@ -249,7 +253,11 @@ export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
         {selectedCompany ? (
           <CompanyInfoModal
             companyName={selectedCompany.companyName}
-            logoUrl={selectedCompany.logoUrl}
+            logoUrl={
+              shouldDisplayCompanyLogo(selectedCompany.packageTier)
+                ? selectedCompany.logoUrl
+                : null
+            }
             representationText={selectedCompany.representationText}
             candidateSummary={selectedCompany.candidateSummary}
             candidateLevelLabel={selectedCompany.candidateLevelLabel}
@@ -376,7 +384,8 @@ export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
                       meta.logoFrameClassName,
                     )}
                   >
-                    {company.logoUrl ? (
+                    {company.logoUrl &&
+                    shouldDisplayCompanyLogo(company.packageTier) ? (
                       <div
                         className={cn(
                           "relative w-full",
@@ -464,7 +473,11 @@ export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
       {selectedCompany ? (
         <CompanyInfoModal
           companyName={selectedCompany.companyName}
-          logoUrl={selectedCompany.logoUrl}
+          logoUrl={
+            shouldDisplayCompanyLogo(selectedCompany.packageTier)
+              ? selectedCompany.logoUrl
+              : null
+          }
           representationText={selectedCompany.representationText}
           candidateSummary={selectedCompany.candidateSummary}
           candidateLevelLabel={selectedCompany.candidateLevelLabel}
