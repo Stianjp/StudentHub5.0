@@ -303,6 +303,7 @@ table {
     width: 100%;
     min-width: 0;
     overflow-wrap: anywhere;
+    -webkit-overflow-scrolling: touch;
   }
 
   .student-scope #checkin_registration *,
@@ -315,6 +316,18 @@ table {
     width: 100%;
     min-width: 0;
     max-width: 100%;
+  }
+
+  .student-scope #checkin_registration > * {
+    width: 100%;
+    min-width: 0;
+    max-width: 100% !important;
+    margin-inline: 0 !important;
+  }
+
+  .student-scope #checkin_registration img {
+    max-width: 100%;
+    height: auto;
   }
 
   .student-scope #checkin_registration :is(input, textarea, select) {
