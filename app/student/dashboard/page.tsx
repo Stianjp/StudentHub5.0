@@ -100,7 +100,7 @@ function summarizeCompany(card: RecommendedCompanyCard) {
     card.company.location ?? "",
   ].filter(Boolean);
 
-  return details.join(" • ") || "Relevant match for din profil.";
+  return details.join(" • ") || "Relevant match for your profile.";
 }
 
 function getCompanyInitials(name: string) {
@@ -193,7 +193,7 @@ export default async function StudentDashboardPage() {
         day: "2-digit",
         month: "long",
       })
-    : "Ingen kommende events";
+    : "No upcoming events";
 
   let color = "#70C08E";
   if (completion <= 30) color = "#D94848";
@@ -205,14 +205,14 @@ export default async function StudentDashboardPage() {
       <header className="flex items-start justify-between gap-4 sm:items-center">
         <div className="min-w-0">
           <h2 className="break-words text-3xl font-black text-white drop-shadow-sm sm:text-4xl">
-            Hei, {student.full_name ?? "student"}! 👋
+            Hi, {student.full_name ?? "student"}!
           </h2>
           <div className="mt-3 h-1.5 w-16 rounded-full bg-[#FE9A70]" />
         </div>
         <div className="flex shrink-0 items-center gap-4">
           <button
             type="button"
-            aria-label="Åpne varsler"
+            aria-label="Open notifications"
             className="relative rounded-2xl border border-white/20 bg-white/10 p-3.5 text-white transition-[background-color,border-color,box-shadow] hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70] focus-visible:ring-offset-2 focus-visible:ring-offset-[#846AE6]"
           >
             <Bell size={20} aria-hidden="true" />
@@ -228,18 +228,18 @@ export default async function StudentDashboardPage() {
               Status
             </span>
             <h3 className="mb-4 text-3xl font-black leading-tight text-white sm:text-4xl lg:text-5xl">
-              Gjør deg klar til
+              Get ready for
               <br className="hidden sm:block" />
               <span className="text-[#FE9A70]"><span className="sm:hidden"> </span>Student Connect.</span>
             </h3>
             <p className="mb-8 max-w-sm text-base font-medium text-white/80 sm:mb-12 sm:text-lg">
-              Profilen din er {completion}% fullført og synlig for våre partnere.
+              Your profile is {completion}% complete and visible to our partners.
             </p>
             <Link
               href="/student"
               className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-[#FE9A70] px-6 py-4 text-center text-sm font-black text-[#140249] shadow-xl shadow-[#FE9A70]/30 transition-[background-color,transform,box-shadow] hover:bg-[#F7A67E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70] focus-visible:ring-offset-2 focus-visible:ring-offset-[#140249] active:scale-95 sm:w-auto sm:px-10 sm:py-5"
             >
-              {needsOnboarding ? "Fullfør profil" : "Se din profil"}
+              {needsOnboarding ? "Complete profile" : "View your profile"}
             </Link>
           </div>
           <div className="pointer-events-none absolute right-0 top-0 flex h-full w-1/2 items-center justify-center opacity-10">
@@ -252,20 +252,35 @@ export default async function StudentDashboardPage() {
             <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#FE9A70] text-[#140249] shadow-xl shadow-[#FE9A70]/30 sm:mb-10 sm:h-16 sm:w-16 sm:rounded-3xl">
               <Calendar size={32} aria-hidden="true" />
             </div>
-            <h4 className="mb-4 text-2xl font-black text-[#EDE8F5]">Neste Event</h4>
+            <h4 className="mb-4 text-2xl font-black text-[#EDE8F5]">Next event</h4>
             <p className="mb-2 text-sm font-bold text-[#EDE8F5]/75">{eventDate}</p>
             <p className="text-xl font-black text-white">
-              {nextEvent?.name ?? "Ingen aktive eventer"}
+              {nextEvent?.name ?? "No active events"}
             </p>
           </div>
           <Link
             href="/student/events"
             className="mt-8 inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-[#FE9A70] px-4 py-4 text-sm font-black text-[#140249] shadow-lg shadow-[#FE9A70]/20 transition-[background-color,transform,box-shadow] hover:bg-[#F7A67E] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70] focus-visible:ring-offset-2 focus-visible:ring-offset-[#140249] active:scale-[0.98] sm:mt-10 sm:py-5"
           >
-            Meld deg på
+            Sign up
           </Link>
         </div>
       </div>
+
+      <section className="rounded-[2rem] border border-[#FE9A70]/35 bg-[#FE9A70] p-6 text-center shadow-2xl shadow-[#140249]/20 sm:p-8 lg:rounded-[3rem]">
+        <h3 className="mx-auto max-w-3xl text-2xl font-black leading-tight text-[#140249] sm:text-3xl">
+          Get your free ticket to Student Connect 2026 here
+        </h3>
+        <p className="mx-auto mt-3 max-w-2xl text-sm font-semibold leading-relaxed text-[#140249]/78 sm:text-base">
+          Open Events to complete the ticket form and connect it to your student profile.
+        </p>
+        <Link
+          href="/student/events"
+          className="mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-2xl bg-[#140249] px-6 py-4 text-sm font-black uppercase tracking-wider text-white shadow-xl shadow-[#140249]/20 transition-[background-color,transform,box-shadow] hover:bg-[#220C6C] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#140249] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FE9A70] active:scale-[0.98] sm:w-auto sm:px-10"
+        >
+          Get your free ticket
+        </Link>
+      </section>
 
       <div className="grid grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-2 xl:gap-8">
         <div className="rounded-[2rem] border border-white/15 bg-[#140249] p-5 shadow-xl sm:p-8 lg:rounded-[3rem] lg:p-10">
@@ -274,10 +289,10 @@ export default async function StudentDashboardPage() {
               <div className="rounded-2xl bg-[#FE9A70] p-3 text-[#140249] shadow-lg shadow-[#FE9A70]/20">
                 <Briefcase size={24} aria-hidden="true" />
               </div>
-              <h4 className="text-lg font-black text-white sm:text-xl">Anbefalte bedrifter</h4>
+              <h4 className="text-lg font-black text-white sm:text-xl">Recommended companies</h4>
             </div>
             <Link href="/student/companies" className="text-xs font-black uppercase tracking-wider text-[#FE9A70] hover:underline">
-              Se alle
+              See all
             </Link>
           </div>
 
@@ -320,7 +335,7 @@ export default async function StudentDashboardPage() {
                         </span>
                       </div>
                       <p className="text-xs font-bold uppercase tracking-tight text-white/55">
-                        {company.eventName ?? "Aktivt event"}
+                        {company.eventName ?? "Active event"}
                         {company.company.location ? ` • ${company.company.location}` : ""}
                       </p>
                       <p className="max-w-md text-sm font-medium text-white/72">
@@ -334,7 +349,7 @@ export default async function StudentDashboardPage() {
               })
             ) : (
               <div className="rounded-2xl border border-white/10 bg-[#1B0858] p-4 text-sm font-medium text-white/72 sm:rounded-3xl sm:p-6">
-                Vi fant ingen tydelige bedriftsmatcher akkurat nå. Oppdater studieprogram, interesser eller jobbtyper for bedre anbefalinger.
+                We could not find clear company matches right now. Update your study programme, interests or job types for better recommendations.
               </div>
             )}
           </div>
@@ -346,22 +361,22 @@ export default async function StudentDashboardPage() {
               <div className="rounded-2xl bg-[#FE9A70] p-3 text-[#140249] shadow-lg shadow-[#FE9A70]/20">
                 <Heart size={24} aria-hidden="true" />
               </div>
-              <h4 className="text-lg font-black text-white sm:text-xl">Dine favoritter</h4>
+              <h4 className="text-lg font-black text-white sm:text-xl">Your favourites</h4>
             </div>
             <Link
               href="/student/companies"
               className="rounded-full border border-[#FE9A70]/80 px-4 py-1.5 text-xs font-bold uppercase tracking-wide text-[#FE9A70] transition-[background-color,border-color,color,box-shadow] hover:bg-[#FE9A70] hover:text-[#140249] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70] focus-visible:ring-offset-2 focus-visible:ring-offset-[#140249]"
             >
-              Finn Flere
+              Find more
             </Link>
           </div>
 
           <p className="mb-6 text-sm font-medium text-[#EDE8F5]/75">
-            Favorittmarkering betyr også samtykke til at bedriften kan kontakte deg.
+            Marking a company as a favourite also gives consent for that company to contact you.
           </p>
 
           <div className="mb-10 flex flex-wrap gap-3">
-            {(typedLikedCompanies.length > 0 ? typedLikedCompanies : [{ id: "none", name: "Ingen favoritter ennå" }]).map(
+            {(typedLikedCompanies.length > 0 ? typedLikedCompanies : [{ id: "none", name: "No favourites yet" }]).map(
               (company) => (
                 <div
                   key={company.id}
@@ -379,9 +394,9 @@ export default async function StudentDashboardPage() {
                 {showCheck ? <Check size={30} strokeWidth={3} aria-hidden="true" /> : <span className="text-xl font-black">%</span>}
               </div>
               <div>
-                <p className="text-lg font-black text-white">Profilen din er {completion}%!</p>
+                <p className="text-lg font-black text-white">Your profile is {completion}% complete</p>
                 <p className="mt-1 text-xs font-bold uppercase tracking-widest text-white/70">
-                  Sist oppdatert i dag
+                  Updated today
                 </p>
               </div>
               <span className="ml-auto text-lg font-black sm:text-xl" style={{ color }}>

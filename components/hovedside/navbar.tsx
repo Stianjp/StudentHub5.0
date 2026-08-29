@@ -13,7 +13,7 @@ type NavLink = {
 };
 
 const NAV_LINKS: NavLink[] = [
-  { label: "Students", href: "/for-studenter" },
+  { label: "Students", href: "/Students" },
   {
     label: "Partners",
     href: "/partners",

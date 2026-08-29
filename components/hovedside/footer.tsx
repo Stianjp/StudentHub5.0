@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 
 const QUICK_LINKS = [
-  { label: "Students", href: "/for-studenter" },
+  { label: "Students", href: "/Students" },
   { label: "Jobs", href: "/jobs" },
   { label: "Thesis projects", href: "/thesis-projects" },
   { label: "Partners", href: "/partners" },
