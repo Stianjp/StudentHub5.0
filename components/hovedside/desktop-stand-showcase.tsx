@@ -53,7 +53,7 @@ export function DesktopStandShowcase(props: Props) {
           onClick={() => setFloorplanRequested(true)}
           className="mt-5 inline-flex min-h-12 w-full items-center justify-center rounded-full bg-secondary px-7 py-3 text-sm font-bold uppercase tracking-wider text-primary transition-colors hover:bg-secondary/90 sm:w-auto"
         >
-          Vis plantegning
+          Show floor plan
         </button>
       </div>
     );
@@ -68,7 +68,7 @@ export function DesktopStandShowcase(props: Props) {
             onClick={() => setFloorplanRequested(false)}
             className="inline-flex min-h-11 items-center justify-center rounded-full border-2 border-secondary px-6 py-2.5 text-sm font-bold uppercase tracking-wider text-secondary transition-colors hover:bg-secondary hover:text-primary"
           >
-            Skjul plantegning
+            Hide floor plan
           </button>
         </div>
         <div className="mx-auto max-w-[688px] overflow-hidden rounded-[22px] bg-white p-2 shadow-[0_18px_50px_rgba(20,2,73,0.2)] sm:p-3">

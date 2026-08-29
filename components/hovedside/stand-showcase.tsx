@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import Image from "next/image";
 import type { PublicRegistrationStand } from "@/lib/event-registration";
 import type { ApprovedCompanyPackageTier } from "@/lib/hovedside/approved-companies";
-import { shouldUseDirectImageUrl } from "@/lib/logo-url";
 import { cn } from "@/lib/utils";
 import { CompanyInfoModal } from "@/components/hovedside/company-info-modal";
 
@@ -234,9 +233,6 @@ export function StandShowcase({
                         alt={`Logo for ${stand.bookingPreview.companyName}`}
                         fill
                         className="object-contain p-1"
-                        unoptimized={shouldUseDirectImageUrl(
-                          stand.bookingPreview.logoUrl,
-                        )}
                       />
                     ) : (
                       <span className="text-[7px] font-bold uppercase tracking-tight text-primary md:text-[8px]">
