@@ -12,6 +12,35 @@ type Props = {
   event: WebsiteEvent | null;
 };
 
+function TicketInstructions() {
+  const steps = [
+    "Create a student account or sign in to your existing account.",
+    "Open Events in the student portal.",
+    "Complete the registration form to receive your free ticket.",
+  ];
+
+  return (
+    <div className="mt-5 rounded-2xl border border-white/12 bg-white/8 p-4 text-left sm:p-5">
+      <p className="text-center text-sm font-bold text-surface">
+        How to get your free ticket
+      </p>
+      <ol className="mt-3 grid gap-2.5">
+        {steps.map((step, index) => (
+          <li
+            key={step}
+            className="flex items-start gap-3 text-sm leading-relaxed text-mist/85"
+          >
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-secondary text-xs font-bold text-primary">
+              {index + 1}
+            </span>
+            <span>{step}</span>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
 export function StudentConnectEventCallout({ event }: Props) {
   return (
     <SectionWrapper bg="primary">
@@ -42,6 +71,7 @@ export function StudentConnectEventCallout({ event }: Props) {
                 Get your free ticket here
               </Link>
             </div>
+            <TicketInstructions />
           </>
         ) : (
           <>
@@ -57,6 +87,7 @@ export function StudentConnectEventCallout({ event }: Props) {
             >
               Get your free ticket here
             </Link>
+            <TicketInstructions />
           </>
         )}
       </div>
