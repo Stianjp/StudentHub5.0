@@ -38,6 +38,7 @@ export default async function ForStudenterPage() {
         subtitle="Are you a student looking for a job or thesis? Sign up here!"
         ctaLabel="Register"
         ctaHref={STUDENT_PORTAL_URL}
+        ctaDescription="Register or sign in, then open Events to get your free ticket."
         backgroundImageSrc={SITE_IMAGES.studentsHero.src}
         backgroundImageAlt={SITE_IMAGES.studentsHero.alt}
         backgroundImagePosition="center"

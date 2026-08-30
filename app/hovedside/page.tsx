@@ -42,6 +42,7 @@ export default async function HomePage() {
         subtitle="By building business partnerships, we make the transition from studies to a professional career smoother and more accessible for students"
         ctaLabel="Register student"
         ctaHref="/Students"
+        ctaDescription="Students: register or sign in, then open Events to get your free ticket."
         extraCtas={[{ label: "Register company", href: "/partners" }]}
         backgroundImageSrc={SITE_IMAGES.homeHero.src}
         backgroundImageAlt={SITE_IMAGES.homeHero.alt}

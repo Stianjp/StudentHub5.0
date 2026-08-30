@@ -7,6 +7,7 @@ type HeroProps = {
   subtitle?: string;
   ctaLabel?: string;
   ctaHref?: string;
+  ctaDescription?: string;
   children?: ReactNode;
   /** Extra CTAs rendered beside the primary one */
   extraCtas?: { label: string; href: string }[];
@@ -21,6 +22,7 @@ export function HeroSection({
   subtitle,
   ctaLabel,
   ctaHref,
+  ctaDescription,
   children,
   extraCtas,
   backgroundImageSrc,
@@ -85,6 +87,11 @@ export function HeroSection({
               </Link>
             ))}
           </div>
+          {ctaDescription ? (
+            <p className="mx-auto mt-3 max-w-xl text-xs font-medium leading-relaxed text-mist/80 sm:mx-0 sm:text-sm">
+              {ctaDescription}
+            </p>
+          ) : null}
         </div>
       </div>
     </section>
