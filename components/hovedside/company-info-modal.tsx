@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { Building2, X } from "lucide-react";
+import { shouldUseDirectImageUrl } from "@/lib/logo-url";
 
 type Props = {
   companyName: string;
@@ -76,6 +77,7 @@ export function CompanyInfoModal({
                 fill
                 sizes="96px"
                 className="object-contain p-3"
+                unoptimized={shouldUseDirectImageUrl(logoUrl)}
               />
             ) : (
               <Building2 size={34} className="text-primary/35" aria-hidden="true" />

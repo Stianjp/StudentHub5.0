@@ -7,6 +7,7 @@ import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { listActiveEvents } from "@/lib/events";
 import { computeMatch } from "@/lib/matching";
 import { getLatestCompanyRegistrationLogos } from "@/lib/company";
+import { shouldUseDirectImageUrl } from "@/lib/logo-url";
 
 const PACKAGE_PRIORITY = {
   platinum: 4,
@@ -316,6 +317,7 @@ export default async function StudentDashboardPage() {
                           width={56}
                           height={56}
                           className="h-full w-full object-contain"
+                          unoptimized={shouldUseDirectImageUrl(logoUrl)}
                         />
                       ) : (
                         <span className="text-[11px] font-black text-[#140249]">

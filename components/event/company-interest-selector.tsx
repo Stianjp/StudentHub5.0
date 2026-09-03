@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
+import { shouldUseDirectImageUrl } from "@/lib/logo-url";
 import { getCompanyAudienceLabel } from "@/lib/student-company-display";
 
 type CompanyOption = {
@@ -94,6 +95,7 @@ export function CompanyInterestSelector({
                   width={44}
                   height={44}
                   className="h-full w-full object-contain"
+                  unoptimized={shouldUseDirectImageUrl(company.logoUrl)}
                 />
               ) : (
                 <span className="text-[10px] font-black text-[#140249]">

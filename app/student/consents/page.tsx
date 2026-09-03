@@ -8,6 +8,7 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { Select } from "@/components/ui/select";
 import { requireRole } from "@/lib/auth";
 import { getLatestCompanyRegistrationLogos } from "@/lib/company";
+import { shouldUseDirectImageUrl } from "@/lib/logo-url";
 import { getCompanyAudienceLabel, getStudentCategoryLabel } from "@/lib/student-company-display";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getOrCreateStudentForUser, listStudentConsents } from "@/lib/student";
@@ -205,6 +206,7 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
                             width={56}
                             height={56}
                             className="h-full w-full object-contain"
+                            unoptimized={shouldUseDirectImageUrl(companyLogoMap[company.id])}
                           />
                         ) : (
                           <span className="text-[10px] font-black text-[#140249]">

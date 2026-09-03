@@ -9,6 +9,7 @@ import { requireRole } from "@/lib/auth";
 import { getCompanyLeads, getCompanyRegistrations, getLatestCompanyRegistrationLogo, getOrCreateCompanyForUser } from "@/lib/company";
 import { getCompanyOnboardingStatus } from "@/lib/company-onboarding";
 import { listActiveEvents } from "@/lib/events";
+import { shouldUseDirectImageUrl } from "@/lib/logo-url";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { uploadCompanyLogoForCompanyAction } from "@/app/company/actions";
 
@@ -92,6 +93,7 @@ export default async function CompanyDashboardPage({ searchParams }: PageProps) 
                   width={96}
                   height={96}
                   className="h-full w-full object-contain"
+                  unoptimized={shouldUseDirectImageUrl(registrationLogo.logoUrl)}
                 />
               </div>
               <div className="min-w-0">
@@ -116,6 +118,7 @@ export default async function CompanyDashboardPage({ searchParams }: PageProps) 
                 width={220}
                 height={110}
                 className="max-h-24 w-auto object-contain"
+                unoptimized={shouldUseDirectImageUrl(registrationLogo.logoUrl)}
               />
             </div>
           </div>

@@ -25,6 +25,7 @@ import {
   listCompanyRegistrations,
 } from "@/lib/admin";
 import { getLatestCompanyRegistrationLogo } from "@/lib/company";
+import { shouldUseDirectImageUrl } from "@/lib/logo-url";
 
 const packageLabel: Record<string, string> = {
   standard: "Standard",
@@ -275,6 +276,7 @@ export default async function AdminCompanyDetailPage({ params, searchParams }: P
                   width={180}
                   height={120}
                   className="h-auto max-h-[110px] w-auto max-w-full object-contain"
+                  unoptimized={shouldUseDirectImageUrl(companyLogo.logoUrl)}
                 />
               ) : (
                 <p className="text-center text-sm text-ink/60">Ingen logo lastet opp</p>

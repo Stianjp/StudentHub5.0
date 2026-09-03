@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
+import { shouldUseDirectImageUrl } from "@/lib/logo-url";
 import { getCompanyAudienceLabel } from "@/lib/student-company-display";
 
 type CompanyOption = {
@@ -63,6 +64,7 @@ export function LikedCompanies({
                       width={48}
                       height={48}
                       className="h-full w-full object-contain"
+                      unoptimized={shouldUseDirectImageUrl(company.logoUrl)}
                     />
                   ) : (
                     <span className="text-[10px] font-black text-[#140249]">

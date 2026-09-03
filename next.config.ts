@@ -24,6 +24,8 @@ const nextConfig: NextConfig = {
     tsconfigPath: isProd ? "tsconfig.build.json" : "tsconfig.json",
   },
   images: {
+    // Marketing photos change rarely; a longer cache avoids repeated Vercel transforms.
+    minimumCacheTTL: 60 * 60 * 24 * 31,
     remotePatterns,
   },
   experimental: {

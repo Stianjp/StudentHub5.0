@@ -9,6 +9,7 @@ import type {
 } from "@/lib/hovedside/approved-companies";
 import { cn } from "@/lib/utils";
 import { CompanyInfoModal } from "@/components/hovedside/company-info-modal";
+import { shouldUseDirectImageUrl } from "@/lib/logo-url";
 
 type Props = {
   companies: ApprovedCompanyPreview[];
@@ -199,6 +200,7 @@ export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
                           fill
                           sizes="calc(100vw - 64px)"
                           className="object-contain p-3"
+                          unoptimized={shouldUseDirectImageUrl(company.logoUrl)}
                         />
                       ) : (
                         <Building2
@@ -399,6 +401,7 @@ export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
                           fill
                           className="object-contain"
                           sizes="(max-width: 640px) 140px, (max-width: 1024px) 180px, 220px"
+                          unoptimized={shouldUseDirectImageUrl(company.logoUrl)}
                         />
                       </div>
                     ) : (
