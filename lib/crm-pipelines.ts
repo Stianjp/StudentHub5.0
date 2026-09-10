@@ -12,10 +12,13 @@ type PipelineRow = TableRow<"crm_pipelines">;
 type StageRow = TableRow<"crm_pipeline_stages">;
 type PositionRow = TableRow<"crm_pipeline_company_positions">;
 type ContactRow = TableRow<"company_contacts">;
+type GalaCompanyRow = TableRow<"crm_gala_dinner_companies">;
+type GalaAttendeeRow = TableRow<"crm_gala_dinner_attendees">;
 
 type ParticipantRow = {
   company_id: string;
   event_id: string;
+  package: TableRow<"event_companies">["package"];
   updated_at: string;
 };
 
@@ -36,6 +39,10 @@ export type CrmPipelineParticipant = {
   lastUpdatedAtIso: string;
   legacyPipelineStage: CrmPipelineStage | "";
   contacts: CrmPipelineContact[];
+  membershipId: string | null;
+  packageTier: TableRow<"event_companies">["package"] | null;
+  dinnerAttendeeCount: number;
+  hasAllergens: boolean;
 };
 
 export type CrmPipelineContact = Pick<
@@ -47,14 +54,25 @@ export type CrmPipelineStageBoard = Pick<StageRow, "id" | "name" | "position"> &
   companies: CrmPipelineParticipant[];
 };
 
-export type CrmPipelineBoard = Pick<PipelineRow, "id" | "name" | "position" | "is_default"> & {
+export type CrmPipelineBoard = Pick<
+  PipelineRow,
+  "id" | "name" | "position" | "is_default" | "kind" | "event_id"
+> & {
   stages: CrmPipelineStageBoard[];
+  totalAttendees: number;
+  availableCompanies: Array<{
+    companyId: string;
+    company: string;
+    packageTier: TableRow<"event_companies">["package"];
+  }>;
 };
 
 export type CrmPipelineConfiguration = {
   pipelines: PipelineRow[];
   stages: StageRow[];
   positions: PositionRow[];
+  galaCompanies: GalaCompanyRow[];
+  galaAttendees: GalaAttendeeRow[];
   participants: Array<{
     key: string;
     companyId: string;
@@ -62,6 +80,7 @@ export type CrmPipelineConfiguration = {
     company: string;
     eventName: string;
     updatedAt: string;
+    packageTier: TableRow<"event_companies">["package"];
     contacts: CrmPipelineContact[];
   }>;
 };
@@ -87,18 +106,30 @@ function crmCardLookupKey(company: string, eventName: string) {
 
 export async function loadCrmPipelineConfiguration(): Promise<CrmPipelineConfiguration> {
   const supabase = createAdminSupabaseClient();
-  const [pipelineResult, stageResult, positionResult, participantResult, companyResult, eventResult, contactResult] =
+  const [
+    pipelineResult,
+    stageResult,
+    positionResult,
+    participantResult,
+    companyResult,
+    eventResult,
+    contactResult,
+    galaCompanyResult,
+    galaAttendeeResult,
+  ] =
     await Promise.all([
       supabase.from("crm_pipelines").select("*").order("position", { ascending: true }),
       supabase.from("crm_pipeline_stages").select("*").order("position", { ascending: true }),
       supabase.from("crm_pipeline_company_positions").select("*"),
-      supabase.from("event_companies").select("company_id, event_id, updated_at"),
+      supabase.from("event_companies").select("company_id, event_id, package, updated_at"),
       supabase.from("companies").select("id, name"),
       supabase.from("events").select("id, name"),
       supabase
         .from("company_contacts")
         .select("id, company_id, contact_type, name, job_title, email, phone")
         .order("contact_type", { ascending: true }),
+      supabase.from("crm_gala_dinner_companies").select("*"),
+      supabase.from("crm_gala_dinner_attendees").select("*"),
     ]);
 
   const error =
@@ -108,7 +139,9 @@ export async function loadCrmPipelineConfiguration(): Promise<CrmPipelineConfigu
     participantResult.error ??
     companyResult.error ??
     eventResult.error ??
-    contactResult.error;
+    contactResult.error ??
+    galaCompanyResult.error ??
+    galaAttendeeResult.error;
   if (error) throw new Error(`Kunne ikke laste CRM-pipelines: ${error.message}`);
 
   const companies = new Map(
@@ -144,6 +177,7 @@ export async function loadCrmPipelineConfiguration(): Promise<CrmPipelineConfigu
         company,
         eventName,
         updatedAt: participant.updated_at,
+        packageTier: participant.package,
         contacts: contactsByCompany.get(participant.company_id) ?? [],
       };
     })
@@ -153,6 +187,8 @@ export async function loadCrmPipelineConfiguration(): Promise<CrmPipelineConfigu
     pipelines: (pipelineResult.data ?? []) as PipelineRow[],
     stages: (stageResult.data ?? []) as StageRow[],
     positions: (positionResult.data ?? []) as PositionRow[],
+    galaCompanies: (galaCompanyResult.data ?? []) as GalaCompanyRow[],
+    galaAttendees: (galaAttendeeResult.data ?? []) as GalaAttendeeRow[],
     participants,
   };
 }
@@ -184,6 +220,10 @@ export function buildCrmPipelineBoards(
       lastUpdatedAtIso: crmCard?.lastUpdatedAtIso || participant.updatedAt,
       legacyPipelineStage: crmCard?.pipelineStage ?? "",
       contacts: participant.contacts,
+      membershipId: null,
+      packageTier: participant.packageTier,
+      dinnerAttendeeCount: 0,
+      hasAllergens: false,
     };
   });
 
@@ -203,6 +243,10 @@ export function buildCrmPipelineBoards(
       lastUpdatedAtIso: card.lastUpdatedAtIso,
       legacyPipelineStage: card.pipelineStage,
       contacts: [],
+      membershipId: null,
+      packageTier: null,
+      dinnerAttendeeCount: 0,
+      hasAllergens: false,
     });
   }
 
@@ -212,6 +256,20 @@ export function buildCrmPipelineBoards(
       position.stage_id,
     ]),
   );
+  const participantsByCompanyEvent = new Map(
+    sourceCompanies
+      .filter((participant) => participant.companyId && participant.eventId)
+      .map((participant) => [
+        `${participant.companyId}::${participant.eventId}`,
+        participant,
+      ]),
+  );
+  const attendeesByMembership = new Map<string, GalaAttendeeRow[]>();
+  for (const attendee of configuration.galaAttendees) {
+    const current = attendeesByMembership.get(attendee.dinner_company_id) ?? [];
+    current.push(attendee);
+    attendeesByMembership.set(attendee.dinner_company_id, current);
+  }
 
   return configuration.pipelines
     .map((pipeline) => {
@@ -223,7 +281,27 @@ export function buildCrmPipelineBoards(
       const companiesByStage = new Map(stages.map((stage) => [stage.id, [] as CrmPipelineParticipant[]]));
       const firstStage = stages[0];
 
-      if (firstStage) {
+      if (firstStage && pipeline.kind === "gala_dinner" && pipeline.event_id) {
+        for (const membership of configuration.galaCompanies) {
+          if (!membership.is_active || membership.pipeline_id !== pipeline.id) continue;
+          const source = participantsByCompanyEvent.get(
+            `${membership.company_id}::${pipeline.event_id}`,
+          );
+          if (!source) continue;
+
+          const attendees = attendeesByMembership.get(membership.id) ?? [];
+          const targetStageId = stageIds.has(membership.stage_id)
+            ? membership.stage_id
+            : firstStage.id;
+          companiesByStage.get(targetStageId)?.push({
+            ...source,
+            key: `gala:${membership.id}`,
+            membershipId: membership.id,
+            dinnerAttendeeCount: attendees.length,
+            hasAllergens: attendees.some((attendee) => Boolean(attendee.allergens?.trim())),
+          });
+        }
+      } else if (firstStage) {
         for (const company of sourceCompanies) {
           const savedStageId = positions.get(`${pipeline.id}::${company.key}`);
           const legacyStageId = pipeline.is_default
@@ -241,6 +319,8 @@ export function buildCrmPipelineBoards(
         name: pipeline.name,
         position: pipeline.position,
         is_default: pipeline.is_default,
+        kind: pipeline.kind,
+        event_id: pipeline.event_id,
         stages: stages.map((stage) => ({
           id: stage.id,
           name: stage.name,
@@ -249,6 +329,29 @@ export function buildCrmPipelineBoards(
             a.company.localeCompare(b.company, "nb"),
           ),
         })),
+        totalAttendees: Array.from(companiesByStage.values())
+          .flat()
+          .reduce((total, company) => total + company.dinnerAttendeeCount, 0),
+        availableCompanies:
+          pipeline.kind === "gala_dinner" && pipeline.event_id
+            ? configuration.participants
+                .filter((participant) => participant.eventId === pipeline.event_id)
+                .filter(
+                  (participant) =>
+                    !configuration.galaCompanies.some(
+                      (membership) =>
+                        membership.pipeline_id === pipeline.id &&
+                        membership.company_id === participant.companyId &&
+                        membership.is_active,
+                    ),
+                )
+                .map((participant) => ({
+                  companyId: participant.companyId,
+                  company: participant.company,
+                  packageTier: participant.packageTier,
+                }))
+                .sort((a, b) => a.company.localeCompare(b.company, "nb"))
+            : [],
       };
     })
     .sort((a, b) => a.position - b.position);
@@ -352,6 +455,13 @@ export async function deleteCrmPipelineStage(pipelineId: string, stageId: string
     .eq("stage_id", stageId);
   if (moveError) throw new Error(`Kunne ikke flytte bedriftene: ${moveError.message}`);
 
+  const { error: galaMoveError } = await supabase
+    .from("crm_gala_dinner_companies")
+    .update({ stage_id: fallbackStage.id })
+    .eq("pipeline_id", pipelineId)
+    .eq("stage_id", stageId);
+  if (galaMoveError) throw new Error(`Kunne ikke flytte middagsbedriftene: ${galaMoveError.message}`);
+
   const { error } = await supabase.from("crm_pipeline_stages").delete().eq("id", stageId);
   if (error) throw new Error(`Kunne ikke slette kolonnen: ${error.message}`);
 }
@@ -368,7 +478,11 @@ export async function moveCrmPipelineCompany(input: {
   const supabase = createAdminSupabaseClient();
   const [{ data: pipeline, error: pipelineError }, { data: stage, error: stageError }] =
     await Promise.all([
-      supabase.from("crm_pipelines").select("id, is_default").eq("id", input.pipelineId).single(),
+      supabase
+        .from("crm_pipelines")
+        .select("id, is_default, kind")
+        .eq("id", input.pipelineId)
+        .single(),
       supabase
         .from("crm_pipeline_stages")
         .select("id, name, pipeline_id")
@@ -378,6 +492,20 @@ export async function moveCrmPipelineCompany(input: {
     ]);
   if (pipelineError || !pipeline) throw new Error("Fant ikke pipelinen.");
   if (stageError || !stage) throw new Error("Fant ikke pipelinekolonnen.");
+
+  if (pipeline.kind === "gala_dinner") {
+    if (!input.companyId) throw new Error("Bedriften mangler ID.");
+    const { data: membership, error: membershipError } = await supabase
+      .from("crm_gala_dinner_companies")
+      .update({ stage_id: input.stageId })
+      .eq("pipeline_id", input.pipelineId)
+      .eq("company_id", input.companyId)
+      .eq("is_active", true)
+      .select("id")
+      .maybeSingle();
+    if (membershipError || !membership) throw new Error("Fant ikke middagsbedriften i pipelinen.");
+    return;
+  }
 
   const { error } = await supabase.from("crm_pipeline_company_positions").upsert(
     {

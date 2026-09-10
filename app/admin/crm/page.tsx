@@ -206,6 +206,7 @@ export default async function AdminCrmPage({ searchParams }: PageProps) {
   const sequenceStep = firstValue(params.sequenceStep).trim();
   const deletedCount = Number.parseInt(firstValue(params.deleted), 10);
   const actionError = firstValue(params.error).trim();
+  const selectedPipelineId = firstValue(params.pipeline).trim();
 
   let datasetError = "";
   let dataset: CrmDataset | null = null;
@@ -421,7 +422,10 @@ export default async function AdminCrmPage({ searchParams }: PageProps) {
           <p className="mt-2">{pipelineError}</p>
         </Card>
       ) : (
-        <CrmPipelineManager pipelines={pipelineBoards} />
+        <CrmPipelineManager
+          pipelines={pipelineBoards}
+          initialPipelineId={selectedPipelineId}
+        />
       )}
 
       <Card className="flex flex-col gap-4">

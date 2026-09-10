@@ -19,6 +19,15 @@ import {
   renameCrmPipeline,
   renameCrmPipelineStage,
 } from "@/lib/crm-pipelines";
+import {
+  addGalaDinnerCompany,
+  createGalaDinnerAttendee,
+  deleteGalaDinnerAttendee,
+  removeGalaDinnerCompany,
+  updateGalaDinnerAttendee,
+  validateGalaDinnerAttendee,
+  type GalaDinnerActionState,
+} from "@/lib/gala-dinner";
 
 function isNextRedirectError(error: unknown) {
   const digest = (error as { digest?: string })?.digest;
@@ -216,4 +225,94 @@ export async function moveCustomCrmPipelineCompany(formData: FormData) {
     eventName,
   });
   revalidatePath("/admin/crm");
+}
+
+export async function addGalaDinnerCompanyAction(formData: FormData) {
+  await requireRole("admin");
+  const pipelineId = requiredText(formData, "pipelineId", "Pipeline-ID");
+  const companyId = requiredText(formData, "companyId", "Bedrift-ID");
+
+  await addGalaDinnerCompany(pipelineId, companyId);
+  revalidatePath("/admin/crm");
+}
+
+export async function removeGalaDinnerCompanyAction(formData: FormData) {
+  await requireRole("admin");
+  const pipelineId = requiredText(formData, "pipelineId", "Pipeline-ID");
+  const membershipId = requiredText(formData, "membershipId", "Medlemskap-ID");
+
+  await removeGalaDinnerCompany(pipelineId, membershipId);
+  revalidatePath("/admin/crm");
+  revalidatePath(`/admin/crm/gallamiddag/${membershipId}`);
+}
+
+function attendeeInput(formData: FormData) {
+  return validateGalaDinnerAttendee({
+    fullName: normalizeTextValue(formData.get("fullName")),
+    allergens: normalizeTextValue(formData.get("allergens")),
+  });
+}
+
+function attendeeError(error: unknown): GalaDinnerActionState {
+  return {
+    status: "error",
+    message: error instanceof Error ? error.message : "Kunne ikke lagre deltakeren.",
+  };
+}
+
+export async function createGalaDinnerAttendeeAction(
+  _previousState: GalaDinnerActionState,
+  formData: FormData,
+): Promise<GalaDinnerActionState> {
+  await requireRole("admin");
+  const membershipId = normalizeTextValue(formData.get("membershipId"));
+  if (!membershipId) return { status: "error", message: "Medlemskap-ID mangler." };
+  const parsed = attendeeInput(formData);
+  if (!parsed.data) {
+    return { status: "error", message: "Kontroller feltene under.", fieldErrors: parsed.errors };
+  }
+
+  try {
+    await createGalaDinnerAttendee(membershipId, parsed.data);
+    revalidatePath("/admin/crm");
+    revalidatePath(`/admin/crm/gallamiddag/${membershipId}`);
+    return { status: "success", message: "Deltakeren ble lagt til." };
+  } catch (error) {
+    return attendeeError(error);
+  }
+}
+
+export async function updateGalaDinnerAttendeeAction(
+  _previousState: GalaDinnerActionState,
+  formData: FormData,
+): Promise<GalaDinnerActionState> {
+  await requireRole("admin");
+  const membershipId = normalizeTextValue(formData.get("membershipId"));
+  const attendeeId = normalizeTextValue(formData.get("attendeeId"));
+  if (!membershipId || !attendeeId) {
+    return { status: "error", message: "Deltaker-ID eller medlemskap-ID mangler." };
+  }
+  const parsed = attendeeInput(formData);
+  if (!parsed.data) {
+    return { status: "error", message: "Kontroller feltene under.", fieldErrors: parsed.errors };
+  }
+
+  try {
+    await updateGalaDinnerAttendee(membershipId, attendeeId, parsed.data);
+    revalidatePath("/admin/crm");
+    revalidatePath(`/admin/crm/gallamiddag/${membershipId}`);
+    return { status: "success", message: "Deltakeren ble oppdatert." };
+  } catch (error) {
+    return attendeeError(error);
+  }
+}
+
+export async function deleteGalaDinnerAttendeeAction(formData: FormData) {
+  await requireRole("admin");
+  const membershipId = requiredText(formData, "membershipId", "Medlemskap-ID");
+  const attendeeId = requiredText(formData, "attendeeId", "Deltaker-ID");
+
+  await deleteGalaDinnerAttendee(membershipId, attendeeId);
+  revalidatePath("/admin/crm");
+  revalidatePath(`/admin/crm/gallamiddag/${membershipId}`);
 }

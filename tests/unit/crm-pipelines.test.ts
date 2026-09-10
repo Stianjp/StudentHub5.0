@@ -32,6 +32,8 @@ function makeConfiguration(): CrmPipelineConfiguration {
         name: "Betalings- og kontraktstatus",
         position: 0,
         is_default: true,
+        kind: "generic",
+        event_id: null,
         created_at: now,
         updated_at: now,
       },
@@ -40,6 +42,8 @@ function makeConfiguration(): CrmPipelineConfiguration {
         name: "Mailfrister - Bord/stoler",
         position: 1,
         is_default: false,
+        kind: "generic",
+        event_id: null,
         created_at: now,
         updated_at: now,
       },
@@ -51,6 +55,8 @@ function makeConfiguration(): CrmPipelineConfiguration {
       { id: "sent", pipeline_id: "mail", name: "Sendt mail", position: 1, created_at: now, updated_at: now },
     ],
     positions: [],
+    galaCompanies: [],
+    galaAttendees: [],
     participants: [
       {
         key: "id:company-1::event-1",
@@ -59,6 +65,8 @@ function makeConfiguration(): CrmPipelineConfiguration {
         company: "Acme AS",
         eventName: "Student Connect 2026",
         updatedAt: now,
+        packageTier: "gold",
+        contacts: [],
       },
     ],
   };
@@ -101,5 +109,88 @@ describe("buildCrmPipelineBoards", () => {
 
     expect(payment?.stages.find((stage) => stage.id === "contract")?.companies).toHaveLength(1);
     expect(mail?.stages.find((stage) => stage.id === "sent")?.companies).toHaveLength(1);
+  });
+
+  it("viser bare aktive gallamiddagmedlemskap i lagret kolonne", () => {
+    const configuration = makeConfiguration();
+    configuration.pipelines.push({
+      id: "gala",
+      name: "Gallamiddag - Student Connect 2026",
+      position: 2,
+      is_default: false,
+      kind: "gala_dinner",
+      event_id: "event-1",
+      created_at: now,
+      updated_at: now,
+    });
+    configuration.stages.push(
+      { id: "not-registered", pipeline_id: "gala", name: "Ikke påmeldt", position: 0, created_at: now, updated_at: now },
+      { id: "registered-gala", pipeline_id: "gala", name: "Påmeldt", position: 1, created_at: now, updated_at: now },
+    );
+    configuration.participants.push({
+      key: "id:company-2::event-1",
+      companyId: "company-2",
+      eventId: "event-1",
+      company: "Beta AS",
+      eventName: "Student Connect 2026",
+      updatedAt: now,
+      packageTier: "silver",
+      contacts: [],
+    });
+    configuration.galaCompanies.push(
+      {
+        id: "membership-1",
+        pipeline_id: "gala",
+        company_id: "company-1",
+        stage_id: "registered-gala",
+        is_active: true,
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        id: "membership-2",
+        pipeline_id: "gala",
+        company_id: "company-2",
+        stage_id: "not-registered",
+        is_active: false,
+        created_at: now,
+        updated_at: now,
+      },
+    );
+    configuration.galaAttendees.push(
+      {
+        id: "attendee-1",
+        dinner_company_id: "membership-1",
+        full_name: "Ada Nordmann",
+        allergens: null,
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        id: "attendee-2",
+        dinner_company_id: "membership-1",
+        full_name: "Ola Nordmann",
+        allergens: "Peanøtter",
+        created_at: now,
+        updated_at: now,
+      },
+    );
+
+    const gala = buildCrmPipelineBoards(configuration, [makeCard()]).find(
+      (pipeline) => pipeline.id === "gala",
+    );
+    const company = gala?.stages.find((stage) => stage.id === "registered-gala")?.companies[0];
+
+    expect(gala?.stages.flatMap((stage) => stage.companies)).toHaveLength(1);
+    expect(company).toMatchObject({
+      company: "Acme AS",
+      membershipId: "membership-1",
+      dinnerAttendeeCount: 2,
+      hasAllergens: true,
+    });
+    expect(gala?.totalAttendees).toBe(2);
+    expect(gala?.availableCompanies).toEqual([
+      { companyId: "company-2", company: "Beta AS", packageTier: "silver" },
+    ]);
   });
 });

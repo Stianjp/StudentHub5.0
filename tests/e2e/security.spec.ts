@@ -15,6 +15,10 @@ const PROTECTED_PAGES = [
   { path: "/admin/students", label: "Admin studenter" },
   { path: "/admin/leads", label: "Admin leads" },
   { path: "/admin/crm", label: "Admin CRM" },
+  {
+    path: "/admin/crm/gallamiddag/00000000-0000-0000-0000-000000000000",
+    label: "Admin gallamiddagdetaljer",
+  },
   { path: "/admin/email", label: "Admin e-post" },
   { path: "/company", label: "Bedriftsportal" },
   { path: "/student/dashboard", label: "Studentdashbord" },

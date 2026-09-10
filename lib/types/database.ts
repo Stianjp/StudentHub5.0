@@ -1614,6 +1614,8 @@ export type Database = {
           name: string;
           position: number;
           is_default: boolean;
+          kind: "generic" | "gala_dinner";
+          event_id: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -1622,6 +1624,8 @@ export type Database = {
           name: string;
           position?: number;
           is_default?: boolean;
+          kind?: "generic" | "gala_dinner";
+          event_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -1630,6 +1634,8 @@ export type Database = {
           name?: string;
           position?: number;
           is_default?: boolean;
+          kind?: "generic" | "gala_dinner";
+          event_id?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -1696,6 +1702,63 @@ export type Database = {
           event_id?: string | null;
           company_name?: string;
           event_name?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      crm_gala_dinner_companies: {
+        Row: {
+          id: string;
+          pipeline_id: string;
+          company_id: string;
+          stage_id: string;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          pipeline_id: string;
+          company_id: string;
+          stage_id: string;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          pipeline_id?: string;
+          company_id?: string;
+          stage_id?: string;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      crm_gala_dinner_attendees: {
+        Row: {
+          id: string;
+          dinner_company_id: string;
+          full_name: string;
+          allergens: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          dinner_company_id: string;
+          full_name: string;
+          allergens?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          dinner_company_id?: string;
+          full_name?: string;
+          allergens?: string | null;
           created_at?: string;
           updated_at?: string;
         };
