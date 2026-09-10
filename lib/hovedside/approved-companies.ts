@@ -124,6 +124,7 @@ async function fetchApprovedCompanies(
     )
     .eq("campaign_id", campaign.id)
     .eq("status", "approved")
+    .not("company_id", "is", null)
     .order("approved_at", { ascending: true });
 
   if (!applications || applications.length === 0) return [];

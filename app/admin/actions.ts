@@ -297,6 +297,8 @@ export async function deleteCompanyAction(formData: FormData) {
     revalidatePath("/admin/company-packages");
     revalidatePath("/admin/email/contact-overview");
     revalidatePath("/admin/crm");
+    revalidateTag("approved-companies", "max");
+    revalidateTag("event-registration-public-campaign-detail", "max");
     redirect("/admin/companies/overview?deleted=1");
   } catch (error) {
     if (isNextRedirectError(error)) throw error;

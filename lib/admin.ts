@@ -872,6 +872,12 @@ export async function deleteCompany(companyId: string) {
     throw new Error("Fant ikke bedriften som skulle slettes.");
   }
 
+  const { data: registrationApplications, error: registrationApplicationsError } = await supabase
+    .from("event_registration_applications")
+    .select("logo_path")
+    .eq("company_id", companyId);
+  if (registrationApplicationsError) throw registrationApplicationsError;
+
   const { data: affectedStudents, error: studentsError } = await supabase
     .from("students")
     .select("id, liked_company_ids")
@@ -896,6 +902,19 @@ export async function deleteCompany(companyId: string) {
 
   const { error: deleteError } = await supabase.from("companies").delete().eq("id", companyId);
   if (deleteError) throw deleteError;
+
+  const storagePaths = [
+    company.logo_path,
+    ...((registrationApplications ?? []) as Array<Pick<RegistrationApplication, "logo_path">>).map(
+      (application) => application.logo_path,
+    ),
+  ].filter((path): path is string => Boolean(path));
+  if (storagePaths.length > 0) {
+    await supabase.storage
+      .from("event-registration-assets")
+      .remove([...new Set(storagePaths)])
+      .catch(() => undefined);
+  }
 
   return company as Company;
 }
