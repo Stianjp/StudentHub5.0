@@ -19,6 +19,8 @@ export const metadata: Metadata = {
     "Are you a student looking for a job or thesis? Join Oslo Student Hub to connect with top companies.",
 };
 
+export const dynamic = "force-dynamic";
+
 const STUDENT_PORTAL_URL = "https://student.oslostudenthub.no/";
 const STUDENT_EVENTS_URL = "https://student.oslostudenthub.no/student/events";
 

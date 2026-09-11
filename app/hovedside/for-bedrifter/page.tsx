@@ -40,6 +40,8 @@ export const metadata: Metadata = {
     "Meet technology students in Oslo. Partner with Oslo Student Hub for career events and recruitment.",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function ForBedrifterPage() {
   const [events, partnerLogos] = await Promise.all([
     listWebsiteEvents(),

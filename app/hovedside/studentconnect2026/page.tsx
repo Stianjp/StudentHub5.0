@@ -29,6 +29,8 @@ export const metadata: Metadata = {
     "Biggest Student Conference in Oslo. Bridging students and industry!",
 };
 
+export const dynamic = "force-dynamic";
+
 export default async function StudentConnect2026Page() {
   const [companies, registrationDetail] = await Promise.all([
     getApprovedCompaniesForCampaign("student-connect-2026"),
