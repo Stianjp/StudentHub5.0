@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { SectionHeader } from "@/components/ui/section-header";
 import { listAllEvents } from "@/lib/events";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 export default async function CheckinHomePage() {
   const typedEvents = await listAllEvents();
