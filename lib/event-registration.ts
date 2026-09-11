@@ -387,7 +387,7 @@ const loadPublicRegistrationCampaigns = unstable_cache(fetchPublicRegistrationCa
 
 const loadPublicRegistrationCampaignDetail = unstable_cache(
   fetchPublicRegistrationCampaignDetail,
-  ["event-registration-public-campaign-detail"],
+  ["event-registration-public-campaign-detail-v2"],
   { revalidate: 300, tags: ["event-registration-public-campaign-detail"] },
 );
 
