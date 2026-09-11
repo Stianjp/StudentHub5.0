@@ -98,7 +98,7 @@ export default async function AdminEventRegistrationPage({ params, searchParams 
           </label>
           <label className="text-sm font-semibold text-primary md:col-span-2">
             Floorplan image path
-            <Input name="floorplanImagePath" defaultValue="/StudentConnect-site/Floorplan_With_Logos.webp" />
+            <Input name="floorplanImagePath" defaultValue="/StudentConnect-site/Floorplan%20OSH.svg" />
           </label>
           <label className="text-sm font-semibold text-primary">
             E-postgruppe-prefiks
