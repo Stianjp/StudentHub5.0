@@ -273,8 +273,8 @@ export default async function StudentConnect2026Page() {
         </h2>
         <p className="mx-auto mb-8 max-w-3xl text-center text-sm leading-relaxed text-mist/68">
           Explore the event floor plan and see which companies have already
-          reserved their stand. Booked companies appear directly on the map
-          with their logo, and tapping or hovering a logo shows a short
+          reserved their stand. Company logos are included in the floor plan,
+          and tapping or hovering a booked stand shows a short
           company summary.
         </p>
         {registrationDetail ? (

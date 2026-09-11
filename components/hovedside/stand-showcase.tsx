@@ -6,7 +6,6 @@ import type { PublicRegistrationStand } from "@/lib/event-registration";
 import type { ApprovedCompanyPackageTier } from "@/lib/hovedside/approved-companies";
 import { cn } from "@/lib/utils";
 import { CompanyInfoModal } from "@/components/hovedside/company-info-modal";
-import { shouldUseDirectImageUrl } from "@/lib/logo-url";
 
 type Props = {
   floorplanImagePath: string;
@@ -46,15 +45,6 @@ function getPackageTier(stand: PublicRegistrationStand): ApprovedCompanyPackageT
 
 function getStandLabel(stand: PublicRegistrationStand) {
   return stand.display_label ?? stand.stand_code;
-}
-
-function getCompanyInitials(value: string) {
-  return value
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("");
 }
 
 function getTooltipPosition(stand: PublicRegistrationStand) {
@@ -142,7 +132,7 @@ export function StandShowcase({
             Floor plan for Student Connect 2026
           </h3>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-mist/70">
-            Tap or hover over a booked logo to see which company has reserved
+            Tap or hover over a booked stand to see which company has reserved
             the stand and read a short company summary.
           </p>
         </div>
@@ -152,102 +142,85 @@ export function StandShowcase({
       </div>
 
       <div className="rounded-[24px] bg-white p-1.5 shadow-[0_24px_80px_rgba(20,2,73,0.18)] sm:rounded-[28px] sm:p-3 md:p-4">
-        <div className="-mx-1 overflow-x-auto overscroll-x-contain px-1 sm:mx-0 sm:px-0 md:overflow-visible">
+        <div className="mx-auto max-w-[690px]">
           <div
-            className="relative min-w-[420px] overflow-hidden rounded-[22px] bg-[#f6f0ff] sm:min-w-0 sm:rounded-[24px]"
+            className="relative w-full overflow-hidden rounded-[22px] bg-[#f6f0ff] sm:rounded-[24px]"
             style={{ aspectRatio: `${floorplanWidth} / ${floorplanHeight}` }}
           >
-          <Image
-            src={floorplanImagePath}
-            alt={floorplanAlt}
-            fill
-            sizes="860px"
-            className="object-contain"
-            unoptimized
-          />
+            <Image
+              src={floorplanImagePath}
+              alt={floorplanAlt}
+              fill
+              sizes="(max-width: 767px) calc(100vw - 56px), 690px"
+              className="object-contain"
+              unoptimized
+            />
 
-          {visibleStands.map((stand) => {
-            const packageTier = getPackageTier(stand);
-            const isBooked = Boolean(
-              stand.assigned_application_id && stand.bookingPreview,
-            );
+            {visibleStands.map((stand) => {
+              const packageTier = getPackageTier(stand);
+              const isBooked = Boolean(
+                stand.assigned_application_id && stand.bookingPreview,
+              );
+              const StandElement = isBooked ? "button" : "div";
 
-            return (
-              <div
-                key={stand.id}
-                role={isBooked ? "button" : undefined}
-                tabIndex={isBooked ? 0 : undefined}
-                aria-label={getStandLabel(stand)}
-                onClick={() => {
-                  if (isBooked) setSelectedStandId(stand.id);
-                }}
-                onKeyDown={(event) => {
-                  if (!isBooked) return;
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    setSelectedStandId(stand.id);
+              return (
+                <StandElement
+                  key={stand.id}
+                  type={isBooked ? "button" : undefined}
+                  aria-label={
+                    isBooked && stand.bookingPreview
+                      ? `View ${stand.bookingPreview.companyName} at ${getStandLabel(stand)}`
+                      : undefined
                   }
-                }}
-                onMouseEnter={() => {
-                  if (isBooked) setActiveStandId(stand.id);
-                }}
-                onMouseLeave={() => {
-                  if (isBooked) setActiveStandId((current) =>
-                    current === stand.id ? null : current,
-                  );
-                }}
-                onFocus={() => {
-                  if (isBooked) setActiveStandId(stand.id);
-                }}
-                onBlur={() => {
-                  if (isBooked) setActiveStandId((current) =>
-                    current === stand.id ? null : current,
-                  );
-                }}
-                style={{
-                  left: `${stand.x}%`,
-                  top: `${stand.y}%`,
-                  width: `${stand.width}%`,
-                  height: `${stand.height}%`,
-                }}
-                className={cn(
-                  "absolute overflow-hidden transition-[transform,box-shadow] duration-150",
-                  isBooked
-                    ? cn(
-                        "z-20 cursor-pointer rounded-[7px] border-2 bg-white p-[2px] outline-none md:block",
-                        BOOKED_STAND_STYLES[packageTier],
-                        activeStandId === stand.id
-                          ? "translate-y-[-1px]"
-                          : undefined,
-                      )
-                    : cn(
-                        "z-10 flex items-center justify-center rounded-[6px] border text-center text-[7px] font-bold leading-none tracking-tight md:text-[8px]",
-                        AVAILABLE_STAND_STYLES[packageTier],
-                      ),
-                )}
-              >
-                {isBooked && stand.bookingPreview ? (
-                  <div className="relative flex h-full w-full items-center justify-center rounded-[5px] bg-white px-1">
-                    {stand.bookingPreview.logoUrl ? (
-                      <Image
-                        src={stand.bookingPreview.logoUrl}
-                        alt={`Logo for ${stand.bookingPreview.companyName}`}
-                        fill
-                        className="object-contain p-1"
-                        unoptimized={shouldUseDirectImageUrl(stand.bookingPreview.logoUrl)}
-                      />
-                    ) : (
-                      <span className="text-[7px] font-bold uppercase tracking-tight text-primary md:text-[8px]">
-                        {getCompanyInitials(stand.bookingPreview.companyName)}
-                      </span>
-                    )}
-                  </div>
-                ) : (
-                  <span className="block px-0.5">{getStandLabel(stand)}</span>
-                )}
-              </div>
-            );
-          })}
+                  onClick={
+                    isBooked ? () => setSelectedStandId(stand.id) : undefined
+                  }
+                  onMouseEnter={() => {
+                    if (isBooked) setActiveStandId(stand.id);
+                  }}
+                  onMouseLeave={() => {
+                    if (isBooked) setActiveStandId((current) =>
+                      current === stand.id ? null : current,
+                    );
+                  }}
+                  onFocus={() => {
+                    if (isBooked) setActiveStandId(stand.id);
+                  }}
+                  onBlur={() => {
+                    if (isBooked) setActiveStandId((current) =>
+                      current === stand.id ? null : current,
+                    );
+                  }}
+                  style={{
+                    left: `${stand.x}%`,
+                    top: `${stand.y}%`,
+                    width: `${stand.width}%`,
+                    height: `${stand.height}%`,
+                  }}
+                  className={cn(
+                    "absolute transition-[border-color,box-shadow,transform] duration-150 motion-reduce:transition-none motion-reduce:transform-none",
+                    isBooked
+                      ? cn(
+                          "z-20 touch-manipulation cursor-pointer rounded-[7px] border-2 border-transparent bg-transparent outline-none focus-visible:ring-2 focus-visible:ring-[#fe6f3f] focus-visible:ring-offset-1",
+                          activeStandId === stand.id
+                            ? cn(
+                                "translate-y-[-1px]",
+                                BOOKED_STAND_STYLES[packageTier],
+                              )
+                            : undefined,
+                        )
+                      : cn(
+                          "z-10 flex items-center justify-center rounded-[6px] border text-center text-[7px] font-bold leading-none tracking-tight md:text-[8px]",
+                          AVAILABLE_STAND_STYLES[packageTier],
+                        ),
+                  )}
+                >
+                  {!isBooked ? (
+                    <span className="block px-0.5">{getStandLabel(stand)}</span>
+                  ) : null}
+                </StandElement>
+              );
+            })}
 
             {activeStand?.bookingPreview ? (
               <div

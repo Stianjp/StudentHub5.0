@@ -69,15 +69,6 @@ function standStateClass(stand: StandMapStand, isSelected: boolean) {
     : "border-primary/40 bg-[#c5f1bb]/85 text-primary";
 }
 
-function getCompanyInitials(value: string) {
-  return value
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("");
-}
-
 export function StandMap({
   floorplanImagePath,
   floorplanAlt,
@@ -148,8 +139,8 @@ export function StandMap({
                   ? `Booked stand ${stand.display_label ?? stand.stand_code} by ${stand.bookingPreview.companyName}`
                   : stand.display_label ?? stand.stand_code
               }
-              aria-pressed={isSelected}
-              aria-disabled={unavailable}
+              aria-pressed={!unavailable ? isSelected : undefined}
+              aria-disabled={unavailable && !isBooked ? true : undefined}
               data-testid={`stand-map-stand-${stand.id}`}
               style={{
                 left: `${stand.x}%`,
@@ -158,12 +149,16 @@ export function StandMap({
                 height: `${stand.height}%`,
               }}
               className={cn(
-                "absolute overflow-hidden transition duration-150",
+                "absolute touch-manipulation transition-[border-color,box-shadow,filter] duration-150 motion-reduce:transition-none",
                 isBooked
                   ? cn(
-                      "z-20 rounded-[6px] border-2 bg-white p-[2px] shadow-sm",
-                      BOOKED_STAND_STYLES[stand.package_tier],
-                      activeBookedStandId === stand.id ? "ring-2 ring-[#FE9A70]" : undefined,
+                      "z-20 cursor-pointer rounded-[6px] border-2 border-transparent bg-transparent",
+                      activeBookedStandId === stand.id
+                        ? cn(
+                            "ring-2 ring-[#FE9A70] ring-offset-1",
+                            BOOKED_STAND_STYLES[stand.package_tier],
+                          )
+                        : undefined,
                     )
                   : cn(
                       "flex items-center justify-center rounded-[4px] border px-0.5 text-center text-[8px] font-bold leading-none tracking-tight md:text-[9px]",
@@ -181,28 +176,9 @@ export function StandMap({
                   className="absolute right-0.5 top-0.5 h-2.5 w-2.5 rounded-full bg-[#FE9A70] ring-1 ring-white"
                 />
               ) : null}
-              {isBooked && stand.bookingPreview ? (
-                <div className="relative flex h-full w-full items-center justify-center rounded-[4px] bg-white px-0.5">
-                  {stand.bookingPreview.logoUrl ? (
-                    <Image
-                      src={stand.bookingPreview.logoUrl}
-                      alt={`Logo for ${stand.bookingPreview.companyName}`}
-                      fill
-                      sizes="64px"
-                      className="object-contain p-1"
-                      unoptimized={shouldUseDirectImageUrl(
-                        stand.bookingPreview.logoUrl,
-                      )}
-                    />
-                  ) : (
-                    <span className="block truncate text-[7px] font-bold uppercase tracking-tight text-primary md:text-[8px]">
-                      {getCompanyInitials(stand.bookingPreview.companyName)}
-                    </span>
-                  )}
-                </div>
-              ) : (
+              {!isBooked ? (
                 <span className="block truncate">{stand.display_label ?? stand.stand_code}</span>
-              )}
+              ) : null}
             </button>
           );
         })}
