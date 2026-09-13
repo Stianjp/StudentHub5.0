@@ -69,12 +69,17 @@ function normalizeOrgNumber(value: string) {
   return value.replace(/\s+/g, "");
 }
 
-function normalizePackageTier(
-  value: RegistrationPackage["mapped_package"] | null | undefined,
+export function resolveApprovedCompanyPackageTier(
+  ...values: unknown[]
 ): ApprovedCompanyPackageTier {
-  if (value === "platinum") return "platinum";
-  if (value === "gold") return "gold";
-  if (value === "silver") return "silver";
+  const value = values
+    .filter((candidate): candidate is string => typeof candidate === "string")
+    .join(" ")
+    .toLocaleLowerCase("nb");
+
+  if (value.includes("platinum")) return "platinum";
+  if (value.includes("gold") || value.includes("gull")) return "gold";
+  if (value.includes("silver") || value.includes("sølv")) return "silver";
   return "standard";
 }
 
@@ -93,12 +98,13 @@ async function fetchApprovedCompanies(
   const { createAdminSupabaseClient } = await import("@/lib/supabase/admin");
   const supabase = createAdminSupabaseClient();
 
-  const { data: campaign } = await supabase
+  const { data: campaign, error: campaignError } = await supabase
     .from("event_registration_campaigns")
     .select("id")
     .eq("slug", campaignSlug)
     .single();
 
+  if (campaignError) throw campaignError;
   if (!campaign) return [];
 
   type AppRow = Pick<
@@ -117,7 +123,7 @@ async function fetchApprovedCompanies(
     | "requested_stand_id"
   >;
 
-  const { data: applications } = await supabase
+  const { data: applications, error: applicationsError } = await supabase
     .from("event_registration_applications")
     .select(
       "id, company_id, company_name, org_number, logo_path, candidate_level, candidate_fields, candidate_fields_other, approved_package_id, requested_package_id, approved_stand_id, requested_stand_id",
@@ -127,6 +133,7 @@ async function fetchApprovedCompanies(
     .not("company_id", "is", null)
     .order("approved_at", { ascending: true });
 
+  if (applicationsError) throw applicationsError;
   if (!applications || applications.length === 0) return [];
 
   const typedApplications = applications as AppRow[];
@@ -157,10 +164,10 @@ async function fetchApprovedCompanies(
   ];
 
   const [
-    { data: packages },
-    { data: stands },
-    { data: companiesById },
-    { data: companiesByOrgNumber },
+    packagesResult,
+    standsResult,
+    companiesByIdResult,
+    companiesByOrgNumberResult,
   ] = await Promise.all([
     packageIds.length > 0
       ? supabase
@@ -172,6 +179,7 @@ async function fetchApprovedCompanies(
             RegistrationPackage,
             "id" | "mapped_package" | "public_name"
           >[],
+          error: null,
         }),
     standIds.length > 0
       ? supabase
@@ -183,6 +191,7 @@ async function fetchApprovedCompanies(
             RegistrationStand,
             "id" | "display_label" | "stand_code"
           >[],
+          error: null,
         }),
     companyIds.length > 0
       ? supabase
@@ -190,7 +199,11 @@ async function fetchApprovedCompanies(
           .select("id, name, org_number, representation_text")
           .in("id", companyIds)
       : Promise.resolve({
-          data: [] as Pick<Company, "id" | "name" | "org_number" | "representation_text">[],
+          data: [] as Pick<
+            Company,
+            "id" | "name" | "org_number" | "representation_text"
+          >[],
+          error: null,
         }),
     orgNumbers.length > 0
       ? supabase
@@ -198,9 +211,26 @@ async function fetchApprovedCompanies(
           .select("id, name, org_number, representation_text")
           .in("org_number", orgNumbers)
       : Promise.resolve({
-          data: [] as Pick<Company, "id" | "name" | "org_number" | "representation_text">[],
+          data: [] as Pick<
+            Company,
+            "id" | "name" | "org_number" | "representation_text"
+          >[],
+          error: null,
         }),
   ]);
+
+  const relatedQueryError = [
+    packagesResult.error,
+    standsResult.error,
+    companiesByIdResult.error,
+    companiesByOrgNumberResult.error,
+  ].find(Boolean);
+  if (relatedQueryError) throw relatedQueryError;
+
+  const packages = packagesResult.data;
+  const stands = standsResult.data;
+  const companiesById = companiesByIdResult.data;
+  const companiesByOrgNumber = companiesByOrgNumberResult.data;
 
   const packageMap = new Map(
     (
@@ -288,7 +318,12 @@ async function fetchApprovedCompanies(
           ? standMap.get(app.requested_stand_id)
           : null) ??
         null;
-      const packageTier = normalizePackageTier(pkg?.mapped_package);
+      const packageTier = resolveApprovedCompanyPackageTier(
+        pkg?.mapped_package,
+        pkg?.public_name,
+        stand?.display_label,
+        stand?.stand_code,
+      );
 
       return {
         id: app.id,
@@ -330,6 +365,6 @@ async function fetchApprovedCompanies(
 
 export const getApprovedCompaniesForCampaign = unstable_cache(
   fetchApprovedCompanies,
-  ["approved-companies"],
+  ["approved-companies-v2"],
   { revalidate: 300, tags: ["approved-companies"] },
 );

@@ -39,7 +39,7 @@ const TIER_META: Record<
   platinum: {
     label: "Platinum",
     sectionClassName: "border-[#f6a6bd]/30 bg-[#f6a6bd]/10",
-    gridClassName: "grid gap-5 md:grid-cols-2 xl:grid-cols-3",
+    gridClassName: "grid gap-5 md:grid-cols-2",
     logoFrameClassName: "rounded-[28px] p-6",
     logoBoxClassName: "h-28",
     chipClassName: "border-[#f6a6bd]/35 bg-[#f6a6bd]/16 text-[#ffe6ef]",
@@ -75,10 +75,6 @@ function groupCompanies(companies: ApprovedCompanyPreview[]) {
     tier,
     companies: companies.filter((company) => company.packageTier === tier),
   })).filter((group) => group.companies.length > 0);
-}
-
-function shouldDisplayCompanyLogo(tier: ApprovedCompanyPackageTier) {
-  return tier === "platinum" || tier === "gold";
 }
 
 function collectCandidateFields(companies: ApprovedCompanyPreview[]) {
@@ -164,10 +160,7 @@ export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
       <>
         <div className="space-y-4">
           <div className="rounded-[28px] border border-white/12 bg-white/8 p-5 shadow-[0_16px_42px_rgba(20,2,73,0.18)]">
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-secondary/85">
-              Attending companies
-            </p>
-            <h3 className="mt-2 text-xl font-bold text-surface">
+            <h3 className="text-xl font-bold text-surface">
               Student Connect 2026 partners
             </h3>
             <p className="mt-2 text-sm leading-relaxed text-mist/75">
@@ -178,9 +171,6 @@ export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
           <div className="grid gap-3 sm:grid-cols-2">
             {mobileCompanies.map((company) => {
               const meta = TIER_META[company.packageTier];
-              const displaysLogo = shouldDisplayCompanyLogo(
-                company.packageTier,
-              );
               return (
                 <button
                   key={company.id}
@@ -191,25 +181,28 @@ export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
                     meta.sectionClassName,
                   )}
                 >
-                  {displaysLogo ? (
-                    <div className="relative h-24 overflow-hidden rounded-[18px] border border-primary/10 bg-white">
-                      {company.logoUrl ? (
-                        <Image
-                          src={company.logoUrl}
-                          alt={`Logo for ${company.companyName}`}
-                          fill
-                          sizes="calc(100vw - 64px)"
-                          className="object-contain p-3"
-                          unoptimized={shouldUseDirectImageUrl(company.logoUrl)}
-                        />
-                      ) : (
-                        <Building2
-                          size={34}
-                          className="absolute inset-0 m-auto text-primary/35"
-                        />
-                      )}
-                    </div>
-                  ) : null}
+                  <div
+                    className={cn(
+                      "relative overflow-hidden rounded-[18px] border border-primary/10 bg-white",
+                      meta.logoBoxClassName,
+                    )}
+                  >
+                    {company.logoUrl ? (
+                      <Image
+                        src={company.logoUrl}
+                        alt={`Logo for ${company.companyName}`}
+                        fill
+                        sizes="calc(100vw - 64px)"
+                        className="object-contain p-3"
+                        unoptimized={shouldUseDirectImageUrl(company.logoUrl)}
+                      />
+                    ) : (
+                      <Building2
+                        size={34}
+                        className="absolute inset-0 m-auto text-primary/35"
+                      />
+                    )}
+                  </div>
                   <p className="mt-3 text-xs font-bold uppercase tracking-[0.2em] text-secondary">
                     {meta.label}
                   </p>
@@ -257,11 +250,7 @@ export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
         {selectedCompany ? (
           <CompanyInfoModal
             companyName={selectedCompany.companyName}
-            logoUrl={
-              shouldDisplayCompanyLogo(selectedCompany.packageTier)
-                ? selectedCompany.logoUrl
-                : null
-            }
+            logoUrl={selectedCompany.logoUrl}
             representationText={selectedCompany.representationText}
             candidateSummary={selectedCompany.candidateSummary}
             candidateLevelLabel={selectedCompany.candidateLevelLabel}
@@ -349,19 +338,14 @@ export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
                 meta.sectionClassName,
               )}
             >
-            <div className="mb-5 flex flex-col gap-2 text-center md:flex-row md:items-end md:justify-between md:text-left">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.28em] text-secondary/85">
-                  Attending companies
-                </p>
-                <h3 className="mt-1 text-2xl font-bold text-surface">
+              <div className="mb-5 flex flex-col gap-2 text-center md:flex-row md:items-end md:justify-between md:text-left">
+                <h3 className="text-2xl font-bold text-surface">
                   {meta.label}
                 </h3>
+                <p className="text-sm font-semibold text-mist/70">
+                  {tierCompanies.length} confirmed companies
+                </p>
               </div>
-              <p className="text-sm font-semibold text-mist/70">
-                {tierCompanies.length} confirmed companies
-              </p>
-            </div>
 
             <div className={meta.gridClassName}>
               {tierCompanies.map((company) => {
