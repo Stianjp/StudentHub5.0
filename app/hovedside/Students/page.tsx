@@ -22,6 +22,8 @@ export const metadata: Metadata = {
 const STUDENT_PORTAL_URL = "https://student.oslostudenthub.no/";
 const STUDENT_EVENTS_URL = "https://student.oslostudenthub.no/student/events";
 
+export const dynamic = "force-dynamic";
+
 export default async function ForStudenterPage() {
   const events = await listWebsiteEvents();
   const { upcoming } = splitWebsiteEvents(events);

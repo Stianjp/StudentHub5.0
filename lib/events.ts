@@ -1,11 +1,12 @@
 import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import type { TableRow } from "@/lib/types/database";
 import { createPublicSupabaseClient } from "@/lib/supabase/public";
 
 type Event = TableRow<"events">;
 type Company = TableRow<"companies">;
 
-export const listActiveEvents = cache(async function listActiveEvents() {
+async function fetchActiveEvents() {
   const supabase = createPublicSupabaseClient();
   const { data, error } = await supabase
     .from("events")
@@ -15,9 +16,9 @@ export const listActiveEvents = cache(async function listActiveEvents() {
 
   if (error) throw error;
   return (data ?? []) as Event[];
-});
+}
 
-export const listAllEvents = cache(async function listAllEvents() {
+async function fetchAllEvents() {
   const supabase = createPublicSupabaseClient();
   const { data, error } = await supabase
     .from("events")
@@ -26,7 +27,19 @@ export const listAllEvents = cache(async function listAllEvents() {
 
   if (error) throw error;
   return (data ?? []) as Array<Pick<Event, "id" | "name" | "starts_at" | "ends_at">>;
-});
+}
+
+export const listActiveEvents = unstable_cache(
+  fetchActiveEvents,
+  ["active-events"],
+  { revalidate: 300, tags: ["events"] },
+);
+
+export const listAllEvents = unstable_cache(
+  fetchAllEvents,
+  ["all-events"],
+  { revalidate: 300, tags: ["events"] },
+);
 
 export const getEvent = cache(async function getEvent(eventId: string) {
   const supabase = createPublicSupabaseClient();

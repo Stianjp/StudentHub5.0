@@ -1,4 +1,4 @@
-import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import type { TableRow } from "@/lib/types/database";
 import { createPublicSupabaseClient } from "@/lib/supabase/public";
 
@@ -30,7 +30,7 @@ const WEBSITE_EVENT_DESCRIPTION_TRANSLATIONS: Record<string, string> = {
     "Main event for students and companies.",
 };
 
-export const listWebsiteEvents = cache(async function listWebsiteEvents() {
+async function fetchWebsiteEvents() {
   const supabase = createPublicSupabaseClient();
   const { data, error } = await supabase
     .from("events")
@@ -41,7 +41,13 @@ export const listWebsiteEvents = cache(async function listWebsiteEvents() {
 
   if (error) throw error;
   return (data ?? []) as WebsiteEvent[];
-});
+}
+
+export const listWebsiteEvents = unstable_cache(
+  fetchWebsiteEvents,
+  ["website-events"],
+  { revalidate: 300, tags: ["website-events"] },
+);
 
 export function splitWebsiteEvents(events: WebsiteEvent[], now = new Date()) {
   const nowMs = now.getTime();

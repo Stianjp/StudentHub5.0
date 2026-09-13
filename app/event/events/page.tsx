@@ -3,7 +3,9 @@ import { Card } from "@/components/ui/card";
 import { SectionHeader } from "@/components/ui/section-header";
 import { listActiveEvents } from "@/lib/events";
 
-export const revalidate = 300;
+// Supabase is not reachable from Vercel's prerender worker. Keep this route at
+// request time so a transient build-time outage cannot block deployments.
+export const dynamic = "force-dynamic";
 
 export default async function EventListPage() {
   const events = await listActiveEvents();

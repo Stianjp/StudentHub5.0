@@ -24,6 +24,8 @@ import {
 } from "@/lib/hovedside/public-events";
 import { SITE_IMAGES } from "@/lib/hovedside/site-images";
 
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   const [events, companies] = await Promise.all([
     listWebsiteEvents(),

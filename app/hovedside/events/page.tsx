@@ -36,6 +36,8 @@ const CURATED_PAST_EVENTS = [
   },
 ];
 
+export const dynamic = "force-dynamic";
+
 export default async function EventsPage() {
   const events = await listWebsiteEvents();
   const { upcoming, past } = splitWebsiteEvents(events);

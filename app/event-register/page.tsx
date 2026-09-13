@@ -3,7 +3,9 @@ import { getPublicRegistrationCopy } from "@/lib/event-registration-copy";
 import { listPublicRegistrationCampaigns } from "@/lib/event-registration";
 import { resolvePublicRegistrationCampaignHref } from "@/lib/event-registration-links";
 
-export const revalidate = 300;
+// Supabase is not reachable from Vercel's prerender worker. Keep this route at
+// request time so a transient build-time outage cannot block deployments.
+export const dynamic = "force-dynamic";
 
 export default async function EventRegisterLandingPage() {
   const campaigns = await listPublicRegistrationCampaigns();
