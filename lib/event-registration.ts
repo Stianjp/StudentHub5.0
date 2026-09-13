@@ -1,5 +1,6 @@
 import { randomUUID } from "crypto";
 import { unstable_cache } from "next/cache";
+import { PUBLIC_LOGO_URL_TTL_SECONDS } from "@/lib/company";
 import type { TableRow } from "@/lib/types/database";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { createPublicSupabaseClient } from "@/lib/supabase/public";
@@ -152,7 +153,7 @@ async function attachStandBookingPreviews(slug: string, stands: RegistrationStan
   const supabase = createAdminSupabaseClient();
   const { data: applications, error } = await supabase
     .from("event_registration_applications")
-    .select("id, company_id, company_name, org_number, candidate_level, candidate_fields, candidate_fields_other")
+    .select("id, company_id, company_name, org_number, candidate_level, candidate_fields, candidate_fields_other, logo_path")
     .in("id", assignedApplicationIds);
 
   if (error) throw error;
@@ -167,6 +168,7 @@ async function attachStandBookingPreviews(slug: string, stands: RegistrationStan
       | "candidate_level"
       | "candidate_fields"
       | "candidate_fields_other"
+      | "logo_path"
     >
   >;
   const companyIds = [
@@ -235,6 +237,43 @@ async function attachStandBookingPreviews(slug: string, stands: RegistrationStan
       ]),
   );
 
+  const { getLatestCompanyRegistrationLogosByIdentifiers } = await import("@/lib/company");
+  const companyLogoMap = await getLatestCompanyRegistrationLogosByIdentifiers(
+    typedApplications.map((application) => ({
+      companyId: application.company_id,
+      orgNumber: application.org_number,
+    })),
+  );
+  const logoUrlMap = new Map<string, string | null>();
+  await Promise.all(
+    typedApplications.map(async (application) => {
+      const companyLogoUrl =
+        (application.company_id
+          ? companyLogoMap.byCompanyId[application.company_id] ?? null
+          : null) ??
+        (application.org_number
+          ? companyLogoMap.byOrgNumber[
+              application.org_number.replace(/\s+/g, "")
+            ] ?? null
+          : null);
+      if (companyLogoUrl) {
+        logoUrlMap.set(application.id, companyLogoUrl);
+        return;
+      }
+      if (!application.logo_path) {
+        logoUrlMap.set(application.id, null);
+        return;
+      }
+      const { data: signed } = await supabase.storage
+        .from(LOGO_BUCKET)
+        .createSignedUrl(
+          application.logo_path,
+          PUBLIC_LOGO_URL_TTL_SECONDS,
+        );
+      logoUrlMap.set(application.id, signed?.signedUrl ?? null);
+    }),
+  );
+
   const applicationMap = new Map(typedApplications.map((application) => [application.id, application]));
 
   return applyPublicRegistrationStandOverrides(
@@ -256,7 +295,7 @@ async function attachStandBookingPreviews(slug: string, stands: RegistrationStan
               ? companyNameByOrgNumber.get(normalizeOrgNumber(application.org_number)) ?? null
               : null) ??
             application.company_name,
-          logoUrl: null,
+          logoUrl: logoUrlMap.get(application.id) ?? null,
           candidateSummary: buildCandidateSummary(application),
           candidateLevelLabel: candidateLevelLabel(application.candidate_level),
           representationText:
@@ -348,7 +387,7 @@ const loadPublicRegistrationCampaigns = unstable_cache(fetchPublicRegistrationCa
 
 const loadPublicRegistrationCampaignDetail = unstable_cache(
   fetchPublicRegistrationCampaignDetail,
-  ["event-registration-public-campaign-detail-v2"],
+  ["event-registration-public-campaign-detail"],
   { revalidate: 300, tags: ["event-registration-public-campaign-detail"] },
 );
 

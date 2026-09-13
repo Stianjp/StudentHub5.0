@@ -3,7 +3,7 @@ import { getPublicRegistrationCopy } from "@/lib/event-registration-copy";
 import { listPublicRegistrationCampaigns } from "@/lib/event-registration";
 import { resolvePublicRegistrationCampaignHref } from "@/lib/event-registration-links";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 export default async function EventRegisterLandingPage() {
   const campaigns = await listPublicRegistrationCampaigns();

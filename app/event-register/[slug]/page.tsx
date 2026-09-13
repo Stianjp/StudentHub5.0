@@ -5,7 +5,7 @@ import { getPublicRegistrationCopy } from "@/lib/event-registration-copy";
 import { getPublicRegistrationCampaignBySlug } from "@/lib/event-registration";
 import { resolvePublicRegistrationLandingHref } from "@/lib/event-registration-links";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 type PageProps = {
   params: Promise<{ slug: string }>;

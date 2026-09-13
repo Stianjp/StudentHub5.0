@@ -20,10 +20,10 @@ export type PreviewRegistrationDetail = {
 };
 
 export const STUDENT_CONNECT_2026_FLOORPLAN = {
-  imagePath: "/StudentConnect-site/Floorplan%20OSH.svg",
+  imagePath: "/event-register/student-connect-2026-floorplan.svg",
   width: 344.25,
   height: 656.25,
-  alt: "Student Connect 2026 floor plan with company logos at booked stands",
+  alt: "Student Connect 2026 floor plan",
 } as const;
 
 export const REGISTRATION_PACKAGE_TIERS = ["standard", "silver", "gold", "platinum"] as const;

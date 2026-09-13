@@ -18,8 +18,6 @@ export const metadata: Metadata = {
   description: "Upcoming and past events organized by Oslo Student Hub.",
 };
 
-export const dynamic = "force-dynamic";
-
 const CURATED_PAST_EVENTS = [
   {
     slug: "naeringslivsdagen-2025",
