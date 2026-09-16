@@ -1,6 +1,7 @@
 import { unstable_cache } from "next/cache";
 import {
   PUBLIC_LOGO_URL_TTL_SECONDS,
+  PUBLIC_LOGO_TRANSFORM,
   getLatestCompanyRegistrationLogosByIdentifiers,
 } from "@/lib/company";
 import type { Database } from "@/lib/types/database";
@@ -300,7 +301,9 @@ async function fetchApprovedCompanies(
       if (!logoUrl && app.logo_path) {
         const { data } = await supabase.storage
           .from(LOGO_BUCKET)
-          .createSignedUrl(app.logo_path, PUBLIC_LOGO_URL_TTL_SECONDS);
+          .createSignedUrl(app.logo_path, PUBLIC_LOGO_URL_TTL_SECONDS, {
+            transform: PUBLIC_LOGO_TRANSFORM,
+          });
         logoUrl = data?.signedUrl ?? null;
       }
 
@@ -365,6 +368,6 @@ async function fetchApprovedCompanies(
 
 export const getApprovedCompaniesForCampaign = unstable_cache(
   fetchApprovedCompanies,
-  ["approved-companies-v2"],
+  ["approved-companies-v3"],
   { revalidate: 300, tags: ["approved-companies"] },
 );

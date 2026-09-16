@@ -33,7 +33,6 @@ const TIER_META: Record<
     gridClassName: string;
     logoFrameClassName: string;
     logoBoxClassName: string;
-    chipClassName: string;
   }
 > = {
   platinum: {
@@ -42,7 +41,6 @@ const TIER_META: Record<
     gridClassName: "grid gap-5 md:grid-cols-2",
     logoFrameClassName: "rounded-[28px] p-6",
     logoBoxClassName: "h-28",
-    chipClassName: "border-[#f6a6bd]/35 bg-[#f6a6bd]/16 text-[#ffe6ef]",
   },
   gold: {
     label: "Gold",
@@ -50,7 +48,6 @@ const TIER_META: Record<
     gridClassName: "grid gap-4 md:grid-cols-2 xl:grid-cols-4",
     logoFrameClassName: "rounded-[24px] p-5",
     logoBoxClassName: "h-24",
-    chipClassName: "border-[#f0c245]/35 bg-[#f0c245]/16 text-[#fff0c3]",
   },
   silver: {
     label: "Silver",
@@ -58,7 +55,6 @@ const TIER_META: Record<
     gridClassName: "grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4",
     logoFrameClassName: "rounded-[22px] p-4",
     logoBoxClassName: "h-20",
-    chipClassName: "border-[#7ec8ef]/35 bg-[#7ec8ef]/16 text-[#e9f9ff]",
   },
   standard: {
     label: "Standard",
@@ -66,7 +62,6 @@ const TIER_META: Record<
     gridClassName: "grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5",
     logoFrameClassName: "rounded-[20px] p-4",
     logoBoxClassName: "h-16",
-    chipClassName: "border-[#7ecf91]/35 bg-[#7ecf91]/16 text-[#ebffef]",
   },
 };
 
@@ -203,10 +198,7 @@ export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
                       />
                     )}
                   </div>
-                  <p className="mt-3 text-xs font-bold uppercase tracking-[0.2em] text-secondary">
-                    {meta.label}
-                  </p>
-                  <h4 className="mt-1 text-base font-bold text-surface">
+                  <h4 className="mt-3 text-base font-bold text-surface">
                     {company.companyName}
                   </h4>
                 </button>
@@ -404,21 +396,6 @@ export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
                     <h4 className="text-sm font-bold text-surface sm:text-base">
                       {company.companyName}
                     </h4>
-                    <div className="flex flex-wrap items-center justify-center gap-2">
-                      <span
-                        className={cn(
-                          "inline-flex rounded-full border px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em]",
-                          meta.chipClassName,
-                        )}
-                      >
-                        {company.packageLabel}
-                      </span>
-                      {company.standLabel ? (
-                        <span className="inline-flex rounded-full border border-white/14 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-mist/85">
-                          {company.standLabel}
-                        </span>
-                      ) : null}
-                    </div>
                     {description ? (
                       <p className="mx-auto max-w-[24rem] text-sm leading-relaxed text-mist/75">
                         {truncateWords(description, 28)}
@@ -443,11 +420,6 @@ export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
                       <span className="font-bold">Looking for:</span>{" "}
                       {truncateWords(getLookingForText(company), 20)}
                     </p>
-                    {company.standLabel ? (
-                      <p className="mt-1 text-xs leading-relaxed text-white/72">
-                        Stand: {company.standLabel}
-                      </p>
-                    ) : null}
                   </div>
                 </article>
                 );

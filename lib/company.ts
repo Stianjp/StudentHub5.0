@@ -16,6 +16,12 @@ type StandVisit = TableRow<"stand_visits">;
 type Lead = TableRow<"leads">;
 const REGISTRATION_LOGO_BUCKET = "event-registration-assets";
 export const PUBLIC_LOGO_URL_TTL_SECONDS = 60 * 60 * 24 * 7;
+export const PUBLIC_LOGO_TRANSFORM = {
+  width: 640,
+  height: 360,
+  resize: "contain",
+  quality: 80,
+} as const;
 
 type EventRegistration = EventCompany & { event: Event };
 
@@ -27,7 +33,9 @@ async function signStoredLogoPath(
 
   const { data, error } = await supabase.storage
     .from(REGISTRATION_LOGO_BUCKET)
-    .createSignedUrl(path, PUBLIC_LOGO_URL_TTL_SECONDS);
+    .createSignedUrl(path, PUBLIC_LOGO_URL_TTL_SECONDS, {
+      transform: PUBLIC_LOGO_TRANSFORM,
+    });
 
   if (error || !data?.signedUrl) return null;
   return data.signedUrl;
@@ -331,10 +339,8 @@ export async function getLatestCompanyRegistrationLogos(companyIds: string[]) {
 
   const signedEntries = await Promise.all(
     Array.from(latestByCompany.entries()).map(async ([companyId, application]) => {
-      const { data: signed } = await supabase.storage
-        .from(REGISTRATION_LOGO_BUCKET)
-        .createSignedUrl(application.logo_path, 60 * 60);
-      return [companyId, signed?.signedUrl ?? null] as const;
+      const logoUrl = await signStoredLogoPath(supabase, application.logo_path);
+      return [companyId, logoUrl] as const;
     }),
   );
 
