@@ -1,6 +1,6 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth";
 import {
@@ -65,6 +65,12 @@ function revalidateRegistrationPaths(eventId: string, campaignId?: string | null
   if (slug) {
     revalidatePath(`/event-register/${slug}`);
   }
+}
+
+function revalidateApprovedCompanies() {
+  revalidateTag("approved-companies", "max");
+  revalidatePath("/hovedside");
+  revalidatePath("/hovedside/studentconnect2026");
 }
 
 export async function saveRegistrationCampaign(formData: FormData) {
@@ -232,6 +238,7 @@ export async function approveRegistrationApplicationAction(formData: FormData) {
     });
 
     revalidateRegistrationPaths(eventId, campaignId, slug);
+    revalidateApprovedCompanies();
     redirectWithResult(returnTo, "saved");
   } catch (error) {
     if (isNextRedirectError(error)) throw error;
@@ -264,6 +271,7 @@ export async function rejectRegistrationApplicationAction(formData: FormData) {
     });
 
     revalidateRegistrationPaths(eventId, campaignId, slug);
+    revalidateApprovedCompanies();
     redirectWithResult(returnTo, "saved");
   } catch (error) {
     if (isNextRedirectError(error)) throw error;
