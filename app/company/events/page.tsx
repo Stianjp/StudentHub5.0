@@ -2,12 +2,10 @@ import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { SectionHeader } from "@/components/ui/section-header";
 import { cn } from "@/lib/utils";
 import { requireRole } from "@/lib/auth";
 import {
-  getCompanyAttendeeCountByEvent,
   getCompanyAttendeeTicketAllowance,
   getCompanyAttendeeTicketLimit,
   getCompanyRegistrations,
@@ -15,7 +13,10 @@ import {
 } from "@/lib/company";
 import { listActiveEvents } from "@/lib/events";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
-import { registerCompanyAttendee, updateCompanyEventGoals } from "@/app/company/actions";
+import { updateCompanyEventGoals } from "@/app/company/actions";
+
+const STUDENT_CONNECT_CHECKIN_URL =
+  "https://event.checkin.no/228140/student-connect-2026";
 
 function packageVariant(pkg: string) {
   if (pkg === "platinum") return "success" as const;
@@ -66,10 +67,9 @@ export default async function CompanyEventsPage() {
       </Card>
     );
   }
-  const [registrations, events, attendeeCountsByEvent] = await Promise.all([
+  const [registrations, events] = await Promise.all([
     getCompanyRegistrations(companyId),
     listActiveEvents(),
-    getCompanyAttendeeCountByEvent(companyId),
   ]);
 
   const registeredEventIds = new Set(registrations.map((reg) => reg.event_id));
@@ -120,9 +120,12 @@ export default async function CompanyEventsPage() {
               const packageLimit = getCompanyAttendeeTicketLimit(registration.package);
               const extraAttendeeTickets = Math.max(registration.extra_attendee_tickets ?? 0, 0);
               const attendeeLimit = getCompanyAttendeeTicketAllowance(registration);
-              const attendeeCount = attendeeCountsByEvent[registration.event_id] ?? 0;
-              const remainingAttendees = Math.max(attendeeLimit - attendeeCount, 0);
-              const limitReached = remainingAttendees === 0;
+              const employeeRegistrationUrl =
+                registration.event.slug === "student-connect-2026"
+                  ? STUDENT_CONNECT_CHECKIN_URL
+                  : isExternalHttpUrl(registration.event.registration_form_url)
+                    ? registration.event.registration_form_url
+                    : null;
               const standLevel = standLevelLabel(registration.stand_type, registration.package);
               const hasIncludedPremiumAccess =
                 registration.package === "gold" || registration.package === "platinum";
@@ -232,39 +235,42 @@ export default async function CompanyEventsPage() {
                   </form>
 
                   <div className="company-light-surface mt-4 rounded-2xl border border-primary/10 bg-surface p-4">
-                    <p className="text-sm font-semibold text-primary">Meld på deltaker (bedrift)</p>
-                  <p className={cn("mt-1 text-xs", limitReached ? "font-semibold text-warning" : "text-ink/70")}>
-                    {attendeeCount} av {attendeeLimit} ansatte meldt på. {remainingAttendees} kostnadsfrie billetter til ansatte gjenstår.
-                  </p>
-                  {extraAttendeeTickets > 0 ? (
-                    <p className="mt-1 text-xs text-ink/70">
-                      Pakke inkluderer {packageLimit}, admin har lagt til +{extraAttendeeTickets} ekstra billetter.
+                    <h4 className="text-sm font-semibold text-primary">Ansattbilletter</h4>
+                    <p className="mt-1 text-sm text-ink/80">
+                      Bedriften har per nå <strong className="text-primary">{attendeeLimit} billetter</strong> til ansatte.
                     </p>
-                  ) : null}
-                  <form action={registerCompanyAttendee} className="mt-3 grid gap-3 md:grid-cols-3">
-                      <input type="hidden" name="eventId" value={registration.event_id} />
-                      <label className="text-sm font-semibold text-primary md:col-span-1">
-                        Navn
-                        <Input name="fullName" required placeholder="Fornavn Etternavn" disabled={limitReached} />
-                      </label>
-                      <label className="text-sm font-semibold text-primary md:col-span-1">
-                        E-post
-                        <Input
-                          name="email"
-                          type="email"
-                          required
-                          placeholder="navn@bedrift.no"
-                          disabled={limitReached}
-                        />
-                      </label>
-                      <label className="text-sm font-semibold text-primary md:col-span-1">
-                        Telefon
-                        <Input name="phone" required placeholder="Telefonnummer" disabled={limitReached} />
-                      </label>
-                      <Button className="md:col-span-3" type="submit" disabled={limitReached}>
-                        {limitReached ? "Maks antall nådd" : "Send billett"}
-                      </Button>
-                    </form>
+                    {extraAttendeeTickets > 0 ? (
+                      <p className="mt-1 text-xs text-ink/70">
+                        Pakken inkluderer {packageLimit} billetter, med {extraAttendeeTickets} ekstra.
+                      </p>
+                    ) : null}
+                    <p className="mt-3 text-sm text-ink/80">
+                      Påmelding av ansatte gjøres i Checkin.
+                    </p>
+                    {employeeRegistrationUrl ? (
+                      <a
+                        className="button-link mt-3 inline-flex text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2"
+                        href={employeeRegistrationUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Meld på ansatte i Checkin
+                        <span className="sr-only"> (åpnes i en ny fane)</span>
+                      </a>
+                    ) : null}
+                    <div className="mt-4 space-y-2 border-t border-primary/10 pt-4 text-xs leading-relaxed text-ink/70">
+                      <p>
+                        Ønsker dere flere billetter, ta kontakt med{" "}
+                        <a className="font-semibold text-primary underline underline-offset-2" href="mailto:stian@oslostudenthub.no">
+                          stian@oslostudenthub.no
+                        </a>
+                        .
+                      </p>
+                      <p>
+                        Ekstra billetter til ansatte koster 1 000 kr eks. mva. og vil bli etterfakturert.
+                      </p>
+                      <p>Vennligst oppgi eventuelt ordrenummer ved bestilling av flere billetter.</p>
+                    </div>
                   </div>
                 </div>
               );

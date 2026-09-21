@@ -454,29 +454,6 @@ export async function getLatestCompanyRegistrationLogosByIdentifiers(
   return { byCompanyId, byOrgNumber };
 }
 
-export async function getCompanyAttendeeCountByEvent(companyId: string) {
-  let supabase = await createServerSupabaseClient();
-  try {
-    supabase = createAdminSupabaseClient() as unknown as typeof supabase;
-  } catch {
-    // fallback
-  }
-
-  const { data, error } = await supabase
-    .from("event_tickets")
-    .select("company_id, event_id")
-    .eq("company_id", companyId);
-
-  if (error) throw error;
-
-  const counts: Record<string, number> = {};
-  for (const row of data ?? []) {
-    counts[row.event_id] = (counts[row.event_id] ?? 0) + 1;
-  }
-
-  return counts;
-}
-
 export async function getCompanyLeads(companyId: string) {
   let supabase = await createServerSupabaseClient();
   try {
