@@ -74,6 +74,31 @@ export const studentRegistrationSchema = z
     }
   });
 
+export const studentOAuthOnboardingSchema = z
+  .object({
+    fullName: z.string().min(2, "Full name is required."),
+    school: z.string().min(2, "University or educational institution is required."),
+    studyProgram: z
+      .string()
+      .min(2, "Field of study is required.")
+      .refine((value) => isValidStudyProgram(value), "Select a valid field of study."),
+    studyLevel: z.string().min(2, "Select bachelor or master."),
+    studyYear: z.coerce.number().int().min(1).max(5),
+    jobTypes: stringArray.transform((values) => mapStudentJobTypes(values)),
+  })
+  .superRefine((value, ctx) => {
+    const studyError = validateStudentStudyChoices(value);
+    if (studyError?.studyLevel) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: studyError.studyLevel, path: ["studyLevel"] });
+    }
+    if (studyError?.studyYear) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: studyError.studyYear, path: ["studyYear"] });
+    }
+    if (studyError?.jobTypes) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: studyError.jobTypes, path: ["jobTypes"] });
+    }
+  });
+
 export const companyRegistrationSchema = z
   .object({
     email: z.string().email("Invalid email address"),
@@ -99,3 +124,13 @@ export const companyRegistrationSchema = z
       });
     }
   });
+
+export const companyOAuthOnboardingSchema = z.object({
+  companyName: z.string().min(2, "Company name is required."),
+  orgNumber: z.string().regex(/^\d{9}$/, "The organisation number must contain 9 digits."),
+  address: z.string().min(2, "Address is required."),
+  postalCode: z.string().min(2, "Postal code is required."),
+  city: z.string().min(2, "City is required."),
+  country: z.string().min(2, "Country is required."),
+  recruitmentFields: stringArray.transform((values) => normalizeStudyCategories(values)),
+});

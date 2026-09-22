@@ -11,23 +11,43 @@ export function CallbackClient() {
   const params = useSearchParams();
   const code = params.get("code");
   const role = params.get("role") ?? "company";
-  const mode = params.get("mode");
-  const studentPortalUrl = process.env.NEXT_PUBLIC_STUDENT_PORTAL_URL ?? "/student/dashboard";
-  const defaultNext = role === "student" ? studentPortalUrl : "/company";
-  const nextPath = params.get("next") ?? defaultNext;
-  const successDestination = mode === "verify" ? `/auth/sign-in?role=${role}` : nextPath;
-  const shouldAutoRedirect = params.get("next") !== null && mode !== "verify";
+  const nextPath = params.get("next");
+  const oauthError = params.get("error");
+  const oauthErrorDescription = params.get("error_description");
   const [message, setMessage] = useState(() => "Completing sign-in...");
   const [successLink, setSuccessLink] = useState<string | null>(null);
-
-  function isExternal(url: string) {
-    return /^https?:\/\//i.test(url);
-  }
 
   useEffect(() => {
     const supabase = createClient();
 
     async function completeAuth() {
+      if (oauthError) {
+        setMessage(
+          oauthError === "access_denied"
+            ? "Google sign-in was cancelled. You can return to sign-in and try again."
+            : oauthErrorDescription || "Google sign-in could not be completed.",
+        );
+        setSuccessLink(`/auth/sign-in?role=${role}`);
+        return;
+      }
+
+      async function finalizeSession() {
+        const response = await fetch("/api/auth/oauth/finalize", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ next: nextPath, role }),
+        });
+        const payload = (await response.json().catch(() => null)) as
+          | { destination?: string; error?: string }
+          | null;
+        if (!response.ok || !payload?.destination) {
+          setMessage(payload?.error ?? "The portal account could not be prepared.");
+          setSuccessLink(`/auth/sign-in?role=${role}`);
+          return;
+        }
+        router.replace(payload.destination);
+      }
+
       // Support both PKCE (code) and implicit hash tokens.
       const hash = typeof window !== "undefined" ? window.location.hash : "";
       const hashParams = new URLSearchParams(hash.replace(/^#/, ""));
@@ -43,16 +63,7 @@ export function CallbackClient() {
           setMessage(error.message);
           return;
         }
-        if (shouldAutoRedirect) {
-          if (isExternal(nextPath)) {
-            window.location.assign(nextPath);
-          } else {
-            router.replace(nextPath);
-          }
-          return;
-        }
-        setMessage("Your account has been verified. You can sign in here:");
-        setSuccessLink(successDestination);
+        await finalizeSession();
         return;
       }
 
@@ -62,16 +73,7 @@ export function CallbackClient() {
           setMessage(error.message);
           return;
         }
-        if (shouldAutoRedirect) {
-          if (isExternal(nextPath)) {
-            window.location.assign(nextPath);
-          } else {
-            router.replace(nextPath);
-          }
-          return;
-        }
-        setMessage("Your account has been verified. You can sign in here:");
-        setSuccessLink(successDestination);
+        await finalizeSession();
         return;
       }
 
@@ -81,7 +83,7 @@ export function CallbackClient() {
     void completeAuth().catch((error) => {
       setMessage(error instanceof Error ? error.message : "An unknown error occurred during sign-in.");
     });
-  }, [code, router, shouldAutoRedirect, successDestination, nextPath]);
+  }, [code, nextPath, oauthError, oauthErrorDescription, role, router]);
 
   return (
     <main className="min-h-screen w-full bg-[linear-gradient(180deg,#140249_0%,#6D367F_52%,#FF7282_100%)] px-6 py-16">

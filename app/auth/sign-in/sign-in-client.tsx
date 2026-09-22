@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { clearBrowserAuthState, createClient } from "@/lib/supabase/client";
 import { getDefaultNextPath } from "@/lib/auth-urls";
+import { getSafePortalNextPath } from "@/lib/auth-oauth";
 import { roleFromHost } from "@/lib/host";
 import {
   getStudentJobTypeOptions,
@@ -109,6 +110,11 @@ export function SignInClient({
   }, [mode, status]);
 
   const selectedRole = effectiveAllowedRole ?? role;
+  const allowGoogleSignIn =
+    effectiveAllowedRole === "student" ||
+    effectiveAllowedRole === "company" ||
+    detectedRole === "student" ||
+    detectedRole === "company";
   const title = getRoleTitle(mode, selectedRole);
   const description = getRoleDescription(mode, selectedRole);
   const studentStudyYearOptions = useMemo(
@@ -132,6 +138,33 @@ export function SignInClient({
     setConfirmPasswordInput("");
     setStudentStudyLevel("");
     setStudentStudyYear("");
+  }
+
+  async function onGoogleSignIn() {
+    if (selectedRole !== "student" && selectedRole !== "company") return;
+    setStatus("loading");
+    setError(null);
+
+    const supabase = createClient();
+    clearBrowserAuthState();
+    await supabase.auth.signOut({ scope: "local" });
+
+    const redirectUrl = new URL("/auth/callback", window.location.origin);
+    redirectUrl.searchParams.set("role", selectedRole);
+    redirectUrl.searchParams.set("next", getSafePortalNextPath(next, selectedRole));
+
+    const { error: oauthError } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: redirectUrl.toString(),
+        scopes: "openid email profile",
+      },
+    });
+
+    if (oauthError) {
+      setStatus("error");
+      setError("Google sign-in could not be started. Try again.");
+    }
   }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -372,6 +405,30 @@ export function SignInClient({
                 </Select>
               </label>
             )}
+
+            {allowGoogleSignIn && selectedRole !== "admin" && mode !== "reset" ? (
+              <>
+                <button
+                  type="button"
+                  onClick={onGoogleSignIn}
+                  disabled={status === "loading" || isSessionResetting}
+                  className="inline-flex min-h-11 w-full items-center justify-center gap-3 rounded-full border border-white/25 bg-white px-5 py-3 text-sm font-bold text-[#140249] transition hover:-translate-y-0.5 hover:border-white hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5" focusable="false">
+                    <path fill="#4285F4" d="M21.6 12.23c0-.71-.06-1.4-.19-2.07H12v3.92h5.38a4.6 4.6 0 0 1-2 3.02v2.55h3.24c1.9-1.75 2.98-4.33 2.98-7.42Z" />
+                    <path fill="#34A853" d="M12 22c2.7 0 4.98-.9 6.63-2.35l-3.24-2.55c-.9.6-2.05.96-3.39.96-2.61 0-4.82-1.76-5.61-4.13H3.04v2.63A10 10 0 0 0 12 22Z" />
+                    <path fill="#FBBC05" d="M6.39 13.93A6 6 0 0 1 6.08 12c0-.67.11-1.32.31-1.93V7.44H3.04A10 10 0 0 0 2 12c0 1.61.39 3.14 1.04 4.56l3.35-2.63Z" />
+                    <path fill="#EA4335" d="M12 5.94c1.47 0 2.79.5 3.82 1.5l2.88-2.88A9.67 9.67 0 0 0 12 2a10 10 0 0 0-8.96 5.44l3.35 2.63C7.18 7.7 9.39 5.94 12 5.94Z" />
+                  </svg>
+                  Continue with Google
+                </button>
+                <div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.18em] text-surface/55" aria-hidden="true">
+                  <span className="h-px flex-1 bg-white/15" />
+                  <span>or use email</span>
+                  <span className="h-px flex-1 bg-white/15" />
+                </div>
+              </>
+            ) : null}
 
             <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
               Email
@@ -728,6 +785,12 @@ export function SignInClient({
           {reason === "admin-domain" ? (
             <div className="rounded-xl bg-warning/15 px-4 py-3 text-xs font-semibold text-warning">
               The admin domain only allows sign-in with @oslostudenthub.no.
+            </div>
+          ) : null}
+
+          {reason === "wrong-portal" ? (
+            <div className="rounded-xl bg-warning/15 px-4 py-3 text-xs font-semibold text-warning">
+              This account belongs to the other Oslo Student Hub portal. Use the correct portal or another account.
             </div>
           ) : null}
         </Card>
