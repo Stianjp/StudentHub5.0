@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import Image from "next/image";
@@ -14,10 +14,14 @@ export function CallbackClient() {
   const nextPath = params.get("next");
   const oauthError = params.get("error");
   const oauthErrorDescription = params.get("error_description");
+  const exchangeStarted = useRef(false);
   const [message, setMessage] = useState(() => "Completing sign-in...");
   const [successLink, setSuccessLink] = useState<string | null>(null);
 
   useEffect(() => {
+    if (exchangeStarted.current) return;
+    exchangeStarted.current = true;
+
     const supabase = createClient();
 
     async function completeAuth() {

@@ -142,12 +142,12 @@ export function SignInClient({
     setError(null);
 
     clearBrowserAuthState();
-    const supabase = createClient();
 
     const redirectUrl = new URL("/auth/callback", window.location.origin);
     redirectUrl.searchParams.set("role", selectedRole);
     redirectUrl.searchParams.set("next", getSafePortalNextPath(next, selectedRole));
 
+    const supabase = createClient();
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {

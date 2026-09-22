@@ -39,7 +39,11 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
-  const sessionCookies = request.cookies.getAll().filter((cookie) => cookie.name.startsWith("sb-"));
+  const sessionCookies = request.cookies
+    .getAll()
+    .filter(
+      (cookie) => cookie.name.startsWith("sb-") && !cookie.name.endsWith("-code-verifier"),
+    );
   function clearSessionCookies() {
     sessionCookies.forEach((cookie) => {
       request.cookies.set({ name: cookie.name, value: "" });
