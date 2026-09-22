@@ -103,33 +103,12 @@ export function createClient() {
 
   const domain = resolveCookieDomain(window.location.hostname, cookieDomain);
 
-  const client = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: true,
-      detectSessionInUrl: true,
-    },
-    cookies: {
-      getAll() {
-        const cookies = parseCookies();
-        return Array.from(cookies.entries()).map(([name, value]) => ({ name, value }));
-      },
-      setAll(cookies) {
-        cookies.forEach(({ name, value, options }) => {
-          const cookieString = buildCookieString(name, value, {
-            path: options?.path,
-            maxAge: options?.maxAge,
-            expires: options?.expires,
-            sameSite: options?.sameSite,
-            secure: options?.secure,
-            domain,
-          });
-          document.cookie = cookieString;
-        });
-      },
+  return createBrowserClient<Database>(supabaseUrl, supabaseAnonKey, {
+    cookieOptions: {
+      domain,
+      path: "/",
+      sameSite: "lax",
+      secure: window.location.protocol === "https:",
     },
   });
-
-  client.auth.stopAutoRefresh?.();
-  return client;
 }

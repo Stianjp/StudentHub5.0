@@ -90,10 +90,6 @@ export function SignInClient({
   const passwordHelpId = "password-help";
 
   useEffect(() => {
-    clearBrowserAuthState();
-  }, []);
-
-  useEffect(() => {
     if (mode !== "register" || status !== "sent") return;
 
     const timeout = window.setTimeout(() => {
@@ -145,9 +141,8 @@ export function SignInClient({
     setStatus("loading");
     setError(null);
 
-    const supabase = createClient();
     clearBrowserAuthState();
-    await supabase.auth.signOut({ scope: "local" });
+    const supabase = createClient();
 
     const redirectUrl = new URL("/auth/callback", window.location.origin);
     redirectUrl.searchParams.set("role", selectedRole);
@@ -157,7 +152,6 @@ export function SignInClient({
       provider: "google",
       options: {
         redirectTo: redirectUrl.toString(),
-        scopes: "openid email profile",
       },
     });
 
