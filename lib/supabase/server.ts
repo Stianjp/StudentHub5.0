@@ -1,9 +1,8 @@
 import { cookies, headers } from "next/headers";
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { createServerClient } from "@supabase/ssr";
 import type { Database } from "@/lib/types/database";
 import { assertSupabaseEnv } from "@/lib/supabase/env";
 import { resolveCookieDomain } from "@/lib/supabase/cookie-domain";
-import { isRecoverableRefreshTokenError } from "@/lib/supabase/auth-errors";
 
 export async function createServerSupabaseClient() {
   const cookieStore = await cookies();
@@ -17,72 +16,20 @@ export async function createServerSupabaseClient() {
       autoRefreshToken: false,
     },
     cookies: {
-      get(name: string) {
-        return cookieStore.get(name)?.value;
+      getAll() {
+        return cookieStore.getAll();
       },
-      set(name: string, value: string, options: CookieOptions) {
+      setAll(cookiesToSet) {
         try {
-          cookieStore.set({ name, value, ...options, domain });
+          cookiesToSet.forEach(({ name, value, options }) => {
+            cookieStore.set({ name, value, ...options, domain });
+          });
         } catch {
           // Setting cookies can fail in Server Components. Middleware handles refresh.
         }
       },
-      remove(name: string, options: CookieOptions) {
-        try {
-          cookieStore.set({ name, value: "", ...options, domain });
-        } catch {
-          // No-op in Server Components.
-        }
-      },
     },
   });
-
-  function decodeSessionValue(raw: string) {
-    const trimmed = raw.startsWith("base64-") ? raw.slice(7) : raw;
-    const normalized = trimmed.replace(/-/g, "+").replace(/_/g, "/");
-    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
-    try {
-      return Buffer.from(padded, "base64").toString("utf8");
-    } catch {
-      return null;
-    }
-  }
-
-  function extractUserFromCookies() {
-    const allCookies = cookieStore.getAll();
-    for (const cookie of allCookies) {
-      if (!cookie.name.startsWith("sb-")) continue;
-      const value = cookie.value;
-      try {
-        const json = decodeSessionValue(value);
-        if (!json) continue;
-        const parsed = JSON.parse(json);
-        const session = parsed?.currentSession ?? parsed?.session ?? parsed;
-        if (session?.user) return session.user;
-      } catch {
-        // ignore parse errors
-      }
-    }
-    return null;
-  }
-
-  const originalGetUser = client.auth.getUser.bind(client.auth);
-  (client.auth as any).getUser = async (...args: any[]) => {
-    try {
-      const result = await originalGetUser(...args);
-      if (result?.data?.user) return result;
-      const cookieUser = extractUserFromCookies();
-      if (cookieUser) return { data: { user: cookieUser }, error: null };
-      return result;
-    } catch (error) {
-      if (isRecoverableRefreshTokenError(error as { code?: string; message?: string })) {
-        const cookieUser = extractUserFromCookies();
-        if (cookieUser) return { data: { user: cookieUser }, error: null };
-        return { data: { user: null }, error: null };
-      }
-      throw error;
-    }
-  };
 
   return client;
 }
