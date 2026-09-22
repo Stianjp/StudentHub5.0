@@ -20,8 +20,10 @@ test("company sign-in offers Google", async ({ page }) => {
 
 test("PKCE verifier survives the callback middleware", async ({ page, context }) => {
   let verifierLength = 0;
+  let tokenRequests = 0;
   await context.route("https://accounts.google.com/**", (route) => route.abort());
   await context.route("**/auth/v1/token?grant_type=pkce", async (route) => {
+    tokenRequests += 1;
     const body = route.request().postDataJSON() as { code_verifier?: unknown };
     verifierLength = typeof body.code_verifier === "string" ? body.code_verifier.length : 0;
     await route.fulfill({
@@ -46,6 +48,8 @@ test("PKCE verifier survives the callback middleware", async ({ page, context })
     ),
   );
   await expect.poll(() => verifierLength).toBeGreaterThan(40);
+  await expect(page.getByText("Synthetic test code")).toBeVisible();
+  expect(tokenRequests).toBe(1);
 });
 
 test("admin sign-in does not offer Google", async ({ page }) => {

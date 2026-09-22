@@ -6,6 +6,56 @@ import { Card } from "@/components/ui/card";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 
+type CompletionResult =
+  | { ok: true; destination: string }
+  | { ok: false; error: string };
+
+let activeCodeCompletion:
+  | { key: string; promise: Promise<CompletionResult> }
+  | undefined;
+
+async function finalizeOAuthSession(role: string, nextPath: string | null) {
+  const response = await fetch("/api/auth/oauth/finalize", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ next: nextPath, role }),
+  });
+  const payload = (await response.json().catch(() => null)) as
+    | { destination?: string; error?: string }
+    | null;
+  if (!response.ok || !payload?.destination) {
+    return {
+      ok: false,
+      error: payload?.error ?? "The portal account could not be prepared.",
+    } satisfies CompletionResult;
+  }
+  return { ok: true, destination: payload.destination } satisfies CompletionResult;
+}
+
+function completeCodeOnce(code: string, role: string, nextPath: string | null) {
+  const key = JSON.stringify([code, role, nextPath]);
+  if (activeCodeCompletion?.key === key) return activeCodeCompletion.promise;
+
+  const promise = (async (): Promise<CompletionResult> => {
+    const supabase = createClient();
+    const { error: initializeError } = await supabase.auth.initialize();
+    if (initializeError) return { ok: false, error: initializeError.message };
+
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
+    if (sessionError) return { ok: false, error: sessionError.message };
+    if (!session) {
+      return { ok: false, error: "Google sign-in did not create a session. Try again." };
+    }
+    return finalizeOAuthSession(role, nextPath);
+  })();
+
+  activeCodeCompletion = { key, promise };
+  return promise;
+}
+
 export function CallbackClient() {
   const router = useRouter();
   const params = useSearchParams();
@@ -35,23 +85,6 @@ export function CallbackClient() {
         return;
       }
 
-      async function finalizeSession() {
-        const response = await fetch("/api/auth/oauth/finalize", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ next: nextPath, role }),
-        });
-        const payload = (await response.json().catch(() => null)) as
-          | { destination?: string; error?: string }
-          | null;
-        if (!response.ok || !payload?.destination) {
-          setMessage(payload?.error ?? "The portal account could not be prepared.");
-          setSuccessLink(`/auth/sign-in?role=${role}`);
-          return;
-        }
-        router.replace(payload.destination);
-      }
-
       // Support both PKCE (code) and implicit hash tokens.
       const hash = typeof window !== "undefined" ? window.location.hash : "";
       const hashParams = new URLSearchParams(hash.replace(/^#/, ""));
@@ -67,17 +100,24 @@ export function CallbackClient() {
           setMessage(error.message);
           return;
         }
-        await finalizeSession();
+        const result = await finalizeOAuthSession(role, nextPath);
+        if (!result.ok) {
+          setMessage(result.error);
+          setSuccessLink(`/auth/sign-in?role=${role}`);
+          return;
+        }
+        router.replace(result.destination);
         return;
       }
 
       if (code) {
-        const { error } = await supabase.auth.exchangeCodeForSession(code);
-        if (error) {
-          setMessage(error.message);
+        const result = await completeCodeOnce(code, role, nextPath);
+        if (!result.ok) {
+          setMessage(result.error);
+          setSuccessLink(`/auth/sign-in?role=${role}`);
           return;
         }
-        await finalizeSession();
+        router.replace(result.destination);
         return;
       }
 
