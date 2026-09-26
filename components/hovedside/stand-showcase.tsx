@@ -46,7 +46,7 @@ const INNOVATION_ROOM = {
   ],
   position: {
     left: "82%",
-    top: "17.4%",
+    top: "18.4%",
     width: "10%",
     height: "3.3%",
   },
