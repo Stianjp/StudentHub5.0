@@ -45,10 +45,10 @@ const INNOVATION_ROOM = {
     "In the Innovation Room today, you have the chance to find a challenge that opens up new opportunities for you!",
   ],
   position: {
-    left: "80%",
-    top: "14.7%",
-    width: "14%",
-    height: "9.3%",
+    left: "82%",
+    top: "17.4%",
+    width: "10%",
+    height: "3.3%",
   },
 } as const;
 
