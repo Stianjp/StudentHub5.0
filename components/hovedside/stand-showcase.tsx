@@ -37,6 +37,23 @@ const BOOKED_STAND_STYLES: Record<ApprovedCompanyPackageTier, string> = {
   standard: "border-[#7ecf91] shadow-[0_8px_24px_rgba(126,207,145,0.28)]",
 };
 
+const INNOVATION_ROOM = {
+  name: "Koblingspunkt Oslo",
+  logoUrl: "/images/PunktOslo-logo.png",
+  description: [
+    "Oslo has many students with relevant skills. Oslo also has many businesses with real challenges. However, they often only find each other by chance. For businesses, it can be time-consuming to figure out who to contact and how to organize everything. For students, it can be hard to get access to real-world problems. Koblingspunkt Oslo is the bridge between them.",
+    "In the Innovation Room today, you have the chance to find a challenge that opens up new opportunities for you!",
+  ],
+  position: {
+    left: "80%",
+    top: "14.7%",
+    width: "14%",
+    height: "9.3%",
+  },
+} as const;
+
+const INNOVATION_ROOM_TOOLTIP_ID = "innovation-room-tooltip";
+
 function getPackageTier(stand: PublicRegistrationStand): ApprovedCompanyPackageTier {
   if (stand.package_tier === "platinum") return "platinum";
   if (stand.package_tier === "gold") return "gold";
@@ -98,6 +115,7 @@ export function StandShowcase({
 }: Props) {
   const [activeStandId, setActiveStandId] = useState<string | null>(null);
   const [selectedStandId, setSelectedStandId] = useState<string | null>(null);
+  const [isInnovationRoomActive, setIsInnovationRoomActive] = useState(false);
 
   const visibleStands = useMemo(
     () => stands.filter((stand) => stand.status !== "disabled"),
@@ -177,7 +195,7 @@ export function StandShowcase({
                 key={stand.id}
                 role={isBooked ? "button" : undefined}
                 tabIndex={isBooked ? 0 : undefined}
-                aria-label={getStandLabel(stand)}
+                aria-label={isBooked ? getStandLabel(stand) : undefined}
                 onClick={() => {
                   if (isBooked) setSelectedStandId(stand.id);
                 }}
@@ -248,6 +266,56 @@ export function StandShowcase({
               </div>
             );
           })}
+
+            <button
+              type="button"
+              aria-label="Koblingspunkt Oslo – Innovation Room"
+              aria-describedby={
+                isInnovationRoomActive ? INNOVATION_ROOM_TOOLTIP_ID : undefined
+              }
+              aria-expanded={isInnovationRoomActive}
+              onClick={() => setIsInnovationRoomActive((current) => !current)}
+              onMouseEnter={() => setIsInnovationRoomActive(true)}
+              onMouseLeave={() => setIsInnovationRoomActive(false)}
+              onFocus={() => setIsInnovationRoomActive(true)}
+              onBlur={() => setIsInnovationRoomActive(false)}
+              style={INNOVATION_ROOM.position}
+              className="absolute z-20 overflow-hidden rounded-[5px] border-2 border-[#00ef9c] bg-[#00f5a3] p-0.5 shadow-[0_8px_24px_rgba(0,165,108,0.28)] outline-none transition-[transform,box-shadow] duration-150 hover:-translate-y-px focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            >
+              <span className="relative block h-full w-full overflow-hidden rounded-[3px] bg-[#00f5a3]">
+                <Image
+                  src={INNOVATION_ROOM.logoUrl}
+                  alt=""
+                  fill
+                  sizes="120px"
+                  className="object-contain"
+                />
+              </span>
+            </button>
+
+            {isInnovationRoomActive ? (
+              <div
+                id={INNOVATION_ROOM_TOOLTIP_ID}
+                role="tooltip"
+                className="pointer-events-none absolute left-[32%] top-[10%] z-30 hidden w-[44%] min-w-[300px] rounded-2xl border border-primary/15 bg-white p-4 text-left shadow-[0_18px_50px_rgba(20,2,73,0.24)] md:block"
+              >
+                <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#006b49]">
+                  Innovation Room
+                </p>
+                <h4 className="mt-1 text-base font-bold text-primary">
+                  {INNOVATION_ROOM.name}
+                </h4>
+                <div className="mt-2 space-y-2 text-xs leading-relaxed text-ink/80">
+                  <p>
+                    <em>Koblingspunkt</em> connects businesses with students who
+                    want to solve real-world challenges.
+                  </p>
+                  {INNOVATION_ROOM.description.map((paragraph) => (
+                    <p key={paragraph}>{paragraph}</p>
+                  ))}
+                </div>
+              </div>
+            ) : null}
 
             {activeStand?.bookingPreview ? (
               <div

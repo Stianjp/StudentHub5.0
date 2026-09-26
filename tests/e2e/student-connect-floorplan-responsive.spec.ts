@@ -43,4 +43,25 @@ test("Student Connect keeps the interactive SVG floorplan on desktop", async ({
   await expect(
     page.getByRole("button", { name: "Show floor plan" }),
   ).toHaveCount(0);
+
+  const innovationRoom = page.getByRole("button", {
+    name: "Koblingspunkt Oslo – Innovation Room",
+  });
+  await expect(innovationRoom).toBeVisible();
+  await expect(innovationRoom.locator("img")).toHaveAttribute(
+    "src",
+    /PunktOslo-logo\.png/,
+  );
+
+  await innovationRoom.hover();
+  const innovationRoomTooltip = page.getByRole("tooltip");
+  await expect(innovationRoomTooltip).toContainText(
+    "Koblingspunkt connects businesses with students",
+  );
+  await expect(innovationRoomTooltip).toContainText(
+    "In the Innovation Room today",
+  );
+
+  await innovationRoom.focus();
+  await expect(innovationRoomTooltip).toBeVisible();
 });
