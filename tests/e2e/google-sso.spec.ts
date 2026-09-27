@@ -76,5 +76,5 @@ test("cancelled Google consent returns a safe retry link", async ({ page }) => {
 
 test("privacy page is public", async ({ page }) => {
   await page.goto(portalUrl("www", "/personvern"));
-  await expect(page.getByRole("heading", { name: "Personvernerklæring" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Privacy policy", exact: true })).toBeVisible();
 });

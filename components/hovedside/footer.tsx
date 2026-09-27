@@ -10,7 +10,7 @@ const QUICK_LINKS = [
   { label: "Events", href: "/events" },
   { label: "About us", href: "/about" },
   { label: "FAQ", href: "/faq" },
-  { label: "Personvern", href: "/personvern" },
+  { label: "Privacy policy", href: "/personvern" },
 ];
 
 export function Footer() {

@@ -1,9 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
-import { Building2, Calendar, LayoutDashboard, LogOut, Settings, User } from "lucide-react";
+import { Building2, Ticket, LayoutDashboard, LogOut, Settings, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LogoutButton } from "@/components/navigation/logout-button";
 import { SessionGuard } from "@/components/supabase/session-guard";
@@ -21,142 +22,43 @@ type StudentShellProps = {
   children: ReactNode;
 };
 
+const iconMap = { dashboard: LayoutDashboard, profile: User, events: Ticket, companies: Building2, settings: Settings };
+
 export function StudentShell({ nav, userName, userInitials, children }: StudentShellProps) {
   const pathname = usePathname() ?? "";
-  const displayName = userName.split(" ")[0] || userName;
-  const iconMap = {
-    dashboard: LayoutDashboard,
-    profile: User,
-    events: Calendar,
-    companies: Building2,
-    settings: Settings,
-  };
-  const activeHref = nav
-    .filter((item) => pathname === item.href || pathname.startsWith(`${item.href}/`))
-    .sort((a, b) => b.href.length - a.href.length)[0]?.href;
+  const activeHref = pathname.startsWith("/student/companies")
+    ? "/student/dashboard"
+    : nav.filter((item) => pathname === item.href || (item.href !== "/student" && pathname.startsWith(`${item.href}/`)))
+      .sort((a, b) => b.href.length - a.href.length)[0]?.href;
 
   return (
-    <div className="student-scope min-h-screen overflow-x-clip bg-[#846AE6] text-[#EDE8F5] font-['Ubuntu']">
-      <a
-        href="#student-main"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-[#FE9A70] focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-[#140249]"
-      >
-        Skip to content
-      </a>
+    <div className="student-scope min-h-screen bg-mist text-ink font-sans">
+      <a href="#student-main" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-secondary focus:px-4 focus:py-3 focus:text-primary">Skip to content</a>
       <SessionGuard />
-      <header className="sticky top-0 z-40 flex min-h-16 items-center justify-between border-b border-white/10 bg-[#140249]/95 px-4 py-2.5 text-white shadow-lg backdrop-blur lg:hidden">
-        <Link href="/student/dashboard" className="flex min-w-0 items-center gap-3 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70]">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#0B0130] text-sm font-black text-[#FE9A70]">
-            OSH
-          </span>
-          <span className="min-w-0">
-            <span className="block truncate text-[10px] font-black uppercase tracking-[0.16em] text-white/60">
-              Oslo Student Hub
-            </span>
-            <span className="block text-base font-black text-white">Student portal</span>
-          </span>
-        </Link>
-        <div className="ml-3 flex shrink-0 items-center gap-2">
-          <div className="flex h-10 min-w-10 items-center justify-center rounded-xl bg-[#FE9A70] px-2 text-xs font-black text-[#140249]" aria-label={`Signed in as ${userName}`}>
-            {userInitials || "SH"}
-          </div>
-          <LogoutButton
-            role="student"
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 text-white/80 transition-colors hover:border-[#FE9A70]/60 hover:text-[#FE9A70] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70]"
-          >
-            <LogOut size={18} aria-hidden="true" />
-            <span className="sr-only">Log out</span>
-          </LogoutButton>
-        </div>
-      </header>
-      <div className="flex min-h-[calc(100svh-4rem)] lg:min-h-screen">
-        <aside className="hidden w-72 shrink-0 flex-col border-r border-white/10 bg-[#140249] p-8 text-[#EDE8F5] shadow-2xl shadow-black/30 lg:flex">
-          <div className="flex items-center space-x-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#0B0130] shadow-lg shadow-black/30">
-              <span className="text-lg font-black text-[#FE9A70]">OSH</span>
-            </div>
-            <div>
-              <h1 className="mb-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#EDE8F5]/55">
-                Oslo Student Hub
-              </h1>
-              <p className="text-xl font-black text-[#EDE8F5]">Portal</p>
-            </div>
-          </div>
-
-          <nav className="mt-12">
-            <p className="mb-6 px-4 text-[11px] font-black uppercase tracking-widest text-[#EDE8F5]/55">
-              Navigation
-            </p>
+      <header className="sticky top-0 z-40 border-b border-white/10 bg-primary text-white">
+        <div className="mx-auto flex min-h-[72px] max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
+          <Link href="/student/events" aria-label="Oslo Student Hub — get your ticket" className="flex min-h-11 shrink-0 items-center">
+            <Image src="/brand/Logo_OSH_Gradient_whitetext.svg" alt="Oslo Student Hub" width={144} height={50} priority className="h-auto w-32 sm:w-36" />
+          </Link>
+          <nav aria-label="Main navigation" className="hidden items-center gap-2 lg:flex">
             {nav.map((item) => {
               const Icon = iconMap[item.icon];
-              const isActive = activeHref === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "mb-2 flex w-full items-center space-x-3 rounded-2xl border border-transparent p-4 text-sm font-bold transition-[background-color,border-color,color,box-shadow,transform] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70] focus-visible:ring-offset-2 focus-visible:ring-offset-[#140249]",
-                    isActive
-                      ? "border-[#FE9A70] bg-[#FE9A70] text-[#140249] shadow-[0_10px_24px_rgba(254,154,112,0.35)]"
-                      : "text-[#EDE8F5] hover:border-[#FE9A70]/70 hover:bg-[#1E0B62] hover:text-white",
-                  )}
-                >
-                  <Icon size={20} aria-hidden="true" />
-                  <span>{item.label}</span>
-                </Link>
-              );
+              const active = activeHref === item.href;
+              return <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined} className={cn("flex min-h-11 items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors", active ? "bg-secondary text-primary" : "text-white hover:bg-white/10")}><Icon size={18} aria-hidden="true" />{item.label}</Link>;
             })}
           </nav>
-
-          <div className="mt-10 border-t border-white/10 pt-6">
-            <LogoutButton
-              role="student"
-              className="flex w-full items-center space-x-3 text-sm font-bold text-[#EDE8F5]/70 transition-colors hover:text-[#FE9A70]"
-            >
-              <span>Log out</span>
-            </LogoutButton>
+          <div className="flex shrink-0 items-center gap-2">
+            <Link href="/student" aria-label={`My profile, ${userName}`} className="flex h-11 min-w-11 items-center justify-center rounded-full bg-white/10 px-2 text-xs font-bold text-white">{userInitials || "SH"}</Link>
+            <LogoutButton role="student" className="min-h-11 min-w-11 !p-2.5"><LogOut size={18} aria-hidden="true" /><span className="sr-only">Log out</span></LogoutButton>
           </div>
-        </aside>
-
-        <main id="student-main" className="relative min-w-0 flex-1 overflow-x-clip bg-[#846AE6] px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-6 sm:px-6 sm:pt-8 lg:p-10">
-          <div
-            className="pointer-events-none absolute inset-0 opacity-10"
-            style={{
-              backgroundImage: "radial-gradient(circle at 2px 2px, white 1px, transparent 0)",
-              backgroundSize: "40px 40px",
-            }}
-          />
-          <div className="relative z-10">
-            <div className="mb-10 hidden justify-end lg:flex">
-              <div className="flex items-center space-x-4 rounded-2xl bg-[#140249] px-4 py-2 text-white shadow-xl ring-1 ring-white/15">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FE9A70] text-sm font-black text-[#140249]">
-                  {userInitials || "SH"}
-                </div>
-                <span className="text-sm font-bold">{displayName}</span>
-              </div>
-            </div>
-            {children}
-          </div>
-        </main>
-      </div>
-      <nav aria-label="Mobile navigation" className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-50 grid grid-cols-4 gap-1 rounded-2xl border border-white/15 bg-[#140249]/95 p-1.5 text-white shadow-2xl backdrop-blur lg:hidden">
+        </div>
+      </header>
+      <main id="student-main" className="mx-auto min-w-0 max-w-5xl px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-5 sm:px-6 sm:pt-8 lg:pb-12">{children}</main>
+      <nav aria-label="Mobile navigation" className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-4 gap-1 border-t border-primary/15 bg-white px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 text-primary lg:hidden">
         {nav.map((item) => {
           const Icon = iconMap[item.icon];
-          const isActive = activeHref === item.href;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-current={isActive ? "page" : undefined}
-              className={cn(
-                "flex min-h-14 min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-1 text-[10px] font-bold leading-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70]",
-                isActive ? "bg-[#FE9A70] text-[#140249]" : "text-white/75 hover:bg-white/10 hover:text-white",
-              )}
-            >
-              <Icon size={19} aria-hidden="true" />
-              <span className="max-w-full truncate">{item.label}</span>
-            </Link>
-          );
+          const active = activeHref === item.href;
+          return <Link key={item.href} href={item.href} aria-current={active ? "page" : undefined} className={cn("flex min-h-14 min-w-0 flex-col items-center justify-center gap-1 rounded-xl px-1 text-xs font-semibold transition-colors", active ? "bg-secondary text-primary" : "text-primary/80 hover:bg-mist")}><Icon size={20} aria-hidden="true" /><span>{item.label}</span></Link>;
         })}
       </nav>
     </div>

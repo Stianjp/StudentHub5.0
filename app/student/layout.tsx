@@ -1,12 +1,13 @@
+import { defaultPathForRole } from "@/lib/host";
 import { StudentShell } from "@/components/layouts/student-shell";
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getOrCreateStudentForUser } from "@/lib/student";
 
 const nav = [
+  { href: "/student/events", label: "Ticket", icon: "events" },
   { href: "/student/dashboard", label: "Dashboard", icon: "dashboard" },
   { href: "/student", label: "My profile", icon: "profile" },
-  { href: "/student/events", label: "Events", icon: "events" },
   { href: "/student/consents", label: "Consents", icon: "settings" },
 ] satisfies Array<{ href: string; label: string; icon: "dashboard" | "profile" | "events" | "companies" | "settings" }>;
 
@@ -19,7 +20,7 @@ export default async function StudentLayout({ children }: { children: React.Reac
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/auth/sign-in?role=student&next=%2Fstudent%2Fdashboard");
+    redirect(`/auth/sign-in?role=student&next=${encodeURIComponent(defaultPathForRole("student"))}`);
   }
 
   const student = await getOrCreateStudentForUser(user.id, user.email);

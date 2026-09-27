@@ -39,6 +39,7 @@ export function LikedCompanies({
 
   return (
     <div className="flex flex-col gap-3">
+      <input name="editableCompanyIds" type="hidden" value={companies.map((company) => company.id).join(",")} readOnly />
       <input name="likedCompanyIds" type="hidden" value={selected.join(",")} readOnly />
       <div className="grid gap-2 md:grid-cols-2">
         {companies.map((company) => {
@@ -49,14 +50,14 @@ export function LikedCompanies({
               type="button"
               aria-pressed={active}
               onClick={() => toggle(company.id)}
-              className={`flex min-w-0 flex-col items-stretch justify-between gap-3 rounded-xl border px-3 py-3 text-left text-sm transition-[background-color,border-color,color,box-shadow,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70] focus-visible:ring-offset-2 focus-visible:ring-offset-[#140249] sm:flex-row sm:items-center ${
+              className={`flex min-w-0 flex-col items-stretch justify-between gap-3 rounded-xl border px-3 py-3 text-left text-sm transition-[background-color,border-color,color,box-shadow,transform] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-white sm:flex-row sm:items-center ${
                 active
-                  ? "!border-secondary bg-secondary/20 text-surface shadow-[0_0_0_3px_#FE9A70]"
-                  : "border-surface/20 bg-primary/20 text-surface hover:border-secondary/60 hover:bg-primary/30 hover:shadow-soft"
+                  ? "border-primary bg-secondary/20 text-primary"
+                  : "border-primary/30 bg-white text-primary hover:border-primary hover:bg-mist/40"
               }`}
             >
               <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/15 bg-white/95 p-2">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-primary/10 bg-white/95 p-2">
                   {company.logoUrl ? (
                     <Image
                       src={company.logoUrl}
@@ -84,9 +85,9 @@ export function LikedCompanies({
                         ✓
                       </span>
                     ) : null}
-                    <span className="truncate">{company.name}</span>
+                    <span className="break-words">{company.name}</span>
                   </span>
-                  <span className="mt-0.5 block text-xs text-surface/70">
+                  <span className="mt-0.5 block text-xs text-ink/75">
                     {getCompanyAudienceLabel({
                       industry: company.industry,
                       recruitmentFields: company.recruitmentFields,
@@ -102,9 +103,9 @@ export function LikedCompanies({
         })}
       </div>
       {selected.length > 0 ? (
-        <p className="text-xs text-surface/70">Selected: {selected.length} companies</p>
+        <p role="status" className="text-xs text-ink/75">Selected: {selected.length} companies</p>
       ) : (
-        <p className="text-xs text-surface/70">No favourites selected yet.</p>
+        <p role="status" className="text-xs text-ink/75">No favourites selected yet.</p>
       )}
     </div>
   );

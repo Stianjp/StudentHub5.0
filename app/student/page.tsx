@@ -82,6 +82,7 @@ export default async function StudentProfilePage({ searchParams }: PageProps) {
   return (
     <div className="flex flex-col gap-8">
       <SectionHeader
+        headingLevel="h1"
         eyebrow="Student"
         title="Profile"
         description="Update your profile to get better matches with companies and events."

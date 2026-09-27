@@ -6,13 +6,16 @@ export function SectionHeader({
   description,
   actions,
   tone = "default",
+  headingLevel = "h2",
 }: {
   eyebrow?: string;
   title: string;
   description?: string;
   actions?: ReactNode;
   tone?: "default" | "light";
+  headingLevel?: "h1" | "h2";
 }) {
+  const Heading = headingLevel;
   const isLight = tone === "light";
 
   return (
@@ -23,7 +26,7 @@ export function SectionHeader({
             {eyebrow}
           </p>
         ) : null}
-        <h2 className={isLight ? "text-2xl font-bold text-surface" : "text-2xl font-bold text-primary"}>{title}</h2>
+        <Heading className={isLight ? "text-2xl font-bold text-surface" : "text-2xl font-bold text-primary"}>{title}</Heading>
         {description ? (
           <p className={isLight ? "mt-1 text-sm text-surface/90" : "mt-1 text-sm text-primary"}>
             {description}

@@ -22,6 +22,7 @@ export type ApprovedCompanyPackageTier =
 
 export type ApprovedCompanyPreview = {
   id: string;
+  companyId: string;
   companyName: string;
   logoUrl: string | null;
   candidateLevelLabel: string | null;
@@ -330,6 +331,7 @@ async function fetchApprovedCompanies(
 
       return {
         id: app.id,
+        companyId: app.company_id!,
         companyName:
           (app.company_id ? companyNameByCompanyId.get(app.company_id) ?? null : null) ??
           (app.org_number
@@ -368,6 +370,6 @@ async function fetchApprovedCompanies(
 
 export const getApprovedCompaniesForCampaign = unstable_cache(
   fetchApprovedCompanies,
-  ["approved-companies-v3"],
+  ["approved-companies-v4"],
   { revalidate: 300, tags: ["approved-companies"] },
 );

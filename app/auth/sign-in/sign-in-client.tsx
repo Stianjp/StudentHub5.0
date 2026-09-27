@@ -184,7 +184,9 @@ export function SignInClient({
     clearBrowserAuthState();
     await supabase.auth.signOut({ scope: "local" });
     const nextPath =
-      typeof next === "string" ? next : getDefaultNextPath(roleValue, window.location.hostname);
+      roleValue === "student"
+        ? getSafePortalNextPath(next, "student")
+        : typeof next === "string" ? next : getDefaultNextPath(roleValue, window.location.hostname);
 
     if (mode === "reset") {
       const response = await fetch("/api/auth/reset", {
@@ -328,7 +330,7 @@ export function SignInClient({
     const host = window.location.hostname.toLowerCase();
     let hostNext = nextPath;
     if (host.startsWith("student.")) {
-      hostNext = "/student/dashboard";
+      hostNext = getSafePortalNextPath(next, "student");
     } else if (host.startsWith("bedrift.")) {
       hostNext = "/company";
     } else if (host.startsWith("admin.")) {

@@ -11,7 +11,7 @@ export function roleFromHost(hostname: string | null): AppRole | null {
 }
 
 export function defaultPathForRole(role: AppRole, hostname?: string | null) {
-  if (role === "student") return "/student/dashboard";
+  if (role === "student") return "/student/events";
   if (role === "admin") return "/admin";
   return "/company";
 }

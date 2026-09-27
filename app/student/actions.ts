@@ -1,5 +1,6 @@
 "use server";
 
+import { mergeVisibleFavourites } from "@/lib/student-portal";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth";
@@ -164,6 +165,8 @@ export async function saveStudentProfile(formData: FormData) {
   });
 
   revalidatePath("/student");
+  revalidatePath("/student/dashboard");
+  revalidatePath("/student/companies");
   revalidatePath("/student/consents");
   revalidatePath("/company/leads");
   revalidatePath("/company/roi");
@@ -183,8 +186,12 @@ export async function saveLikedCompanies(formData: FormData) {
   }
 
   const student = await getOrCreateStudentForUser(profile.id, user.email);
-  const likedCompanyIds = await filterExistingCompanyIds(parseMultiValue(formData, "likedCompanyIds"));
   const previousLikedCompanyIds = student.liked_company_ids ?? [];
+  const submittedIds = parseMultiValue(formData, "likedCompanyIds");
+  const nextIds = formData.has("editableCompanyIds")
+    ? mergeVisibleFavourites(previousLikedCompanyIds, submittedIds, parseMultiValue(formData, "editableCompanyIds"))
+    : submittedIds;
+  const likedCompanyIds = await filterExistingCompanyIds(nextIds);
 
   const { error } = await supabase
     .from("students")

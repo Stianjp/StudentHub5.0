@@ -1,4 +1,4 @@
-import { roleFromHost, type AppRole } from "@/lib/host";
+import { defaultPathForRole, roleFromHost, type AppRole } from "@/lib/host";
 
 export type OAuthPortalRole = Extract<AppRole, "student" | "company">;
 
@@ -27,8 +27,12 @@ export function getSafePortalNextPath(
   value: string | null | undefined,
   role: OAuthPortalRole,
 ) {
-  const fallback = role === "student" ? "/student/dashboard" : "/company";
+  const fallback = defaultPathForRole(role);
   if (!value || !value.startsWith("/") || value.startsWith("//")) return fallback;
+
+  // Older sign-in links still use the dashboard as the default destination.
+  const pathname = value.split(/[?#]/, 1)[0].replace(/\/$/, "");
+  if (role === "student" && pathname === "/student/dashboard") return fallback;
 
   const prefix = PORTAL_PREFIXES[role];
   if (value !== prefix && !value.startsWith(`${prefix}/`) && !value.startsWith(`${prefix}?`)) {

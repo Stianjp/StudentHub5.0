@@ -105,27 +105,27 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
   });
 
   return (
-    <div className="flex flex-col gap-8 text-surface">
-      <div className="rounded-3xl border border-surface/10 bg-primary p-4 sm:p-6 md:p-10">
+    <div className="flex flex-col gap-8 text-primary">
+      <div className="space-y-5">
         <SectionHeader
+        headingLevel="h1"
           eyebrow="Consents"
           title="Your consents"
           description="An overview of the companies you have given permission to contact you."
-          tone="light"
         />
 
-        <Card className="mt-8 flex flex-col gap-4 bg-primary text-surface ring-1 ring-white/10">
+        <Card className="mt-8 flex flex-col gap-4">
           <form className="grid gap-3 md:grid-cols-3" method="get">
-            <label className="text-sm font-semibold text-surface md:col-span-2">
+            <label className="text-sm font-semibold text-primary md:col-span-2">
               Search
               <Input
                 name="q"
                 defaultValue={search}
-                placeholder="Search by company name or industry..."
+                placeholder="Search by company name or industry…"
                 autoComplete="off"
               />
             </label>
-            <label className="text-sm font-semibold text-surface">
+            <label className="text-sm font-semibold text-primary">
               Industry
               <Select name="industry" defaultValue={selectedIndustry}>
                 <option value={INDUSTRY_ALL}>All industries</option>
@@ -136,7 +136,7 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
                 ))}
               </Select>
             </label>
-            <label className="text-sm font-semibold text-surface">
+            <label className="text-sm font-semibold text-primary">
               Consent status
               <Select name="status" defaultValue={selectedStatus}>
                 <option value={STATUS_ALL}>All</option>
@@ -157,7 +157,7 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="success">{consentedCount} with consent</Badge>
             <Badge variant="warning">{Math.max(totalCompanies - consentedCount, 0)} without consent</Badge>
-            <span className="text-xs text-surface/70">
+            <span className="text-xs text-ink/70">
               Showing {filteredCompanies.length} of {totalCompanies} companies.
             </span>
           </div>
@@ -177,12 +177,12 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
           </div>
         </Card>
 
-        <Card className="mt-6 flex flex-col gap-6 bg-primary text-surface ring-1 ring-white/10">
-          <h3 className="text-lg font-bold text-surface">Your consents ({filteredCompanies.length})</h3>
+        <Card className="mt-6 flex flex-col gap-6">
+          <h3 className="text-lg font-bold text-primary">Your consents ({filteredCompanies.length})</h3>
           {filteredCompanies.length === 0 ? (
-            <p className="text-sm text-surface/70">No companies match your search or filters.</p>
+            <p className="text-sm text-ink/70">No companies match your search or filters.</p>
           ) : (
-            <ul className="grid gap-6 text-sm text-surface/80">
+            <ul className="grid gap-6 text-sm text-ink/80">
               {filteredCompanies.map((company) => {
                 const latestConsent = latestConsentByCompanyId.get(company.id);
                 const hasConsent = Boolean(latestConsent?.consent);
@@ -194,7 +194,7 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
                     className={`flex flex-col gap-2 rounded-xl border p-4 md:flex-row md:items-center md:justify-between ${
                       hasConsent
                         ? "border-secondary/60 bg-secondary/15 shadow-soft"
-                        : "border-surface/10 bg-[#1B0858]"
+                        : "border-primary/15 bg-mist/30"
                     }`}
                   >
                     <div className="flex min-w-0 items-center gap-4">
@@ -220,14 +220,14 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
                         )}
                       </div>
                       <div className="min-w-0">
-                        <p className="font-semibold text-surface">{company.name}</p>
-                        <p className="text-xs text-surface/70">
+                        <p className="font-semibold text-primary">{company.name}</p>
+                        <p className="text-xs text-ink/70">
                           {getCompanyAudienceLabel({
                             industry: company.industry,
                             recruitmentFields: company.recruitment_fields,
                           })}
                         </p>
-                        <p className="mt-1 text-xs text-surface/70">
+                        <p className="mt-1 text-xs text-ink/70">
                           {updatedAt
                             ? `Last updated ${new Date(updatedAt).toLocaleString("en-GB")}`
                             : "No consent history has been recorded yet."}
@@ -253,12 +253,11 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
         </Card>
       </div>
 
-      <div className="rounded-3xl border border-surface/10 bg-primary p-4 sm:p-6 md:p-10">
+      <div className="space-y-5">
         <SectionHeader
           eyebrow="Account"
           title="Settings"
           description="Change your password or delete your profile."
-          tone="light"
         />
 
         {passwordUpdated ? (
@@ -273,10 +272,10 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
         ) : null}
 
         <div className="mt-8 grid gap-6 lg:grid-cols-2">
-          <Card className="flex flex-col gap-4 bg-primary text-surface ring-1 ring-white/10">
-            <h3 className="text-lg font-bold text-surface">Change password</h3>
+          <Card className="flex flex-col gap-4">
+            <h3 className="text-lg font-bold text-primary">Change password</h3>
             <form action={changeStudentPassword} className="grid gap-3">
-              <label className="text-sm font-semibold text-surface">
+              <label className="text-sm font-semibold text-primary">
                 New password
                 <Input
                   name="newPassword"
@@ -287,7 +286,7 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
                   placeholder="At least 8 characters"
                 />
               </label>
-              <label className="text-sm font-semibold text-surface">
+              <label className="text-sm font-semibold text-primary">
                 Confirm new password
                 <Input
                   name="confirmPassword"
@@ -304,13 +303,13 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
             </form>
           </Card>
 
-          <Card className="flex flex-col gap-4 bg-primary text-surface ring-1 ring-white/10">
-            <h3 className="text-lg font-bold text-surface">Delete profile</h3>
-            <p className="text-sm text-surface/80">
+          <Card className="flex flex-col gap-4">
+            <h3 className="text-lg font-bold text-primary">Delete profile</h3>
+            <p className="text-sm text-ink/80">
               This action cannot be undone. Your account, profile and associated student data will be deleted.
             </p>
             <form action={deleteStudentAccount} className="grid gap-3">
-              <label className="text-sm font-semibold text-surface">
+              <label className="text-sm font-semibold text-primary">
                 Type <span className="font-black">DELETE</span> to confirm
                 <Input
                   name="confirmDelete"

@@ -10,7 +10,7 @@ type Profile = TableRow<"profiles">;
 
 const roleRedirect: Record<Profile["role"], string> = {
   company: "/company",
-  student: "/student/dashboard",
+  student: defaultPathForRole("student"),
   admin: "/admin",
 };
 

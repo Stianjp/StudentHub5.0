@@ -7,7 +7,7 @@ import { Select } from "@/components/ui/select";
 import { LikedCompanies } from "@/components/student/liked-companies";
 import { saveLikedCompanies } from "@/app/student/actions";
 import { requireRole } from "@/lib/auth";
-import { getLatestCompanyRegistrationLogos } from "@/lib/company";
+import { listStudentParticipatingCompanies } from "@/lib/student-companies";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getOrCreateStudentForUser } from "@/lib/student";
 import { getStudentCategoryLabel } from "@/lib/student-company-display";
@@ -48,21 +48,25 @@ export default async function StudentCompaniesPage({ searchParams }: PageProps) 
     throw new Error("User not found");
   }
 
-  const [student, { data: companies, error: companiesError }] = await Promise.all([
+  const [student, participants] = await Promise.all([
     getOrCreateStudentForUser(profile.id, user.email),
-    supabase.from("companies").select("id, name, industry, recruitment_fields").order("name"),
+    listStudentParticipatingCompanies(),
   ]);
-
+  const participantIds = participants.map((company) => company.companyId);
+  const { data: companyDetails, error: companiesError } = participantIds.length > 0
+    ? await supabase.from("companies").select("id, industry, recruitment_fields").in("id", participantIds)
+    : { data: [], error: null };
   if (companiesError) throw companiesError;
-  const allCompanies = (companies ?? []) as Array<{
-    id: string;
-    name: string;
-    industry: string | null;
-    recruitment_fields: string[] | null;
-  }>;
-  const companyLogoMap = await getLatestCompanyRegistrationLogos(
-    allCompanies.map((company) => company.id),
-  );
+  const details = (companyDetails ?? []) as Array<{ id: string; industry: string | null; recruitment_fields: string[] | null }>;
+  const detailsById = new Map(details.map((company) => [company.id, company]));
+  // Keep the public site's package order, using company IDs for favourite actions.
+  const allCompanies = participants.map((company) => ({
+    id: company.companyId,
+    name: company.companyName,
+    logoUrl: company.logoUrl,
+    industry: detailsById.get(company.companyId)?.industry ?? null,
+    recruitment_fields: detailsById.get(company.companyId)?.recruitment_fields ?? company.candidateFields,
+  }));
   const industryOptions = Array.from(
     new Set([...INDUSTRY_OPTIONS, ...allCompanies.map((company) => company.industry).filter(Boolean)]),
   ) as string[];
@@ -80,9 +84,10 @@ export default async function StudentCompaniesPage({ searchParams }: PageProps) 
   return (
     <div className="flex flex-col gap-8">
       <SectionHeader
+        headingLevel="h1"
         eyebrow="Student"
-        title="Explore companies"
-        description="Discover companies and update your favourites."
+        title="Participating companies"
+        description="Meet the confirmed participants at Student Connect 2026 and choose your favourites."
         actions={
           <Link className="button-link text-xs" href="/student/dashboard">
             Back to dashboard
@@ -100,7 +105,7 @@ export default async function StudentCompaniesPage({ searchParams }: PageProps) 
         <p className="text-sm text-ink/80">
           Select the companies you want to follow. You can update the list at any time.
         </p>
-        <p className="text-xs font-semibold text-secondary">
+        <p className="text-sm font-semibold text-primary">
           Adding a company to your favourites also gives it permission to contact you.
         </p>
 
@@ -110,7 +115,7 @@ export default async function StudentCompaniesPage({ searchParams }: PageProps) 
             <Input
               name="q"
               defaultValue={search}
-              placeholder="Search by name or industry..."
+              placeholder="Search by name or industry…"
               autoComplete="off"
             />
           </label>
@@ -141,13 +146,15 @@ export default async function StudentCompaniesPage({ searchParams }: PageProps) 
 
         {allCompanies.length > 0 ? (
           <form action={saveLikedCompanies} className="flex flex-col gap-4">
+            {filteredCompanies.length === 0 ? <p className="text-sm text-ink/75">No companies match your search or filters.</p> : null}
             <LikedCompanies
+              key={(student.liked_company_ids ?? []).join(",")}
               companies={filteredCompanies.map((company) => ({
                 id: company.id,
                 name: company.name,
                 industry: company.industry,
                 recruitmentFields: company.recruitment_fields,
-                logoUrl: companyLogoMap[company.id] ?? null,
+                logoUrl: company.logoUrl,
               }))}
               initialSelected={student.liked_company_ids ?? []}
             />
@@ -159,7 +166,7 @@ export default async function StudentCompaniesPage({ searchParams }: PageProps) 
             </div>
           </form>
         ) : (
-          <p className="text-sm text-ink/70">No companies have been registered yet.</p>
+          <p className="text-sm text-ink/70">Participating companies will appear here once confirmed.</p>
         )}
       </Card>
     </div>

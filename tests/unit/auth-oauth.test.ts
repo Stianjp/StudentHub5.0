@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { getDefaultNextPath } from "@/lib/auth-urls";
 import {
   getSafePortalNextPath,
   isStudentOnboardingComplete,
@@ -18,10 +19,20 @@ describe("Google OAuth portal security", () => {
   });
 
   it("rejects external and cross-portal return addresses", () => {
-    expect(getSafePortalNextPath("https://example.com", "student")).toBe("/student/dashboard");
+    expect(getSafePortalNextPath("https://example.com", "student")).toBe("/student/events");
     expect(getSafePortalNextPath("//example.com", "company")).toBe("/company");
-    expect(getSafePortalNextPath("/admin", "student")).toBe("/student/dashboard");
+    expect(getSafePortalNextPath("/admin", "student")).toBe("/student/events");
     expect(getSafePortalNextPath("/company/leads", "company")).toBe("/company/leads");
+  });
+
+  it("lands students on Events by default while preserving explicit portal destinations", () => {
+    expect(getDefaultNextPath("student", "student.oslostudenthub.no")).toBe("/student/events");
+    expect(getSafePortalNextPath(null, "student")).toBe("/student/events");
+    expect(getSafePortalNextPath(undefined, "student")).toBe("/student/events");
+    expect(getSafePortalNextPath("/student/dashboard", "student")).toBe("/student/events");
+    expect(getSafePortalNextPath("/student/dashboard/", "student")).toBe("/student/events");
+    expect(getSafePortalNextPath("/student/dashboard?welcome=1", "student")).toBe("/student/events");
+    expect(getSafePortalNextPath("/student/consents", "student")).toBe("/student/consents");
   });
 
   it("requires the core student fields before leaving onboarding", () => {

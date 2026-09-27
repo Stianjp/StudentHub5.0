@@ -19,6 +19,8 @@ if (supabaseUrl) {
 }
 
 const nextConfig: NextConfig = {
+  // Keep browser-test compilation and fixture credentials out of the regular build.
+  distDir: process.env.STUDENT_PORTAL_TEST === "1" ? ".next/student-portal-test" : ".next",
   typescript: {
     ignoreBuildErrors: process.env.SKIP_TYPECHECK === "1",
     tsconfigPath: isProd ? "tsconfig.build.json" : "tsconfig.json",

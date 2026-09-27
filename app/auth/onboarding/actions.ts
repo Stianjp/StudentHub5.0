@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { defaultPathForRole } from "@/lib/host";
 import { resolveOAuthPortalRole } from "@/lib/auth-oauth";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -113,7 +114,7 @@ export async function completeStudentOAuthOnboarding(formData: FormData) {
   }
 
   revalidatePath("/student");
-  redirect("/student/dashboard");
+  redirect(defaultPathForRole("student"));
 }
 
 export async function completeCompanyOAuthOnboarding(formData: FormData) {

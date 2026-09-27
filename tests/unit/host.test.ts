@@ -31,8 +31,8 @@ describe("roleFromHost", () => {
 });
 
 describe("defaultPathForRole", () => {
-  it("sender student til /student/dashboard", () => {
-    expect(defaultPathForRole("student")).toBe("/student/dashboard");
+  it("sender student til /student/events", () => {
+    expect(defaultPathForRole("student")).toBe("/student/events");
   });
 
   it("sender company til /company", () => {

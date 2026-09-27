@@ -1,3 +1,5 @@
+import { defaultPathForRole } from "@/lib/host";
+
 type Role = "student" | "company" | "admin";
 
 export function getBaseUrlForRole(role: Role, fallback?: string) {
@@ -12,9 +14,5 @@ export function getBaseUrlForRole(role: Role, fallback?: string) {
 }
 
 export function getDefaultNextPath(role: Role, hostname?: string | null) {
-  if (role === "admin") {
-    return "/admin";
-  }
-  if (role === "company") return "/company";
-  return "/student/dashboard";
+  return defaultPathForRole(role, hostname);
 }
