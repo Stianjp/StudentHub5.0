@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -21,9 +21,9 @@ type QuestionDraft = {
   required: boolean;
 };
 
-function createQuestionDraft(): QuestionDraft {
+function createQuestionDraft(id = crypto.randomUUID()): QuestionDraft {
   return {
-    id: crypto.randomUUID(),
+    id,
     kind: "short_text",
     label: "",
     helpText: "",
@@ -43,7 +43,8 @@ type BuilderProps = {
 };
 
 export function FeedbackFormBuilder({ folders, slugGroups, action }: BuilderProps) {
-  const [questions, setQuestions] = useState<QuestionDraft[]>(() => [createQuestionDraft()]);
+  const initialQuestionId = useId();
+  const [questions, setQuestions] = useState<QuestionDraft[]>(() => [createQuestionDraft(initialQuestionId)]);
 
   function updateQuestion(id: string, patch: Partial<QuestionDraft>) {
     setQuestions((current) =>
@@ -74,6 +75,7 @@ export function FeedbackFormBuilder({ folders, slugGroups, action }: BuilderProp
 
   return (
     <form action={action} className="grid gap-6">
+      <input type="hidden" name="returnTo" value="/admin/forms/new" />
       <input type="hidden" name="questionOrder" value={questions.map((question) => question.id).join(",")} />
 
       <div className="grid gap-4 lg:grid-cols-[0.95fr_1.05fr]">

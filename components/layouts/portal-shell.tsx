@@ -97,7 +97,7 @@ export function PortalShell({
   title,
   nav,
   roleKey,
-  backgroundClass = "bg-[#846AE6]",
+  backgroundClass = "bg-mist",
   backgroundStyle,
   mainClass = "",
   children,
@@ -112,6 +112,7 @@ export function PortalShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname() ?? "/";
+  const lightPortal = mainClass.includes("admin-scope") || mainClass.includes("company-scope");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const isCollapsed = useSyncExternalStore(
     subscribeToCollapsedSidebar,
@@ -136,7 +137,7 @@ export function PortalShell({
   }
 
   return (
-    <div className={cn("min-h-screen overflow-x-clip text-[#EDE8F5] font-['Ubuntu']", backgroundClass)} style={backgroundStyle}>
+    <div className={cn("min-h-screen overflow-x-clip font-sans", lightPortal ? "text-ink" : "text-mist", backgroundClass)} style={backgroundStyle}>
       <a
         href="#portal-main"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-lg focus:bg-[#FE9A70] focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-[#140249]"
@@ -144,7 +145,7 @@ export function PortalShell({
         Hopp til innhold
       </a>
       <SessionGuard />
-      <header className="sticky top-0 z-50 flex min-h-16 items-center justify-between border-b border-white/10 bg-[#140249]/95 px-4 py-2.5 text-white shadow-lg backdrop-blur lg:hidden">
+      <header className="sticky top-0 z-50 flex min-h-16 items-center justify-between border-b border-white/10 bg-[#140249]/95 px-4 py-2.5 text-white lg:hidden">
         <Link
           href={normalizeHref(`/${roleKey}`)}
           onClick={() => setMobileMenuOpen(false)}
@@ -224,7 +225,7 @@ export function PortalShell({
                               aria-current={childIsActive ? "page" : undefined}
                               onClick={() => setMobileMenuOpen(false)}
                               className={cn(
-                                "rounded-lg px-3 py-2 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70]",
+                                "flex min-h-11 items-center rounded-lg px-3 py-2 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70]",
                                 childIsActive ? "bg-[#FE9A70]/20 text-[#FE9A70]" : "text-white/65 hover:bg-white/10 hover:text-white",
                               )}
                             >
@@ -253,7 +254,7 @@ export function PortalShell({
 
       <div className="flex min-h-[calc(100svh-4rem)] lg:min-h-screen">
         <aside className={cn(
-          "hidden shrink-0 border-r border-white/10 bg-[#140249] text-[#EDE8F5] shadow-2xl shadow-black/30 transition-[width,padding] duration-200 lg:block",
+          "hidden shrink-0 border-r border-white/10 bg-[#140249] text-[#EDE8F5] transition-[width,padding] duration-200 lg:block",
           isCollapsed ? "w-24 p-4" : "w-72 p-8",
         )}>
           <div className={cn("flex", isCollapsed ? "justify-center" : "justify-start")}>
@@ -310,7 +311,7 @@ export function PortalShell({
                       "group relative flex w-full items-center rounded-2xl border border-transparent p-4 text-sm font-bold transition-[background-color,border-color,color,box-shadow,transform] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70] focus-visible:ring-offset-2 focus-visible:ring-offset-[#140249]",
                       isCollapsed ? "justify-center" : "justify-between",
                       isActive
-                        ? "border-[#F2A786] bg-[#F3A17B] text-[#140249]"
+                        ? "border-secondary bg-secondary text-[#140249]"
                         : "text-[#EDE8F5] hover:border-[#FE9A70]/70 hover:bg-[#1E0B62] hover:text-white",
                     )}
                   >
@@ -335,7 +336,7 @@ export function PortalShell({
                             key={child.href}
                             href={child.href}
                             className={cn(
-                              "rounded-xl border px-3 py-2 text-xs font-semibold transition-[background-color,border-color,color] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70] focus-visible:ring-offset-2 focus-visible:ring-offset-[#140249]",
+                              "flex min-h-11 items-center rounded-xl border px-3 py-2 text-xs font-semibold transition-[background-color,border-color,color] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FE9A70] focus-visible:ring-offset-2 focus-visible:ring-offset-[#140249]",
                               childIsActive
                                 ? "border-[#FE9A70]/90 bg-[#FE9A70]/20 text-[#FE9A70]"
                                 : "border-transparent text-[#EDE8F5]/75 hover:border-[#FE9A70]/45 hover:bg-[#1E0B62] hover:text-[#EDE8F5]",
@@ -366,24 +367,17 @@ export function PortalShell({
           </div>
         </aside>
 
-        <main id="portal-main" className="relative min-w-0 flex-1 overflow-x-clip bg-[#846AE6] px-4 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-6 sm:px-6 sm:pt-8 lg:p-10">
-          <div
-            className="pointer-events-none absolute inset-0 opacity-10"
-            style={{
-              backgroundImage: "radial-gradient(circle at 2px 2px, white 1px, transparent 0)",
-              backgroundSize: "40px 40px",
-            }}
-          />
+        <main id="portal-main" className={cn("relative min-w-0 flex-1 overflow-x-clip px-4 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-6 sm:px-6 sm:pt-8 lg:p-8", lightPortal ? "bg-mist text-ink" : "bg-[#846AE6]")}>
           <div className="relative z-10">
-            <div className="mb-10 hidden justify-end lg:flex">
-              <div className="flex items-center gap-3 rounded-2xl bg-[#140249] px-4 py-2 text-white shadow-xl ring-1 ring-white/15">
+            <div className="mb-6 hidden justify-end lg:flex">
+              <div className="flex items-center gap-3 rounded-2xl bg-[#140249] px-4 py-2 text-white">
                 <span className="rounded-full bg-[#FE9A70] px-3 py-1 text-xs font-black uppercase tracking-wide text-[#140249]">
                   {roleLabel}
                 </span>
                 <span className="text-sm font-bold">{title}</span>
               </div>
             </div>
-            <div className={mainClass}>{children}</div>
+            <div className={cn(mainClass, lightPortal && "portal-light-scope")}>{children}</div>
           </div>
         </main>
       </div>

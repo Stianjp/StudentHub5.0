@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { feedbackPublicUrl } from "@/lib/feedback-url";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink } from "lucide-react";
@@ -14,9 +15,11 @@ import {
   createFeedbackQuestionAction,
   deleteFeedbackFormAction,
   saveFeedbackFormAction,
+  updateFeedbackQuestionAction,
 } from "@/app/admin/forms/actions";
 import { SlugPicker } from "@/components/admin/slug-picker";
 import { QuestionCreateForm } from "@/components/admin/question-create-form";
+import { QuestionEditForm } from "@/components/admin/question-edit-form";
 import { DeleteFeedbackForm } from "@/components/admin/delete-feedback-form";
 
 type PageProps = {
@@ -57,7 +60,7 @@ export default async function AdminFeedbackFormPage({ params, searchParams }: Pa
 
   const { folder, form, questions, responses } = result;
   const questionSummaries = buildFeedbackQuestionSummaries(questions, responses);
-  const publicUrl = `/feedback/${folder.slug}/${form.slug}`;
+  const publicUrl = feedbackPublicUrl(folder.slug, form.slug);
 
   return (
     <div className="flex flex-col gap-8">
@@ -225,6 +228,12 @@ export default async function AdminFeedbackFormPage({ params, searchParams }: Pa
                       Alternativer: {questionOptions(question).join(", ")}
                     </p>
                   ) : null}
+                  <QuestionEditForm
+                    action={updateFeedbackQuestionAction}
+                    formId={form.id}
+                    question={question}
+                    returnTo={`/admin/forms/${formId}`}
+                  />
                 </div>
               ))}
             </div>

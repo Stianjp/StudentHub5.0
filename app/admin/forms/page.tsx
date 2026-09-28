@@ -1,11 +1,12 @@
 import Link from "next/link";
+import { feedbackPublicUrl } from "@/lib/feedback-url";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { createFeedbackFolderAction } from "@/app/admin/forms/actions";
+import { createFeedbackFolderAction, setFeedbackFormPublishedAction } from "@/app/admin/forms/actions";
 import {
   buildAdminFeedbackSlugSuggestionGroups,
   getAdminFeedbackOverview,
@@ -35,6 +36,7 @@ export default async function AdminFormsPage({ searchParams }: PageProps) {
         eyebrow="Skjemaer"
         title="Skjemabygger for feedback"
         description="Lag mapper per arrangement, opprett flere skjemaer per mappe, og del dem via QR-kode eller lenke."
+        actions={<Link href={feedbackPublicUrl()} className="button-link text-sm">Se publiserte skjemaer</Link>}
       />
 
       {saved ? (
@@ -152,7 +154,7 @@ export default async function AdminFormsPage({ searchParams }: PageProps) {
                     </div>
                     {folder.description ? <p className="mt-2 text-sm text-primary/70">{folder.description}</p> : null}
                   </div>
-                  <Link href={`/feedback/${folder.slug}`} className="button-link text-sm">
+                  <Link href={feedbackPublicUrl(folder.slug)} className="button-link text-sm">
                     Åpne offentlig side
                   </Link>
                 </div>
@@ -177,10 +179,16 @@ export default async function AdminFormsPage({ searchParams }: PageProps) {
                           </p>
                         </div>
                         <div className="flex flex-wrap gap-2">
+                          <form action={setFeedbackFormPublishedAction}>
+                            <input type="hidden" name="returnTo" value="/admin/forms" />
+                            <input type="hidden" name="formId" value={form.id} />
+                            <input type="hidden" name="isPublished" value={String(!form.is_published)} />
+                            <Button type="submit" variant="secondary">{form.is_published ? "Avpubliser" : "Publiser"}</Button>
+                          </form>
                           <Link href={`/admin/forms/${form.id}`} className="button-link text-sm">
                             Rediger
                           </Link>
-                          <Link href={`/feedback/${folder.slug}/${form.slug}`} className="button-link text-sm">
+                          <Link href={feedbackPublicUrl(folder.slug, form.slug)} className="button-link text-sm">
                             Åpen side
                           </Link>
                         </div>

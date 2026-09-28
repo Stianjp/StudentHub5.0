@@ -62,146 +62,6 @@ table {
   background-color: #140249;
 }
 
-.admin-scope .osh-card,
-.company-scope .osh-card {
-  background-color: #140249;
-  border-color: rgba(237, 232, 245, 0.16);
-  color: #EDE8F5;
-}
-
-.admin-scope table,
-.company-scope table {
-  background-color: #140249;
-  color: #EDE8F5;
-  border-color: rgba(237, 232, 245, 0.2);
-}
-
-.admin-scope table :is(th, td),
-.company-scope table :is(th, td) {
-  color: #EDE8F5;
-}
-
-.admin-scope table :is(h1, h2, h3, h4, h5, h6, p, label, legend, li, span, a, small, strong, div)[class*="text-primary"],
-.company-scope table :is(h1, h2, h3, h4, h5, h6, p, label, legend, li, span, a, small, strong, div)[class*="text-primary"] {
-  color: #FFFFFF;
-}
-
-.admin-scope table :is(h1, h2, h3, h4, h5, h6, p, label, legend, li, span, a, small, strong, div)[class*="text-ink"],
-.company-scope table :is(h1, h2, h3, h4, h5, h6, p, label, legend, li, span, a, small, strong, div)[class*="text-ink"] {
-  color: rgba(237, 232, 245, 0.88);
-}
-
-.admin-scope .osh-card[class*="bg-success/"],
-.company-scope .osh-card[class*="bg-success/"] {
-  background-color: rgba(112, 192, 142, 0.15);
-  border-color: rgba(112, 192, 142, 0.5);
-  color: #E7F8EE;
-}
-
-.admin-scope .osh-card[class*="bg-error/"],
-.company-scope .osh-card[class*="bg-error/"] {
-  background-color: rgba(217, 72, 72, 0.16);
-  border-color: rgba(217, 72, 72, 0.52);
-  color: #FCEAEA;
-}
-
-.admin-scope .osh-card[class*="bg-info/"],
-.company-scope .osh-card[class*="bg-info/"] {
-  background-color: rgba(132, 106, 230, 0.24);
-  border-color: rgba(132, 106, 230, 0.58);
-  color: #F1ECFF;
-}
-
-.admin-scope .osh-card :is(h1, h2, h3, h4, h5, h6, p, label, legend, li, span, a, small, strong)[class*="text-primary"],
-.company-scope .osh-card :is(h1, h2, h3, h4, h5, h6, p, label, legend, li, span, a, small, strong)[class*="text-primary"] {
-  color: #EDE8F5;
-}
-
-.admin-scope .osh-card :is(h1, h2, h3, h4, h5, h6, p, label, legend, li, span, a, small, strong)[class*="text-ink"],
-.company-scope .osh-card :is(h1, h2, h3, h4, h5, h6, p, label, legend, li, span, a, small, strong)[class*="text-ink"] {
-  color: rgba(237, 232, 245, 0.88);
-}
-
-.admin-scope .osh-card :is(input, textarea, select),
-.company-scope .osh-card :is(input, textarea, select) {
-  background-color: #1B0858;
-  color: #F8F6FF;
-  border-color: rgba(237, 232, 245, 0.35);
-}
-
-.admin-scope .osh-card :is(input, textarea, select)::placeholder,
-.company-scope .osh-card :is(input, textarea, select)::placeholder {
-  color: rgba(237, 232, 245, 0.62);
-}
-
-.admin-scope .osh-card :is(input, textarea, select):hover,
-.company-scope .osh-card :is(input, textarea, select):hover {
-  border-color: rgba(254, 154, 112, 0.8);
-}
-
-.admin-scope .osh-card :is(input, textarea, select):focus,
-.company-scope .osh-card :is(input, textarea, select):focus {
-  border-color: #FE9A70;
-  box-shadow: 0 0 0 2px rgba(254, 154, 112, 0.7);
-}
-
-.company-scope .osh-card :is(input, textarea, select) {
-  color: #F8F6FF !important;
-  caret-color: #F8F6FF;
-  -webkit-text-fill-color: #F8F6FF !important;
-  color-scheme: dark;
-}
-
-.company-scope .osh-card :is(input, textarea, select):-webkit-autofill {
-  -webkit-text-fill-color: #F8F6FF !important;
-  box-shadow: 0 0 0 1000px #1B0858 inset !important;
-}
-
-.company-scope .osh-card input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(1);
-  opacity: 0.85;
-}
-
-/* Admin cards are dark by default. These rules must override the inline light-theme
-   colors used by the shared form components. */
-.admin-scope .osh-card :is(input, textarea, select) {
-  color: #F8F6FF !important;
-  caret-color: #F8F6FF;
-  -webkit-text-fill-color: #F8F6FF !important;
-  color-scheme: dark;
-}
-
-.admin-scope .osh-card :is(input, textarea, select)::placeholder {
-  color: #C8C1D6 !important;
-  -webkit-text-fill-color: #C8C1D6 !important;
-  opacity: 1;
-}
-
-.admin-scope .osh-card :is(input, textarea, select):-webkit-autofill {
-  -webkit-text-fill-color: #F8F6FF !important;
-  box-shadow: 0 0 0 1000px #1B0858 inset !important;
-}
-
-.admin-scope .osh-card :is(input, textarea, select):disabled {
-  background-color: #241166;
-  color: #C8C1D6 !important;
-  -webkit-text-fill-color: #C8C1D6 !important;
-  opacity: 1;
-}
-
-.admin-scope .osh-card input[type="date"]::-webkit-calendar-picker-indicator {
-  filter: invert(1);
-  opacity: 0.85;
-}
-
-.admin-scope .osh-card :is(h1, h2, h3, h4, h5, h6, p, label, legend, li, span, a, small, strong, div, section, article, summary, dt, dd)[class*="text-primary"] {
-  color: #EDE8F5 !important;
-}
-
-.admin-scope .osh-card :is(h1, h2, h3, h4, h5, h6, p, label, legend, li, span, a, small, strong, div, section, article, summary, dt, dd)[class*="text-ink"] {
-  color: #D8D1E5 !important;
-}
-
 .student-scope #checkin_registration {
   color: #140249;
 }
@@ -337,33 +197,6 @@ table {
   border-color: transparent;
   box-shadow: none;
   transform: none;
-}
-
-.admin-scope .osh-card select,
-.company-scope .osh-card select {
-  color-scheme: dark;
-}
-
-.admin-scope .osh-card select option,
-.admin-scope .osh-card select optgroup,
-.company-scope .osh-card select option,
-.company-scope .osh-card select optgroup {
-  background-color: #140249;
-  color: #EDE8F5;
-}
-
-.admin-scope .osh-card select option,
-.admin-scope .osh-card select optgroup {
-  background-color: #140249 !important;
-  color: #F8F6FF !important;
-  -webkit-text-fill-color: #F8F6FF !important;
-}
-
-.admin-scope .osh-card :is(label, div, section)[class*="bg-primary/5"],
-.company-scope .osh-card :is(label, div, section)[class*="bg-primary/5"] {
-  background-color: rgba(27, 8, 88, 0.92);
-  border-color: rgba(237, 232, 245, 0.24);
-  color: #F8F6FF;
 }
 
 .admin-scope .admin-light-surface {
@@ -821,4 +654,55 @@ button:active:not(:disabled) {
 }
 @media (prefers-reduced-motion: reduce) {
   .student-scope *, .student-scope *::before, .student-scope *::after { transition: none !important; animation: none !important; }
+}
+
+/* Shared light content theme for the admin/company portals. Navigation and
+   explicitly marked photographic cards retain the dark brand treatment. */
+.portal-light-scope { color: #1A1626; color-scheme: light; }
+.portal-light-scope .osh-card:not(.portal-dark-surface) {
+  background-color: #FFFFFF;
+  border-color: rgba(20, 2, 73, 0.14);
+  color: #1A1626;
+  box-shadow: 0 10px 30px -15px rgba(20, 2, 73, 0.2);
+}
+.portal-light-scope :is(div, section, article, li, details, fieldset)[class*="bg-primary/"]:not(.portal-dark-surface *) {
+  background-color: #F7F5FB;
+}
+.portal-light-scope :is(div, section, article, li)[class*="bg-[#1B0858]"]:not(.portal-dark-surface *),
+.portal-light-scope :is(div, section, article, li)[class*="bg-[#1b0858]"]:not(.portal-dark-surface *) {
+  background-color: #FFFFFF;
+  border-color: rgba(20, 2, 73, 0.16);
+}
+.portal-light-scope :is(h1, h2, h3, h4, h5, h6, p, label, legend, li, span, a, small, strong, div, section, article, ol, ul)[class*="text-surface"]:not(.portal-dark-surface, .portal-dark-surface *),
+.portal-light-scope :is(h1, h2, h3, h4, p, label, li, span, a, small, strong, div, section, article)[class*="text-white"]:not(.portal-dark-surface, .portal-dark-surface *) {
+  color: #140249;
+}
+.portal-light-scope [class*="text-secondary"]:not(.portal-dark-surface *) { color: #704126; }
+.portal-light-scope :is(a, button)[class~="bg-primary"] { background-color: #FE9A70; color: #140249; box-shadow: none; }
+.portal-light-scope :is(a, button)[class~="bg-primary"]:hover { background-color: #F7AC8A; }
+.portal-light-scope a[class*="text-white"]:not(.portal-dark-surface *) { border-color: rgba(20, 2, 73, 0.3); }
+.portal-light-scope .osh-card :is(input, textarea, select) {
+  background-color: #FFFFFF;
+  border-color: #8C849E;
+  color: #140249;
+  color-scheme: light;
+  -webkit-text-fill-color: #140249;
+}
+.portal-light-scope .osh-card :is(input, textarea, select)::placeholder { color: #655D72; -webkit-text-fill-color: #655D72; opacity: 1; }
+.portal-light-scope .osh-card :is(input, textarea, select):-webkit-autofill { -webkit-text-fill-color: #140249 !important; box-shadow: 0 0 0 1000px #FFFFFF inset !important; }
+.portal-light-scope table { background: #FFFFFF; color: #1A1626; border-color: rgba(20, 2, 73, 0.15); }
+.portal-light-scope table :is(th, td) { color: #1A1626; border-color: rgba(20, 2, 73, 0.15); }
+.portal-light-scope table thead { background: #EDE8F5; }
+.portal-light-scope table tbody tr:hover { background-color: #FFF1E9; }
+.portal-light-scope .text-success:not(.portal-dark-surface *) { color: #24643B; }
+.portal-light-scope .text-warning:not(.portal-dark-surface *) { color: #85500F; }
+.portal-light-scope .text-error:not(.portal-dark-surface *) { color: #B42323; }
+.portal-light-scope .text-info:not(.portal-dark-surface *) { color: #6041B4; }
+.portal-light-scope :is(a, button, input, select, textarea):focus-visible { outline: 2px solid #140249; outline-offset: 3px; box-shadow: 0 0 0 2px #FFFFFF; }
+.portal-light-scope .portal-dark-surface :is(a, button):focus-visible { outline-color: #FE9A70; }
+.portal-light-scope .button-link:hover { box-shadow: none; transform: none; background-color: #F7AC8A; }
+.portal-light-scope .portal-dark-surface { color: #FFFFFF; }
+.portal-light-scope button[class~="bg-error"] { background-color: #B42323; }
+@media (prefers-reduced-motion: reduce) {
+  .portal-light-scope *, .portal-light-scope *::before, .portal-light-scope *::after { transition: none !important; animation: none !important; }
 }

@@ -151,7 +151,7 @@ export default async function CompanyDashboardPage({ searchParams }: PageProps) 
       )}
 
       <section className="grid gap-6 lg:grid-cols-2">
-        <Card className="relative overflow-hidden">
+        <Card className="portal-dark-surface relative overflow-hidden">
           <Image
             src="/images/event_giving_a_sheet.jpg"
             alt="Registrering og oppfølging på event"
@@ -203,7 +203,7 @@ export default async function CompanyDashboardPage({ searchParams }: PageProps) 
       </section>
 
       <section className="grid gap-4 lg:grid-cols-3 lg:items-start">
-        <Card className="relative overflow-hidden p-0 lg:col-span-2 lg:self-start">
+        <Card className="portal-dark-surface relative overflow-hidden p-0 lg:col-span-2 lg:self-start">
           <div className="relative aspect-[16/8] w-full">
             <Image
               src="/images/Event_People_talking.jpg"

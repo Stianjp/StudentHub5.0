@@ -7,11 +7,16 @@ const apiPort = 4050;
 const appPort = 3012;
 const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 const user = { id: id(1), email: "student@example.test", aud: "authenticated", role: "authenticated", created_at: "2026-01-01T00:00:00Z", app_metadata: { provider: "email" }, user_metadata: { full_name: "Ada Student" } };
+const adminUser = { ...user, id: id(3), email: "admin@oslostudenthub.no" };
+const companyUser = { ...user, id: id(4), email: "company@example.test" };
+const users = [user, adminUser, companyUser];
 let tables;
 function reset() {
-  const companies = ["Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Other event"].map((name, i) => ({ id: id(10 + i), name, industry: i === 1 ? "Elektro" : "Data/IT", recruitment_fields: [i === 1 ? "Elektro" : "Data/IT"], org_number: String(999000000 + i), logo_path: i === 0 ? "test.svg" : null, representation_text: null }));
+  const companies = ["Alpha", "Beta", "Gamma", "Delta", "Epsilon", "Other event"].map((name, i) => ({ id: id(10 + i), name, industry: i === 1 ? "Elektro" : "Data/IT", recruitment_fields: [i === 1 ? "Elektro" : "Data/IT"], org_number: String(999000000 + i), logo_path: i === 0 ? "test.svg" : null, representation_text: null, location: "Oslo", recruitment_job_types: [], recruitment_levels: [], recruitment_years_bachelor: [], recruitment_years_master: [], branding_values: [] }));
   tables = {
-    profiles: [{ id: user.id, role: "student", full_name: "Ada Student" }],
+    profiles: [{ id: user.id, role: "student", full_name: "Ada Student" }, { id: adminUser.id, role: "admin" }, { id: companyUser.id, role: "company" }],
+    company_users: [{ id: id(5), user_id: companyUser.id, company_id: id(10), approved_at: "2026-01-01" }],
+    events: [], event_companies: [], stand_visits: [], company_user_requests: [], event_tickets: [],
     students: [{ id: id(2), user_id: user.id, email: user.email, full_name: "Ada Student", school: "UiO", study_program: "Data/IT", study_level: "Bachelor", study_year: 2, phone: null, about: null, work_style: null, social_profile: null, team_size: null, liked_company_ids: [id(11), id(15)], interests: [], job_types: [], values: [], preferred_locations: [], willing_to_relocate: false, created_at: "2026-01-01T00:00:00Z" }],
     companies,
     event_registration_campaigns: [{ id: id(30), slug: "student-connect-2026" }],
@@ -19,13 +24,15 @@ function reset() {
     event_registration_stands: [],
     event_registration_applications: [...companies.slice(0, 5).map((c, i) => ({ id: id(40 + i), campaign_id: id(30), company_id: c.id, company_name: c.name, org_number: c.org_number, logo_path: c.logo_path, candidate_level: "bachelor", candidate_fields: c.recruitment_fields, candidate_fields_other: null, approved_package_id: i === 0 ? id(31) : id(32), requested_package_id: null, approved_stand_id: null, requested_stand_id: null, status: "approved", approved_at: "2026-01-01" })), { id: id(49), campaign_id: id(30), company_id: id(10), company_name: "Alpha duplicate", org_number: "999000000", candidate_fields: [], approved_package_id: id(32), status: "approved", logo_path: null }],
     consents: [], leads: [],
+    feedback_folders: [{ id: id(70), name: "Student Connect 2026", slug: "student-connect-2026", is_active: true, sort_order: 0, created_at: "2026-01-01" }],
+    feedback_forms: [], feedback_questions: [], feedback_responses: [],
   };
 }
 reset();
-const session = () => {
+const session = (sessionUser = user) => {
   const now = Math.floor(Date.now() / 1000);
   const encode = (value) => Buffer.from(JSON.stringify(value)).toString("base64url");
-  return { access_token: `${encode({ alg: "HS256", typ: "JWT" })}.${encode({ sub: user.id, aud: "authenticated", role: "authenticated", email: user.email, exp: now + 3600, iat: now })}.local-test-signature`, refresh_token: "local-test-refresh", token_type: "bearer", expires_in: 3600, expires_at: now + 3600, user };
+  return { access_token: `${encode({ alg: "HS256", typ: "JWT" })}.${encode({ sub: sessionUser.id, aud: "authenticated", role: "authenticated", email: sessionUser.email, exp: now + 3600, iat: now })}.local-test-signature`, refresh_token: "local-test-refresh", token_type: "bearer", expires_in: 3600, expires_at: now + 3600, user: sessionUser };
 };
 function matches(row, key, filter) {
   if (filter.startsWith("eq.")) return String(row[key]) === filter.slice(3);
@@ -47,8 +54,12 @@ const server = createServer(async (req, res) => {
     const input = body ? JSON.parse(body) : null;
     if (url.pathname === "/test/reset") { reset(); return send({ ok: true }); }
     if (url.pathname === "/test/state") return send(tables);
-    if (url.pathname === "/auth/v1/token") return send(session());
-    if (url.pathname === "/auth/v1/user") return req.headers.authorization?.includes("local-test-signature") ? send(user) : send({ message: "No test session" }, 401);
+    if (url.pathname === "/auth/v1/token") return send(session(users.find((candidate) => candidate.email === input?.email) ?? user));
+    if (url.pathname === "/auth/v1/user") {
+      if (!req.headers.authorization?.includes("local-test-signature")) return send({ message: "No test session" }, 401);
+      const claims = JSON.parse(Buffer.from(req.headers.authorization.split(".")[1], "base64url").toString());
+      return send(users.find((candidate) => candidate.id === claims.sub));
+    }
     if (url.pathname === "/auth/v1/logout") return send({});
     if (url.pathname === "/auth/v1/authorize") {
       const target = new URL(url.searchParams.get("redirect_to"));
@@ -71,6 +82,7 @@ const server = createServer(async (req, res) => {
       rows = (Array.isArray(input) ? input : [input]).map((row, i) => ({ id: id(100 + tables[table].length + i), ...row }));
       tables[table].push(...rows);
     }
+    if (url.searchParams.has("offset")) rows = rows.slice(Number(url.searchParams.get("offset")));
     if (url.searchParams.has("limit")) rows = rows.slice(0, Number(url.searchParams.get("limit")));
     if (table === "consents") rows = rows.map((row) => ({ ...row, company: tables.companies.find((c) => c.id === row.company_id) ?? null, event: null }));
     send(req.headers.accept?.includes("vnd.pgrst.object") ? rows[0] ?? null : rows);

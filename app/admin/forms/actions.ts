@@ -46,7 +46,7 @@ function getFormValue(formData: FormData, name: string) {
 }
 
 function isChecked(formData: FormData, name: string) {
-  const value = formData.get(name);
+  const value = getFormValue(formData, name);
   return value === "on" || value === "true" || value === "1";
 }
 
@@ -135,7 +135,7 @@ export async function createFeedbackFolderAction(formData: FormData) {
     if (error) throw error;
 
     revalidatePath("/admin/forms");
-    revalidatePath("/feedback");
+    revalidatePath("/feedback", "layout");
     redirectBack(returnTo, "/admin/forms");
   } catch (error) {
     if (isNextRedirectError(error)) throw error;
@@ -184,7 +184,7 @@ export async function createFeedbackFormAction(formData: FormData) {
     if (error) throw error;
 
     revalidatePath("/admin/forms");
-    revalidatePath("/feedback");
+    revalidatePath("/feedback", "layout");
     redirectBack(returnTo, "/admin/forms");
   } catch (error) {
     if (isNextRedirectError(error)) throw error;
@@ -220,50 +220,51 @@ export async function createFeedbackFormWizardAction(formData: FormData) {
     const supabase = createAdminSupabaseClient();
     const now = new Date().toISOString();
 
-    const [{ data: folder, error: folderError }, { data: form, error: formError }] = await Promise.all([
-      supabase.from("feedback_folders").select("id, slug").eq("id", folderId).maybeSingle(),
-      supabase.from("feedback_forms").insert({
-        folder_id: folderId,
-        title,
-        slug: slugValue ? buildFeedbackSlug(slugValue) : buildFeedbackSlug(title),
-        description: description || null,
-        intro_text: introText || null,
-        cta_label: ctaLabel || "Start",
-        thank_you_text: thankYouText || "Takk for tilbakemeldingen.",
-        sort_order: sortOrderValue ? Number(sortOrderValue) : 0,
-        is_published: isChecked(formData, "isPublished"),
-        created_at: now,
-        updated_at: now,
-      })
-      .select("*")
-      .single(),
-    ]);
-
+    const { data: folder, error: folderError } = await supabase
+      .from("feedback_folders").select("id, slug, is_active").eq("id", folderId).maybeSingle();
     if (folderError) throw folderError;
-    if (formError) throw formError;
-    if (!folder || !form) {
-      throw new Error("Kunne ikke opprette skjema.");
-    }
+    if (!folder) throw new Error("Mappen finnes ikke.");
+    const publish = isChecked(formData, "isPublished");
+    if (publish && !folder.is_active) throw new Error("Mappen er inaktiv. Velg en aktiv mappe før publisering.");
 
-    for (const question of questions) {
-      const { error } = await supabase.from("feedback_questions").insert({
-        form_id: form.id,
-        label: question.label,
-        kind: question.kind,
-        help_text: question.help_text,
-        required: question.required,
-        options: question.options,
-        sort_order: question.sort_order,
-        created_at: now,
-        updated_at: now,
-      });
+    const { data: form, error: formError } = await supabase.from("feedback_forms").insert({
+      folder_id: folderId,
+      title,
+      slug: slugValue ? buildFeedbackSlug(slugValue) : buildFeedbackSlug(title),
+      description: description || null,
+      intro_text: introText || null,
+      cta_label: ctaLabel || "Start",
+      thank_you_text: thankYouText || "Takk for tilbakemeldingen.",
+      sort_order: sortOrderValue ? Number(sortOrderValue) : 0,
+      is_published: false,
+      created_at: now,
+      updated_at: now,
+    }).select("*").single();
+    if (formError) throw formError;
+    if (!form) throw new Error("Kunne ikke opprette skjema.");
+
+    try {
+      const { error } = await supabase.from("feedback_questions").insert(questions.map((question) => ({
+        ...question, form_id: form.id, created_at: now, updated_at: now,
+      })));
       if (error) throw error;
+      if (publish) {
+        const { error: publishError } = await supabase.from("feedback_forms")
+          .update({ is_published: true, updated_at: now }).eq("id", form.id);
+        if (publishError) throw publishError;
+      }
+    } catch (error) {
+      // A new form must never appear publicly with only some of its questions.
+      const { error: cleanupError } = await supabase.from("feedback_forms").delete().eq("id", form.id);
+      if (cleanupError) throw new Error("Opprettelsen feilet. Et upublisert utkast er beholdt i skjemaoversikten.");
+      throw error;
     }
 
     revalidatePath("/admin/forms");
+    revalidatePath(`/admin/forms/${form.id}`);
     revalidatePath("/feedback");
     revalidatePath(`/feedback/${folder.slug}`);
-    if (form.is_published) {
+    if (publish) {
       revalidatePath(`/feedback/${folder.slug}/${form.slug}`);
     }
     redirect(`/admin/forms/${form.id}?saved=1`);
@@ -320,7 +321,7 @@ export async function saveFeedbackFormAction(formData: FormData) {
     if (error) throw error;
 
     revalidatePath("/admin/forms");
-    revalidatePath("/feedback");
+    revalidatePath("/feedback", "layout");
     redirectBack(returnTo, "/admin/forms");
   } catch (error) {
     if (isNextRedirectError(error)) throw error;
@@ -357,7 +358,7 @@ export async function setFeedbackFormPublishedAction(formData: FormData) {
 
     const { data: folder, error: folderError } = await supabase
       .from("feedback_folders")
-      .select("slug")
+      .select("slug, is_active")
       .eq("id", form.folder_id)
       .maybeSingle();
 
@@ -365,6 +366,8 @@ export async function setFeedbackFormPublishedAction(formData: FormData) {
     if (!folder) {
       throw new Error("Mappen til skjemaet ble ikke funnet.");
     }
+
+    if (isPublished && !folder.is_active) throw new Error("Mappen er inaktiv. Velg en aktiv mappe før publisering.");
 
     const { error } = await supabase
       .from("feedback_forms")
@@ -376,10 +379,11 @@ export async function setFeedbackFormPublishedAction(formData: FormData) {
     if (error) throw error;
 
     revalidatePath("/admin/forms");
+    revalidatePath(`/admin/forms/${form.id}`);
     revalidatePath("/feedback");
     revalidatePath(`/feedback/${folder.slug}`);
     revalidatePath(`/feedback/${folder.slug}/${form.slug}`);
-    redirectBack(returnTo, `/admin/forms/${formId}`);
+    redirectBack(returnTo, returnTo === "/admin/forms" ? "/admin/forms" : `/admin/forms/${formId}`);
   } catch (error) {
     if (isNextRedirectError(error)) throw error;
     if (typeof returnTo === "string" && returnTo.startsWith("/")) {
@@ -414,7 +418,7 @@ export async function deleteFeedbackFormAction(formData: FormData) {
 
     const { data: folder, error: folderError } = await supabase
       .from("feedback_folders")
-      .select("slug")
+      .select("slug, is_active")
       .eq("id", form.folder_id)
       .maybeSingle();
 
@@ -486,7 +490,85 @@ export async function createFeedbackQuestionAction(formData: FormData) {
     revalidatePath("/admin/forms");
     revalidatePath(`/admin/forms/${formId}`);
     revalidatePath("/feedback");
-    redirectBack(returnTo, `/admin/forms/${formId}`);
+    redirectBack(returnTo, returnTo === "/admin/forms" ? "/admin/forms" : `/admin/forms/${formId}`);
+  } catch (error) {
+    if (isNextRedirectError(error)) throw error;
+    if (typeof returnTo === "string" && returnTo.startsWith("/")) {
+      redirect(`${returnTo}?error=${encodeURIComponent(getErrorMessage(error))}`);
+    }
+    throw error;
+  }
+}
+
+export async function updateFeedbackQuestionAction(formData: FormData) {
+  await requireRole("admin");
+  const returnTo = formData.get("returnTo");
+
+  try {
+    const formId = String(getFormValue(formData, "formId") ?? "").trim();
+    const questionId = String(getFormValue(formData, "questionId") ?? "").trim();
+    const label = String(getFormValue(formData, "label") ?? "").trim();
+    const kind = String(getFormValue(formData, "kind") ?? "").trim();
+    const helpText = String(getFormValue(formData, "helpText") ?? "").trim();
+    const sortOrderValue = String(getFormValue(formData, "sortOrder") ?? "").trim();
+
+    if (!isUuid(formId) || !isUuid(questionId)) {
+      throw new Error("Velg et gyldig spørsmål.");
+    }
+    if (!label) {
+      throw new Error("Spørsmålet må ha en tittel.");
+    }
+    if (!kind) {
+      throw new Error("Velg en spørsmåls-type.");
+    }
+    if (!FEEDBACK_QUESTION_KINDS.includes(kind as FeedbackQuestionKind)) {
+      throw new Error("Ugyldig spørsmålstype.");
+    }
+
+    const options = normalizeFeedbackOptions(String(getFormValue(formData, "options") ?? ""));
+    if ((kind === "single_choice" || kind === "multi_choice") && options.length === 0) {
+      throw new Error("Spørsmål med svaralternativer må ha minst ett alternativ.");
+    }
+
+    const supabase = createAdminSupabaseClient();
+    const { data: form, error: formError } = await supabase
+      .from("feedback_forms")
+      .select("id, slug, folder_id")
+      .eq("id", formId)
+      .maybeSingle();
+    if (formError) throw formError;
+    if (!form) throw new Error("Skjemaet finnes ikke.");
+
+    const { data: folder, error: folderError } = await supabase
+      .from("feedback_folders")
+      .select("slug")
+      .eq("id", form.folder_id)
+      .maybeSingle();
+    if (folderError) throw folderError;
+
+    const { error } = await supabase
+      .from("feedback_questions")
+      .update({
+        label,
+        kind,
+        help_text: helpText || null,
+        required: isChecked(formData, "required"),
+        options,
+        sort_order: sortOrderValue ? Number(sortOrderValue) : 0,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", questionId)
+      .eq("form_id", formId);
+    if (error) throw error;
+
+    revalidatePath("/admin/forms");
+    revalidatePath(`/admin/forms/${formId}`);
+    revalidatePath("/feedback");
+    if (folder?.slug) {
+      revalidatePath(`/feedback/${folder.slug}`);
+      revalidatePath(`/feedback/${folder.slug}/${form.slug}`);
+    }
+    redirectBack(returnTo, returnTo === "/admin/forms" ? "/admin/forms" : `/admin/forms/${formId}`);
   } catch (error) {
     if (isNextRedirectError(error)) throw error;
     if (typeof returnTo === "string" && returnTo.startsWith("/")) {
@@ -520,7 +602,7 @@ export async function toggleFeedbackFormPublishedAction(formData: FormData) {
 
     revalidatePath("/admin/forms");
     revalidatePath("/feedback");
-    redirectBack(returnTo, `/admin/forms/${formId}`);
+    redirectBack(returnTo, returnTo === "/admin/forms" ? "/admin/forms" : `/admin/forms/${formId}`);
   } catch (error) {
     if (isNextRedirectError(error)) throw error;
     if (typeof returnTo === "string" && returnTo.startsWith("/")) {

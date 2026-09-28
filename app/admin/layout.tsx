@@ -22,7 +22,7 @@ const nav = [
   },
   { href: "/admin/company-packages", label: "Bedriftspakker" },
   { href: "/admin/students", label: "Studenter" },
-  { href: "/admin/leads", label: "Leads" },
+  { href: "/admin/leads", label: "Leads", children: [{ href: "/admin/leads/overview", label: "Oversikt" }] },
   {
     href: "/admin/crm",
     label: "CRM",
