@@ -12,7 +12,7 @@ function fullyDecode(value: string) {
   return decoded;
 }
 
-test("Student Connect uses the PNG floorplan on mobile", async ({ page }) => {
+test("Student Connect uses the new floorplan on mobile", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/hovedside/studentconnect2026");
 
@@ -23,11 +23,11 @@ test("Student Connect uses the PNG floorplan on mobile", async ({ page }) => {
 
   const src = await floorplan.getAttribute("src");
   expect(fullyDecode(src ?? "")).toContain(
-    "/StudentConnect-site/Floorplan OSH.png",
+    "/StudentConnect-site/Floorplan_new.png",
   );
 });
 
-test("Student Connect keeps the interactive SVG floorplan on desktop", async ({
+test("Student Connect keeps the interactive floorplan on desktop", async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 1200 });
@@ -38,7 +38,7 @@ test("Student Connect keeps the interactive SVG floorplan on desktop", async ({
 
   const src = await floorplan.getAttribute("src");
   expect(fullyDecode(src ?? "")).toContain(
-    "/event-register/student-connect-2026-floorplan.svg",
+    "/StudentConnect-site/Floorplan_new.png",
   );
   await expect(
     page.getByRole("button", { name: "Show floor plan" }),

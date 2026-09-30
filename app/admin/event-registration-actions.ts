@@ -7,6 +7,7 @@ import {
   approveRegistrationApplication,
   rejectRegistrationApplication,
   resendCompanyPortalInvite,
+  updateApprovedRegistrationApplicationPackageAndStand,
   updateApprovedRegistrationApplicationStand,
 } from "@/lib/event-registration";
 import {
@@ -21,6 +22,7 @@ import {
   registrationStandSchema,
   rejectRegistrationApplicationSchema,
   resendPortalInviteSchema,
+  updateApprovedRegistrationPackageAndStandSchema,
   updateApprovedRegistrationStandSchema,
 } from "@/lib/validation/event-registration";
 
@@ -308,6 +310,45 @@ export async function updateApprovedRegistrationStandAction(formData: FormData) 
     revalidatePath(`/admin/events/${result.eventId}`);
     revalidatePath("/company");
     revalidatePath("/company/events");
+    redirectWithResult(returnTo, "saved");
+  } catch (error) {
+    if (isNextRedirectError(error)) throw error;
+    redirectWithResult(returnTo, "error", getErrorMessage(error));
+    throw error;
+  }
+}
+
+export async function updateApprovedRegistrationPackageAndStandAction(formData: FormData) {
+  const admin = await requireRole("admin");
+  const returnTo = getSafeReturnTo(formData);
+
+  try {
+    const eventId = String(formData.get("eventId") ?? "").trim();
+    const campaignId = String(formData.get("campaignId") ?? "").trim();
+    const slug = String(formData.get("slug") ?? "").trim() || null;
+    void admin;
+    const parsed = updateApprovedRegistrationPackageAndStandSchema.safeParse({
+      applicationId: formData.get("applicationId"),
+      approvedPackageId: formData.get("approvedPackageId"),
+      approvedStandId: formData.get("approvedStandId"),
+    });
+
+    if (!parsed.success) {
+      throw new Error(parsed.error.issues.map((issue) => issue.message).join(", "));
+    }
+
+    const result = await updateApprovedRegistrationApplicationPackageAndStand({
+      applicationId: parsed.data.applicationId,
+      approvedPackageId: parsed.data.approvedPackageId,
+      approvedStandId: parsed.data.approvedStandId,
+    });
+
+    revalidateRegistrationPaths(eventId || result.eventId, campaignId || result.campaignId, slug);
+    revalidatePath(`/admin/companies/${result.companyId}`);
+    revalidatePath(`/admin/events/${result.eventId}`);
+    revalidatePath("/company");
+    revalidatePath("/company/events");
+    revalidateApprovedCompanies();
     redirectWithResult(returnTo, "saved");
   } catch (error) {
     if (isNextRedirectError(error)) throw error;

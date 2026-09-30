@@ -1840,6 +1840,158 @@ export async function updateApprovedRegistrationApplicationStand(input: {
   }
 }
 
+export async function updateApprovedRegistrationApplicationPackageAndStand(input: {
+  applicationId: string;
+  approvedPackageId: string;
+  approvedStandId?: string | null;
+}) {
+  const supabase = createAdminSupabaseClient();
+  const now = new Date().toISOString();
+  const { data: application, error: applicationError } = await supabase
+    .from("event_registration_applications")
+    .select("*")
+    .eq("id", input.applicationId)
+    .single();
+
+  if (applicationError) throw applicationError;
+
+  const typedApplication = application as RegistrationApplication;
+  if (typedApplication.status !== "approved") {
+    throw new Error("Bare godkjente søknader kan få oppdatert pakke og standplass.");
+  }
+
+  const { data: approvedPackage, error: packageError } = await supabase
+    .from("event_registration_packages")
+    .select("*")
+    .eq("id", input.approvedPackageId)
+    .single();
+
+  if (packageError) throw packageError;
+
+  const typedPackage = approvedPackage as RegistrationPackage;
+  if (typedPackage.campaign_id !== typedApplication.campaign_id) {
+    throw new Error("Valgt pakke tilhører en annen registreringskampanje.");
+  }
+  if (!typedPackage.mapped_package) {
+    throw new Error("Godkjent pakke må være koblet til Standard, Silver, Gold eller Platinum.");
+  }
+
+  if (typedPackage.internal_capacity !== null && typedPackage.id !== typedApplication.approved_package_id) {
+    const { count } = await supabase
+      .from("event_registration_applications")
+      .select("id, campaign_id, status, approved_package_id", { count: "exact", head: true })
+      .eq("campaign_id" as never, typedApplication.campaign_id as never)
+      .eq("status" as never, "approved" as never)
+      .eq("approved_package_id" as never, typedPackage.id as never);
+
+    if ((count ?? 0) >= typedPackage.internal_capacity) {
+      throw new Error("Valgt pakke har nådd intern kapasitet.");
+    }
+  }
+
+  if (!input.approvedStandId) {
+    throw new Error("Velg en standplass som matcher valgt pakke.");
+  }
+
+  const previousApprovedStandId = typedApplication.approved_stand_id;
+  let claimedStand: RegistrationStand | null = null;
+  let shouldReleaseClaimedStand = false;
+
+  if (input.approvedStandId) {
+    const { data: stand, error: standError } = await supabase
+      .from("event_registration_stands")
+      .select("*")
+      .eq("id", input.approvedStandId)
+      .single();
+
+    if (standError) throw standError;
+
+    const typedStand = stand as RegistrationStand;
+    if (typedStand.campaign_id !== typedApplication.campaign_id) {
+      throw new Error("Valgt stand tilhører en annen registreringskampanje.");
+    }
+    if (typedStand.package_tier !== typedPackage.mapped_package) {
+      throw new Error("Valgt stand matcher ikke valgt pakke.");
+    }
+
+    if (typedStand.assigned_application_id === typedApplication.id && typedStand.status === "assigned") {
+      claimedStand = typedStand;
+    } else {
+      const { data: claimed, error: claimError } = await supabase
+        .from("event_registration_stands")
+        .update({
+          status: "assigned",
+          assigned_application_id: typedApplication.id,
+          updated_at: now,
+        })
+        .eq("id", typedStand.id)
+        .eq("status", "available")
+        .is("assigned_application_id", null)
+        .select("*")
+        .single();
+
+      if (claimError) {
+        throw new Error("Standplassen er ikke lenger ledig. Oppdater siden og prøv igjen.");
+      }
+
+      claimedStand = claimed as RegistrationStand;
+      shouldReleaseClaimedStand = true;
+    }
+  }
+
+  try {
+    const { company } = await ensureCompanyFromApplication({ application: typedApplication });
+    const eventCompany = await ensureEventCompanyFromApplication({
+      application: typedApplication,
+      company,
+      packageTier: typedPackage.mapped_package,
+      standCode: claimedStand?.stand_code ?? null,
+    });
+
+    const { error: updateError } = await supabase
+      .from("event_registration_applications")
+      .update({
+        company_id: company.id,
+        event_company_id: eventCompany.id,
+        approved_package_id: typedPackage.id,
+        approved_stand_id: claimedStand?.id ?? null,
+        updated_at: now,
+      })
+      .eq("id", typedApplication.id);
+
+    if (updateError) throw updateError;
+
+    if (previousApprovedStandId && previousApprovedStandId !== claimedStand?.id) {
+      await releaseStandReservation(previousApprovedStandId);
+    }
+
+    try {
+      await syncDynamicEmailGroups({ campaignId: typedApplication.campaign_id });
+    } catch (syncError) {
+      console.error("Dynamic email group sync failed after package update", syncError);
+    }
+
+    return {
+      applicationId: typedApplication.id,
+      companyId: company.id,
+      eventId: typedApplication.event_id,
+      campaignId: typedApplication.campaign_id,
+    };
+  } catch (error) {
+    if (claimedStand && shouldReleaseClaimedStand) {
+      await supabase
+        .from("event_registration_stands")
+        .update({
+          status: "available",
+          assigned_application_id: null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", claimedStand.id);
+    }
+    throw error;
+  }
+}
+
 export async function rejectRegistrationApplication(input: {
   applicationId: string;
   rejectionReason?: string | null;

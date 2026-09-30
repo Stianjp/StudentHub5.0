@@ -11,8 +11,9 @@ import {
   approveRegistrationApplicationAction,
   rejectRegistrationApplicationAction,
   resendCompanyPortalInviteAction,
-  updateApprovedRegistrationStandAction,
+  updateApprovedRegistrationPackageAndStandAction,
 } from "@/app/admin/event-registration-actions";
+import { ApprovedPackageStandForm } from "@/components/admin/approved-package-stand-form";
 
 type PageProps = {
   params: Promise<{ eventId: string; campaignId: string; applicationId: string }>;
@@ -47,13 +48,6 @@ export default async function AdminRegistrationApplicationPage({ params, searchP
   const approvedStand = detail.stands.find((stand) => stand.id === detail.application.approved_stand_id) ?? null;
   const defaultPackageId = detail.application.approved_package_id ?? detail.application.requested_package_id ?? "";
   const defaultStandId = detail.application.approved_stand_id ?? detail.application.requested_stand_id ?? "";
-  const approvedStandOptions = detail.approvedPackage?.mapped_package
-    ? detail.stands.filter(
-        (stand) =>
-          stand.package_tier === detail.approvedPackage?.mapped_package &&
-          (stand.assigned_application_id === detail.application.id || (!stand.assigned_application_id && stand.status === "available")),
-      )
-    : [];
   const registrationLead = detail.automationStatus.crmEntries.find(
     (entry) => entry.lead_id === detail.automationStatus.registrationLeadId,
   );
@@ -272,32 +266,23 @@ export default async function AdminRegistrationApplicationPage({ params, searchP
       {detail.application.status === "approved" ? (
         <Card className="grid gap-4">
           <div>
-            <h3 className="text-lg font-bold text-primary">Oppdater standplass</h3>
+            <h3 className="text-lg font-bold text-primary">Endre standpakke og standplass</h3>
             <p className="text-sm text-ink/70">
-              Endrer du stand her, frigjøres forrige stand automatisk på kartet og bedriften oppdateres med ny standkode.
+              Endrer du pakke og stand her, frigjøres forrige stand automatisk på kartet og bedriften oppdateres med ny pakke og standkode.
             </p>
           </div>
-          <form action={updateApprovedRegistrationStandAction} className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
-            <input type="hidden" name="eventId" value={eventId} />
-            <input type="hidden" name="campaignId" value={campaignId} />
-            <input type="hidden" name="applicationId" value={applicationId} />
-            <input type="hidden" name="slug" value={detail.campaign.slug} />
-            <input type="hidden" name="returnTo" value={returnTo} />
-            <label className="text-sm font-semibold text-primary">
-              Godkjent standplass
-              <Select name="approvedStandId" defaultValue={detail.application.approved_stand_id ?? ""}>
-                <option value="">Ingen stand</option>
-                {approvedStandOptions.map((stand) => (
-                  <option key={stand.id} value={stand.id}>
-                    {stand.stand_code} · {stand.package_tier} · {stand.status}
-                  </option>
-                ))}
-              </Select>
-            </label>
-            <Button type="submit" variant="secondary">
-              Lagre standplass
-            </Button>
-          </form>
+          <ApprovedPackageStandForm
+            action={updateApprovedRegistrationPackageAndStandAction}
+            eventId={eventId}
+            campaignId={campaignId}
+            applicationId={applicationId}
+            slug={detail.campaign.slug}
+            returnTo={returnTo}
+            packages={detail.packages}
+            stands={detail.stands}
+            currentPackageId={detail.application.approved_package_id ?? ""}
+            currentStandId={detail.application.approved_stand_id ?? ""}
+          />
         </Card>
       ) : null}
 

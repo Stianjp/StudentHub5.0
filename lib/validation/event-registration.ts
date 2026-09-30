@@ -145,6 +145,14 @@ export const updateApprovedRegistrationStandSchema = z.object({
     .transform((value) => value || null),
 });
 
+export const updateApprovedRegistrationPackageAndStandSchema = z.object({
+  applicationId: z.string().uuid("Invalid application."),
+  approvedPackageId: z.string().uuid("Velg en gyldig pakke."),
+  approvedStandId: z
+    .union([z.string().uuid(), z.literal(""), z.undefined()])
+    .transform((value) => value || null),
+});
+
 export const rejectRegistrationApplicationSchema = z.object({
   applicationId: z.string().uuid("Invalid application."),
   rejectionReason: z.string().max(1000).optional().or(z.literal("")),

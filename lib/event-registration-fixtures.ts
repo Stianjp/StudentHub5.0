@@ -1,6 +1,5 @@
 import type { TableRow } from "@/lib/types/database";
 import type { PublicRegistrationStand } from "@/lib/event-registration";
-import { applyPublicRegistrationStandOverrides } from "@/lib/event-registration-stand-overrides";
 
 type EventRow = TableRow<"events">;
 type RegistrationCampaign = TableRow<"event_registration_campaigns">;
@@ -20,9 +19,9 @@ export type PreviewRegistrationDetail = {
 };
 
 export const STUDENT_CONNECT_2026_FLOORPLAN = {
-  imagePath: "/event-register/student-connect-2026-floorplan.svg",
-  width: 344.25,
-  height: 656.25,
+  imagePath: "/StudentConnect-site/Floorplan_new.png",
+  width: 1436,
+  height: 2735,
   alt: "Student Connect 2026 floor plan",
 } as const;
 
@@ -150,23 +149,23 @@ const FIXTURE_STANDS: RegistrationStand[] = [
   buildStand("Silver 15", "silver", 66.0, 49.06, 5.61, 3.0, 230),
   buildStand("Silver 16", "silver", 66.0, 52.28, 5.72, 3.0, 240),
   buildStand("Silver 17", "silver", 66.0, 55.39, 5.72, 2.94, 250),
-  buildStand("Silver 18", "silver", 41.21, 68.06, 5.61, 3.0, 300),
-  buildStand("Silver 19", "silver", 47.35, 68.06, 5.72, 3.0, 310),
-  buildStand("Silver 20", "silver", 59.0, 68.11, 5.61, 3.0, 320),
+  buildStand("Silver 18", "silver", 41.21, 68.06, 5.61, 3.0, 300, "disabled"),
+  buildStand("Silver 19", "silver", 47.35, 68.06, 5.72, 3.0, 310, "disabled"),
+  buildStand("Silver 20", "silver", 59.0, 68.11, 5.61, 3.0, 320, "disabled"),
 
-  buildStand("Standard 1", "standard", 78.18, 19.61, 5.61, 1.83, 10),
-  buildStand("Standard 2", "standard", 84.22, 19.67, 5.72, 1.78, 20),
-  buildStand("Standard 3", "standard", 90.47, 21.56, 3.5, 2.94, 30),
-  buildStand("Standard 4", "standard", 81.99, 28.23, 3.5, 2.94, 40),
-  buildStand("Standard 5", "standard", 90.15, 29.69, 3.5, 2.94, 50),
-  buildStand("Standard 6", "standard", 90.15, 32.88, 3.5, 2.94, 60),
-  buildStand("Standard 7", "standard", 90.57, 32.33, 3.5, 3.0, 70),
-  buildStand("Standard 8", "standard", 79.98, 35.17, 3.39, 3.0, 80),
-  buildStand("Standard 9", "standard", 90.36, 37.39, 3.6, 2.94, 90),
-  buildStand("Standard 10", "standard", 90.36, 40.44, 3.5, 2.94, 100),
-  buildStand("Standard 11", "standard", 79.98, 43.67, 3.5, 3.0, 110),
-  buildStand("Standard 12", "standard", 90.15, 45.89, 3.5, 3.0, 120),
-  buildStand("Standard 13", "standard", 90.15, 49.11, 3.5, 3.0, 130),
+  buildStand("Standard 1", "standard", 78.18, 19.61, 5.61, 1.83, 10, "disabled"),
+  buildStand("Standard 2", "standard", 84.22, 19.67, 5.72, 1.78, 20, "disabled"),
+  buildStand("Standard 3", "standard", 90.47, 21.56, 3.5, 2.94, 30, "disabled"),
+  buildStand("Standard 4", "standard", 81.99, 28.23, 3.5, 2.94, 40, "disabled"),
+  buildStand("Standard 5", "standard", 90.15, 29.69, 3.5, 2.94, 50, "disabled"),
+  buildStand("Standard 6", "standard", 90.15, 32.88, 3.5, 2.94, 60, "disabled"),
+  buildStand("Standard 7", "standard", 90.57, 32.33, 3.5, 3.0, 70, "disabled"),
+  buildStand("Standard 8", "standard", 79.98, 35.17, 3.39, 3.0, 80, "disabled"),
+  buildStand("Standard 9", "standard", 90.36, 37.39, 3.6, 2.94, 90, "disabled"),
+  buildStand("Standard 10", "standard", 90.36, 40.44, 3.5, 2.94, 100, "disabled"),
+  buildStand("Standard 11", "standard", 79.98, 43.67, 3.5, 3.0, 110, "disabled"),
+  buildStand("Standard 12", "standard", 90.15, 45.89, 3.5, 3.0, 120, "disabled"),
+  buildStand("Standard 13", "standard", 90.15, 49.11, 3.5, 3.0, 130, "disabled"),
   buildStand("Standard 14", "standard", 41.31, 71.22, 5.61, 1.83, 140),
   buildStand("Standard 15", "standard", 47.25, 71.28, 5.61, 1.78, 150),
   buildStand("Standard 16", "standard", 53.18, 71.28, 5.61, 1.78, 160),
@@ -174,6 +173,9 @@ const FIXTURE_STANDS: RegistrationStand[] = [
   buildStand("Standard 18", "standard", 66.84, 74.56, 3.6, 3.06, 180),
   buildStand("Standard 19", "standard", 66.53, 77.67, 3.6, 3.06, 190),
   buildStand("Standard 20", "standard", 56.14, 81.72, 6.46, 3.06, 200),
+  buildStand("Standard 21", "standard", 41.21, 68.06, 5.61, 3.0, 210),
+  buildStand("Standard 22", "standard", 47.35, 68.06, 5.72, 3.0, 220),
+  buildStand("Standard 23", "standard", 59.0, 68.11, 5.61, 3.0, 230),
 ];
 
 export function isPreviewRegistrationSlug(slug: string) {
@@ -196,9 +198,6 @@ export function getPreviewRegistrationDetail(slug: string): PreviewRegistrationD
   return {
     campaign: { ...FIXTURE_CAMPAIGN, event: { ...FIXTURE_EVENT } },
     packages: FIXTURE_PACKAGES.map((pkg) => ({ ...pkg })),
-    stands: applyPublicRegistrationStandOverrides(
-      slug,
-      FIXTURE_STANDS.map((stand) => ({ ...stand, bookingPreview: null })) as PublicRegistrationStand[],
-    ),
+    stands: FIXTURE_STANDS.map((stand) => ({ ...stand, bookingPreview: null })) as PublicRegistrationStand[],
   };
 }
