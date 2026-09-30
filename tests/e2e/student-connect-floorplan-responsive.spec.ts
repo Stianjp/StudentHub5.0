@@ -23,7 +23,7 @@ test("Student Connect uses the new floorplan on mobile", async ({ page }) => {
 
   const src = await floorplan.getAttribute("src");
   expect(fullyDecode(src ?? "")).toContain(
-    "/StudentConnect-site/Floorplan_new.png",
+    "/StudentConnect-site/FloorPlan_New_2.png",
   );
 });
 
@@ -38,7 +38,7 @@ test("Student Connect keeps the interactive floorplan on desktop", async ({
 
   const src = await floorplan.getAttribute("src");
   expect(fullyDecode(src ?? "")).toContain(
-    "/StudentConnect-site/Floorplan_new.png",
+    "/StudentConnect-site/FloorPlan_New_2.png",
   );
   await expect(
     page.getByRole("button", { name: "Show floor plan" }),

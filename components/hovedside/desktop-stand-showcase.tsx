@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import type { PublicRegistrationStand } from "@/lib/event-registration";
 
 const MOBILE_FLOORPLAN_IMAGE =
-  "/StudentConnect-site/Floorplan_new.png";
+  "/StudentConnect-site/FloorPlan_New_2.png";
 
 const StandShowcase = dynamic(
   () => import("@/components/hovedside/stand-showcase").then((mod) => mod.StandShowcase),
