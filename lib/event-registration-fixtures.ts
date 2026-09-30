@@ -173,9 +173,9 @@ const FIXTURE_STANDS: RegistrationStand[] = [
   buildStand("Standard 18", "standard", 66.84, 74.56, 3.6, 3.06, 180),
   buildStand("Standard 19", "standard", 66.53, 77.67, 3.6, 3.06, 190),
   buildStand("Standard 20", "standard", 56.14, 81.72, 6.46, 3.06, 200),
-  buildStand("Standard 21", "standard", 41.21, 68.06, 5.61, 3.0, 210),
-  buildStand("Standard 22", "standard", 47.35, 68.06, 5.72, 3.0, 220),
-  buildStand("Standard 23", "standard", 59.0, 68.11, 5.61, 3.0, 230),
+  buildStand("Standard 21", "standard", 41.21, 68.06, 5.61, 2.2, 210),
+  buildStand("Standard 22", "standard", 47.35, 68.06, 5.72, 2.2, 220),
+  buildStand("Standard 23", "standard", 59.0, 68.11, 5.61, 2.2, 230),
 ];
 
 export function isPreviewRegistrationSlug(slug: string) {
