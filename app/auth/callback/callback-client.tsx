@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
+import type { EmailOtpType } from "@supabase/supabase-js";
 
 type CompletionResult =
   | { ok: true; destination: string }
@@ -13,6 +14,18 @@ type CompletionResult =
 let activeCodeCompletion:
   | { key: string; promise: Promise<CompletionResult> }
   | undefined;
+
+
+function isEmailOtpType(value: string | null): value is EmailOtpType {
+  return (
+    value === "signup" ||
+    value === "invite" ||
+    value === "magiclink" ||
+    value === "recovery" ||
+    value === "email_change" ||
+    value === "email"
+  );
+}
 
 async function finalizeOAuthSession(role: string, nextPath: string | null) {
   const response = await fetch("/api/auth/oauth/finalize", {
@@ -60,6 +73,9 @@ export function CallbackClient() {
   const router = useRouter();
   const params = useSearchParams();
   const code = params.get("code");
+  const tokenHash = params.get("token_hash");
+  const otpType = params.get("type");
+  const mode = params.get("mode");
   const role = params.get("role") ?? "company";
   const nextPath = params.get("next");
   const oauthError = params.get("error");
@@ -121,13 +137,41 @@ export function CallbackClient() {
         return;
       }
 
+      if (tokenHash) {
+        const type = isEmailOtpType(otpType) ? otpType : "email";
+        const { error } = await supabase.auth.verifyOtp({
+          token_hash: tokenHash,
+          type,
+        });
+        if (error) {
+          setMessage(error.message);
+          setSuccessLink(`/auth/sign-in?role=${role}`);
+          return;
+        }
+
+        const result = await finalizeOAuthSession(role, nextPath);
+        if (!result.ok) {
+          setMessage(result.error);
+          setSuccessLink(`/auth/sign-in?role=${role}`);
+          return;
+        }
+        router.replace(result.destination);
+        return;
+      }
+
+      if (mode === "verify") {
+        setMessage("Email confirmed. You can return to sign-in and log in with your password.");
+        setSuccessLink(`/auth/sign-in?role=${role}`);
+        return;
+      }
+
       setMessage("The magic link is missing a code. Try again.");
     }
 
     void completeAuth().catch((error) => {
       setMessage(error instanceof Error ? error.message : "An unknown error occurred during sign-in.");
     });
-  }, [code, nextPath, oauthError, oauthErrorDescription, role, router]);
+  }, [code, mode, nextPath, oauthError, oauthErrorDescription, otpType, role, router, tokenHash]);
 
   return (
     <main className="min-h-screen w-full bg-[linear-gradient(180deg,#140249_0%,#6D367F_52%,#FF7282_100%)] px-6 py-16">

@@ -52,6 +52,41 @@ test("PKCE verifier survives the callback middleware", async ({ page, context })
   expect(tokenRequests).toBe(1);
 });
 
+
+test("email confirmation callback verifies token_hash without requiring a code", async ({ page, context }) => {
+  let verifyRequests = 0;
+  let verifyBody = "";
+  await context.route("**/auth/v1/verify**", async (route) => {
+    verifyRequests += 1;
+    verifyBody = route.request().postData() ?? "";
+    await route.fulfill({
+      status: 400,
+      contentType: "application/json",
+      body: JSON.stringify({ error: "synthetic_verify_error", msg: "Synthetic verify check" }),
+    });
+  });
+
+  await page.goto(
+    portalUrl(
+      "student",
+      "/auth/callback?role=student&token_hash=synthetic-token&type=signup&next=%2Fstudent%2Fdashboard",
+    ),
+  );
+
+  await expect(page.getByText(/Synthetic verify check|synthetic_verify_error/i)).toBeVisible();
+  expect(verifyRequests).toBe(1);
+  expect(verifyBody).toContain("synthetic-token");
+  expect(verifyBody).toContain("signup");
+  await expect(page.getByText("The magic link is missing a code. Try again.")).toHaveCount(0);
+});
+
+test("verified email callback without auth params shows a sign-in link", async ({ page }) => {
+  await page.goto(portalUrl("student", "/auth/callback?role=student&mode=verify&next=%2Fstudent%2Fdashboard"));
+  await expect(page.getByText("Email confirmed. You can return to sign-in and log in with your password.")).toBeVisible();
+  await expect(page.getByRole("link", { name: /go to sign-in/i })).toHaveAttribute("href", "/auth/sign-in?role=student");
+  await expect(page.getByText("The magic link is missing a code. Try again.")).toHaveCount(0);
+});
+
 test("admin sign-in does not offer Google", async ({ page }) => {
   await page.goto(portalUrl("admin", "/auth/sign-in"));
   await expect(page.getByRole("button", { name: "Continue with Google" })).toHaveCount(0);
