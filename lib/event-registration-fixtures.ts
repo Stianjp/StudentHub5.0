@@ -166,16 +166,16 @@ const FIXTURE_STANDS: RegistrationStand[] = [
   buildStand("Standard 11", "standard", 79.98, 43.67, 3.5, 3.0, 110, "disabled"),
   buildStand("Standard 12", "standard", 90.15, 45.89, 3.5, 3.0, 120, "disabled"),
   buildStand("Standard 13", "standard", 90.15, 49.11, 3.5, 3.0, 130, "disabled"),
-  buildStand("Standard 14", "standard", 41.31, 71.22, 5.61, 1.83, 140),
-  buildStand("Standard 15", "standard", 47.25, 71.28, 5.61, 1.78, 150),
-  buildStand("Standard 16", "standard", 53.18, 71.28, 5.61, 1.78, 160),
-  buildStand("Standard 17", "standard", 59.11, 71.28, 5.61, 1.78, 170),
+  buildStand("Standard 14", "standard", 41.31, 70.35, 5.61, 1.83, 140),
+  buildStand("Standard 15", "standard", 47.25, 70.35, 5.61, 1.78, 150),
+  buildStand("Standard 16", "standard", 53.18, 70.35, 5.61, 1.78, 160),
+  buildStand("Standard 17", "standard", 59.11, 70.35, 5.61, 1.78, 170),
   buildStand("Standard 18", "standard", 66.84, 74.56, 3.6, 3.06, 180),
   buildStand("Standard 19", "standard", 66.53, 77.67, 3.6, 3.06, 190),
   buildStand("Standard 20", "standard", 56.14, 81.72, 6.46, 3.06, 200),
   buildStand("Standard 21", "standard", 41.21, 68.06, 5.61, 2.2, 210),
   buildStand("Standard 22", "standard", 47.35, 68.06, 5.72, 2.2, 220),
-  buildStand("Standard 23", "standard", 59.0, 68.11, 5.61, 2.2, 230),
+  buildStand("Standard 23", "standard", 57.6, 68.55, 5.61, 2.2, 230),
 ];
 
 export function isPreviewRegistrationSlug(slug: string) {
