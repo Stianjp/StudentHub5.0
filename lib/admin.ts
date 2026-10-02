@@ -24,6 +24,78 @@ type RegistrationCampaign = TableRow<"event_registration_campaigns">;
 type RegistrationPackage = TableRow<"event_registration_packages">;
 type RegistrationPortalEmail = TableRow<"event_registration_portal_emails">;
 type RegistrationStand = TableRow<"event_registration_stands">;
+
+const ADMIN_CHECKLIST_KPI_PREFIX = "admin_checklist:";
+
+type EventCompanyAdminChecklist = {
+  contract_received: boolean;
+  invoice_sent: boolean;
+  invoice_paid: boolean;
+  chair_count_registered: boolean;
+  chair_count: number;
+  regular_table_count_registered: boolean;
+  regular_table_count: number;
+  standing_table_count_registered: boolean;
+  standing_table_count: number;
+  checkin_tickets_registered: boolean;
+  career_evening_registered: boolean;
+  career_evening_company_attendee_count: number;
+  career_evening_student_ticket_count: number;
+};
+
+const emptyAdminChecklist: EventCompanyAdminChecklist = {
+  contract_received: false,
+  invoice_sent: false,
+  invoice_paid: false,
+  chair_count_registered: false,
+  chair_count: 0,
+  regular_table_count_registered: false,
+  regular_table_count: 0,
+  standing_table_count_registered: false,
+  standing_table_count: 0,
+  checkin_tickets_registered: false,
+  career_evening_registered: false,
+  career_evening_company_attendee_count: 0,
+  career_evening_student_ticket_count: 0,
+};
+
+function nonNegativeInteger(value: unknown) {
+  const numberValue = Number(value);
+  return Number.isInteger(numberValue) && numberValue >= 0 ? numberValue : 0;
+}
+
+function parseAdminChecklistFromKpis(kpis: string[] | null | undefined): EventCompanyAdminChecklist {
+  const encoded = (kpis ?? []).find((item) => item.startsWith(ADMIN_CHECKLIST_KPI_PREFIX));
+  if (!encoded) return { ...emptyAdminChecklist };
+
+  try {
+    const raw = Buffer.from(encoded.slice(ADMIN_CHECKLIST_KPI_PREFIX.length), "base64url").toString("utf8");
+    const parsed = JSON.parse(raw) as Partial<EventCompanyAdminChecklist>;
+    return {
+      contract_received: Boolean(parsed.contract_received),
+      invoice_sent: Boolean(parsed.invoice_sent),
+      invoice_paid: Boolean(parsed.invoice_paid),
+      chair_count_registered: Boolean(parsed.chair_count_registered),
+      chair_count: nonNegativeInteger(parsed.chair_count),
+      regular_table_count_registered: Boolean(parsed.regular_table_count_registered),
+      regular_table_count: nonNegativeInteger(parsed.regular_table_count),
+      standing_table_count_registered: Boolean(parsed.standing_table_count_registered),
+      standing_table_count: nonNegativeInteger(parsed.standing_table_count),
+      checkin_tickets_registered: Boolean(parsed.checkin_tickets_registered),
+      career_evening_registered: Boolean(parsed.career_evening_registered),
+      career_evening_company_attendee_count: nonNegativeInteger(parsed.career_evening_company_attendee_count),
+      career_evening_student_ticket_count: nonNegativeInteger(parsed.career_evening_student_ticket_count),
+    };
+  } catch {
+    return { ...emptyAdminChecklist };
+  }
+}
+
+function mergeAdminChecklistIntoKpis(kpis: string[] | null | undefined, checklist: EventCompanyAdminChecklist) {
+  const existing = (kpis ?? []).filter((item) => !item.startsWith(ADMIN_CHECKLIST_KPI_PREFIX));
+  const encoded = Buffer.from(JSON.stringify(checklist), "utf8").toString("base64url");
+  return [...existing, `${ADMIN_CHECKLIST_KPI_PREFIX}${encoded}`];
+}
 const COMPANY_PORTAL_FALLBACK_URL = "https://bedrift.oslostudenthub.no";
 const REGISTRATION_LOGO_BUCKET = "event-registration-assets";
 
@@ -1045,6 +1117,7 @@ export async function getEventWithRegistrations(eventId: string) {
     event: event as Event,
     registrations: typedRegistrations.map((registration) => ({
       ...registration,
+      ...parseAdminChecklistFromKpis(registration.kpis),
       application_id: applicationMap.get(registration.id)?.id ?? null,
       application_campaign_id: applicationMap.get(registration.id)?.campaign_id ?? null,
     })),
@@ -1303,6 +1376,63 @@ export async function updateEventCompanyPackageSettings(input: {
       can_view_leads: input.canViewLeads,
       can_publish_jobs: input.canPublishJobs,
       can_publish_thesis: input.canPublishThesis,
+      updated_at: now,
+    })
+    .eq("id", input.registrationId)
+    .select("*")
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export async function updateEventCompanyAdminChecklist(input: {
+  registrationId: string;
+  contractReceived: boolean;
+  invoiceSent: boolean;
+  invoicePaid: boolean;
+  chairCountRegistered: boolean;
+  chairCount: number;
+  regularTableCountRegistered: boolean;
+  regularTableCount: number;
+  standingTableCountRegistered: boolean;
+  standingTableCount: number;
+  checkinTicketsRegistered: boolean;
+  careerEveningRegistered: boolean;
+  careerEveningCompanyAttendeeCount: number;
+  careerEveningStudentTicketCount: number;
+}) {
+  const supabase = createAdminSupabaseClient();
+  const now = new Date().toISOString();
+
+  const { data: registration, error: registrationError } = await supabase
+    .from("event_companies")
+    .select("id, kpis")
+    .eq("id", input.registrationId)
+    .single();
+
+  if (registrationError) throw registrationError;
+
+  const nextKpis = mergeAdminChecklistIntoKpis((registration as Pick<EventCompany, "kpis">).kpis, {
+    contract_received: input.contractReceived,
+    invoice_sent: input.invoiceSent,
+    invoice_paid: input.invoicePaid,
+    chair_count_registered: input.chairCountRegistered,
+    chair_count: input.chairCount,
+    regular_table_count_registered: input.regularTableCountRegistered,
+    regular_table_count: input.regularTableCount,
+    standing_table_count_registered: input.standingTableCountRegistered,
+    standing_table_count: input.standingTableCount,
+    checkin_tickets_registered: input.checkinTicketsRegistered,
+    career_evening_registered: input.careerEveningRegistered,
+    career_evening_company_attendee_count: input.careerEveningCompanyAttendeeCount,
+    career_evening_student_ticket_count: input.careerEveningStudentTicketCount,
+  });
+
+  const { data, error } = await supabase
+    .from("event_companies")
+    .update({
+      kpis: nextKpis,
       updated_at: now,
     })
     .eq("id", input.registrationId)

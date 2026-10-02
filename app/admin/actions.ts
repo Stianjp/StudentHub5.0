@@ -34,6 +34,7 @@ import {
   revokeCompanyPortalAccess,
   setPackageForCompany,
   upsertCompanyContact,
+  updateEventCompanyAdminChecklist,
   updateEventCompanyPackageSettings,
   updateEventCompanyStandType,
   upsertEvent,
@@ -970,6 +971,59 @@ export async function updateCompanyPackageSettings(formData: FormData) {
     revalidatePath("/company/thesis-projects");
     revalidatePath("/jobs");
     revalidatePath("/thesis-projects");
+    if (typeof returnTo === "string" && returnTo.startsWith("/")) {
+      const separator = returnTo.includes("?") ? "&" : "?";
+      redirect(`${returnTo}${separator}saved=1`);
+    }
+  } catch (error) {
+    if (isNextRedirectError(error)) throw error;
+    if (typeof returnTo === "string" && returnTo.startsWith("/")) {
+      const message = getErrorMessage(error);
+      const separator = returnTo.includes("?") ? "&" : "?";
+      redirect(`${returnTo}${separator}error=${encodeURIComponent(message)}`);
+    }
+    throw error;
+  }
+}
+
+export async function updateRegisteredCompanyAdminChecklistAction(formData: FormData) {
+  await requireRole("admin");
+  const returnTo = formData.get("returnTo");
+
+  function parseNonNegativeInteger(name: string) {
+    const raw = String(getFormValue(formData, name) ?? "0").trim();
+    const value = raw.length === 0 ? 0 : Number(raw);
+    if (!Number.isInteger(value) || value < 0) {
+      throw new Error(`${name}: Må være et heltall lik eller større enn 0.`);
+    }
+    return value;
+  }
+
+  try {
+    const registrationId = String(getFormValue(formData, "registrationId") ?? "").trim();
+
+    if (!isUuid(registrationId)) {
+      throw new Error("Ugyldig registrering.");
+    }
+
+    await updateEventCompanyAdminChecklist({
+      registrationId,
+      contractReceived: getFormValue(formData, "contractReceived") !== null,
+      invoiceSent: getFormValue(formData, "invoiceSent") !== null,
+      invoicePaid: getFormValue(formData, "invoicePaid") !== null,
+      chairCountRegistered: getFormValue(formData, "chairCountRegistered") !== null,
+      chairCount: parseNonNegativeInteger("chairCount"),
+      regularTableCountRegistered: getFormValue(formData, "regularTableCountRegistered") !== null,
+      regularTableCount: parseNonNegativeInteger("regularTableCount"),
+      standingTableCountRegistered: getFormValue(formData, "standingTableCountRegistered") !== null,
+      standingTableCount: parseNonNegativeInteger("standingTableCount"),
+      checkinTicketsRegistered: getFormValue(formData, "checkinTicketsRegistered") !== null,
+      careerEveningRegistered: getFormValue(formData, "careerEveningRegistered") !== null,
+      careerEveningCompanyAttendeeCount: parseNonNegativeInteger("careerEveningCompanyAttendeeCount"),
+      careerEveningStudentTicketCount: parseNonNegativeInteger("careerEveningStudentTicketCount"),
+    });
+
+    revalidatePath("/admin/events");
     if (typeof returnTo === "string" && returnTo.startsWith("/")) {
       const separator = returnTo.includes("?") ? "&" : "?";
       redirect(`${returnTo}${separator}saved=1`);
