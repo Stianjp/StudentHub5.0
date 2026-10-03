@@ -13,6 +13,10 @@ function normalizeForSchoolMatch(value: string) {
     .trim();
 }
 
+function includesAll(value: string, words: string[]) {
+  return words.every((word) => value.includes(word));
+}
+
 export function normalizeSchoolName(value: string | null | undefined) {
   const trimmed = value?.trim().replace(/\s+/g, " ") ?? "";
   if (!trimmed) return "";
@@ -25,7 +29,7 @@ export function normalizeSchoolName(value: string | null | undefined) {
     normalized === "oslo met" ||
     compact.includes("oslometstorbyuniversitet") ||
     compact.includes("oslometstorbyuniversitetet") ||
-    (compact.includes("oslo") && compact.includes("metropolitan") && compact.includes("university")) ||
+    includesAll(compact, ["oslo", "metropolitan", "university"]) ||
     compact.includes("oslometno");
 
   if (isOsloMetVariant) {
@@ -46,6 +50,57 @@ export function normalizeSchoolName(value: string | null | undefined) {
 
   if (hasKristianiaVariant) {
     return "Høyskolen Kristiania";
+  }
+
+  const isNtnuVariant =
+    compact === "ntnu" ||
+    compact.includes("ntnuno") ||
+    includesAll(compact, ["norges", "teknisk", "naturvitenskapelige", "universitet"]) ||
+    includesAll(compact, ["norwegian", "university", "science", "technology"]);
+
+  if (isNtnuVariant) {
+    return "NTNU";
+  }
+
+  const isNmbuVariant =
+    compact === "nmbu" ||
+    compact.includes("nmbuno") ||
+    includesAll(compact, ["norges", "miljo", "biovitenskapelige", "universitet"]) ||
+    includesAll(compact, ["norwegian", "university", "life", "sciences"]);
+
+  if (isNmbuVariant) {
+    return "NMBU";
+  }
+
+  const isUioVariant =
+    compact === "uio" ||
+    compact.includes("uiono") ||
+    normalized === "universitetet i oslo" ||
+    includesAll(compact, ["university", "oslo"]);
+
+  if (isUioVariant) {
+    return "UiO";
+  }
+
+  const isUitVariant =
+    compact === "uit" ||
+    compact.includes("uitno") ||
+    includesAll(compact, ["universitetet", "tromso"]) ||
+    includesAll(compact, ["tromso", "university"]) ||
+    includesAll(compact, ["arctic", "university", "norway"]);
+
+  if (isUitVariant) {
+    return "UiT";
+  }
+
+  const isUisVariant =
+    compact === "uis" ||
+    compact.includes("uisno") ||
+    normalized === "universitetet i stavanger" ||
+    includesAll(compact, ["university", "stavanger"]);
+
+  if (isUisVariant) {
+    return "UiS";
   }
 
   return trimmed;
