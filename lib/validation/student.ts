@@ -4,6 +4,7 @@ import {
   mapStudentJobTypes,
   validateStudentStudyChoices,
 } from "@/lib/auth-registration";
+import { normalizeSchoolName } from "@/lib/school";
 
 const commaSeparated = z
   .string()
@@ -35,7 +36,7 @@ export const studentProfileSchema = z
     fullName: z.string().min(2, "Name is required"),
     email: z.string().email("Invalid email address"),
     phone: z.string().optional().or(z.literal("")),
-    school: z.string().min(2, "University or educational institution is required"),
+    school: z.string().min(2, "University or educational institution is required").transform(normalizeSchoolName),
     studyProgram: z
       .string()
       .min(2, "Field of study is required")

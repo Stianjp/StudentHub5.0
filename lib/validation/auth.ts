@@ -6,6 +6,7 @@ import {
   validatePasswordStrength,
 } from "@/lib/auth-registration";
 import { normalizeStudyCategories } from "@/lib/company-categories";
+import { normalizeSchoolName } from "@/lib/school";
 
 const stringArray = z.preprocess((value) => {
   if (Array.isArray(value)) {
@@ -24,7 +25,7 @@ export const studentRegistrationSchema = z
   .object({
     email: z.string().email("Invalid email address"),
     fullName: z.string().min(2, "Full name is required."),
-    school: z.string().min(2, "University or educational institution is required."),
+    school: z.string().min(2, "University or educational institution is required.").transform(normalizeSchoolName),
     studyProgram: z
       .string()
       .min(2, "Field of study is required.")
@@ -77,7 +78,7 @@ export const studentRegistrationSchema = z
 export const studentOAuthOnboardingSchema = z
   .object({
     fullName: z.string().min(2, "Full name is required."),
-    school: z.string().min(2, "University or educational institution is required."),
+    school: z.string().min(2, "University or educational institution is required.").transform(normalizeSchoolName),
     studyProgram: z
       .string()
       .min(2, "Field of study is required.")

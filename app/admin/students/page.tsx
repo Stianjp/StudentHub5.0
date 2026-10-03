@@ -7,6 +7,7 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { requireRole } from "@/lib/auth";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { normalizeSchoolName } from "@/lib/school";
 import { cn } from "@/lib/utils";
 
 const STUDENT_COUNT_FORMATTER = new Intl.NumberFormat("nb-NO");
@@ -49,7 +50,7 @@ function buildSchoolStudyProgramStats(rows: StudentStatsRow[]) {
   const schoolMap = new Map<string, Map<string, number>>();
 
   for (const row of rows) {
-    const school = normalizeLabel(row.school, "Ikke oppgitt studiested");
+    const school = normalizeLabel(normalizeSchoolName(row.school), "Ikke oppgitt studiested");
     const studyProgram = normalizeLabel(row.study_program, "Ikke oppgitt studieretning");
     const programMap = schoolMap.get(school) ?? new Map<string, number>();
     programMap.set(studyProgram, (programMap.get(studyProgram) ?? 0) + 1);
@@ -125,7 +126,7 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
 
   const statsRows = (statsResult.data ?? []) as StudentStatsRow[];
   const studyProgramStats = countByLabel(statsRows, (row) => normalizeLabel(row.study_program, "Ikke oppgitt studieretning"));
-  const schoolStats = countByLabel(statsRows, (row) => normalizeLabel(row.school, "Ikke oppgitt studiested"));
+  const schoolStats = countByLabel(statsRows, (row) => normalizeLabel(normalizeSchoolName(row.school), "Ikke oppgitt studiested"));
   const schoolStudyProgramStats = buildSchoolStudyProgramStats(statsRows);
 
   const totalStudents = totalResult.count ?? statsRows.length;

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { normalizeSchoolName } from "@/lib/school";
 
 function parseTags(input: FormDataEntryValue | null) {
   if (!input) return [];
@@ -21,7 +22,7 @@ export async function updateStudentProfile(formData: FormData) {
 
   const fullName = String(formData.get("fullName") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
-  const school = String(formData.get("school") ?? "").trim();
+  const school = normalizeSchoolName(String(formData.get("school") ?? ""));
   const studyProgram = String(formData.get("studyProgram") ?? "").trim();
   const studyLevel = String(formData.get("studyLevel") ?? "").trim();
   const graduationYearRaw = String(formData.get("graduationYear") ?? "").trim();
