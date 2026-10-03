@@ -23,7 +23,7 @@ export default async function AdminStudentDetailPage({ params }: PageProps) {
     await Promise.all([
       supabase
         .from("students")
-        .select("id, full_name, email, study_program, study_level, study_year, graduation_year, interests, work_style, social_profile, team_size")
+        .select("id, full_name, email, school, study_program, study_level, study_year, graduation_year, interests, work_style, social_profile, team_size")
         .eq("id", studentId)
         .single(),
       supabase
@@ -72,6 +72,10 @@ export default async function AdminStudentDetailPage({ params }: PageProps) {
           <label className="text-sm font-semibold text-primary">
             E-post
             <Input name="email" type="email" defaultValue={student?.email ?? ""} />
+          </label>
+          <label className="text-sm font-semibold text-primary">
+            Studiested
+            <Input name="school" defaultValue={student?.school ?? ""} placeholder="For eksempel OsloMet" />
           </label>
           <label className="text-sm font-semibold text-primary">
             Ferdigår

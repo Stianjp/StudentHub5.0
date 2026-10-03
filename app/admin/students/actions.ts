@@ -21,6 +21,7 @@ export async function updateStudentProfile(formData: FormData) {
 
   const fullName = String(formData.get("fullName") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
+  const school = String(formData.get("school") ?? "").trim();
   const studyProgram = String(formData.get("studyProgram") ?? "").trim();
   const studyLevel = String(formData.get("studyLevel") ?? "").trim();
   const graduationYearRaw = String(formData.get("graduationYear") ?? "").trim();
@@ -35,6 +36,7 @@ export async function updateStudentProfile(formData: FormData) {
     .update({
       full_name: fullName || null,
       email: email || null,
+      school: school || null,
       study_program: studyProgram || null,
       study_level: studyLevel || null,
       study_year: Number.isNaN(studyYear) ? null : studyYear,
