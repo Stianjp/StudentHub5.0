@@ -7,11 +7,19 @@ import { SectionHeader } from "@/components/ui/section-header";
 import { requireRole } from "@/lib/auth";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { cn } from "@/lib/utils";
 
 const STUDENT_COUNT_FORMATTER = new Intl.NumberFormat("nb-NO");
 
 type PageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+type StatsView = "study-programs" | "schools" | "schools-study-programs";
+
+type StudentStatsRow = {
+  school: string | null;
+  study_program: string | null;
 };
 
 const PAGE_SIZE = 20;
@@ -20,9 +28,52 @@ function formatCount(value: number) {
   return STUDENT_COUNT_FORMATTER.format(value);
 }
 
-function normalizeStudyProgram(value: string | null) {
+function normalizeLabel(value: string | null, fallback: string) {
   const trimmed = value?.trim();
-  return trimmed && trimmed.length > 0 ? trimmed : "Ikke oppgitt";
+  return trimmed && trimmed.length > 0 ? trimmed : fallback;
+}
+
+function countByLabel(rows: StudentStatsRow[], getLabel: (row: StudentStatsRow) => string) {
+  const counts = new Map<string, number>();
+  for (const row of rows) {
+    const label = getLabel(row);
+    counts.set(label, (counts.get(label) ?? 0) + 1);
+  }
+
+  return [...counts.entries()]
+    .map(([label, count]) => ({ label, count }))
+    .sort((a, b) => a.label.localeCompare(b.label, "nb-NO"));
+}
+
+function buildSchoolStudyProgramStats(rows: StudentStatsRow[]) {
+  const schoolMap = new Map<string, Map<string, number>>();
+
+  for (const row of rows) {
+    const school = normalizeLabel(row.school, "Ikke oppgitt studiested");
+    const studyProgram = normalizeLabel(row.study_program, "Ikke oppgitt studieretning");
+    const programMap = schoolMap.get(school) ?? new Map<string, number>();
+    programMap.set(studyProgram, (programMap.get(studyProgram) ?? 0) + 1);
+    schoolMap.set(school, programMap);
+  }
+
+  return [...schoolMap.entries()]
+    .map(([school, programMap]) => ({
+      school,
+      total: [...programMap.values()].reduce((sum, count) => sum + count, 0),
+      programs: [...programMap.entries()]
+        .map(([label, count]) => ({ label, count }))
+        .sort((a, b) => a.label.localeCompare(b.label, "nb-NO")),
+    }))
+    .sort((a, b) => a.school.localeCompare(b.school, "nb-NO"));
+}
+
+function statsLink(view: StatsView, query: string, sort: string) {
+  const params = new URLSearchParams();
+  if (query) params.set("q", query);
+  params.set("sort", sort);
+  params.set("dir", "asc");
+  params.set("view", view);
+  return `?${params.toString()}`;
 }
 
 export default async function AdminStudentsPage({ searchParams }: PageProps) {
@@ -30,6 +81,10 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const query = typeof params.q === "string" ? params.q.trim() : "";
   const sort = typeof params.sort === "string" ? params.sort : "name";
+  const view: StatsView =
+    params.view === "schools" || params.view === "schools-study-programs"
+      ? params.view
+      : "study-programs";
   const dir = "asc";
   const page = Math.max(1, Number(params.page ?? "1"));
 
@@ -40,46 +95,45 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
     // fall back
   }
 
-  let baseQuery = supabase.from("students").select("id, full_name, email, study_program, study_level, study_year, graduation_year", { count: "exact" });
+  let baseQuery = supabase.from("students").select("id, full_name, email, school, study_program, study_level, study_year, graduation_year", { count: "exact" });
 
   if (query) {
-    baseQuery = baseQuery.or(`full_name.ilike.%${query}%,email.ilike.%${query}%,study_program.ilike.%${query}%`);
+    baseQuery = baseQuery.or(`full_name.ilike.%${query}%,email.ilike.%${query}%,school.ilike.%${query}%,study_program.ilike.%${query}%`);
   }
 
   const orderColumn = sort === "email" ? "email" : "full_name";
-  const [studentsResult, totalResult, studyProgramsResult] = await Promise.all([
+  const [studentsResult, totalResult, statsResult] = await Promise.all([
     baseQuery.order(orderColumn, { ascending: true }).range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1),
     supabase.from("students").select("id", { count: "exact", head: true }),
-    supabase.from("students").select("study_program").range(0, 9999),
+    supabase.from("students").select("school, study_program").range(0, 9999),
   ]);
 
   if (studentsResult.error) throw studentsResult.error;
   if (totalResult.error) throw totalResult.error;
-  if (studyProgramsResult.error) throw studyProgramsResult.error;
+  if (statsResult.error) throw statsResult.error;
 
   const typedStudents = (studentsResult.data ?? []) as unknown as Array<{
     id: string;
     full_name: string | null;
     email: string | null;
+    school: string | null;
     study_program: string | null;
     study_level: string | null;
     study_year: number | null;
     graduation_year: number | null;
   }>;
 
-  const studyProgramCounts = new Map<string, number>();
-  for (const row of (studyProgramsResult.data ?? []) as Array<{ study_program: string | null }>) {
-    const label = normalizeStudyProgram(row.study_program);
-    studyProgramCounts.set(label, (studyProgramCounts.get(label) ?? 0) + 1);
-  }
+  const statsRows = (statsResult.data ?? []) as StudentStatsRow[];
+  const studyProgramStats = countByLabel(statsRows, (row) => normalizeLabel(row.study_program, "Ikke oppgitt studieretning"));
+  const schoolStats = countByLabel(statsRows, (row) => normalizeLabel(row.school, "Ikke oppgitt studiested"));
+  const schoolStudyProgramStats = buildSchoolStudyProgramStats(statsRows);
 
-  const studyProgramStats = [...studyProgramCounts.entries()]
-    .map(([label, count]) => ({ label, count }))
-    .sort((a, b) => a.label.localeCompare(b.label, "nb-NO"));
-
-  const totalStudents = totalResult.count ?? studyProgramStats.reduce((sum, item) => sum + item.count, 0);
+  const totalStudents = totalResult.count ?? statsRows.length;
   const totalPages = Math.max(1, Math.ceil((studentsResult.count ?? 0) / PAGE_SIZE));
   const currentResultCount = studentsResult.count ?? 0;
+  const statsCards = view === "schools" ? schoolStats : studyProgramStats;
+  const statsTitle = view === "schools" ? "Studiesteder" : view === "schools-study-programs" ? "Studieretninger per skole" : "Studieretninger";
+  const statsEmptyText = view === "schools" ? "Ingen studiesteder er registrert enda." : "Ingen studieretninger er registrert enda.";
 
   return (
     <div className="flex flex-col gap-8">
@@ -98,18 +152,76 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
           <p className="mt-2 text-4xl font-black tabular-nums text-primary">{formatCount(totalStudents)}</p>
           <p className="mt-1 text-sm text-ink/70">Studenter er registrert på Oslo Student Hub.</p>
         </Card>
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-          {studyProgramStats.length > 0 ? (
-            studyProgramStats.map((item) => (
-              <Card key={item.label} className="p-3 sm:p-4">
-                <p className="line-clamp-2 min-h-10 text-sm font-semibold text-primary">{item.label}</p>
-                <p className="mt-2 text-2xl font-black tabular-nums text-primary">{formatCount(item.count)}</p>
+
+        <nav aria-label="Velg studentstatistikk" className="flex flex-wrap gap-2">
+          {[
+            ["study-programs", "Studieretninger"],
+            ["schools", "Studiesteder"],
+            ["schools-study-programs", "Studieretninger per skole"],
+          ].map(([viewValue, label]) => {
+            const active = view === viewValue;
+            return (
+              <Link
+                key={viewValue}
+                href={statsLink(viewValue as StatsView, query, sort)}
+                aria-current={active ? "page" : undefined}
+                className={cn(
+                  "inline-flex min-h-11 items-center rounded-full border px-4 py-2 text-sm font-bold transition-[background-color,border-color,color,box-shadow,transform] hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2 focus-visible:ring-offset-mist",
+                  active
+                    ? "border-primary bg-primary text-surface shadow-soft"
+                    : "border-primary/20 bg-surface text-primary hover:border-secondary hover:bg-secondary/15",
+                )}
+              >
+                {label}
+              </Link>
+            );
+          })}
+        </nav>
+
+        <div className="grid gap-2">
+          <h3 className="text-base font-bold text-primary">{statsTitle}</h3>
+          {view === "schools-study-programs" ? (
+            schoolStudyProgramStats.length > 0 ? (
+              <div className="grid gap-3 lg:grid-cols-2">
+                {schoolStudyProgramStats.map((school) => (
+                  <Card key={school.school} className="p-3 sm:p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <p className="font-bold text-primary">{school.school}</p>
+                      <span className="rounded-full bg-secondary/20 px-3 py-1 text-xs font-bold tabular-nums text-primary">
+                        {formatCount(school.total)} studenter
+                      </span>
+                    </div>
+                    <ul className="mt-3 grid gap-2">
+                      {school.programs.map((program) => (
+                        <li key={program.label} className="flex items-center justify-between gap-3 rounded-xl bg-primary/5 px-3 py-2 text-sm">
+                          <span className="min-w-0 break-words font-semibold text-primary">{program.label}</span>
+                          <span className="shrink-0 font-black tabular-nums text-primary">{formatCount(program.count)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Card className="p-3 sm:p-4">
+                <p className="text-sm text-ink/70">Ingen skole- eller studiedata er registrert enda.</p>
               </Card>
-            ))
+            )
           ) : (
-            <Card className="p-3 sm:p-4">
-              <p className="text-sm text-ink/70">Ingen studieretninger er registrert enda.</p>
-            </Card>
+            <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+              {statsCards.length > 0 ? (
+                statsCards.map((item) => (
+                  <Card key={item.label} className="p-3 sm:p-4">
+                    <p className="line-clamp-2 min-h-10 text-sm font-semibold text-primary">{item.label}</p>
+                    <p className="mt-2 text-2xl font-black tabular-nums text-primary">{formatCount(item.count)}</p>
+                  </Card>
+                ))
+              ) : (
+                <Card className="p-3 sm:p-4">
+                  <p className="text-sm text-ink/70">{statsEmptyText}</p>
+                </Card>
+              )}
+            </div>
           )}
         </div>
       </section>
@@ -117,9 +229,10 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
       <Card className="flex flex-col gap-4">
         <form className="grid gap-3 md:grid-cols-3" method="get">
           <input type="hidden" name="dir" value={dir} />
+          <input type="hidden" name="view" value={view} />
           <label className="text-sm font-semibold text-primary md:col-span-2">
             Søk
-            <Input name="q" defaultValue={query} placeholder="Navn, e-post eller studie…" />
+            <Input name="q" defaultValue={query} placeholder="Navn, e-post, skole eller studie…" />
           </label>
           <label className="text-sm font-semibold text-primary">
             Sortering
@@ -140,6 +253,7 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
             <tr className="text-left text-xs font-semibold uppercase tracking-wide text-primary/60">
               <th className="px-4 py-3">Navn</th>
               <th className="px-4 py-3">E-post</th>
+              <th className="px-4 py-3">Studiested</th>
               <th className="px-4 py-3">Studie</th>
               <th className="px-4 py-3">Nivå</th>
               <th className="px-4 py-3">Ferdigår</th>
@@ -155,6 +269,7 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
                     </Link>
                   </td>
                   <td className="px-4 py-3 text-ink/80">{student.email ?? "—"}</td>
+                  <td className="px-4 py-3 text-ink/80">{student.school ?? "—"}</td>
                   <td className="px-4 py-3 text-ink/80">{student.study_program ?? "—"}</td>
                   <td className="px-4 py-3 text-ink/80">{student.study_level ?? "—"}</td>
                   <td className="px-4 py-3 text-ink/80">{student.study_year ?? student.graduation_year ?? "—"}</td>
@@ -162,7 +277,7 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
               ))
             ) : (
               <tr>
-                <td className="px-4 py-6 text-sm text-ink/70" colSpan={5}>
+                <td className="px-4 py-6 text-sm text-ink/70" colSpan={6}>
                   Ingen studenter matcher søket.
                 </td>
               </tr>
@@ -175,12 +290,12 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
         <span>Side {page} av {totalPages} · {formatCount(currentResultCount)} treff</span>
         <div className="flex gap-2">
           {page > 1 ? (
-            <a className="rounded-full border border-primary/20 px-3 py-2 font-semibold hover:border-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary" href={`?q=${encodeURIComponent(query)}&sort=${sort}&dir=${dir}&page=${page - 1}`}>
+            <a className="rounded-full border border-primary/20 px-3 py-2 font-semibold hover:border-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary" href={`?q=${encodeURIComponent(query)}&sort=${sort}&dir=${dir}&view=${view}&page=${page - 1}`}>
               Forrige
             </a>
           ) : null}
           {page < totalPages ? (
-            <a className="rounded-full border border-primary/20 px-3 py-2 font-semibold hover:border-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary" href={`?q=${encodeURIComponent(query)}&sort=${sort}&dir=${dir}&page=${page + 1}`}>
+            <a className="rounded-full border border-primary/20 px-3 py-2 font-semibold hover:border-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary" href={`?q=${encodeURIComponent(query)}&sort=${sort}&dir=${dir}&view=${view}&page=${page + 1}`}>
               Neste
             </a>
           ) : null}
