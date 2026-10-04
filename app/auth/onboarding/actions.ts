@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { defaultPathForRole } from "@/lib/host";
+import { studentAudienceFromHost } from "@/lib/portal-audience";
 import { resolveOAuthPortalRole } from "@/lib/auth-oauth";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -36,7 +37,7 @@ async function getAuthenticatedPortalUser(expectedRole: "student" | "company") {
     redirect(`/auth/sign-in?role=${expectedRole}&reason=wrong-portal`);
   }
 
-  return { user, admin };
+  return { user, admin, host };
 }
 
 export async function completeStudentOAuthOnboarding(formData: FormData) {
@@ -52,7 +53,8 @@ export async function completeStudentOAuthOnboarding(formData: FormData) {
     redirect(`/auth/onboarding/student?error=${encodeURIComponent(parsed.error.issues.map((issue) => issue.message).join(" "))}`);
   }
 
-  const { user, admin } = await getAuthenticatedPortalUser("student");
+  const { user, admin, host } = await getAuthenticatedPortalUser("student");
+  const audience = studentAudienceFromHost(host);
   const email = user.email!.trim().toLowerCase();
   const now = new Date().toISOString();
 
@@ -82,6 +84,7 @@ export async function completeStudentOAuthOnboarding(formData: FormData) {
     study_level: parsed.data.studyLevel,
     study_year: parsed.data.studyYear,
     job_types: parsed.data.jobTypes,
+    audience,
     updated_at: now,
   };
 

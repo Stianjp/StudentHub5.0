@@ -246,6 +246,7 @@ export type Database = {
           user_id: string | null;
           full_name: string | null;
           email: string | null;
+          audience: "student" | "young_professional";
           phone: string | null;
           about: string | null;
           school: string | null;
@@ -270,6 +271,7 @@ export type Database = {
           user_id?: string | null;
           full_name?: string | null;
           email?: string | null;
+          audience?: "student" | "young_professional";
           phone?: string | null;
           about?: string | null;
           school?: string | null;
@@ -294,6 +296,7 @@ export type Database = {
           user_id?: string | null;
           full_name?: string | null;
           email?: string | null;
+          audience?: "student" | "young_professional";
           phone?: string | null;
           about?: string | null;
           school?: string | null;
@@ -318,6 +321,7 @@ export type Database = {
       student_public_profiles: {
         Row: {
           student_id: string;
+          audience: "student" | "young_professional";
           study_program: string | null;
           study_level: string | null;
           graduation_year: number | null;
@@ -335,6 +339,7 @@ export type Database = {
         };
         Insert: {
           student_id: string;
+          audience?: "student" | "young_professional";
           study_program?: string | null;
           study_level?: string | null;
           graduation_year?: number | null;
@@ -352,6 +357,7 @@ export type Database = {
         };
         Update: {
           student_id?: string;
+          audience?: "student" | "young_professional";
           study_program?: string | null;
           study_level?: string | null;
           graduation_year?: number | null;

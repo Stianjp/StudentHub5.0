@@ -13,7 +13,7 @@ type NavLink = {
 };
 
 const NAV_LINKS: NavLink[] = [
-  { label: "Students", href: "/Students" },
+  { label: "Students & Young Pros", href: "/Students" },
   {
     label: "Partners",
     href: "/partners",
@@ -32,6 +32,7 @@ const MORE_LINKS: NavLink[] = [
 
 const LOGIN_LINKS: NavLink[] = [
   { label: "Student", href: "https://student.oslostudenthub.no/" },
+  { label: "Young professional", href: "https://young-professionals.oslostudenthub.no/" },
   { label: "Company", href: "https://bedrift.oslostudenthub.no/" },
 ];
 

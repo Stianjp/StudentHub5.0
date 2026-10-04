@@ -1,4 +1,6 @@
 import { defaultPathForRole } from "@/lib/host";
+import { headers } from "next/headers";
+import { getStudentAudiencePortalName, studentAudienceFromHost } from "@/lib/portal-audience";
 import { StudentShell } from "@/components/layouts/student-shell";
 import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -14,6 +16,8 @@ const nav = [
 export const dynamic = "force-dynamic";
 
 export default async function StudentLayout({ children }: { children: React.ReactNode }) {
+  const host = (await headers()).get("host");
+  const audience = studentAudienceFromHost(host);
   const supabase = await createServerSupabaseClient();
   const {
     data: { user },
@@ -24,7 +28,7 @@ export default async function StudentLayout({ children }: { children: React.Reac
   }
 
   const student = await getOrCreateStudentForUser(user.id, user.email);
-  const userName = student?.full_name ?? "Student portal";
+  const userName = student?.full_name ?? getStudentAudiencePortalName(audience);
   const userInitials = userName
     .split(" ")
     .filter(Boolean)
@@ -34,7 +38,7 @@ export default async function StudentLayout({ children }: { children: React.Reac
     .toUpperCase();
 
   return (
-    <StudentShell nav={nav} userName={userName} userInitials={userInitials}>
+    <StudentShell nav={nav} userName={userName} userInitials={userInitials} audience={student?.audience ?? audience}>
       {children}
     </StudentShell>
   );

@@ -239,7 +239,7 @@ export function validateHostRoleLock(hostname: string | null | undefined, expect
   }
   if (hostRole !== expectedRole) {
     return expectedRole === "student"
-      ? "Student registration is only available on the student domain."
+      ? "Student and Young Professionals registration is only available on the student portals."
       : "Company registration is only available on the company domain.";
   }
   return null;
@@ -253,7 +253,7 @@ export function validateMagicLinkRoleForHost(hostname: string | null | undefined
   }
   if (hostRole !== requestedRole) {
     return hostRole === "student"
-      ? "This domain only supports student sign-in."
+      ? "This domain only supports student and Young Professionals sign-in."
       : "This domain only supports company sign-in.";
   }
   return null;

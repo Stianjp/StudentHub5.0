@@ -6,6 +6,7 @@ import { requireRole } from "@/lib/auth";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { normalizeSchoolName } from "@/lib/school";
+import type { StudentAudience } from "@/lib/portal-audience";
 
 function parseTags(input: FormDataEntryValue | null) {
   if (!input) return [];
@@ -23,6 +24,8 @@ export async function updateStudentProfile(formData: FormData) {
   const fullName = String(formData.get("fullName") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
   const school = normalizeSchoolName(String(formData.get("school") ?? ""));
+  const audienceValue = String(formData.get("audience") ?? "student");
+  const audience: StudentAudience = audienceValue === "young_professional" ? "young_professional" : "student";
   const studyProgram = String(formData.get("studyProgram") ?? "").trim();
   const studyLevel = String(formData.get("studyLevel") ?? "").trim();
   const graduationYearRaw = String(formData.get("graduationYear") ?? "").trim();
@@ -37,6 +40,7 @@ export async function updateStudentProfile(formData: FormData) {
     .update({
       full_name: fullName || null,
       email: email || null,
+      audience,
       school: school || null,
       study_program: studyProgram || null,
       study_level: studyLevel || null,
@@ -53,6 +57,7 @@ export async function updateStudentProfile(formData: FormData) {
     .upsert(
       {
         student_id: studentId,
+        audience,
         study_program: studyProgram || null,
         study_level: studyLevel || null,
         study_year: Number.isNaN(studyYear) ? null : studyYear,
@@ -67,7 +72,7 @@ export async function updateStudentProfile(formData: FormData) {
 }
 
 export async function upsertStudentConsent(formData: FormData) {
-  const profile = await requireRole("admin");
+  await requireRole("admin");
   const studentId = String(formData.get("studentId") ?? "").trim();
   const companyId = String(formData.get("companyId") ?? "").trim();
   const eventId = String(formData.get("eventId") ?? "").trim();
@@ -111,7 +116,7 @@ export async function upsertStudentConsent(formData: FormData) {
 }
 
 export async function updateStudentConsent(formData: FormData) {
-  const profile = await requireRole("admin");
+  await requireRole("admin");
   const studentId = String(formData.get("studentId") ?? "").trim();
   const consentId = String(formData.get("consentId") ?? "").trim();
   const consent = String(formData.get("consent") ?? "true") === "true";

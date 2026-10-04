@@ -40,11 +40,11 @@ export default async function HomePage() {
     <>
       {/* ── Hero ─────────────────────────────────────────────── */}
       <HeroSection
-        title="WE CONNECT STUDENTS & COMPANIES"
-        subtitle="By building business partnerships, we make the transition from studies to a professional career smoother and more accessible for students"
-        ctaLabel="Register student"
+        title="WE CONNECT STUDENTS, YOUNG PROFESSIONALS & COMPANIES"
+        subtitle="By building business partnerships, we make the transition from studies to a professional career smoother and more accessible for students and Young Professionals"
+        ctaLabel="Register student / young professional"
         ctaHref="/Students"
-        ctaDescription="Students: register or sign in, then open Events to get your free ticket."
+        ctaDescription="Students and Young Professionals: register or sign in, then open Events to get your free ticket."
         extraCtas={[{ label: "Register company", href: "/partners" }]}
         backgroundImageSrc={SITE_IMAGES.homeHero.src}
         backgroundImageAlt={SITE_IMAGES.homeHero.alt}
@@ -117,7 +117,7 @@ export default async function HomePage() {
 
       {/* ── Stats banner ─────────────────────────────────────── */}
       <StatsBanner
-        headline="There are more than 80,000 students in Oslo."
+        headline="There are more than 80,000 students and Young Professionals in Oslo."
         stats={[
           { value: "22,000", label: "Students at OsloMet" },
           { value: "26,000", label: "Students at UiO" },
@@ -142,7 +142,7 @@ export default async function HomePage() {
           <FeatureCard
             icon={<GraduationCap size={24} />}
             title="Career Opportunities"
-            description="Explore career opportunities through our platform. Connect with top companies looking for talented students like you."
+            description="Explore career opportunities through our platform. Connect with top companies looking for students and Young Professionals like you."
           />
           <FeatureCard
             icon={<HeartHandshake size={24} />}

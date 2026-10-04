@@ -10,11 +10,18 @@ import { getStudentCategoryLabel } from "@/lib/student-company-display";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { completeStudentOAuthOnboarding } from "@/app/auth/onboarding/actions";
 import { resolveOAuthPortalRole } from "@/lib/auth-oauth";
+import {
+  getStudentAudienceProfileDescription,
+  getStudentAudienceProfileTitle,
+  studentAudienceFromHost,
+} from "@/lib/portal-audience";
 
 type PageProps = { searchParams?: Promise<{ error?: string }> };
 
 export default async function StudentOAuthOnboardingPage({ searchParams }: PageProps) {
-  if (resolveOAuthPortalRole((await headers()).get("host"), "student") !== "student") {
+  const host = (await headers()).get("host");
+  const audience = studentAudienceFromHost(host);
+  if (resolveOAuthPortalRole(host, "student") !== "student") {
     redirect("/auth/sign-in?role=student&reason=wrong-portal");
   }
   const supabase = await createServerSupabaseClient();
@@ -29,15 +36,15 @@ export default async function StudentOAuthOnboardingPage({ searchParams }: PageP
         <Image src="/brand/Logo_OSH_Gradient_whitetext.svg" alt="Oslo Student Hub" width={220} height={54} className="mx-auto h-auto" priority />
         <div className="text-center">
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-secondary">One last step</p>
-          <h1 className="mt-2 text-2xl font-bold">Complete your student profile</h1>
-          <p className="mt-2 text-sm text-surface/75">Signed in as {user.email}. These details improve your company matches.</p>
+          <h1 className="mt-2 text-2xl font-bold">{getStudentAudienceProfileTitle(audience)}</h1>
+          <p className="mt-2 text-sm text-surface/75">Signed in as {user.email}. {getStudentAudienceProfileDescription(audience)}</p>
         </div>
         {params.error ? <p className="rounded-xl bg-error/15 p-3 text-sm text-error">{params.error}</p> : null}
         <form action={completeStudentOAuthOnboarding} className="grid gap-4 md:grid-cols-2">
           <label className="text-sm font-semibold">Full name<Input name="fullName" required autoComplete="name" defaultValue={suggestedName} /></label>
-          <label className="text-sm font-semibold">University or educational institution<Input name="school" required placeholder="For example, NTNU" /></label>
+          <label className="text-sm font-semibold">{audience === "young_professional" ? "University, school or latest educational institution" : "University or educational institution"}<Input name="school" required placeholder={audience === "young_professional" ? "For example, OsloMet or NTNU" : "For example, NTNU"} /></label>
           <label className="text-sm font-semibold">Field of study<Select name="studyProgram" required defaultValue=""><option value="">Select field of study</option>{STUDY_CATEGORIES.map((category) => <option key={category} value={category}>{getStudentCategoryLabel(category)}</option>)}</Select></label>
-          <label className="text-sm font-semibold">Student type<Select name="studyLevel" required defaultValue=""><option value="">Select</option><option value="Bachelor">Bachelor</option><option value="Master">Master</option></Select></label>
+          <label className="text-sm font-semibold">{audience === "young_professional" ? "Education level" : "Student type"}<Select name="studyLevel" required defaultValue=""><option value="">Select</option><option value="Bachelor">Bachelor</option><option value="Master">Master</option></Select></label>
           <label className="text-sm font-semibold">Year<Select name="studyYear" required defaultValue=""><option value="">Select year</option>{[1,2,3,4,5].map((year) => <option key={year} value={year}>Year {year}</option>)}</Select></label>
           <fieldset className="grid gap-2 rounded-2xl border border-white/15 p-4 md:col-span-2">
             <legend className="px-1 text-sm font-semibold">I am interested in (optional)</legend>

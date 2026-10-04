@@ -8,6 +8,7 @@ import { requireRole } from "@/lib/auth";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { normalizeSchoolName } from "@/lib/school";
+import { getStudentAudienceLabel } from "@/lib/portal-audience";
 import { cn } from "@/lib/utils";
 
 const STUDENT_COUNT_FORMATTER = new Intl.NumberFormat("nb-NO");
@@ -68,12 +69,17 @@ function buildSchoolStudyProgramStats(rows: StudentStatsRow[]) {
     .sort((a, b) => a.school.localeCompare(b.school, "nb-NO"));
 }
 
-function statsLink(view: StatsView, query: string, sort: string) {
+function audienceFilter(value: string | string[] | undefined) {
+  return value === "student" || value === "young_professional" ? value : "all";
+}
+
+function statsLink(view: StatsView, query: string, sort: string, audience: string) {
   const params = new URLSearchParams();
   if (query) params.set("q", query);
   params.set("sort", sort);
   params.set("dir", "asc");
   params.set("view", view);
+  if (audience !== "all") params.set("audience", audience);
   return `?${params.toString()}`;
 }
 
@@ -87,6 +93,7 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
       ? params.view
       : "study-programs";
   const dir = "asc";
+  const audience = audienceFilter(params.audience);
   const page = Math.max(1, Number(params.page ?? "1"));
 
   let supabase = await createServerSupabaseClient();
@@ -96,17 +103,20 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
     // fall back
   }
 
-  let baseQuery = supabase.from("students").select("id, full_name, email, school, study_program, study_level, study_year, graduation_year", { count: "exact" });
+  let baseQuery = supabase.from("students").select("id, full_name, email, audience, school, study_program, study_level, study_year, graduation_year", { count: "exact" });
 
   if (query) {
     baseQuery = baseQuery.or(`full_name.ilike.%${query}%,email.ilike.%${query}%,school.ilike.%${query}%,study_program.ilike.%${query}%`);
+  }
+  if (audience !== "all") {
+    baseQuery = baseQuery.eq("audience", audience);
   }
 
   const orderColumn = sort === "email" ? "email" : "full_name";
   const [studentsResult, totalResult, statsResult] = await Promise.all([
     baseQuery.order(orderColumn, { ascending: true }).range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1),
     supabase.from("students").select("id", { count: "exact", head: true }),
-    supabase.from("students").select("school, study_program").range(0, 9999),
+    supabase.from("students").select("school, study_program, audience").range(0, 9999),
   ]);
 
   if (studentsResult.error) throw studentsResult.error;
@@ -117,6 +127,7 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
     id: string;
     full_name: string | null;
     email: string | null;
+    audience: "student" | "young_professional";
     school: string | null;
     study_program: string | null;
     study_level: string | null;
@@ -124,7 +135,10 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
     graduation_year: number | null;
   }>;
 
-  const statsRows = (statsResult.data ?? []) as StudentStatsRow[];
+  const allStatsRows = (statsResult.data ?? []) as Array<StudentStatsRow & { audience?: "student" | "young_professional" | null }>;
+  const statsRows = audience === "all" ? allStatsRows : allStatsRows.filter((row) => row.audience === audience);
+  const studentAudienceCount = allStatsRows.filter((row) => (row.audience ?? "student") === "student").length;
+  const youngProfessionalCount = allStatsRows.filter((row) => row.audience === "young_professional").length;
   const studyProgramStats = countByLabel(statsRows, (row) => normalizeLabel(row.study_program, "Ikke oppgitt studieretning"));
   const schoolStats = countByLabel(statsRows, (row) => normalizeLabel(normalizeSchoolName(row.school), "Ikke oppgitt studiested"));
   const schoolStudyProgramStats = buildSchoolStudyProgramStats(statsRows);
@@ -151,7 +165,17 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
         <Card className="border border-secondary/30 bg-secondary/10">
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-primary/70">Totalt registrert</p>
           <p className="mt-2 text-4xl font-black tabular-nums text-primary">{formatCount(totalStudents)}</p>
-          <p className="mt-1 text-sm text-ink/70">Studenter er registrert på Oslo Student Hub.</p>
+          <p className="mt-1 text-sm text-ink/70">Personer er registrert på Oslo Student Hub.</p>
+          <div className="mt-4 grid gap-2 sm:grid-cols-2">
+            <div className="rounded-2xl bg-white/70 p-3 ring-1 ring-primary/10">
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-primary/60">Students</p>
+              <p className="mt-1 text-2xl font-black tabular-nums text-primary">{formatCount(studentAudienceCount)}</p>
+            </div>
+            <div className="rounded-2xl bg-white/70 p-3 ring-1 ring-primary/10">
+              <p className="text-xs font-bold uppercase tracking-[0.14em] text-primary/60">Young Professionals</p>
+              <p className="mt-1 text-2xl font-black tabular-nums text-primary">{formatCount(youngProfessionalCount)}</p>
+            </div>
+          </div>
         </Card>
 
         <nav aria-label="Velg studentstatistikk" className="flex flex-wrap gap-2">
@@ -164,7 +188,7 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
             return (
               <Link
                 key={viewValue}
-                href={statsLink(viewValue as StatsView, query, sort)}
+                href={statsLink(viewValue as StatsView, query, sort, audience)}
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "inline-flex min-h-11 items-center rounded-full border px-4 py-2 text-sm font-bold transition-[background-color,border-color,color,box-shadow,transform] hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary focus-visible:ring-offset-2 focus-visible:ring-offset-mist",
@@ -228,9 +252,17 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
       </section>
 
       <Card className="flex flex-col gap-4">
-        <form className="grid gap-3 md:grid-cols-3" method="get">
+        <form className="grid gap-3 md:grid-cols-4" method="get">
           <input type="hidden" name="dir" value={dir} />
           <input type="hidden" name="view" value={view} />
+          <label className="text-sm font-semibold text-primary">
+            Målgruppe
+            <Select name="audience" defaultValue={audience}>
+              <option value="all">Alle</option>
+              <option value="student">Students</option>
+              <option value="young_professional">Young Professionals</option>
+            </Select>
+          </label>
           <label className="text-sm font-semibold text-primary md:col-span-2">
             Søk
             <Input name="q" defaultValue={query} placeholder="Navn, e-post, skole eller studie…" />
@@ -254,6 +286,7 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
             <tr className="text-left text-xs font-semibold uppercase tracking-wide text-primary/60">
               <th className="px-4 py-3">Navn</th>
               <th className="px-4 py-3">E-post</th>
+              <th className="px-4 py-3">Målgruppe</th>
               <th className="px-4 py-3">Studiested</th>
               <th className="px-4 py-3">Studie</th>
               <th className="px-4 py-3">Nivå</th>
@@ -270,6 +303,7 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
                     </Link>
                   </td>
                   <td className="px-4 py-3 text-ink/80">{student.email ?? "—"}</td>
+                  <td className="px-4 py-3 text-ink/80">{getStudentAudienceLabel(student.audience)}</td>
                   <td className="px-4 py-3 text-ink/80">{student.school ?? "—"}</td>
                   <td className="px-4 py-3 text-ink/80">{student.study_program ?? "—"}</td>
                   <td className="px-4 py-3 text-ink/80">{student.study_level ?? "—"}</td>
@@ -278,7 +312,7 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
               ))
             ) : (
               <tr>
-                <td className="px-4 py-6 text-sm text-ink/70" colSpan={6}>
+                <td className="px-4 py-6 text-sm text-ink/70" colSpan={7}>
                   Ingen studenter matcher søket.
                 </td>
               </tr>
@@ -291,12 +325,12 @@ export default async function AdminStudentsPage({ searchParams }: PageProps) {
         <span>Side {page} av {totalPages} · {formatCount(currentResultCount)} treff</span>
         <div className="flex gap-2">
           {page > 1 ? (
-            <a className="rounded-full border border-primary/20 px-3 py-2 font-semibold hover:border-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary" href={`?q=${encodeURIComponent(query)}&sort=${sort}&dir=${dir}&view=${view}&page=${page - 1}`}>
+            <a className="rounded-full border border-primary/20 px-3 py-2 font-semibold hover:border-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary" href={`?q=${encodeURIComponent(query)}&sort=${sort}&dir=${dir}&view=${view}&audience=${audience}&page=${page - 1}`}>
               Forrige
             </a>
           ) : null}
           {page < totalPages ? (
-            <a className="rounded-full border border-primary/20 px-3 py-2 font-semibold hover:border-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary" href={`?q=${encodeURIComponent(query)}&sort=${sort}&dir=${dir}&view=${view}&page=${page + 1}`}>
+            <a className="rounded-full border border-primary/20 px-3 py-2 font-semibold hover:border-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary" href={`?q=${encodeURIComponent(query)}&sort=${sort}&dir=${dir}&view=${view}&audience=${audience}&page=${page + 1}`}>
               Neste
             </a>
           ) : null}

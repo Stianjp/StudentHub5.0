@@ -10,6 +10,7 @@ import { requireRole } from "@/lib/auth";
 import { getLatestCompanyRegistrationLogos } from "@/lib/company";
 import { shouldUseDirectImageUrl } from "@/lib/logo-url";
 import { getCompanyAudienceLabel, getStudentCategoryLabel } from "@/lib/student-company-display";
+import { getStudentAudienceLabel } from "@/lib/portal-audience";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getOrCreateStudentForUser, listStudentConsents } from "@/lib/student";
 import {
@@ -109,7 +110,7 @@ export default async function StudentConsentsPage({ searchParams }: PageProps) {
       <div className="space-y-5">
         <SectionHeader
         headingLevel="h1"
-          eyebrow="Consents"
+          eyebrow={getStudentAudienceLabel(student.audience)}
           title="Your consents"
           description="An overview of the companies you have given permission to contact you."
         />

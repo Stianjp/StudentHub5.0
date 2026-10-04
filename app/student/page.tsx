@@ -11,6 +11,7 @@ import { requireRole } from "@/lib/auth";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getOrCreateStudentForUser } from "@/lib/student";
 import { getStudentCategoryLabel } from "@/lib/student-company-display";
+import { getStudentAudienceLabel } from "@/lib/portal-audience";
 
 const INTEREST_OPTIONS = [
   { value: "Teknologi", label: "Technology" },
@@ -71,6 +72,7 @@ export default async function StudentProfilePage({ searchParams }: PageProps) {
     work_style: string | null;
     team_size: string | null;
     liked_company_ids: string[] | null;
+    audience: "student" | "young_professional";
   };
   const interestSet = new Set((typedStudent.interests ?? []).map(normalize));
   const customInterests = (typedStudent.interests ?? []).filter(
@@ -83,7 +85,7 @@ export default async function StudentProfilePage({ searchParams }: PageProps) {
     <div className="flex flex-col gap-8">
       <SectionHeader
         headingLevel="h1"
-        eyebrow="Student"
+        eyebrow={getStudentAudienceLabel(typedStudent.audience)}
         title="Profile"
         description="Update your profile to get better matches with companies and events."
       />
@@ -135,7 +137,7 @@ export default async function StudentProfilePage({ searchParams }: PageProps) {
             />
           </label>
           <label className="text-sm font-semibold text-primary">
-            University or educational institution
+            {typedStudent.audience === "young_professional" ? "University, school or latest educational institution" : "University or educational institution"}
             <Input
               name="school"
               required

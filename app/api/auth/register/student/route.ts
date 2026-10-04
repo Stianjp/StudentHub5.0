@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { createRouteSupabaseClient } from "@/lib/supabase/route";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
-import { getBaseUrlForRole } from "@/lib/auth-urls";
+import { getBaseUrlForStudentAudience } from "@/lib/auth-urls";
+import { studentAudienceFromHost } from "@/lib/portal-audience";
 import { studentRegistrationSchema } from "@/lib/validation/auth";
 import {
   normalizeEmailAddress,
@@ -25,7 +26,8 @@ export async function POST(request: Request) {
   const admin = createAdminSupabaseClient();
   const now = new Date().toISOString();
   const normalizedEmail = normalizeEmailAddress(parsed.data.email);
-  const baseUrl = getBaseUrlForRole("student", new URL(request.url).origin);
+  const audience = studentAudienceFromHost(request.headers.get("host"));
+  const baseUrl = getBaseUrlForStudentAudience(audience, new URL(request.url).origin);
   let createdUserId: string | null = null;
 
   try {
@@ -79,6 +81,7 @@ export async function POST(request: Request) {
       study_level: parsed.data.studyLevel,
       study_year: parsed.data.studyYear,
       job_types: parsed.data.jobTypes,
+      audience,
       updated_at: now,
     };
 

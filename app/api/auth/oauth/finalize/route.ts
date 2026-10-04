@@ -3,6 +3,7 @@ import { getSafePortalNextPath, isStudentOnboardingComplete, resolveOAuthPortalR
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { reconcileApprovedCompanyPortalInvites } from "@/lib/event-registration";
+import { studentAudienceFromHost } from "@/lib/portal-audience";
 
 type FinalizeBody = {
   next?: string | null;
@@ -11,7 +12,9 @@ type FinalizeBody = {
 
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as FinalizeBody;
-  const role = resolveOAuthPortalRole(request.headers.get("host"), body.role);
+  const host = request.headers.get("host");
+  const role = resolveOAuthPortalRole(host, body.role);
+  const studentAudience = studentAudienceFromHost(host);
   if (!role) {
     return NextResponse.json({ error: "Google sign-in is only available in the student and company portals." }, { status: 403 });
   }
@@ -72,7 +75,7 @@ export async function POST(request: Request) {
   if (role === "student") {
     const { data: byUser, error: byUserError } = await admin
       .from("students")
-      .select("id, user_id, full_name, school, study_program, study_level, study_year")
+      .select("id, user_id, full_name, school, study_program, study_level, study_year, audience")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(1)
@@ -85,7 +88,7 @@ export async function POST(request: Request) {
     if (!student) {
       const { data: byEmail, error: byEmailError } = await admin
         .from("students")
-        .select("id, user_id, full_name, school, study_program, study_level, study_year")
+        .select("id, user_id, full_name, school, study_program, study_level, study_year, audience")
         .eq("email", normalizedEmail)
         .order("created_at", { ascending: false })
         .limit(1)
@@ -96,9 +99,9 @@ export async function POST(request: Request) {
       if (byEmail && (!byEmail.user_id || byEmail.user_id === user.id)) {
         const { data: linked, error: linkError } = await admin
           .from("students")
-          .update({ user_id: user.id, updated_at: now })
+          .update({ user_id: user.id, audience: studentAudience, updated_at: now })
           .eq("id", byEmail.id)
-          .select("id, user_id, full_name, school, study_program, study_level, study_year")
+          .select("id, user_id, full_name, school, study_program, study_level, study_year, audience")
           .single();
         if (linkError) {
           return NextResponse.json({ error: "The existing student profile could not be connected." }, { status: 500 });

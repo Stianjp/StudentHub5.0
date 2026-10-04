@@ -7,6 +7,7 @@ import type { ReactNode } from "react";
 import { Building2, Ticket, LayoutDashboard, LogOut, Settings, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LogoutButton } from "@/components/navigation/logout-button";
+import { getStudentAudiencePortalName } from "@/lib/portal-audience";
 import { SessionGuard } from "@/components/supabase/session-guard";
 
 type NavItem = {
@@ -20,11 +21,12 @@ type StudentShellProps = {
   userName: string;
   userInitials: string;
   children: ReactNode;
+  audience?: string | null;
 };
 
 const iconMap = { dashboard: LayoutDashboard, profile: User, events: Ticket, companies: Building2, settings: Settings };
 
-export function StudentShell({ nav, userName, userInitials, children }: StudentShellProps) {
+export function StudentShell({ nav, userName, userInitials, children, audience }: StudentShellProps) {
   const pathname = usePathname() ?? "";
   const activeHref = pathname.startsWith("/student/companies")
     ? "/student/dashboard"
@@ -37,7 +39,7 @@ export function StudentShell({ nav, userName, userInitials, children }: StudentS
       <SessionGuard />
       <header className="sticky top-0 z-40 border-b border-white/10 bg-primary text-white">
         <div className="mx-auto flex min-h-[72px] max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
-          <Link href="/student/events" aria-label="Oslo Student Hub — get your ticket" className="flex min-h-11 shrink-0 items-center">
+          <Link href="/student/events" aria-label={`${getStudentAudiencePortalName(audience)} — get your ticket`} className="flex min-h-11 shrink-0 items-center">
             <Image src="/brand/Logo_OSH_Gradient_whitetext.svg" alt="Oslo Student Hub" width={144} height={50} priority className="h-auto w-32 sm:w-36" />
           </Link>
           <nav aria-label="Main navigation" className="hidden items-center gap-2 lg:flex">

@@ -1,8 +1,10 @@
 import { cache } from "react";
+import { headers } from "next/headers";
 import type { TableRow } from "@/lib/types/database";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { filterExistingCompanyIds, getCompanyIfExists } from "@/lib/lead";
+import { studentAudienceFromHost } from "@/lib/portal-audience";
 
 type Student = TableRow<"students">;
 type Consent = TableRow<"consents">;
@@ -72,6 +74,8 @@ export const getOrCreateStudentForUser = cache(async function getOrCreateStudent
   }
 
   const supabase = await createServerSupabaseClient();
+  const host = (await headers()).get("host");
+  const audience = studentAudienceFromHost(host);
   const normalizedEmail = email ? email.toLowerCase() : null;
 
   const { data: existingRows, error: readError } = await supabase
@@ -117,6 +121,7 @@ export const getOrCreateStudentForUser = cache(async function getOrCreateStudent
       user_id: userId,
       email: normalizedEmail,
       full_name: deriveStudentName(normalizedEmail),
+      audience,
       created_at: now,
       updated_at: now,
     })

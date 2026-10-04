@@ -5,6 +5,7 @@ import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Badge } from "@/components/ui/badge";
+import { getStudentAudienceLabel } from "@/lib/portal-audience";
 import { requireRole } from "@/lib/auth";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
 import { deleteStudent, updateStudentConsent, updateStudentProfile, upsertStudentConsent } from "@/app/admin/students/actions";
@@ -23,7 +24,7 @@ export default async function AdminStudentDetailPage({ params }: PageProps) {
     await Promise.all([
       supabase
         .from("students")
-        .select("id, full_name, email, school, study_program, study_level, study_year, graduation_year, interests, work_style, social_profile, team_size")
+        .select("id, full_name, email, audience, school, study_program, study_level, study_year, graduation_year, interests, work_style, social_profile, team_size")
         .eq("id", studentId)
         .single(),
       supabase
@@ -62,7 +63,10 @@ export default async function AdminStudentDetailPage({ params }: PageProps) {
       />
 
       <Card className="flex flex-col gap-4">
-        <h3 className="text-lg font-bold text-primary">Studentprofil</h3>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h3 className="text-lg font-bold text-primary">Studentprofil</h3>
+          <Badge variant={student?.audience === "young_professional" ? "warning" : "success"}>{getStudentAudienceLabel(student?.audience)}</Badge>
+        </div>
         <form action={updateStudentProfile} className="grid gap-4 md:grid-cols-2">
           <input type="hidden" name="studentId" value={studentId} />
           <label className="text-sm font-semibold text-primary md:col-span-2">
@@ -72,6 +76,13 @@ export default async function AdminStudentDetailPage({ params }: PageProps) {
           <label className="text-sm font-semibold text-primary">
             E-post
             <Input name="email" type="email" defaultValue={student?.email ?? ""} />
+          </label>
+          <label className="text-sm font-semibold text-primary">
+            Målgruppe
+            <Select name="audience" defaultValue={student?.audience ?? "student"}>
+              <option value="student">Student</option>
+              <option value="young_professional">Young professional</option>
+            </Select>
           </label>
           <label className="text-sm font-semibold text-primary">
             Studiested

@@ -16,11 +16,13 @@ import { SITE_IMAGES } from "@/lib/hovedside/site-images";
 export const metadata: Metadata = {
   title: "Students",
   description:
-    "Are you a student looking for a job or thesis? Join Oslo Student Hub to connect with top companies.",
+    "Are you a student or Young Professional looking for a job or thesis? Join Oslo Student Hub to connect with top companies.",
 };
 
 const STUDENT_PORTAL_URL = "https://student.oslostudenthub.no/";
+const YOUNG_PROFESSIONAL_PORTAL_URL = "https://young-professionals.oslostudenthub.no/";
 const STUDENT_EVENTS_URL = "https://student.oslostudenthub.no/student/events";
+const YOUNG_PROFESSIONAL_EVENTS_URL = "https://young-professionals.oslostudenthub.no/student/events";
 
 export const dynamic = "force-dynamic";
 
@@ -36,11 +38,12 @@ export default async function ForStudenterPage() {
     <>
       {/* ── Hero ─────────────────────────────────────────────── */}
       <HeroSection
-        title="WE CONNECT STUDENTS & COMPANIES"
-        subtitle="Are you a student looking for a job or thesis? Sign up here!"
-        ctaLabel="Register"
+        title="WE CONNECT STUDENTS, YOUNG PROFESSIONALS & COMPANIES"
+        subtitle="Are you a student or Young Professional looking for a job, thesis or new career opportunity? Sign up here!"
+        ctaLabel="Register as student"
         ctaHref={STUDENT_PORTAL_URL}
-        ctaDescription="Register or sign in, then open Events to get your free ticket."
+        ctaDescription="Students and Young Professionals can register or sign in, then open Events to get a free ticket."
+        extraCtas={[{ label: "Register as Young Professional", href: YOUNG_PROFESSIONAL_PORTAL_URL }]}
         backgroundImageSrc={SITE_IMAGES.studentsHero.src}
         backgroundImageAlt={SITE_IMAGES.studentsHero.alt}
         backgroundImagePosition="center"
@@ -78,9 +81,9 @@ export default async function ForStudenterPage() {
               </h2>
               <ol className="mt-6 grid gap-3 text-left">
                 {[
-                  "Register as a student.",
-                  "Go to Events inside your student page.",
-                  "Get your free student ticket there.",
+                  "Register as a student or Young Professional.",
+                  "Go to Events inside your portal.",
+                  "Get your free ticket there.",
                 ].map((step, index) => (
                   <li
                     key={step}
@@ -100,12 +103,20 @@ export default async function ForStudenterPage() {
                 Log in and open Events to continue directly to your free Student
                 Connect ticket.
               </p>
-              <Link
-                href={STUDENT_EVENTS_URL}
-                className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-secondary px-6 py-3 text-sm font-bold uppercase tracking-wider text-primary transition-colors hover:bg-secondary/90 sm:w-auto"
-              >
-                Log in here
-              </Link>
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                <Link
+                  href={STUDENT_EVENTS_URL}
+                  className="inline-flex w-full items-center justify-center rounded-full bg-secondary px-6 py-3 text-sm font-bold uppercase tracking-wider text-primary transition-colors hover:bg-secondary/90 sm:w-auto"
+                >
+                  Student login
+                </Link>
+                <Link
+                  href={YOUNG_PROFESSIONAL_EVENTS_URL}
+                  className="inline-flex w-full items-center justify-center rounded-full border-2 border-secondary px-6 py-3 text-sm font-bold uppercase tracking-wider text-secondary transition-colors hover:bg-secondary hover:text-primary sm:w-auto"
+                >
+                  Young Professional login
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -163,7 +174,7 @@ export default async function ForStudenterPage() {
       {/* ── University stats ─────────────────────────────────── */}
       <SectionWrapper>
         <h2 className="mb-8 text-center text-2xl font-bold text-primary">
-          All the students in Oslo
+          All the students and Young Professionals in Oslo
         </h2>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {[
@@ -200,7 +211,7 @@ export default async function ForStudenterPage() {
       {/* ── What we offer ────────────────────────────────────── */}
       <SectionWrapper bg="mist">
         <h2 className="mb-8 text-center text-2xl font-bold text-primary">
-          What we offer students
+          What we offer students and Young Professionals
         </h2>
         <div className="grid gap-6 md:grid-cols-3">
           <FeatureCard
@@ -211,7 +222,7 @@ export default async function ForStudenterPage() {
           <FeatureCard
             icon={<Users size={24} />}
             title="Networking"
-            description="Build your professional network early. Connect with industry professionals and fellow ambitious students."
+            description="Build your professional network early. Connect with industry professionals and fellow ambitious people."
           />
           <FeatureCard
             icon={<GraduationCap size={24} />}
@@ -224,8 +235,9 @@ export default async function ForStudenterPage() {
       {/* ── CTA ──────────────────────────────────────────────── */}
       <CtaSection
         headline="Ready to start your career journey?"
-        ctaLabel="Register now"
+        ctaLabel="Register as student"
         ctaHref={STUDENT_PORTAL_URL}
+        extraCtas={[{ label: "Register as Young Professional", href: YOUNG_PROFESSIONAL_PORTAL_URL }]}
       />
     </>
   );

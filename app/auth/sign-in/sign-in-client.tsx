@@ -12,6 +12,13 @@ import { getDefaultNextPath } from "@/lib/auth-urls";
 import { getSafePortalNextPath } from "@/lib/auth-oauth";
 import { roleFromHost } from "@/lib/host";
 import {
+  getStudentAudienceRegisterDescription,
+  getStudentAudienceRegisterTitle,
+  getStudentAudienceSignInTitle,
+  studentAudienceFromHost,
+  type StudentAudience,
+} from "@/lib/portal-audience";
+import {
   getStudentJobTypeOptions,
   getPasswordStrengthSummary,
   getStudyYearOptions,
@@ -26,23 +33,23 @@ import { getStudentCategoryLabel } from "@/lib/student-company-display";
 type Role = "student" | "company" | "admin";
 type Mode = "login" | "register" | "reset";
 
-function getRoleTitle(mode: Mode, role: Role) {
+function getRoleTitle(mode: Mode, role: Role, audience: StudentAudience) {
   if (mode === "reset") return "Reset password";
   if (mode === "register") {
-    return role === "student" ? "Register as a student" : "Register a company";
+    return role === "student" ? getStudentAudienceRegisterTitle(audience) : "Register a company";
   }
-  if (role === "student") return "Student sign-in";
+  if (role === "student") return getStudentAudienceSignInTitle(audience);
   if (role === "admin") return "Admin sign-in";
   return "Company sign-in";
 }
 
-function getRoleDescription(mode: Mode, role: Role) {
+function getRoleDescription(mode: Mode, role: Role, audience: StudentAudience) {
   if (mode === "reset") {
     return "Receive a link by email to set a new password.";
   }
   if (mode === "register") {
     if (role === "student") {
-      return "Create a student account with your university, field of study and job preferences.";
+      return getStudentAudienceRegisterDescription(audience);
     }
     return "Create a company account. Portal access is approved manually by OSH.";
   }
@@ -54,14 +61,20 @@ function getRoleDescription(mode: Mode, role: Role) {
 
 export function SignInClient({
   allowedRole,
+  studentAudience = "student",
 }: {
   allowedRole?: Role | null;
+  studentAudience?: StudentAudience;
 }) {
   const params = useSearchParams();
   const paramRole = params.get("role") as Role | null;
   const detectedRole = useMemo(
     () => (typeof window === "undefined" ? null : roleFromHost(window.location.host)),
     [],
+  );
+  const detectedAudience = useMemo(
+    () => (typeof window === "undefined" ? studentAudience : studentAudienceFromHost(window.location.host)),
+    [studentAudience],
   );
   const effectiveAllowedRole = allowedRole ?? detectedRole;
   const initialRole =
@@ -111,8 +124,8 @@ export function SignInClient({
     effectiveAllowedRole === "company" ||
     detectedRole === "student" ||
     detectedRole === "company";
-  const title = getRoleTitle(mode, selectedRole);
-  const description = getRoleDescription(mode, selectedRole);
+  const title = getRoleTitle(mode, selectedRole, detectedAudience);
+  const description = getRoleDescription(mode, selectedRole, detectedAudience);
   const studentStudyYearOptions = useMemo(
     () => getStudyYearOptions(studentStudyLevel),
     [studentStudyLevel],
@@ -237,6 +250,7 @@ export function SignInClient({
             jobTypes: formData.getAll("jobTypes").map((value) => String(value)),
             password: passwordValue,
             confirmPassword: confirmPasswordValue,
+            audience: detectedAudience,
           }),
         });
 
@@ -432,7 +446,7 @@ export function SignInClient({
                 name="email"
                 required
                 type="email"
-                placeholder={selectedRole === "student" ? "name@student.no" : "name@company.no"}
+                placeholder={selectedRole === "student" ? (detectedAudience === "young_professional" ? "name@example.com" : "name@student.no") : "name@company.no"}
                 aria-invalid={status === "error"}
                 aria-describedby={status === "error" ? errorId : undefined}
               />
@@ -462,8 +476,8 @@ export function SignInClient({
                     <Input name="fullName" required placeholder="First name Last name" />
                   </label>
                   <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
-                    University or educational institution
-                    <Input name="school" required placeholder="For example, NTNU" />
+                    {detectedAudience === "young_professional" ? "University, school or latest educational institution" : "University or educational institution"}
+                    <Input name="school" required placeholder={detectedAudience === "young_professional" ? "For example, OsloMet or NTNU" : "For example, NTNU"} />
                   </label>
                 </div>
 
@@ -480,7 +494,7 @@ export function SignInClient({
                     </Select>
                   </label>
                   <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
-                    Student type
+                    {detectedAudience === "young_professional" ? "Education level" : "Student type"}
                     <Select
                       name="studyLevel"
                       required

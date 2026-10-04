@@ -3,9 +3,12 @@ import { headers } from "next/headers";
 import { Card } from "@/components/ui/card";
 import { SignInClient } from "@/app/auth/sign-in/sign-in-client";
 import { roleFromHost } from "@/lib/host";
+import { studentAudienceFromHost } from "@/lib/portal-audience";
 
 export default async function SignInPage() {
-  const allowedRole = roleFromHost((await headers()).get("host"));
+  const host = (await headers()).get("host");
+  const allowedRole = roleFromHost(host);
+  const studentAudience = studentAudienceFromHost(host);
   return (
     <Suspense
       fallback={
@@ -21,7 +24,7 @@ export default async function SignInPage() {
         </main>
       }
     >
-      <SignInClient allowedRole={allowedRole} />
+      <SignInClient allowedRole={allowedRole} studentAudience={studentAudience} />
     </Suspense>
   );
 }

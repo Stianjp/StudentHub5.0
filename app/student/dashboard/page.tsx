@@ -7,6 +7,7 @@ import { getUser } from "@/lib/auth";
 import { listStudentParticipatingCompanies } from "@/lib/student-companies";
 import { calcProfileCompletion } from "@/lib/student-portal";
 import { shouldUseDirectImageUrl } from "@/lib/logo-url";
+import { getStudentAudiencePortalName } from "@/lib/portal-audience";
 
 export default async function StudentDashboardPage() {
   const profile = await requireRole("student");
@@ -22,7 +23,7 @@ export default async function StudentDashboardPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-5 sm:space-y-6">
       <header>
-        <p className="text-xs font-semibold uppercase tracking-widest text-primary/70">Student portal</p>
+        <p className="text-xs font-semibold uppercase tracking-widest text-primary/70">{getStudentAudiencePortalName(student.audience)}</p>
         <h1 className="mt-1 break-words text-2xl font-bold text-primary sm:text-3xl">
           {firstName ? `Hi, ${firstName}!` : "Your dashboard"}
         </h1>

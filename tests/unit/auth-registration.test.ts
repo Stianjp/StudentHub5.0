@@ -56,7 +56,7 @@ describe("host-låsing", () => {
 
   it("avviser registrering på feil domene", () => {
     expect(validateHostRoleLock("student.oslostudenthub.no", "company")).toMatch(/company domain/i);
-    expect(validateHostRoleLock("bedrift.oslostudenthub.no", "student")).toMatch(/student domain/i);
+    expect(validateHostRoleLock("bedrift.oslostudenthub.no", "student")).toMatch(/student portals/i);
     expect(validateHostRoleLock("admin.oslostudenthub.no", "student")).toMatch(/not available/i);
   });
 

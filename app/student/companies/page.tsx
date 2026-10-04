@@ -11,6 +11,7 @@ import { listStudentParticipatingCompanies } from "@/lib/student-companies";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { getOrCreateStudentForUser } from "@/lib/student";
 import { getStudentCategoryLabel } from "@/lib/student-company-display";
+import { getStudentAudienceLabel } from "@/lib/portal-audience";
 
 const INDUSTRY_ALL = "all";
 const INDUSTRY_OPTIONS = [
@@ -85,7 +86,7 @@ export default async function StudentCompaniesPage({ searchParams }: PageProps) 
     <div className="flex flex-col gap-8">
       <SectionHeader
         headingLevel="h1"
-        eyebrow="Student"
+        eyebrow={getStudentAudienceLabel(student.audience)}
         title="Participating companies"
         description="Meet the confirmed participants at Student Connect 2026 and choose your favourites."
         actions={
