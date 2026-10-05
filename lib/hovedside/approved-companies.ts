@@ -371,6 +371,6 @@ async function fetchApprovedCompanies(
 
 export const getApprovedCompaniesForCampaign = unstable_cache(
   fetchApprovedCompanies,
-  ["approved-companies-v5"],
+  ["approved-companies-v6"],
   { revalidate: 300, tags: ["approved-companies"] },
 );
