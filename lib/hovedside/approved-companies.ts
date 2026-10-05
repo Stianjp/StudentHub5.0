@@ -4,6 +4,7 @@ import {
   PUBLIC_LOGO_TRANSFORM,
   getLatestCompanyRegistrationLogosByIdentifiers,
 } from "@/lib/company";
+import { applyApprovedCompanyLogoOverrides } from "@/lib/event-registration-stand-overrides";
 import type { Database } from "@/lib/types/database";
 
 type RegistrationApplication =
@@ -360,7 +361,7 @@ async function fetchApprovedCompanies(
     }),
   );
 
-  return previews.sort((left, right) => {
+  return applyApprovedCompanyLogoOverrides(campaignSlug, previews).sort((left, right) => {
     const tierDelta =
       PACKAGE_ORDER[right.packageTier] - PACKAGE_ORDER[left.packageTier];
     if (tierDelta !== 0) return tierDelta;
@@ -370,6 +371,6 @@ async function fetchApprovedCompanies(
 
 export const getApprovedCompaniesForCampaign = unstable_cache(
   fetchApprovedCompanies,
-  ["approved-companies-v4"],
+  ["approved-companies-v5"],
   { revalidate: 300, tags: ["approved-companies"] },
 );

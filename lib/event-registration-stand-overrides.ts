@@ -19,8 +19,8 @@ type PublicStandLike = {
 };
 
 const STUDENT_CONNECT_2026_SLUG = "student-connect-2026";
-const GRUNDERSKOLEN_STAND_CODE = "Standard 21";
-const GRUNDERSKOLEN_LOGO_URL = "/StudentConnect-site/Grunderskolen-logo.png";
+export const GRUNDERSKOLEN_STAND_CODE = "Standard 21";
+export const GRUNDERSKOLEN_LOGO_URL = "/StudentConnect-site/Grunderskolen-logo.png";
 
 export function applyPublicRegistrationStandOverrides<T extends PublicStandLike>(slug: string, stands: T[]): T[] {
   if (slug !== STUDENT_CONNECT_2026_SLUG) return stands;
@@ -39,6 +39,31 @@ export function applyPublicRegistrationStandOverrides<T extends PublicStandLike>
           stand.bookingPreview?.representationText ??
           "Gründerskolen møter studenter og unge profesjonelle på Student Connect 2026.",
       },
+    };
+  });
+}
+
+
+type ApprovedCompanyLike = {
+  companyName: string;
+  logoUrl: string | null;
+  standLabel?: string | null;
+};
+
+export function applyApprovedCompanyLogoOverrides<T extends ApprovedCompanyLike>(slug: string, companies: T[]): T[] {
+  if (slug !== STUDENT_CONNECT_2026_SLUG) return companies;
+
+  return companies.map((company) => {
+    const isGrunderskolen =
+      company.standLabel === GRUNDERSKOLEN_STAND_CODE ||
+      company.companyName.trim().toLocaleLowerCase("nb") === "gründerskolen";
+
+    if (!isGrunderskolen) return company;
+
+    return {
+      ...company,
+      companyName: "Gründerskolen",
+      logoUrl: GRUNDERSKOLEN_LOGO_URL,
     };
   });
 }
