@@ -342,7 +342,9 @@ async function fetchPublicRegistrationCampaignDetail(
   slug: string,
   options: { includeClosed?: boolean } = {},
 ): Promise<PublicCampaignDetail | null> {
-  const supabase = createPublicSupabaseClient();
+  const supabase = options.includeClosed && hasAdminSupabaseEnv()
+    ? createAdminSupabaseClient()
+    : createPublicSupabaseClient();
   const { data: campaign, error } = await supabase
     .from("event_registration_campaigns")
     .select(`*, event:events(${PUBLIC_EVENT_FIELDS})`)
