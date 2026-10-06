@@ -338,7 +338,10 @@ async function fetchPublicRegistrationCampaigns() {
   return campaigns.filter((campaign) => isCampaignOpen(campaign));
 }
 
-async function fetchPublicRegistrationCampaignDetail(slug: string): Promise<PublicCampaignDetail | null> {
+async function fetchPublicRegistrationCampaignDetail(
+  slug: string,
+  options: { includeClosed?: boolean } = {},
+): Promise<PublicCampaignDetail | null> {
   const supabase = createPublicSupabaseClient();
   const { data: campaign, error } = await supabase
     .from("event_registration_campaigns")
@@ -351,7 +354,7 @@ async function fetchPublicRegistrationCampaignDetail(slug: string): Promise<Publ
 
   const typedCampaign = campaign as unknown as PublicCampaign;
 
-  if (!isCampaignOpen(typedCampaign)) {
+  if (!options.includeClosed && !isCampaignOpen(typedCampaign)) {
     return null;
   }
 
@@ -387,7 +390,7 @@ const loadPublicRegistrationCampaigns = unstable_cache(fetchPublicRegistrationCa
 
 const loadPublicRegistrationCampaignDetail = unstable_cache(
   fetchPublicRegistrationCampaignDetail,
-  ["event-registration-public-campaign-detail"],
+  ["event-registration-public-campaign-detail-v2"],
   { revalidate: 300, tags: ["event-registration-public-campaign-detail"] },
 );
 
@@ -852,14 +855,17 @@ export async function listPublicRegistrationCampaigns() {
   return loadPublicRegistrationCampaigns();
 }
 
-export async function getPublicRegistrationCampaignBySlug(slug: string): Promise<PublicCampaignDetail | null> {
+export async function getPublicRegistrationCampaignBySlug(
+  slug: string,
+  options: { includeClosed?: boolean } = {},
+): Promise<PublicCampaignDetail | null> {
   if (shouldUsePreviewRegistrationData()) {
     return getPreviewRegistrationDetail(slug);
   }
   if (process.env.NODE_ENV !== "production") {
-    return fetchPublicRegistrationCampaignDetail(slug);
+    return fetchPublicRegistrationCampaignDetail(slug, options);
   }
-  return loadPublicRegistrationCampaignDetail(slug);
+  return loadPublicRegistrationCampaignDetail(slug, options);
 }
 
 export async function submitPublicRegistrationApplication(input: {
