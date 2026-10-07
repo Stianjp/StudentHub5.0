@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import {
-} from "lucide-react";
 import { PartnerInquiryForm } from "@/components/hovedside/partner-inquiry-form";
 import { HeroSection } from "@/components/hovedside/hero-section";
 import { PartnerLogoCarousel } from "@/components/hovedside/partner-logo-carousel";
@@ -19,7 +17,18 @@ import { SITE_IMAGES } from "@/lib/hovedside/site-images";
 
 const COMPANY_REGISTRATION_URL = "https://eventregister.oslostudenthub.no/";
 
-const PAST_EVENTS = [
+type PastEvent = {
+  title: string;
+  description: string;
+  href?: string;
+};
+
+const PAST_EVENTS: PastEvent[] = [
+  {
+    title: "Student Connect 2026",
+    description: "Our 2026 career fair bringing students, Young Professionals and companies together for stands, presentations and conversations.",
+    href: "/studentconnect2026",
+  },
   {
     title: "Næringslivsdagen 2025",
     description: "A career-focused event bringing students and companies together for conversations, exposure, and recruitment.",
@@ -66,12 +75,22 @@ export default async function ForBedrifterPage() {
       {/* ── Gradient stripe ──────────────────────────────────── */}
       <div className="h-2 bg-gradient-to-r from-secondary via-pink to-purple" />
 
+      {/* ── Contact form ────────────────────────────────────── */}
+      <SectionWrapper>
+        <div className="mx-auto max-w-2xl">
+          <h2 className="text-center text-2xl font-bold text-primary md:text-3xl">
+            Do you want to have an event with us?
+          </h2>
+          <PartnerInquiryForm />
+        </div>
+      </SectionWrapper>
+
       {/* ── Upcoming events ──────────────────────────────────── */}
       <SectionWrapper bg="primary">
         {featuredEvents.length === 0 ? (
           <div className="rounded-2xl bg-white/5 p-8 ring-1 ring-white/10">
             <p className="text-sm text-mist/70">
-              No upcoming events have been added in admin yet.
+              No upcoming event.
             </p>
           </div>
         ) : (
@@ -110,18 +129,43 @@ export default async function ForBedrifterPage() {
           A selection of previous events delivered together with students, partners, and industry.
         </p>
         <div className="grid gap-5 md:grid-cols-3">
-          {PAST_EVENTS.map((event) => (
-            <div
-              key={event.title}
-              className="rounded-[28px] bg-mist/40 p-6 shadow-[0_18px_44px_rgba(20,2,73,0.08)] ring-1 ring-primary/6"
-            >
-              <p className="text-xs font-bold uppercase tracking-[0.22em] text-secondary">
-                Past event
-              </p>
-              <h3 className="mt-3 text-xl font-bold text-primary">{event.title}</h3>
-              <p className="mt-3 text-sm leading-relaxed text-ink/70">{event.description}</p>
-            </div>
-          ))}
+          {PAST_EVENTS.map((event) => {
+            const content = (
+              <>
+                <p className="text-xs font-bold uppercase tracking-[0.22em] text-secondary">
+                  Past event
+                </p>
+                <h3 className="mt-3 text-xl font-bold text-primary">{event.title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-ink/70">{event.description}</p>
+                {event.href ? (
+                  <p className="mt-4 text-sm font-bold text-primary underline underline-offset-4">
+                    View event page
+                  </p>
+                ) : null}
+              </>
+            );
+
+            if (event.href) {
+              return (
+                <Link
+                  key={event.title}
+                  href={event.href}
+                  className="block rounded-[28px] bg-mist/40 p-6 shadow-[0_18px_44px_rgba(20,2,73,0.08)] ring-1 ring-primary/6 transition hover:-translate-y-0.5 hover:ring-secondary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary"
+                >
+                  {content}
+                </Link>
+              );
+            }
+
+            return (
+              <div
+                key={event.title}
+                className="rounded-[28px] bg-mist/40 p-6 shadow-[0_18px_44px_rgba(20,2,73,0.08)] ring-1 ring-primary/6"
+              >
+                {content}
+              </div>
+            );
+          })}
         </div>
       </SectionWrapper>
 
@@ -135,16 +179,6 @@ export default async function ForBedrifterPage() {
           { value: "80,000+", label: "Total students in Oslo" },
         ]}
       />
-
-      {/* ── Contact form placeholder ─────────────────────────── */}
-      <SectionWrapper>
-        <div className="mx-auto max-w-2xl">
-          <h2 className="text-center text-2xl font-bold text-primary md:text-3xl">
-            Do you want to have an event with us?
-          </h2>
-          <PartnerInquiryForm />
-        </div>
-      </SectionWrapper>
 
       {/* ── Partners carousel ────────────────────────────────── */}
       <SectionWrapper bg="primary">

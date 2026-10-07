@@ -11,9 +11,7 @@ import { HeroSection } from "@/components/hovedside/hero-section";
 import { SectionWrapper } from "@/components/hovedside/section-wrapper";
 import { FeatureCard } from "@/components/hovedside/feature-card";
 import { StatsBanner } from "@/components/hovedside/stats-banner";
-import { CtaSection } from "@/components/hovedside/cta-section";
 import { CompanyGrid } from "@/components/hovedside/company-grid";
-import { StudentConnectEventCallout } from "@/components/hovedside/student-connect-event-callout";
 import { getApprovedCompaniesForCampaign } from "@/lib/hovedside/approved-companies";
 import {
   formatWebsiteEventMonth,
@@ -33,9 +31,6 @@ export default async function HomePage() {
   ]);
   const { upcoming } = splitWebsiteEvents(events);
   const featuredEvents = upcoming.slice(0, 2);
-  const studentConnectEvent =
-    upcoming.find((event) => event.slug === "student-connect-2026") ?? null;
-
   return (
     <>
       {/* ── Hero ─────────────────────────────────────────────── */}
@@ -44,7 +39,6 @@ export default async function HomePage() {
         subtitle="By building business partnerships, we make the transition from studies to a professional career smoother and more accessible for students and Young Professionals"
         ctaLabel="Register student / young professional"
         ctaHref="/Students"
-        ctaDescription="Students and Young Professionals: register or sign in, then open Events to get your free ticket."
         extraCtas={[{ label: "Register company", href: "/partners" }]}
         backgroundImageSrc={SITE_IMAGES.homeHero.src}
         backgroundImageAlt={SITE_IMAGES.homeHero.alt}
@@ -59,7 +53,7 @@ export default async function HomePage() {
         {featuredEvents.length === 0 ? (
           <div className="rounded-2xl bg-white/5 p-8 ring-1 ring-white/10">
             <p className="text-sm text-mist/70">
-              No upcoming events have been added in admin yet.
+              No upcoming event.
             </p>
           </div>
         ) : (
@@ -152,28 +146,13 @@ export default async function HomePage() {
         </div>
       </SectionWrapper>
 
-      {/* ── Student Connect ticket ───────────────────────────── */}
-      <StudentConnectEventCallout event={studentConnectEvent} />
-
       {/* ── Partners ─────────────────────────────────────────── */}
       <SectionWrapper bg="primary">
         <h2 className="mb-2 text-center text-2xl font-bold text-surface">
-          Our partners
+          Our partners in 2026
         </h2>
-        <p className="mx-auto mb-8 max-w-2xl text-center text-sm text-mist/60">
-          Confirmed partners for Student Connect 2026, sorted by package from
-          Platinum to Standard. Hover or click a company to read a short
-          presentation.
-        </p>
-        <CompanyGrid companies={companies} compactOnMobile />
+        <CompanyGrid companies={companies} variant="flatLogos" />
       </SectionWrapper>
-
-      {/* ── CTA ──────────────────────────────────────────────── */}
-      <CtaSection
-        headline="Ready for Student Connect 2026?"
-        ctaLabel="Learn more"
-        ctaHref="/studentconnect2026"
-      />
     </>
   );
 }

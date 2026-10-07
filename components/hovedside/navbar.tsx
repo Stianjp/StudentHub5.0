@@ -14,11 +14,7 @@ type NavLink = {
 
 const NAV_LINKS: NavLink[] = [
   { label: "Students & Young Pros", href: "/Students" },
-  {
-    label: "Partners",
-    href: "/partners",
-    children: [{ label: "Student Connect 2026", href: "/studentconnect2026" }],
-  },
+  { label: "Partners", href: "/partners" },
   { label: "Events", href: "/events" },
   { label: "Jobs", href: "/jobs" },
   { label: "Thesis", href: "/thesis-projects" },

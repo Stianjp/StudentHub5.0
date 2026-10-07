@@ -6,11 +6,6 @@ import { HeroSection } from "@/components/hovedside/hero-section";
 import { SectionWrapper } from "@/components/hovedside/section-wrapper";
 import { FeatureCard } from "@/components/hovedside/feature-card";
 import { CtaSection } from "@/components/hovedside/cta-section";
-import { StudentConnectEventCallout } from "@/components/hovedside/student-connect-event-callout";
-import {
-  listWebsiteEvents,
-  splitWebsiteEvents,
-} from "@/lib/hovedside/public-events";
 import { SITE_IMAGES } from "@/lib/hovedside/site-images";
 
 export const metadata: Metadata = {
@@ -21,19 +16,10 @@ export const metadata: Metadata = {
 
 const STUDENT_PORTAL_URL = "https://student.oslostudenthub.no/";
 const YOUNG_PROFESSIONAL_PORTAL_URL = "https://young-professionals.oslostudenthub.no/";
-const STUDENT_EVENTS_URL = "https://student.oslostudenthub.no/student/events";
-const YOUNG_PROFESSIONAL_EVENTS_URL = "https://young-professionals.oslostudenthub.no/student/events";
 
 export const dynamic = "force-dynamic";
 
 export default async function ForStudenterPage() {
-  const events = await listWebsiteEvents();
-  const { upcoming } = splitWebsiteEvents(events);
-  const featuredEvent =
-    upcoming.find((event) => event.slug === "student-connect-2026") ??
-    upcoming[0] ??
-    null;
-
   return (
     <>
       {/* ── Hero ─────────────────────────────────────────────── */}
@@ -42,7 +28,7 @@ export default async function ForStudenterPage() {
         subtitle="Are you a student or Young Professional looking for a job, thesis or new career opportunity? Sign up here!"
         ctaLabel="Register as student"
         ctaHref={STUDENT_PORTAL_URL}
-        ctaDescription="Students and Young Professionals can register or sign in, then open Events to get a free ticket."
+        ctaDescription="Register to get early updates about relevant jobs, events, thesis opportunities and career news."
         extraCtas={[{ label: "Register as Young Professional", href: YOUNG_PROFESSIONAL_PORTAL_URL }]}
         backgroundImageSrc={SITE_IMAGES.studentsHero.src}
         backgroundImageAlt={SITE_IMAGES.studentsHero.alt}
@@ -70,54 +56,31 @@ export default async function ForStudenterPage() {
       </SectionWrapper>
 
       <SectionWrapper bg="mist">
-        <div className="mx-auto max-w-4xl">
-          <div className="grid gap-8 lg:grid-cols-[1fr_0.9fr] lg:items-center">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.28em] text-secondary">
-                Student Connect 2026
-              </p>
-              <h2 className="mt-3 text-2xl font-bold text-primary md:text-3xl">
-                How to get your free ticket to Student Connect
-              </h2>
-              <ol className="mt-6 grid gap-3 text-left">
-                {[
-                  "Register as a student or Young Professional.",
-                  "Go to Events inside your portal.",
-                  "Get your free ticket there.",
-                ].map((step, index) => (
-                  <li
-                    key={step}
-                    className="flex gap-4 rounded-2xl bg-white p-4 text-sm font-semibold text-ink shadow-[0_14px_36px_rgba(20,2,73,0.08)] ring-1 ring-primary/6"
-                  >
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-bold text-surface">
-                      {index + 1}
-                    </span>
-                    <span className="pt-1">{step}</span>
-                  </li>
-                ))}
-              </ol>
-            </div>
-            <div className="rounded-[28px] bg-primary p-6 text-surface shadow-[0_20px_54px_rgba(20,2,73,0.18)]">
-              <h3 className="text-xl font-bold">Already have an account?</h3>
-              <p className="mt-3 text-sm leading-relaxed text-mist/78">
-                Log in and open Events to continue directly to your free Student
-                Connect ticket.
-              </p>
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                <Link
-                  href={STUDENT_EVENTS_URL}
-                  className="inline-flex w-full items-center justify-center rounded-full bg-secondary px-6 py-3 text-sm font-bold uppercase tracking-wider text-primary transition-colors hover:bg-secondary/90 sm:w-auto"
-                >
-                  Student login
-                </Link>
-                <Link
-                  href={YOUNG_PROFESSIONAL_EVENTS_URL}
-                  className="inline-flex w-full items-center justify-center rounded-full border-2 border-secondary px-6 py-3 text-sm font-bold uppercase tracking-wider text-secondary transition-colors hover:bg-secondary hover:text-primary sm:w-auto"
-                >
-                  Young Professional login
-                </Link>
-              </div>
-            </div>
+        <div className="mx-auto max-w-4xl text-center">
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-secondary">
+            Stay updated
+          </p>
+          <h2 className="mt-3 text-2xl font-bold text-primary md:text-3xl">
+            Get early notice about relevant jobs, events and opportunities.
+          </h2>
+          <p className="mx-auto mt-4 max-w-2xl text-base leading-relaxed text-ink/70">
+            Register as a student or Young Professional to hear about career events,
+            employer presentations, thesis opportunities, jobs and other relevant updates
+            from Oslo Student Hub.
+          </p>
+          <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Link
+              href={STUDENT_PORTAL_URL}
+              className="inline-flex w-full items-center justify-center rounded-full bg-primary px-7 py-3 text-sm font-bold uppercase tracking-wider text-surface transition-colors hover:bg-primary/90 sm:w-auto"
+            >
+              Register as student
+            </Link>
+            <Link
+              href={YOUNG_PROFESSIONAL_PORTAL_URL}
+              className="inline-flex w-full items-center justify-center rounded-full border-2 border-primary px-7 py-3 text-sm font-bold uppercase tracking-wider text-primary transition-colors hover:bg-primary hover:text-surface sm:w-auto"
+            >
+              Register as Young Professional
+            </Link>
           </div>
         </div>
       </SectionWrapper>
@@ -167,9 +130,6 @@ export default async function ForStudenterPage() {
           </div>
         </div>
       </SectionWrapper>
-
-      {/* ── Upcoming event ───────────────────────────────────── */}
-      <StudentConnectEventCallout event={featuredEvent} />
 
       {/* ── University stats ─────────────────────────────────── */}
       <SectionWrapper>

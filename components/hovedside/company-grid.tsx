@@ -14,6 +14,7 @@ import { shouldUseDirectImageUrl } from "@/lib/logo-url";
 type Props = {
   companies: ApprovedCompanyPreview[];
   compactOnMobile?: boolean;
+  variant?: "default" | "flatLogos";
 };
 
 const MOBILE_COMPANIES_PER_PAGE = 5;
@@ -92,7 +93,7 @@ function truncateWords(value: string, maxWords: number) {
   return `${words.slice(0, maxWords).join(" ")}...`;
 }
 
-export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
+export function CompanyGrid({ companies, compactOnMobile = false, variant = "default" }: Props) {
   const [activeField, setActiveField] = useState<string | null>(null);
   const [showFullCompanyGrid, setShowFullCompanyGrid] = useState(false);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
@@ -147,6 +148,59 @@ export function CompanyGrid({ companies, compactOnMobile = false }: Props) {
           Participating companies will be announced here as they are approved.
         </p>
       </div>
+    );
+  }
+
+  if (variant === "flatLogos") {
+    return (
+      <>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {orderedCompanies.map((company) => (
+            <button
+              key={company.id}
+              type="button"
+              onClick={() => setSelectedCompanyId(company.id)}
+              className="group rounded-[26px] border border-white/12 bg-white/10 p-4 text-center shadow-[0_16px_42px_rgba(20,2,73,0.16)] transition hover:border-secondary/60 hover:bg-white/14 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary"
+              aria-label={`Read more about ${company.companyName}`}
+            >
+              <div className="relative flex items-center justify-center rounded-[22px] border border-primary/10 bg-white p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)]">
+                {company.logoUrl ? (
+                  <div className="relative h-20 w-full">
+                    <Image
+                      src={company.logoUrl}
+                      alt={company.companyName}
+                      fill
+                      className="object-contain"
+                      sizes="(max-width: 640px) calc(100vw - 64px), (max-width: 1024px) 30vw, 260px"
+                      unoptimized={shouldUseDirectImageUrl(company.logoUrl)}
+                    />
+                  </div>
+                ) : (
+                  <div className="flex h-20 w-full items-center justify-center rounded-2xl bg-mist/10">
+                    <Building2 size={32} className="text-primary/40" />
+                  </div>
+                )}
+              </div>
+              <h3 className="mt-3 text-sm font-bold text-surface sm:text-base">
+                {company.companyName}
+              </h3>
+            </button>
+          ))}
+        </div>
+
+        {selectedCompany ? (
+          <CompanyInfoModal
+            companyName={selectedCompany.companyName}
+            logoUrl={selectedCompany.logoUrl}
+            representationText={selectedCompany.representationText}
+            candidateSummary={selectedCompany.candidateSummary}
+            candidateLevelLabel={selectedCompany.candidateLevelLabel}
+            packageLabel={selectedCompany.packageLabel}
+            standLabel={selectedCompany.standLabel}
+            onClose={() => setSelectedCompanyId(null)}
+          />
+        ) : null}
+      </>
     );
   }
 

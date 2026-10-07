@@ -73,7 +73,7 @@ export default async function EventsPage() {
         {upcoming.length === 0 ? (
           <div className="rounded-2xl bg-surface p-6 shadow-soft ring-1 ring-primary/5">
             <p className="text-sm text-ink/70">
-              No upcoming events have been added in admin yet.
+              No upcoming event.
             </p>
           </div>
         ) : (

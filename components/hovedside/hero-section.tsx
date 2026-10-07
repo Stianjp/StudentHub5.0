@@ -71,7 +71,7 @@ export function HeroSection({
               <Link
                 href={ctaHref}
                 prefetch={false}
-                className="inline-flex w-full items-center justify-center rounded-full border-2 border-secondary px-6 py-3 text-sm font-bold uppercase tracking-[0.18em] text-secondary transition-colors hover:bg-secondary hover:text-primary sm:w-auto sm:px-7"
+                className="inline-flex w-full items-center justify-center rounded-full border-2 border-secondary bg-secondary px-6 py-3 text-sm font-black uppercase tracking-[0.18em] text-primary shadow-[0_16px_40px_rgba(254,154,112,0.32)] transition-colors hover:bg-secondary/90 sm:w-auto sm:px-7"
               >
                 {ctaLabel}
               </Link>
@@ -81,7 +81,7 @@ export function HeroSection({
                 key={cta.href}
                 href={cta.href}
                 prefetch={false}
-                className="inline-flex w-full items-center justify-center rounded-full border-2 border-secondary px-6 py-3 text-sm font-bold uppercase tracking-[0.18em] text-secondary transition-colors hover:bg-secondary hover:text-primary sm:w-auto sm:px-7"
+                className="inline-flex w-full items-center justify-center rounded-full border-2 border-white/85 bg-white/10 px-6 py-3 text-sm font-black uppercase tracking-[0.18em] text-surface shadow-[0_12px_32px_rgba(20,2,73,0.22)] transition-colors hover:border-secondary hover:bg-secondary hover:text-primary sm:w-auto sm:px-7"
               >
                 {cta.label}
               </Link>
