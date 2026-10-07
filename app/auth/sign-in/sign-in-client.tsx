@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { SchoolSelect } from "@/components/student/school-select";
 import { clearBrowserAuthState, createClient } from "@/lib/supabase/client";
 import { getDefaultNextPath } from "@/lib/auth-urls";
 import { getSafePortalNextPath } from "@/lib/auth-oauth";
@@ -244,6 +245,7 @@ export function SignInClient({
             email: emailValue,
             fullName: String(formData.get("fullName") ?? ""),
             school: String(formData.get("school") ?? ""),
+            schoolOther: String(formData.get("schoolOther") ?? ""),
             studyProgram: String(formData.get("studyProgram") ?? ""),
             studyLevel: String(formData.get("studyLevel") ?? ""),
             studyYear: Number(formData.get("studyYear") ?? 0),
@@ -477,7 +479,7 @@ export function SignInClient({
                   </label>
                   <label className="flex flex-col gap-2 text-sm font-semibold text-surface">
                     {detectedAudience === "young_professional" ? "University, school or latest educational institution" : "University or educational institution"}
-                    <Input name="school" required placeholder={detectedAudience === "young_professional" ? "For example, OsloMet or NTNU" : "For example, NTNU"} />
+                    <SchoolSelect required placeholder="Select university" otherPlaceholder="Write university or school" />
                   </label>
                 </div>
 

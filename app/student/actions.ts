@@ -90,6 +90,7 @@ export async function saveStudentProfile(formData: FormData) {
     email: formData.get("email"),
     phone: formData.get("phone"),
     school: formData.get("school"),
+    schoolOther: formData.get("schoolOther"),
     studyProgram: formData.get("studyProgram"),
     studyLevel,
     studyYear,

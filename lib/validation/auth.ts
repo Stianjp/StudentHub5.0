@@ -6,7 +6,7 @@ import {
   validatePasswordStrength,
 } from "@/lib/auth-registration";
 import { normalizeStudyCategories } from "@/lib/company-categories";
-import { normalizeSchoolName } from "@/lib/school";
+import { resolveSchoolFormValue } from "@/lib/school";
 
 const stringArray = z.preprocess((value) => {
   if (Array.isArray(value)) {
@@ -25,7 +25,8 @@ export const studentRegistrationSchema = z
   .object({
     email: z.string().email("Invalid email address"),
     fullName: z.string().min(2, "Full name is required."),
-    school: z.string().min(2, "University or educational institution is required.").transform(normalizeSchoolName),
+    school: z.string().min(1, "University or educational institution is required."),
+    schoolOther: z.string().optional(),
     studyProgram: z
       .string()
       .min(2, "Field of study is required.")
@@ -37,6 +38,15 @@ export const studentRegistrationSchema = z
     confirmPassword: z.string(),
   })
   .superRefine((value, ctx) => {
+    const resolvedSchool = resolveSchoolFormValue(value.school, value.schoolOther);
+    if (!resolvedSchool || resolvedSchool.length < 2) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "University or educational institution is required.",
+        path: ["school"],
+      });
+    }
+
     const passwordError = validatePasswordStrength(value.password, value.confirmPassword);
     if (passwordError) {
       ctx.addIssue({
@@ -73,12 +83,14 @@ export const studentRegistrationSchema = z
         path: ["jobTypes"],
       });
     }
-  });
+  })
+  .transform((value) => ({ ...value, school: resolveSchoolFormValue(value.school, value.schoolOther) }));
 
 export const studentOAuthOnboardingSchema = z
   .object({
     fullName: z.string().min(2, "Full name is required."),
-    school: z.string().min(2, "University or educational institution is required.").transform(normalizeSchoolName),
+    school: z.string().min(1, "University or educational institution is required."),
+    schoolOther: z.string().optional(),
     studyProgram: z
       .string()
       .min(2, "Field of study is required.")
@@ -88,6 +100,11 @@ export const studentOAuthOnboardingSchema = z
     jobTypes: stringArray.transform((values) => mapStudentJobTypes(values)),
   })
   .superRefine((value, ctx) => {
+    const resolvedSchool = resolveSchoolFormValue(value.school, value.schoolOther);
+    if (!resolvedSchool || resolvedSchool.length < 2) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: "University or educational institution is required.", path: ["school"] });
+    }
+
     const studyError = validateStudentStudyChoices(value);
     if (studyError?.studyLevel) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: studyError.studyLevel, path: ["studyLevel"] });
@@ -98,7 +115,8 @@ export const studentOAuthOnboardingSchema = z
     if (studyError?.jobTypes) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, message: studyError.jobTypes, path: ["jobTypes"] });
     }
-  });
+  })
+  .transform((value) => ({ ...value, school: resolveSchoolFormValue(value.school, value.schoolOther) }));
 
 export const companyRegistrationSchema = z
   .object({

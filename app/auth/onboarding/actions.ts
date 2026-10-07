@@ -44,6 +44,7 @@ export async function completeStudentOAuthOnboarding(formData: FormData) {
   const parsed = studentOAuthOnboardingSchema.safeParse({
     fullName: formData.get("fullName"),
     school: formData.get("school"),
+    schoolOther: formData.get("schoolOther"),
     studyProgram: formData.get("studyProgram"),
     studyLevel: formData.get("studyLevel"),
     studyYear: formData.get("studyYear"),

@@ -4,7 +4,7 @@ import {
   mapStudentJobTypes,
   validateStudentStudyChoices,
 } from "@/lib/auth-registration";
-import { normalizeSchoolName } from "@/lib/school";
+import { resolveSchoolFormValue } from "@/lib/school";
 
 const commaSeparated = z
   .string()
@@ -36,7 +36,8 @@ export const studentProfileSchema = z
     fullName: z.string().min(2, "Name is required"),
     email: z.string().email("Invalid email address"),
     phone: z.string().optional().or(z.literal("")),
-    school: z.string().min(2, "University or educational institution is required").transform(normalizeSchoolName),
+    school: z.string().min(1, "University or educational institution is required"),
+    schoolOther: z.string().optional(),
     studyProgram: z
       .string()
       .min(2, "Field of study is required")
@@ -55,6 +56,15 @@ export const studentProfileSchema = z
     teamSize: z.string().optional().or(z.literal("")),
   })
   .superRefine((value, ctx) => {
+    const resolvedSchool = resolveSchoolFormValue(value.school, value.schoolOther);
+    if (!resolvedSchool || resolvedSchool.length < 2) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "University or educational institution is required",
+        path: ["school"],
+      });
+    }
+
     const studyError = validateStudentStudyChoices({
       studyLevel: value.studyLevel,
       studyYear: value.studyYear,
@@ -82,7 +92,8 @@ export const studentProfileSchema = z
         path: ["jobTypes"],
       });
     }
-  });
+  })
+  .transform((value) => ({ ...value, school: resolveSchoolFormValue(value.school, value.schoolOther) }));
 
 export const consentSchema = z.object({
   eventId: z.string().uuid().optional().nullable(),

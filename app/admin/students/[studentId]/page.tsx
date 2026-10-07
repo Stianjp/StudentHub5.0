@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { SchoolSelect } from "@/components/student/school-select";
 import { Button } from "@/components/ui/button";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Badge } from "@/components/ui/badge";
@@ -86,7 +87,7 @@ export default async function AdminStudentDetailPage({ params }: PageProps) {
           </label>
           <label className="text-sm font-semibold text-primary">
             Studiested
-            <Input name="school" defaultValue={student?.school ?? ""} placeholder="For eksempel OsloMet" />
+            <SchoolSelect required={false} defaultValue={student?.school ?? ""} placeholder="Velg studiested" otherPlaceholder="Skriv studiested" />
           </label>
           <label className="text-sm font-semibold text-primary">
             Ferdigår

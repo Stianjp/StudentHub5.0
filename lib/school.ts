@@ -1,3 +1,30 @@
+export const SCHOOL_OTHER_VALUE = "Other";
+
+export const SCHOOL_OPTIONS = [
+  { value: "NTNU", label: "Norges teknisk-naturvitenskapelige universitet (NTNU) – Trondheim" },
+  { value: "UiO", label: "Universitetet i Oslo (UiO) – Oslo" },
+  { value: "UiB", label: "Universitetet i Bergen (UiB) – Bergen" },
+  { value: "UiT", label: "UiT Norges arktiske universitet – Tromsø" },
+  { value: "OsloMet", label: "OsloMet – storbyuniversitetet – Oslo" },
+  { value: "UiS", label: "Universitetet i Stavanger (UiS) – Stavanger" },
+  { value: "UiA", label: "Universitetet i Agder (UiA) – Kristiansand / Grimstad" },
+  { value: "NMBU", label: "Norges miljø- og biovitenskapelige universitet (NMBU) – Ås" },
+  { value: "USN", label: "Universitetet i Sørøst-Norge (USN) – Bø, Drammen, Kongsberg, Notodden, Porsgrunn, Ringerike, Rauland og Vestfold" },
+  { value: "Nord universitet", label: "Nord universitet – Bodø / Levanger m.fl." },
+  { value: "INN", label: "Høgskolen i Innlandet / Universitetet i Innlandet (INN)" },
+  { value: "VID", label: "VID vitenskapelige høgskole" },
+  { value: "MF", label: "MF vitenskapelig høyskole" },
+  { value: "Høyskolen Kristiania", label: "Høyskolen Kristiania" },
+] as const;
+
+export type SchoolOptionValue = (typeof SCHOOL_OPTIONS)[number]["value"];
+
+const SCHOOL_OPTION_VALUES = new Set<string>(SCHOOL_OPTIONS.map((option) => option.value));
+
+export function isKnownSchoolOption(value: string | null | undefined) {
+  return SCHOOL_OPTION_VALUES.has(value?.trim() ?? "");
+}
+
 function normalizeForSchoolMatch(value: string) {
   return value
     .trim()
@@ -19,7 +46,7 @@ function includesAll(value: string, words: string[]) {
 
 function isPrivateEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim()) &&
-    !/(oslomet|uio|ntnu|nmbu|uit|uis|bi|kristiania|usn)\./i.test(value);
+    !/(oslomet|uio|ntnu|nmbu|uit|uis|uia|uib|bi|kristiania|usn|nord|inn|vid|mf)\./i.test(value);
 }
 
 export function normalizeSchoolName(value: string | null | undefined) {
@@ -30,14 +57,23 @@ export function normalizeSchoolName(value: string | null | undefined) {
   const normalized = normalizeForSchoolMatch(trimmed);
   const compact = normalized.replace(/\s+/g, "");
 
+  if (compact === "other" || compact === "annet") {
+    return SCHOOL_OTHER_VALUE;
+  }
+
   const isOsloMetVariant =
     compact === "oslomet" ||
     compact === "odlomet" ||
     compact === "olsomet" ||
+    compact === "oslmet" ||
     compact === "osloemet" ||
+    compact === "oslomer" ||
+    compact === "oslomey" ||
+    compact === "metoslo" ||
     normalized === "oslo met" ||
     compact.includes("oslometstorbyuniversitet") ||
     compact.includes("oslometstorbyuniversitetet") ||
+    includesAll(compact, ["kjemiingenior", "oslomet"]) ||
     includesAll(compact, ["oslo", "metropolitan", "university"]) ||
     compact.includes("oslometno");
 
@@ -45,21 +81,16 @@ export function normalizeSchoolName(value: string | null | undefined) {
     return "OsloMet";
   }
 
-  const isOsloNyeFagskoleVariant =
-    compact === "oslonye fagskole".replace(/\s+/g, "") ||
-    compact === "oslonyehoyskole" ||
-    includesAll(compact, ["oslo", "nye", "fagskole"]) ||
-    includesAll(compact, ["oslo", "nye", "hoyskole"]);
-
-  if (isOsloNyeFagskoleVariant) {
-    return "Oslo Nye Fagskole";
-  }
-
   const hasKristianiaVariant =
+    compact === "hk" ||
     compact.includes("kristiania") ||
     compact.includes("kristania") ||
     compact.includes("kristianai") ||
     compact.includes("krisiania") ||
+    compact.includes("kristianka") ||
+    compact.includes("kristianina") ||
+    compact.includes("kristiannia") ||
+    compact.includes("kristianauniversity") ||
     compact.includes("kristianiacollege") ||
     compact.includes("kristianiauniversitycollege") ||
     compact.includes("kristianiahoyskole") ||
@@ -76,6 +107,10 @@ export function normalizeSchoolName(value: string | null | undefined) {
     compact.includes("bino") ||
     includesAll(compact, ["bi", "norwegian", "business", "school"]) ||
     includesAll(compact, ["bi", "handelshoyskole"]) ||
+    compact.includes("bihandelsskole") ||
+    compact.includes("bihandelssskole") ||
+    compact.includes("handelsskolebi") ||
+    compact.includes("handelssskolebi") ||
     compact.includes("handelshoyskolenbi");
 
   if (isBiVariant) {
@@ -116,10 +151,21 @@ export function normalizeSchoolName(value: string | null | undefined) {
     compact === "uio" ||
     compact.includes("uiono") ||
     normalized === "universitetet i oslo" ||
+    normalized === "universitetet og oslo" ||
     includesAll(compact, ["university", "oslo"]);
 
   if (isUioVariant) {
     return "UiO";
+  }
+
+  const isUibVariant =
+    compact === "uib" ||
+    compact.includes("uibno") ||
+    normalized === "universitetet i bergen" ||
+    includesAll(compact, ["university", "bergen"]);
+
+  if (isUibVariant) {
+    return "UiB";
   }
 
   const isUitVariant =
@@ -137,11 +183,69 @@ export function normalizeSchoolName(value: string | null | undefined) {
     compact === "uis" ||
     compact.includes("uisno") ||
     normalized === "universitetet i stavanger" ||
+    normalized === "universitet i stavanger" ||
     includesAll(compact, ["university", "stavanger"]);
 
   if (isUisVariant) {
     return "UiS";
   }
 
+  const isUiaVariant =
+    compact === "uia" ||
+    compact.includes("uiano") ||
+    normalized === "universitetet i agder" ||
+    includesAll(compact, ["university", "agder"]);
+
+  if (isUiaVariant) {
+    return "UiA";
+  }
+
+  const isNordVariant =
+    compact === "nord" ||
+    compact.includes("norduniversitet") ||
+    includesAll(compact, ["nord", "university"]);
+
+  if (isNordVariant) {
+    return "Nord universitet";
+  }
+
+  const isInnVariant =
+    compact === "inn" ||
+    compact.includes("universitetetinnlandet") ||
+    compact.includes("hogskoleniinnlandet") ||
+    compact.includes("hoyskoleniinnlandet") ||
+    includesAll(compact, ["university", "innlandet"]);
+
+  if (isInnVariant) {
+    return "INN";
+  }
+
+  const isVidVariant =
+    compact === "vid" ||
+    compact.includes("vidvitenskapeligehogskole") ||
+    compact.includes("vidvitenskapeligehoyskole");
+
+  if (isVidVariant) {
+    return "VID";
+  }
+
+  const isMfVariant =
+    compact === "mf" ||
+    compact.includes("mfvitenskapelighoyskole") ||
+    compact.includes("mfvitenskapelighogskole");
+
+  if (isMfVariant) {
+    return "MF";
+  }
+
   return trimmed;
+}
+
+export function resolveSchoolFormValue(school: FormDataEntryValue | string | null | undefined, schoolOther?: FormDataEntryValue | string | null) {
+  const selected = String(school ?? "").trim();
+  const other = String(schoolOther ?? "").trim();
+  if (selected === SCHOOL_OTHER_VALUE) {
+    return normalizeSchoolName(other) || SCHOOL_OTHER_VALUE;
+  }
+  return normalizeSchoolName(selected);
 }

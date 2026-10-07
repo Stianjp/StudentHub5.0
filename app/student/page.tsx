@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { SectionHeader } from "@/components/ui/section-header";
 import { Select } from "@/components/ui/select";
+import { SchoolSelect } from "@/components/student/school-select";
 import { Textarea } from "@/components/ui/textarea";
 import { LikedCompanies } from "@/components/student/liked-companies";
 import { STUDY_CATEGORIES } from "@/components/event/study-categories";
@@ -138,12 +139,7 @@ export default async function StudentProfilePage({ searchParams }: PageProps) {
           </label>
           <label className="text-sm font-semibold text-primary">
             {typedStudent.audience === "young_professional" ? "University, school or latest educational institution" : "University or educational institution"}
-            <Input
-              name="school"
-              required
-              defaultValue={typedStudent.school ?? ""}
-              placeholder="For example, NTNU"
-            />
+            <SchoolSelect required defaultValue={typedStudent.school ?? ""} placeholder="Select university" otherPlaceholder="Write university or school" />
           </label>
           <label className="text-sm font-semibold text-primary">
             Field of study

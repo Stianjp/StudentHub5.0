@@ -127,6 +127,7 @@ export async function POST(request: Request, context: RouteContext) {
     email: body.email,
     phone: body.phone,
     school: body.school,
+    schoolOther: body.schoolOther,
     studyProgram: body.studyProgram,
     studyLevel: body.studyLevel,
     studyYear: body.studyYear,

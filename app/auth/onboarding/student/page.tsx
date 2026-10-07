@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { SchoolSelect } from "@/components/student/school-select";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { STUDY_CATEGORIES } from "@/components/event/study-categories";
@@ -42,7 +43,7 @@ export default async function StudentOAuthOnboardingPage({ searchParams }: PageP
         {params.error ? <p className="rounded-xl bg-error/15 p-3 text-sm text-error">{params.error}</p> : null}
         <form action={completeStudentOAuthOnboarding} className="grid gap-4 md:grid-cols-2">
           <label className="text-sm font-semibold">Full name<Input name="fullName" required autoComplete="name" defaultValue={suggestedName} /></label>
-          <label className="text-sm font-semibold">{audience === "young_professional" ? "University, school or latest educational institution" : "University or educational institution"}<Input name="school" required placeholder={audience === "young_professional" ? "For example, OsloMet or NTNU" : "For example, NTNU"} /></label>
+          <label className="text-sm font-semibold">{audience === "young_professional" ? "University, school or latest educational institution" : "University or educational institution"}<SchoolSelect required placeholder="Select university" otherPlaceholder="Write university or school" /></label>
           <label className="text-sm font-semibold">Field of study<Select name="studyProgram" required defaultValue=""><option value="">Select field of study</option>{STUDY_CATEGORIES.map((category) => <option key={category} value={category}>{getStudentCategoryLabel(category)}</option>)}</Select></label>
           <label className="text-sm font-semibold">{audience === "young_professional" ? "Education level" : "Student type"}<Select name="studyLevel" required defaultValue=""><option value="">Select</option><option value="Bachelor">Bachelor</option><option value="Master">Master</option></Select></label>
           <label className="text-sm font-semibold">Year<Select name="studyYear" required defaultValue=""><option value="">Select year</option>{[1,2,3,4,5].map((year) => <option key={year} value={year}>Year {year}</option>)}</Select></label>

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { SchoolSelect } from "@/components/student/school-select";
 import { Textarea } from "@/components/ui/textarea";
 import { STUDY_CATEGORIES } from "@/components/event/study-categories";
 import {
@@ -127,6 +128,7 @@ export function PublicStudentTicketForm({
       email: String(formData.get("email") ?? "").trim(),
       phone: String(formData.get("phone") ?? "").trim(),
       school: String(formData.get("school") ?? "").trim(),
+      schoolOther: String(formData.get("schoolOther") ?? "").trim(),
       studyProgram: String(formData.get("studyProgram") ?? "").trim(),
       studyLevel,
       studyYear: Number(studyYear),
@@ -245,7 +247,7 @@ export function PublicStudentTicketForm({
           </label>
           <label className="text-sm font-semibold text-primary">
             Studiested
-            <Input name="school" required defaultValue={initialValues?.school ?? ""} placeholder="F.eks. UiO, BI eller NTNU" />
+            <SchoolSelect required defaultValue={initialValues?.school ?? ""} placeholder="Velg studiested" otherPlaceholder="Skriv studiested" />
           </label>
         </div>
       </Card>
