@@ -1,14 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { TableRow } from "@/lib/types/database";
 import { REGISTRATION_INVOICE_OPTIONS, REGISTRATION_LEVEL_OPTIONS, REGISTRATION_STAND_NEEDS, REGISTRATION_STUDENT_FIELDS } from "@/lib/event-registration-options";
-import { STUDENT_CONNECT_2026_FLOORPLAN } from "@/lib/event-registration-fixtures";
+import { useRouter } from "next/navigation";
+import { ALL_STUDENT_FIELDS, buildOrder, formatNok, type EventAddon } from "@/lib/event-order";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { StandMap, type StandMapStand } from "@/components/event-register/stand-map";
 import { cn } from "@/lib/utils";
 
 type RegistrationPackage = TableRow<"event_registration_packages">;
@@ -23,7 +23,7 @@ type PublicRegistrationFormProps = {
     eventName: string;
   };
   packages: RegistrationPackage[];
-  stands: StandMapStand[];
+  addons?: EventAddon[];
 };
 
 type StepKey =
@@ -32,7 +32,6 @@ type StepKey =
   | "invoice"
   | "students"
   | "package"
-  | "stand"
   | "needs"
   | "finish";
 
@@ -40,25 +39,14 @@ const steps: Array<{ key: StepKey; label: string; title: string }> = [
   { key: "contact", label: "1", title: "Contact" },
   { key: "company", label: "2", title: "Company" },
   { key: "invoice", label: "3", title: "Invoice" },
-  { key: "students", label: "4", title: "Students" },
+  { key: "students", label: "4", title: "Student audience" },
   { key: "package", label: "5", title: "Package" },
-  { key: "stand", label: "6", title: "Stand" },
-  { key: "needs", label: "7", title: "Needs" },
-  { key: "finish", label: "8", title: "Finish" },
+  { key: "needs", label: "6", title: "Add-ons" },
+  { key: "finish", label: "7", title: "Review" },
 ];
 
-const PACKAGE_PRICES: Record<string, number> = {
-  platinum: 65000,
-  gold: 50000,
-  silver: 30000,
-  standard: 20000,
-};
-
 function packagePrice(pkg: RegistrationPackage): string | null {
-  if (!pkg.mapped_package) return null;
-  const price = PACKAGE_PRICES[pkg.mapped_package];
-  if (!price) return null;
-  return `${price.toLocaleString("nb-NO")} kr eks. mva`;
+  return pkg.price_ore == null ? null : `${formatNok(pkg.price_ore)} excl. VAT`;
 }
 
 function packageLabel(pkg: RegistrationPackage) {
@@ -69,7 +57,7 @@ export function PublicRegistrationForm({
   slug,
   campaign,
   packages,
-  stands,
+  addons = [],
 }: PublicRegistrationFormProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -100,7 +88,10 @@ export function PublicRegistrationForm({
   const [candidateFieldsOther, setCandidateFieldsOther] = useState("");
 
   const [requestedPackageId, setRequestedPackageId] = useState("");
-  const [requestedStandId, setRequestedStandId] = useState("");
+  const errorRef = useRef<HTMLDivElement>(null);
+  useEffect(() => { if(error) errorRef.current?.focus(); }, [error]);
+  const router = useRouter();
+  const [addonQuantities, setAddonQuantities] = useState<Record<string, number>>({});
 
   const [standNeeds, setStandNeeds] = useState<string[]>([]);
   const [standNeedsOther, setStandNeedsOther] = useState("");
@@ -113,18 +104,10 @@ export function PublicRegistrationForm({
     [packages, requestedPackageId],
   );
 
-  const filteredStands = useMemo(() => {
-    if (!selectedPackage?.mapped_package) return [];
-    return stands.filter((stand) => stand.package_tier === selectedPackage.mapped_package && stand.status !== "disabled");
-  }, [selectedPackage, stands]);
-
-  useEffect(() => {
-    setRequestedStandId((current) => {
-      if (!current) return current;
-      const stillAvailable = filteredStands.some((stand) => stand.id === current);
-      return stillAvailable ? current : "";
-    });
-  }, [filteredStands]);
+  const order = useMemo(() => {
+    if (!selectedPackage) return null;
+    try { return buildOrder(selectedPackage, addons, addonQuantities); } catch { return null; }
+  }, [selectedPackage, addons, addonQuantities]);
 
   useEffect(() => {
     setPortalEmails((current) => {
@@ -176,10 +159,9 @@ export function PublicRegistrationForm({
     if (stepIndex === 4 && !requestedPackageId) {
       return "Choose a package before continuing.";
     }
-    if (stepIndex === 5 && selectedPackage?.mapped_package && !requestedStandId) {
-      return "Choose a stand on the floor plan before continuing.";
-    }
-    if (stepIndex === 7) {
+    if (stepIndex === 3 && candidateFields.includes("Other") && !candidateFieldsOther.trim()) return "Describe the other study field.";
+    if (stepIndex >= 4 && !order) return "Choose an available package and valid add-on quantities.";
+    if (stepIndex === 6) {
       const cleanedEmails = portalEmails.map((value) => value.trim()).filter(Boolean);
       if (cleanedEmails.length === 0) {
         return "Add at least one portal email before submitting.";
@@ -237,7 +219,8 @@ export function PublicRegistrationForm({
       formData.append("candidateLevel", candidateLevel);
       formData.append("candidateFieldsOther", candidateFieldsOther);
       formData.append("requestedPackageId", requestedPackageId);
-      formData.append("requestedStandId", requestedStandId);
+      formData.append("addonQuantities", JSON.stringify(addonQuantities));
+      formData.append("orderQuote", JSON.stringify(order));
       formData.append("standNeedsOther", standNeedsOther);
       formData.append("notes", notes);
 
@@ -262,6 +245,7 @@ export function PublicRegistrationForm({
         | null;
 
       if (!response.ok || !payload?.ok || !payload.id) {
+        if (payload?.error?.includes("Prices changed")) router.refresh();
         throw new Error(payload?.error ?? "Could not submit the registration.");
       }
 
@@ -470,11 +454,14 @@ export function PublicRegistrationForm({
 
         {currentStep === 3 ? (
           <div className="grid gap-5">
+            <h2 className="text-xl font-bold">Which students would you like to meet?</h2>
+            <p>Select the study fields you recruit from, regardless of your company’s industry. OSH uses your answers to group companies: one field suggests a subject area; several fields suggest the shared area. OSH assigns your final location.</p>
             <div className="grid gap-3 sm:grid-cols-3">
               {REGISTRATION_LEVEL_OPTIONS.map((option) => (
                 <button
                   key={option.value}
                   type="button"
+                  aria-pressed={candidateLevel === option.value}
                   onClick={() => setCandidateLevel(option.value)}
                   className={cn(
                     "rounded-2xl border px-4 py-4 text-left transition",
@@ -488,7 +475,7 @@ export function PublicRegistrationForm({
               ))}
             </div>
             <div className="grid gap-2 sm:grid-cols-2">
-              {REGISTRATION_STUDENT_FIELDS.map((field) => (
+              {[ALL_STUDENT_FIELDS, ...REGISTRATION_STUDENT_FIELDS].map((field) => (
                 <label
                   key={field}
                   className={cn(
@@ -501,7 +488,10 @@ export function PublicRegistrationForm({
                   <input
                     type="checkbox"
                     checked={candidateFields.includes(field)}
-                    onChange={() => toggleListValue(field, candidateFields, setCandidateFields)}
+                    onChange={() => {
+                      if (field === ALL_STUDENT_FIELDS) setCandidateFields(candidateFields.includes(field) ? [] : [field]);
+                      else toggleListValue(field, candidateFields.filter(f => f !== ALL_STUDENT_FIELDS), setCandidateFields);
+                    }}
                     className="h-4 w-4 rounded border-primary/30 text-primary focus:ring-secondary"
                   />
                   <span className="font-semibold text-primary">{field}</span>
@@ -527,6 +517,7 @@ export function PublicRegistrationForm({
               <button
                 key={pkg.id}
                 type="button"
+                aria-pressed={requestedPackageId === pkg.id}
                 onClick={() => setRequestedPackageId(pkg.id)}
                 className={cn(
                   "rounded-3xl border px-5 py-5 text-left transition",
@@ -558,71 +549,20 @@ export function PublicRegistrationForm({
 
         {currentStep === 5 ? (
           <div className="grid gap-5">
-            {!selectedPackage ? (
-              <div className="rounded-2xl border border-amber-300 bg-amber-50 px-4 py-3">
-                <p className="text-sm font-medium text-amber-800">Choose a package first.</p>
-              </div>
-            ) : !selectedPackage.mapped_package ? (
-              <div className="rounded-2xl border border-gray-300 bg-gray-50 px-4 py-3">
-                <p className="text-sm text-gray-700">
-                  This package requires OSH follow-up before a stand can be assigned. Continue to the final step and submit the application.
-                </p>
-              </div>
-            ) : (
-              <>
-                {campaign.floorplanImagePath ? (
-                  <StandMap
-                    floorplanImagePath={campaign.floorplanImagePath}
-                    floorplanAlt={STUDENT_CONNECT_2026_FLOORPLAN.alt}
-                    floorplanWidth={STUDENT_CONNECT_2026_FLOORPLAN.width}
-                    floorplanHeight={STUDENT_CONNECT_2026_FLOORPLAN.height}
-                    stands={filteredStands}
-                    selectedStandId={requestedStandId}
-                    onSelectStand={setRequestedStandId}
-                  />
-                ) : null}
-                <div className="grid gap-2 sm:grid-cols-2">
-                  {filteredStands.map((stand) => {
-                    const unavailable = stand.status !== "available" || Boolean(stand.assigned_application_id);
-                    const isSelected = requestedStandId === stand.id;
-                    return (
-                      <button
-                        key={`${stand.id}-list`}
-                        type="button"
-                        disabled={unavailable}
-                        onClick={() => {
-                          if (!unavailable) setRequestedStandId(stand.id);
-                        }}
-                        className={cn(
-                          "rounded-2xl border px-4 py-3 text-left transition",
-                          isSelected
-                            ? "border-[#FE9A70] bg-[#FE9A70]/15 shadow-sm"
-                            : unavailable
-                              ? "cursor-not-allowed border-gray-200 bg-gray-50 text-gray-400"
-                              : "border-gray-300 bg-white hover:border-[#FE9A70]",
-                        )}
-                      >
-                        <span className="block text-sm font-semibold text-primary">{stand.display_label ?? stand.stand_code}</span>
-                        <span className="mt-1 block text-xs text-ink/70">
-                          {unavailable
-                            ? stand.bookingPreview
-                              ? `Booked by ${stand.bookingPreview.companyName}`
-                              : "Already assigned"
-                            : "Available to request"}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </>
-            )}
-          </div>
-        ) : null}
-
-        {currentStep === 6 ? (
-          <div className="grid gap-5">
+            <h2 className="text-xl font-bold">Included items and optional extras</h2>
+            <p>Choose quantities in addition to what your package includes. Prices exclude VAT.</p>
+            {order?.lines.map(line => {
+              const available = addons.find(a => a.id === line.id)?.is_active;
+              return <label key={line.id} className="grid gap-2 rounded-xl border border-gray-300 p-4 font-semibold">
+                {line.name} — {line.included} included
+                {available ? <><span className="text-sm">{formatNok(line.unitPriceOre)} per {line.unit} extra</span>
+                <Input aria-label={`Extra ${line.name}`} type="number" min={0} max={10000} step={1} value={addonQuantities[line.id] ?? 0}
+                  onChange={e => setAddonQuantities(current => ({ ...current, [line.id]: Math.min(10000, Math.max(0, Math.floor(Number(e.target.value) || 0))) }))} /></> : <span className="text-sm">Included in your package. Extra units are not on sale yet.</span>}
+              </label>;
+            })}
+            {!order?.lines.length ? <p>No add-ons are available yet.</p> : null}
             <div className="grid gap-2 sm:grid-cols-2">
-              {REGISTRATION_STAND_NEEDS.map((need) => (
+              {REGISTRATION_STAND_NEEDS.filter(need => need !== "Tables").map((need) => (
                 <label
                   key={need}
                   className={cn(
@@ -642,7 +582,7 @@ export function PublicRegistrationForm({
                 </label>
               ))}
             </div>
-            {standNeeds.includes("Annet") ? (
+            {standNeeds.includes("Other") ? (
               <label className="text-sm font-semibold text-primary">
                 Other stand request
                 <Input
@@ -655,7 +595,7 @@ export function PublicRegistrationForm({
           </div>
         ) : null}
 
-        {currentStep === 7 ? (
+        {currentStep === 6 ? (
           <div className="grid gap-5">
             <label className="text-sm font-semibold text-primary">
               Anything else in mind?
@@ -694,13 +634,13 @@ export function PublicRegistrationForm({
               </div>
               <div className="grid gap-3">
                 {portalEmails.map((value, index) => (
+                  <label key={`portal-email-${index}`} className="text-sm font-semibold">Portal e-mail {index+1}
                   <Input
-                    key={`portal-email-${index}`}
                     type="email"
                     value={value}
                     onChange={(event) => updatePortalEmail(index, event.target.value)}
                     placeholder={`Portal e-mail ${index + 1}`}
-                  />
+                  /></label>
                 ))}
               </div>
             </div>
@@ -708,7 +648,7 @@ export function PublicRegistrationForm({
         ) : null}
 
         {error ? (
-          <div className="rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+          <div ref={errorRef} tabIndex={-1} role="alert" className="rounded-2xl border border-red-300 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
             {error}
           </div>
         ) : null}
@@ -748,11 +688,17 @@ export function PublicRegistrationForm({
               <p className="font-semibold text-white">{selectedPackage ? selectedPackage.public_name : "Not selected"}</p>
             </div>
             <div>
-              <p className="text-white/78">Stand</p>
+              <p className="text-white/78">Student audience</p>
               <p className="font-semibold text-white">
-                {stands.find((stand) => stand.id === requestedStandId)?.stand_code ?? "Not selected"}
+                {candidateFields.join(", ") || "Not selected"}{candidateFieldsOther ? `: ${candidateFieldsOther}` : ""}
               </p>
             </div>
+            {order ? <div aria-live="polite" className="grid gap-2">
+              <p>Package: {formatNok(order.packagePriceOre)}</p>
+              {order.lines.filter(line => line.included || line.extra).map(line => <p key={line.id}>{line.name}: {line.included} included + {line.extra} extra — {formatNok(line.extra * line.unitPriceOre)}</p>)}
+              <p className="text-lg font-bold">Total: {formatNok(order.totalOre)} excl. VAT</p>
+              <p>Subject to OSH approval. Invoiced after approval.</p>
+            </div> : null}
             <div>
               <p className="text-white/78">Portal emails</p>
               <p className="font-semibold text-white">
@@ -766,7 +712,7 @@ export function PublicRegistrationForm({
           <p className="text-sm font-bold text-[#140249]">What happens next?</p>
           <ol className="mt-3 list-decimal space-y-2 pl-5 text-sm text-[#1A1626]">
             <li>You submit the event application.</li>
-            <li>OSH reviews package, stand and company details.</li>
+            <li>OSH reviews your order and assigns an area and stand.</li>
             <li>Approved portal users receive access after OSH approval.</li>
           </ol>
         </Card>

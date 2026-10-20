@@ -1,3 +1,4 @@
+import { EventPublication } from "@/components/admin/event-publication";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { SectionHeader } from "@/components/ui/section-header";
@@ -150,6 +151,7 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
         </Card>
       ) : null}
 
+      <EventPublication event={eventData.event} />
       <Card className="flex flex-col gap-4">
         <h3 className="text-lg font-bold text-primary">Rediger event</h3>
         <form action={saveEvent} className="grid gap-3 md:grid-cols-2">
@@ -187,10 +189,6 @@ export default async function AdminEventDetailPage({ params, searchParams }: Pag
               placeholder="https://www.oslostudenthub.no/registreringsside-student-hub-2026"
               defaultValue={eventData.event.registration_form_url ?? ""}
             />
-          </label>
-          <label className="flex items-center gap-2 text-sm font-semibold text-primary md:col-span-2">
-            <input className="h-4 w-4" name="isActive" type="checkbox" defaultChecked={eventData.event.is_active} />
-            Aktivt event
           </label>
           <Button className="md:col-span-2" type="submit">
             Lagre event

@@ -1,3 +1,4 @@
+import { OrderSummary } from "@/components/admin/order-summary";
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
@@ -60,6 +61,7 @@ export default async function AdminRegistrationApplicationPage({ params, searchP
 
   return (
     <div className="flex flex-col gap-8">
+      <OrderSummary value={detail.application.order_snapshot} />
       <SectionHeader
         eyebrow="Søknad"
         title={detail.application.company_name}

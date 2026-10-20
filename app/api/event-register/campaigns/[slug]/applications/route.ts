@@ -11,8 +11,8 @@ export async function POST(
     const result = await submitPublicRegistrationApplication({ slug, formData });
     return NextResponse.json({ ok: true, id: result.id });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    const status =
+    const message = error && typeof error === "object" && "message" in error ? String(error.message) : "Could not submit registration.";
+    const status = message.includes("Prices changed") ? 409 :
       message.toLowerCase().includes("required") ||
       message.toLowerCase().includes("choose") ||
       message.toLowerCase().includes("valid") ||

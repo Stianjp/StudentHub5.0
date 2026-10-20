@@ -20,6 +20,7 @@ const nav = [
       { href: "/admin/events/overview", label: "Oversikt over eventer" },
     ],
   },
+  { href: "/admin/event-catalog", label: "Pakker og tillegg" },
   { href: "/admin/company-packages", label: "Bedriftspakker" },
   { href: "/admin/students", label: "Studenter" },
   { href: "/admin/leads", label: "Leads", children: [{ href: "/admin/leads/overview", label: "Oversikt" }] },

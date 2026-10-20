@@ -15,9 +15,8 @@ import { HeroSection } from "@/components/hovedside/hero-section";
 import { SectionWrapper } from "@/components/hovedside/section-wrapper";
 import { FeatureCard } from "@/components/hovedside/feature-card";
 import { CompanyGrid } from "@/components/hovedside/company-grid";
-import { DesktopStandShowcase } from "@/components/hovedside/desktop-stand-showcase";
-import { getPublicRegistrationCampaignBySlug } from "@/lib/event-registration";
-import { STUDENT_CONNECT_2026_FLOORPLAN } from "@/lib/event-registration-fixtures";
+import { createPublicSupabaseClient } from "@/lib/supabase/public";
+import { notFound } from "next/navigation";
 import { getApprovedCompaniesForCampaign } from "@/lib/hovedside/approved-companies";
 import { SITE_IMAGES } from "@/lib/hovedside/site-images";
 
@@ -32,10 +31,9 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function StudentConnect2026Page() {
-  const [companies, registrationDetail] = await Promise.all([
-    getApprovedCompaniesForCampaign("student-connect-2026"),
-    getPublicRegistrationCampaignBySlug("student-connect-2026", { includeClosed: true }),
-  ]);
+  const {data: event} = await createPublicSupabaseClient().from("events").select("id").eq("slug","student-connect-2026").eq("is_active",true).eq("website_published",true).maybeSingle();
+  if (!event) notFound();
+  const companies = await getApprovedCompaniesForCampaign("student-connect-2026");
 
   return (
     <>
@@ -46,7 +44,7 @@ export default async function StudentConnect2026Page() {
         ctaLabel="Company registration"
         ctaHref={COMPANY_REGISTRATION_URL}
         extraCtas={[
-          { label: "See our stands", href: "#stands" },
+          { label: "Explore subject areas", href: "#stands" },
           { label: "Find attending companies", href: "#companies" },
         ]}
         backgroundImageSrc={SITE_IMAGES.studentConnectHero.src}
@@ -268,35 +266,10 @@ export default async function StudentConnect2026Page() {
         </div>
       </SectionWrapper>
 
-      {/* ── Stands placeholder ───────────────────────────────── */}
       <SectionWrapper bg="primary" id="stands">
-        <h2 className="mb-2 text-center text-2xl font-bold text-surface">
-          Our Stands
-        </h2>
-        <p className="mx-auto mb-8 max-w-3xl text-center text-sm leading-relaxed text-mist/68">
-          Explore the event floor plan and see which companies have already
-          reserved their stand. Booked companies appear directly on the map
-          with their logo, and tapping or hovering a logo shows a short
-          company summary.
-        </p>
-        {registrationDetail ? (
-          <DesktopStandShowcase
-            floorplanImagePath={STUDENT_CONNECT_2026_FLOORPLAN.imagePath}
-            floorplanAlt={STUDENT_CONNECT_2026_FLOORPLAN.alt}
-            floorplanWidth={STUDENT_CONNECT_2026_FLOORPLAN.width}
-            floorplanHeight={STUDENT_CONNECT_2026_FLOORPLAN.height}
-            stands={registrationDetail.stands}
-          />
-        ) : (
-          <div className="flex items-center justify-center rounded-2xl bg-white/5 py-16 ring-1 ring-white/10">
-            <div className="text-center text-mist/40">
-              <MapPin size={40} className="mx-auto" />
-              <p className="mt-3 text-sm">
-                Stand map and floor plan will be shown here
-              </p>
-            </div>
-          </div>
-        )}
+        <h2 className="mb-4 text-center text-2xl font-bold text-white">Meet companies in your field</h2>
+        <p className="mx-auto max-w-3xl text-center text-white">Companies tell us which study fields they recruit from. OSH groups companies by student audience and assigns their location. Companies recruiting across several fields are placed in a shared area.</p>
+        <p className="mt-4 text-center"><a className="text-white underline" href={`https://student.oslostudenthub.no/events/${event.id}`}>Find relevant companies and their areas</a></p>
       </SectionWrapper>
 
       {/* ── Approved companies (dynamic) ─────────────────────── */}

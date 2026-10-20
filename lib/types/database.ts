@@ -375,8 +375,15 @@ export type Database = {
         };
         Relationships: [];
       };
+      event_addons: {
+        Row: import("@/lib/event-order").EventAddon;
+        Insert: Omit<import("@/lib/event-order").EventAddon, "id"> & { id?: string };
+        Update: Partial<import("@/lib/event-order").EventAddon>;
+        Relationships: [];
+      };
       events: {
         Row: {
+          website_published?: boolean;
           id: string;
           name: string;
           slug: string;
@@ -391,6 +398,7 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
+          website_published?: boolean;
           id?: string;
           name: string;
           slug: string;
@@ -405,6 +413,7 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          website_published?: boolean;
           id?: string;
           name?: string;
           slug?: string;
@@ -470,6 +479,8 @@ export type Database = {
       };
       event_registration_packages: {
         Row: {
+          price_ore?: number | null;
+          included_quantities?: Json;
           id: string;
           campaign_id: string;
           package_key: string;
@@ -483,6 +494,8 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
+          price_ore?: number | null;
+          included_quantities?: Json;
           id?: string;
           campaign_id: string;
           package_key: string;
@@ -496,6 +509,8 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          price_ore?: number | null;
+          included_quantities?: Json;
           id?: string;
           campaign_id?: string;
           package_key?: string;
@@ -563,6 +578,7 @@ export type Database = {
       };
       event_registration_applications: {
         Row: {
+          order_snapshot?: Json | null;
           id: string;
           campaign_id: string;
           event_id: string;
@@ -603,6 +619,7 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
+          order_snapshot?: Json | null;
           id?: string;
           campaign_id: string;
           event_id: string;
@@ -643,6 +660,7 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          order_snapshot?: Json | null;
           id?: string;
           campaign_id?: string;
           event_id?: string;
@@ -809,6 +827,10 @@ export type Database = {
       };
       event_companies: {
         Row: {
+          target_fields?: string[];
+          target_fields_other?: string | null;
+          confirmed_area?: string | null;
+          ordered_attendee_tickets?: number | null;
           id: string;
           event_id: string;
           company_id: string;
@@ -832,6 +854,10 @@ export type Database = {
           updated_at: string;
         };
         Insert: {
+          target_fields?: string[];
+          target_fields_other?: string | null;
+          confirmed_area?: string | null;
+          ordered_attendee_tickets?: number | null;
           id?: string;
           event_id: string;
           company_id: string;
@@ -855,6 +881,10 @@ export type Database = {
           updated_at?: string;
         };
         Update: {
+          target_fields?: string[];
+          target_fields_other?: string | null;
+          confirmed_area?: string | null;
+          ordered_attendee_tickets?: number | null;
           id?: string;
           event_id?: string;
           company_id?: string;
@@ -1887,6 +1917,8 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      set_event_publication: { Args: { event_uuid: string; campaign_uuid: string | null; website: boolean; registration: boolean; opening: string | null; closing: string | null; unpublish: boolean }; Returns: undefined };
+      copy_event_catalog: { Args: { source_campaign: string; target_campaign: string }; Returns: undefined };
       is_admin: {
         Args: { uid: string };
         Returns: boolean;

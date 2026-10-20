@@ -36,7 +36,7 @@ export function getPublicRegistrationCopy(input: PublicRegistrationCopyInput): P
       title: "Student Connect 2026",
       subtitle: "Organized by Oslo Student Hub",
       description:
-        "Register your company for Student Connect 2026 by Oslo Student Hub. Choose your package, request your stand and add the team members who need portal access.",
+        "Register your company for Student Connect 2026 by Oslo Student Hub. Choose your package, tell us which students you want to meet and add the team members who need portal access.",
     };
   }
 

@@ -1,4 +1,3 @@
-import { unstable_cache } from "next/cache";
 import type { TableRow } from "@/lib/types/database";
 import { createPublicSupabaseClient } from "@/lib/supabase/public";
 
@@ -15,7 +14,7 @@ export type WebsiteEvent = Pick<
   | "starts_at"
   | "ends_at"
   | "is_active"
->;
+> & { registration_campaign_slug?: string };
 
 const WEBSITE_EVENT_DESCRIPTION_OVERRIDES: Partial<
   Record<NonNullable<WebsiteEvent["slug"]>, string>
@@ -37,17 +36,17 @@ async function fetchWebsiteEvents() {
     .select(
       "id, name, slug, description, location, registration_form_url, starts_at, ends_at, is_active",
     )
+    .eq("is_active", true)
+    .eq("website_published", true)
     .order("starts_at", { ascending: true });
 
   if (error) throw error;
-  return (data ?? []) as WebsiteEvent[];
+  const {data: campaigns, error: campaignError} = await supabase.from("event_registration_campaigns").select("event_id,slug").order("created_at");
+  if(campaignError) throw campaignError;
+  return (data as WebsiteEvent[] ?? []).map(event => ({...event, registration_campaign_slug: (campaigns as {event_id:string;slug:string}[] ?? []).find(c=>c.event_id===event.id)?.slug}));
 }
 
-export const listWebsiteEvents = unstable_cache(
-  fetchWebsiteEvents,
-  ["website-events"],
-  { revalidate: 300, tags: ["website-events"] },
-);
+export const listWebsiteEvents = fetchWebsiteEvents;
 
 export function splitWebsiteEvents(events: WebsiteEvent[], now = new Date()) {
   const nowMs = now.getTime();
@@ -55,6 +54,7 @@ export function splitWebsiteEvents(events: WebsiteEvent[], now = new Date()) {
   const past: WebsiteEvent[] = [];
 
   for (const event of events) {
+    if (!event.is_active) continue;
     const endMs = new Date(event.ends_at).getTime();
     if (endMs >= nowMs) {
       upcoming.push(event);
@@ -109,5 +109,6 @@ export function resolveWebsiteEventHref(event: WebsiteEvent) {
   if (url) {
     return url;
   }
+  if (event.registration_campaign_slug) return `https://eventregister.oslostudenthub.no/${event.registration_campaign_slug}`;
   return `/events#${event.slug}`;
 }

@@ -14,18 +14,6 @@ type PageProps = {
   searchParams?: Promise<Record<string, string | string[] | undefined>>;
 };
 
-function toDateTimeLocal(value: string | null | undefined) {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  const hours = String(date.getHours()).padStart(2, "0");
-  const minutes = String(date.getMinutes()).padStart(2, "0");
-  return `${year}-${month}-${day}T${hours}:${minutes}`;
-}
-
 export default async function AdminEventRegistrationPage({ params, searchParams }: PageProps) {
   await requireRole("admin");
   const { eventId } = await params;
@@ -98,7 +86,7 @@ export default async function AdminEventRegistrationPage({ params, searchParams 
           </label>
           <label className="text-sm font-semibold text-primary md:col-span-2">
             Floorplan image path
-            <Input name="floorplanImagePath" defaultValue="/StudentConnect-site/FloorPlan_New_3.png" />
+            <Input name="floorplanImagePath"  />
           </label>
           <label className="text-sm font-semibold text-primary">
             E-postgruppe-prefiks
@@ -106,15 +94,15 @@ export default async function AdminEventRegistrationPage({ params, searchParams 
           </label>
           <label className="text-sm font-semibold text-primary">
             Åpner
-            <Input name="opensAt" type="datetime-local" defaultValue={toDateTimeLocal(eventData.event.starts_at)} />
+            <Input name="opensAt" type="datetime-local"  />
           </label>
           <label className="text-sm font-semibold text-primary">
             Lukker
-            <Input name="closesAt" type="datetime-local" defaultValue={toDateTimeLocal(eventData.event.ends_at)} />
+            <Input name="closesAt" type="datetime-local"  />
           </label>
           <label className="flex items-center gap-2 text-sm font-semibold text-primary md:col-span-2">
-            <input type="checkbox" name="isPublished" defaultChecked className="h-4 w-4" />
-            Publiser kampanjen umiddelbart
+            <input type="checkbox" name="isPublished" className="h-4 w-4" />
+            Publiser kampanjen (krever pakker med pris)
           </label>
           <Button type="submit" className="md:col-span-2">Opprett kampanje</Button>
         </form>

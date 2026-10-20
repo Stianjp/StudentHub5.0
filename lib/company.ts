@@ -81,8 +81,9 @@ export function getCompanyAttendeeTicketLimit(packageTier: string | null | undef
 export function getCompanyAttendeeTicketAllowance(input: {
   package: string | null | undefined;
   extra_attendee_tickets?: number | null;
+  ordered_attendee_tickets?: number | null;
 }) {
-  const baseLimit = getCompanyAttendeeTicketLimit(input.package);
+  const baseLimit = input.ordered_attendee_tickets ?? getCompanyAttendeeTicketLimit(input.package);
   const extra = Number.isFinite(input.extra_attendee_tickets)
     ? Math.max(Number(input.extra_attendee_tickets), 0)
     : 0;

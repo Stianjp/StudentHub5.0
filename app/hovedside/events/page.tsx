@@ -68,12 +68,13 @@ export default async function EventsPage() {
       {/* ── Upcoming ─────────────────────────────────────────── */}
       <SectionWrapper>
         <h2 className="mb-8 text-2xl font-bold text-primary">
-          Upcoming Events
+          Published Events
         </h2>
+        <p className="mb-6 text-ink/80">Upcoming events from Oslo Student Hub.</p>
         {upcoming.length === 0 ? (
           <div className="rounded-2xl bg-surface p-6 shadow-soft ring-1 ring-primary/5">
             <p className="text-sm text-ink/70">
-              No upcoming event.
+              No upcoming events are published right now.
             </p>
           </div>
         ) : (
@@ -94,7 +95,7 @@ export default async function EventsPage() {
                 <MapPin size={14} />
                 {event.location ?? "Location to be confirmed"}
               </div>
-              <p className="mt-2 text-xs font-semibold text-ink/50">
+              <p className="mt-2 text-xs font-semibold text-ink/75">
                 {formatWebsiteEventDate(event.starts_at)}
               </p>
               <p className="mt-3 text-sm text-ink/70">
@@ -102,7 +103,7 @@ export default async function EventsPage() {
               </p>
               <Link
                 href={resolveWebsiteEventHref(event)}
-                className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-secondary hover:underline"
+                className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-primary underline underline-offset-4 hover:text-purple"
               >
                 Learn more <ArrowRight size={14} />
               </Link>
@@ -134,7 +135,7 @@ export default async function EventsPage() {
                 <p className="text-sm font-semibold text-primary">
                   {event.name}
                 </p>
-                <p className="text-xs text-ink/50">
+                <p className="text-xs text-ink/75">
                   {"starts_at" in event ? formatWebsiteEventDate(event.starts_at) : event.dateLabel}
                 </p>
               </div>

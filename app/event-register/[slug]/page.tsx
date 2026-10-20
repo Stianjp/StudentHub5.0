@@ -5,7 +5,7 @@ import { getPublicRegistrationCopy } from "@/lib/event-registration-copy";
 import { getPublicRegistrationCampaignBySlug } from "@/lib/event-registration";
 import { resolvePublicRegistrationLandingHref } from "@/lib/event-registration-links";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 
 type PageProps = {
   params: Promise<{ slug: string }>;
@@ -43,7 +43,7 @@ export default async function EventRegisterCampaignPage({ params }: PageProps) {
             </h1>
             <p className="max-w-2xl text-base leading-relaxed text-[#1A1626]">
               {copy.description ??
-                "Complete the registration to request a package, a stand and company portal access for your team."}
+                "Complete the registration to choose a student audience, a package and company portal access for your team."}
             </p>
           </div>
           <Link
@@ -81,7 +81,7 @@ export default async function EventRegisterCampaignPage({ params }: PageProps) {
             eventName: detail.campaign.event.name,
           }}
           packages={detail.packages}
-          stands={detail.stands}
+          addons={detail.addons ?? []}
         />
       </div>
     </main>

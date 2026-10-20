@@ -1,5 +1,6 @@
+import { buildOrder, type EventAddon } from "@/lib/event-order";
+import type { Json } from "@/lib/types/database";
 import { randomUUID } from "crypto";
-import { unstable_cache } from "next/cache";
 import { PUBLIC_LOGO_URL_TTL_SECONDS } from "@/lib/company";
 import type { TableRow } from "@/lib/types/database";
 import { createAdminSupabaseClient } from "@/lib/supabase/admin";
@@ -36,7 +37,7 @@ type EmailGroup = TableRow<"email_groups">;
 type EmailGroupMember = TableRow<"email_group_members">;
 type CrmPipelineEntry = TableRow<"crm_pipeline_entries">;
 
-type PublicEventSummary = Pick<Event, "id" | "name" | "slug" | "starts_at" | "ends_at" | "location" | "registration_form_url">;
+type PublicEventSummary = Pick<Event, "id" | "name" | "slug" | "starts_at" | "ends_at" | "location" | "registration_form_url" | "is_active">;
 type PublicCampaign = RegistrationCampaign & { event: PublicEventSummary };
 export type PublicStandBookingPreview = {
   companyName: string;
@@ -52,6 +53,7 @@ type PublicCampaignDetail = {
   campaign: PublicCampaign;
   packages: RegistrationPackage[];
   stands: PublicRegistrationStand[];
+  addons?: EventAddon[];
 };
 
 const LOGO_BUCKET = "event-registration-assets";
@@ -323,7 +325,7 @@ function isCampaignOpen(campaign: RegistrationCampaign) {
   return true;
 }
 
-const PUBLIC_EVENT_FIELDS = "id, name, slug, starts_at, ends_at, location, registration_form_url";
+const PUBLIC_EVENT_FIELDS = "id, name, slug, starts_at, ends_at, location, registration_form_url, is_active";
 
 async function fetchPublicRegistrationCampaigns() {
   const supabase = createPublicSupabaseClient();
@@ -335,7 +337,7 @@ async function fetchPublicRegistrationCampaigns() {
   if (error) throw error;
 
   const campaigns = (data ?? []) as unknown as PublicCampaign[];
-  return campaigns.filter((campaign) => isCampaignOpen(campaign));
+  return campaigns.filter((campaign) => campaign.event?.is_active && isCampaignOpen(campaign));
 }
 
 async function fetchPublicRegistrationCampaignDetail(
@@ -356,7 +358,7 @@ async function fetchPublicRegistrationCampaignDetail(
 
   const typedCampaign = campaign as unknown as PublicCampaign;
 
-  if (!options.includeClosed && !isCampaignOpen(typedCampaign)) {
+  if (!options.includeClosed && (!typedCampaign.event?.is_active || !isCampaignOpen(typedCampaign))) {
     return null;
   }
 
@@ -378,23 +380,16 @@ async function fetchPublicRegistrationCampaignDetail(
   if (standsError) throw standsError;
 
   const typedStands = (stands ?? []) as RegistrationStand[];
+  const { data: addons, error: addonsError } = await createAdminSupabaseClient().from("event_addons").select("*").eq("event_id", typedCampaign.event_id).order("sort_order");
+  if (addonsError) throw addonsError;
 
   return {
     campaign: typedCampaign,
     packages: (packages ?? []) as RegistrationPackage[],
-    stands: await attachStandBookingPreviews(typedCampaign.slug, typedStands),
+    stands: options.includeClosed ? await attachStandBookingPreviews(typedCampaign.slug, typedStands) : [],
+    addons: (addons as EventAddon[] ?? []).filter(a => a.is_active || (packages as RegistrationPackage[] ?? []).some(p => Number((p.included_quantities as Record<string,number> | undefined)?.[a.id]) > 0)),
   };
 }
-
-const loadPublicRegistrationCampaigns = unstable_cache(fetchPublicRegistrationCampaigns, ["event-registration-public-campaigns"], {
-  revalidate: 300,
-});
-
-const loadPublicRegistrationCampaignDetail = unstable_cache(
-  fetchPublicRegistrationCampaignDetail,
-  ["event-registration-public-campaign-detail-v2"],
-  { revalidate: 300, tags: ["event-registration-public-campaign-detail"] },
-);
 
 function inferStandTypeFromPackage(packageTier: RegistrationPackage["mapped_package"]) {
   if (packageTier === "silver") return "Silver";
@@ -685,9 +680,15 @@ async function ensureEventCompanyFromApplication(input: {
   company: Company;
   packageTier: RegistrationPackage["mapped_package"];
   standCode?: string | null;
+  pending?: boolean;
 }) {
   const supabase = createAdminSupabaseClient();
   const now = new Date().toISOString();
+  if (input.pending) {
+    const {data: existing,error} = await supabase.from("event_companies").select("*").eq("event_id",input.application.event_id).eq("company_id",input.company.id).maybeSingle();
+    if(error) throw error;
+    if(existing) return existing as EventCompany;
+  }
 
   const { data, error } = await supabase
     .from("event_companies")
@@ -699,6 +700,8 @@ async function ensureEventCompanyFromApplication(input: {
         package: input.packageTier ?? "standard",
         stand_type: inferStandTypeFromPackage(input.packageTier),
         stand_code: input.standCode ?? null,
+        target_fields: input.application.candidate_fields,
+        target_fields_other: input.application.candidate_fields_other,
         registered_at: now,
         updated_at: now,
       },
@@ -854,7 +857,7 @@ export async function listPublicRegistrationCampaigns() {
   if (process.env.NODE_ENV !== "production") {
     return fetchPublicRegistrationCampaigns();
   }
-  return loadPublicRegistrationCampaigns();
+  return fetchPublicRegistrationCampaigns();
 }
 
 export async function getPublicRegistrationCampaignBySlug(
@@ -867,7 +870,7 @@ export async function getPublicRegistrationCampaignBySlug(
   if (process.env.NODE_ENV !== "production") {
     return fetchPublicRegistrationCampaignDetail(slug, options);
   }
-  return loadPublicRegistrationCampaignDetail(slug, options);
+  return fetchPublicRegistrationCampaignDetail(slug, options);
 }
 
 export async function submitPublicRegistrationApplication(input: {
@@ -929,23 +932,12 @@ export async function submitPublicRegistrationApplication(input: {
     throw new Error("Choose a package before submitting.");
   }
 
-  let selectedStand: RegistrationStand | null = null;
-  if (parsed.data.requestedStandId) {
-    selectedStand = detail.stands.find((stand) => stand.id === parsed.data.requestedStandId) ?? null;
-    if (!selectedStand) {
-      throw new Error("Selected stand could not be found.");
-    }
-    if (selectedStand.status !== "available" || selectedStand.assigned_application_id) {
-      throw new Error("Selected stand is no longer available.");
-    }
-  }
-
-  if (selectedPackage.mapped_package && !selectedStand) {
-    throw new Error("Choose a stand on the floor plan before submitting.");
-  }
-
-  if (selectedStand && selectedPackage.mapped_package && selectedStand.package_tier !== selectedPackage.mapped_package) {
-    throw new Error("Selected stand does not match the chosen package.");
+  if (parsed.data.requestedStandId) throw new Error("Public stand selection is no longer available.");
+  const quantities = JSON.parse(String(input.formData.get("addonQuantities") ?? "{}"));
+  if (!quantities || typeof quantities !== "object" || Array.isArray(quantities)) throw new Error("Choose valid add-on quantities.");
+  const order = buildOrder(selectedPackage, detail.addons ?? [], quantities);
+  if (String(input.formData.get("orderQuote") ?? "") !== JSON.stringify(order)) {
+    throw new Error("Prices changed. Review the updated order before submitting.");
   }
 
   let logoPath: string | null = null;
@@ -982,7 +974,8 @@ export async function submitPublicRegistrationApplication(input: {
     campaign_id: detail.campaign.id,
     event_id: detail.campaign.event_id,
     requested_package_id: selectedPackage.id,
-    requested_stand_id: selectedStand?.id ?? null,
+    requested_stand_id: null,
+    order_snapshot: order as unknown as Json,
     status: "pending" as const,
     contact_first_name: parsed.data.contactFirstName,
     contact_last_name: parsed.data.contactLastName,
@@ -1021,16 +1014,6 @@ export async function submitPublicRegistrationApplication(input: {
     throw insertError;
   }
 
-  // Lock the requested stand immediately so no other applicant can book it
-  if (selectedStand) {
-    const adminSupabase = createAdminSupabaseClient();
-    await adminSupabase
-      .from("event_registration_stands")
-      .update({ status: "assigned", assigned_application_id: applicationId })
-      .eq("id", selectedStand.id)
-      .eq("status", "available"); // guard against double-booking in a race condition
-  }
-
   const emailRows = parsed.data.portalEmails.map((email) => ({
     application_id: applicationId,
     email,
@@ -1040,7 +1023,7 @@ export async function submitPublicRegistrationApplication(input: {
   const { error: emailError } = await supabase.from("event_registration_portal_emails").insert(emailRows);
   if (emailError) {
     await supabase.from("event_registration_applications").delete().eq("id", applicationId);
-    await releaseStandReservation(selectedStand?.id);
+    await releaseStandReservation(null);
     if (logoPath) {
       await supabase.storage.from(LOGO_BUCKET).remove([logoPath]).catch(() => undefined);
     }
@@ -1071,10 +1054,11 @@ export async function submitPublicRegistrationApplication(input: {
     }
 
     const eventCompany = await ensureEventCompanyFromApplication({
+      pending: true,
       application: typedApplication,
       company,
       packageTier: selectedPackage.mapped_package,
-      standCode: selectedStand?.stand_code ?? null,
+      standCode: null,
     });
 
     const { error: applicationLinkError } = await supabase
@@ -1131,10 +1115,7 @@ export async function submitPublicRegistrationApplication(input: {
         companyChannelName: "",
         companyChannelId: "",
         temperature: "varm",
-        pipelineValue:
-          ({ platinum: 65000, gold: 50000, silver: 30000, standard: 20000 } as Record<string, number>)[
-            selectedPackage.mapped_package ?? ""
-          ] ?? 0,
+        pipelineValue: order.totalOre / 100,
       },
     });
 
@@ -1151,7 +1132,7 @@ export async function submitPublicRegistrationApplication(input: {
     } catch {
       // best-effort rollback
     }
-    await releaseStandReservation(selectedStand?.id);
+    await releaseStandReservation(null);
     if (logoPath) {
       await supabase.storage.from(LOGO_BUCKET).remove([logoPath]).catch(() => undefined);
     }
@@ -1373,6 +1354,12 @@ export async function upsertRegistrationCampaign(input: {
   isPublished: boolean;
 }) {
   const supabase = createAdminSupabaseClient();
+  if (input.isPublished) {
+    if (!input.campaignId) throw new Error("Opprett kampanjen som utkast, og sett opp pakker før publisering.");
+    const { data: packages, error } = await supabase.from("event_registration_packages").select("id,price_ore").eq("campaign_id",input.campaignId).eq("is_active",true);
+    if (error) throw error;
+    if (!packages?.length || packages.some((p: {price_ore:number|null})=>p.price_ore==null)) throw new Error("Sett opp aktive pakker med pris i Pakker og tillegg før publisering.");
+  }
   const payload = {
     event_id: input.eventId,
     slug: input.slug,

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { validStudentFields } from "@/lib/event-order";
 
 const stringArray = z.preprocess((value) => {
   if (Array.isArray(value)) {
@@ -39,7 +40,7 @@ export const publicRegistrationApplicationSchema = z
     invoiceDueDays: z.enum(["14", "30", "45", "other"]),
     invoiceDueDaysOther: z.string().optional().or(z.literal("")),
     candidateLevel: z.enum(["bachelor", "master", "both"]),
-    candidateFields: stringArray.refine((value) => value.length > 0, "Select at least one field."),
+    candidateFields: stringArray.refine((value) => validStudentFields(value), "Select valid study fields, or all study fields."),
     candidateFieldsOther: z.string().optional().or(z.literal("")),
     requestedPackageId: nullableUuid,
     requestedStandId: nullableUuid,
@@ -57,6 +58,9 @@ export const publicRegistrationApplicationSchema = z
       ),
   })
   .superRefine((value, ctx) => {
+    if (value.candidateFields.includes("Other") && !value.candidateFieldsOther?.trim()) {
+      ctx.addIssue({ code: "custom", path: ["candidateFieldsOther"], message: "Describe the other study field." });
+    }
     if (value.invoiceDeliveryMethod === "email" && !value.invoiceEmail) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,

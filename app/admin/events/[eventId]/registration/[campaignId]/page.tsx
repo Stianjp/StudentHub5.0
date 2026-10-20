@@ -9,7 +9,6 @@ import { requireRole } from "@/lib/auth";
 import { getAdminRegistrationCampaignDetail } from "@/lib/event-registration";
 import {
   saveRegistrationCampaign,
-  saveRegistrationPackage,
   saveRegistrationStand,
 } from "@/app/admin/event-registration-actions";
 
@@ -129,86 +128,9 @@ export default async function AdminRegistrationCampaignDetailPage({ params, sear
 
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
         <Card className="grid gap-4">
-          <div className="flex items-center justify-between gap-3">
-            <h3 className="text-lg font-bold text-primary">Pakker</h3>
-            <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-              {detail.packages.length} stk
-            </span>
-          </div>
-          <div className="grid gap-3">
-            {detail.packages.map((pkg) => (
-              <form key={pkg.id} action={saveRegistrationPackage} className="grid gap-3 rounded-2xl border border-primary/10 bg-primary/5 p-4">
-                <input type="hidden" name="eventId" value={eventId} />
-                <input type="hidden" name="campaignId" value={campaignId} />
-                <input type="hidden" name="packageId" value={pkg.id} />
-                <input type="hidden" name="slug" value={detail.campaign.slug} />
-                <input type="hidden" name="returnTo" value={returnTo} />
-                <div className="grid gap-3 md:grid-cols-2">
-                  <label className="text-sm font-semibold text-primary">
-                    Package key
-                    <Input name="packageKey" required defaultValue={pkg.package_key} />
-                  </label>
-                  <label className="text-sm font-semibold text-primary">
-                    Public name
-                    <Input name="publicName" required defaultValue={pkg.public_name} />
-                  </label>
-                  <label className="text-sm font-semibold text-primary md:col-span-2">
-                    Description
-                    <Textarea name="description" rows={2} defaultValue={pkg.description ?? ""} />
-                  </label>
-                  <label className="text-sm font-semibold text-primary">
-                    Mapped package
-                    <Select name="mappedPackage" defaultValue={pkg.mapped_package ?? ""}>
-                      <option value="">Manuell oppfølging</option>
-                      <option value="standard">Standard</option>
-                      <option value="silver">Silver</option>
-                      <option value="gold">Gold</option>
-                      <option value="platinum">Platinum</option>
-                    </Select>
-                  </label>
-                  <label className="text-sm font-semibold text-primary">
-                    Internal capacity
-                    <Input name="internalCapacity" type="number" min="0" defaultValue={pkg.internal_capacity ?? ""} />
-                  </label>
-                  <label className="text-sm font-semibold text-primary">
-                    Sort order
-                    <Input name="sortOrder" type="number" defaultValue={pkg.sort_order} />
-                  </label>
-                  <label className="flex items-center gap-2 text-sm font-semibold text-primary">
-                    <input type="checkbox" name="isActive" defaultChecked={pkg.is_active} className="h-4 w-4" />
-                    Aktiv pakke
-                  </label>
-                </div>
-                <Button type="submit">Lagre pakke</Button>
-              </form>
-            ))}
-          </div>
-          <form action={saveRegistrationPackage} className="grid gap-3 rounded-2xl border border-dashed border-primary/20 p-4">
-            <input type="hidden" name="eventId" value={eventId} />
-            <input type="hidden" name="campaignId" value={campaignId} />
-            <input type="hidden" name="slug" value={detail.campaign.slug} />
-            <input type="hidden" name="returnTo" value={returnTo} />
-            <h4 className="text-sm font-bold text-primary">Legg til ny pakke</h4>
-            <div className="grid gap-3 md:grid-cols-2">
-              <Input name="packageKey" required placeholder="package-key" />
-              <Input name="publicName" required placeholder="Public package name" />
-              <Textarea name="description" rows={2} placeholder="Description" className="md:col-span-2" />
-              <Select name="mappedPackage" defaultValue="">
-                <option value="">Manuell oppfølging</option>
-                <option value="standard">Standard</option>
-                <option value="silver">Silver</option>
-                <option value="gold">Gold</option>
-                <option value="platinum">Platinum</option>
-              </Select>
-              <Input name="internalCapacity" type="number" min="0" placeholder="Capacity" />
-              <Input name="sortOrder" type="number" defaultValue="0" />
-              <label className="flex items-center gap-2 text-sm font-semibold text-primary">
-                <input type="checkbox" name="isActive" defaultChecked className="h-4 w-4" />
-                Aktiv pakke
-              </label>
-            </div>
-            <Button type="submit">Opprett pakke</Button>
-          </form>
+          <h2 className="text-xl font-bold">Pakker og tillegg</h2>
+          <p>Administrer priser, inkludert utstyr og tillegg i den samlede katalogen.</p>
+          <Link className="button-link" href={`/admin/event-catalog?eventId=${eventId}&campaignId=${campaignId}`}>Åpne pakker og tillegg</Link>
         </Card>
 
         <Card className="grid gap-4">

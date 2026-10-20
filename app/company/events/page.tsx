@@ -117,7 +117,7 @@ export default async function CompanyEventsPage() {
         ) : (
           <div className="grid gap-3">
             {registrations.map((registration) => {
-              const packageLimit = getCompanyAttendeeTicketLimit(registration.package);
+              const packageLimit = registration.ordered_attendee_tickets ?? getCompanyAttendeeTicketLimit(registration.package);
               const extraAttendeeTickets = Math.max(registration.extra_attendee_tickets ?? 0, 0);
               const attendeeLimit = getCompanyAttendeeTicketAllowance(registration);
               const employeeRegistrationUrl =

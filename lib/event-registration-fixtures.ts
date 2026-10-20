@@ -9,7 +9,7 @@ type RegistrationStand = TableRow<"event_registration_stands">;
 export type RegistrationPackageTier = RegistrationStand["package_tier"];
 
 export type PreviewRegistrationCampaign = RegistrationCampaign & {
-  event: Pick<EventRow, "id" | "name" | "slug" | "starts_at" | "ends_at" | "location" | "registration_form_url">;
+  event: Pick<EventRow, "id" | "name" | "slug" | "starts_at" | "ends_at" | "location" | "registration_form_url" | "is_active">;
 };
 
 export type PreviewRegistrationDetail = {
@@ -31,8 +31,9 @@ const FIXTURE_TIMESTAMP = "2026-01-15T12:00:00.000Z";
 const FIXTURE_EVENT_ID = "fixture-event-student-connect-2026";
 const FIXTURE_CAMPAIGN_ID = "fixture-campaign-student-connect-2026";
 
-const FIXTURE_EVENT: Pick<EventRow, "id" | "name" | "slug" | "starts_at" | "ends_at" | "location" | "registration_form_url"> = {
+const FIXTURE_EVENT: Pick<EventRow, "id" | "name" | "slug" | "starts_at" | "ends_at" | "location" | "registration_form_url" | "is_active"> = {
   id: FIXTURE_EVENT_ID,
+  is_active: true,
   name: "Student Connect 2026",
   slug: "student-connect-2026",
   starts_at: "2026-09-10T08:00:00.000Z",
@@ -48,7 +49,7 @@ const FIXTURE_CAMPAIGN: PreviewRegistrationCampaign = {
   public_title: "Student Connect 2026",
   public_subtitle: "Organized by Oslo Student Hub",
   public_description:
-    "Register your company for Student Connect 2026 by Oslo Student Hub. Choose your package, request your stand and add the team members who need portal access.",
+    "Register your company for Student Connect 2026 by Oslo Student Hub. Choose your package, tell us which students you want to meet and add the team members who need portal access.",
   floorplan_image_path: STUDENT_CONNECT_2026_FLOORPLAN.imagePath,
   email_group_prefix: "SC26",
   is_published: true,
@@ -74,6 +75,8 @@ function buildPackage(
     public_name: publicName,
     description,
     mapped_package: mappedPackage,
+    price_ore: ({standard:2000000,silver:3000000,gold:5000000,platinum:6500000})[mappedPackage ?? "standard"],
+    included_quantities: {},
     internal_capacity: internalCapacity,
     is_active: true,
     sort_order: sortOrder,

@@ -69,10 +69,7 @@ export default async function AdminNewEventPage({ searchParams }: PageProps) {
               placeholder="https://www.oslostudenthub.no/registreringsside-student-hub-2026"
             />
           </label>
-          <label className="flex items-center gap-2 text-sm font-semibold text-primary md:col-span-2">
-            <input className="h-4 w-4" defaultChecked name="isActive" type="checkbox" />
-            Aktivt event
-          </label>
+          <p>Eventet opprettes som utkast. Du velger publisering på neste side.</p>
           <Button className="md:col-span-2" type="submit">
             Opprett event
           </Button>

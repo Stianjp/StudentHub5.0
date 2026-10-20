@@ -1,5 +1,6 @@
 "use server";
 
+import { refreshEventPages } from "@/app/admin/event-management-actions";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireRole } from "@/lib/auth";
@@ -160,7 +161,10 @@ export async function saveEvent(formData: FormData) {
     }
 
     const id = formData.get("id");
-    await upsertEvent({
+    const existingId = typeof id === "string" && id.length > 0 ? id : null;
+    const existing = existingId ? await createAdminSupabaseClient().from("events").select("is_active").eq("id",existingId).single() : null;
+    if (existing?.error) throw existing.error;
+    const savedEvent = await upsertEvent({
       id: typeof id === "string" && id.length > 0 ? id : undefined,
       name: parsed.data.name,
       slug: parsed.data.slug,
@@ -169,9 +173,11 @@ export async function saveEvent(formData: FormData) {
       registration_form_url: parsed.data.registrationFormUrl || null,
       starts_at: parsed.data.startsAt,
       ends_at: parsed.data.endsAt,
-      is_active: parsed.data.isActive,
+      is_active: existing?.data?.is_active ?? false,
     });
 
+    await refreshEventPages(savedEvent.id);
+    if (!existingId) redirect(`/admin/events/${savedEvent.id}?saved=1`);
     revalidatePath("/admin/events");
     revalidatePath("/admin/events/overview");
     revalidatePath("/admin");
