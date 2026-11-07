@@ -28,6 +28,12 @@ npm ci
 npm run dev
 ```
 
+## Google Analytics og Search Console
+
+Måle-ID-ene er knyttet til domenene i `lib/analytics.ts`: hoveddomenet og `www`, `eventregister`, `student` og `bedrift` har hver sin oppgitte GA4-nettstrøm. Andre domener, inkludert Vercel-forhåndsvisninger og vanlig lokal utvikling, måles ikke. Ved lokal nettlesertest kan `NEXT_PUBLIC_GA_TEST_MEASUREMENT_ID=G-TEST123` settes midlertidig. En felles komponent i `app/layout.tsx` måler sider etter at besøkende har tillatt analyse. Ingen Google Analytics-skript lastes før samtykke, og URL-parametre sendes ikke som del av sidevisninger. Besøkstallene vises i Google Analytics, ikke i adminportalen.
+
+For tall fra Google-søk, opprett en **Domain property** for `oslostudenthub.no` i Google Search Console og bekreft domenet med DNS-posten Google oppgir. Da omfattes også underdomenene. Search Console viser blant annet klikk, visninger og søkeord, mens Analytics viser besøk etter samtykke.
+
 ## Tester og GitHub Actions
 
 `.github/workflows/ci.yml` kjører ved push til `main` og ved pull requests. Først bygger den appen og kjører enhetstester på Ubuntu. Deretter bygger den appen og kjører Playwright-tester i Chromium på macOS. Begge jobber krever `NEXT_PUBLIC_SUPABASE_URL` og `NEXT_PUBLIC_SUPABASE_ANON_KEY` som GitHub Variables eller Secrets. CI avbryter tidlig med en egen feilmelding hvis en av dem mangler.

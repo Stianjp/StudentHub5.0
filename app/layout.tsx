@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { AnalyticsConsent } from "@/components/analytics-consent";
 
 export const metadata: Metadata = {
   title: "Oslo Student Hub",
@@ -26,7 +27,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">{children}<AnalyticsConsent /></body>
     </html>
   );
 }

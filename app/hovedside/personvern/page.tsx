@@ -13,7 +13,7 @@ export default function PrivacyPage() {
       <article className="mx-auto max-w-3xl text-ink/80">
         <p className="text-sm font-bold uppercase tracking-[0.18em] text-primary">Privacy</p>
         <h1 className="mt-3 text-4xl font-bold text-primary">Privacy policy</h1>
-        <p className="mt-4 text-sm text-ink/60">Last updated 22 September 2026</p>
+        <p className="mt-4 text-sm text-ink/60">Last updated 7 November 2026</p>
 
         <div className="mt-10 space-y-8 leading-7">
           <section>
@@ -31,6 +31,11 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-2xl font-bold text-primary">Sharing and deletion</h2>
             <p className="mt-3">We only share data with companies as part of a feature you use or based on consent you have given. You can request access to, correction of or deletion of your data by contacting us. You can also remove access granted to Oslo Student Hub in your Google account security settings.</p>
+          </section>
+          <section>
+            <h2 className="text-2xl font-bold text-primary">Website analytics</h2>
+            <p className="mt-3">If you allow analytics, we use Google Analytics to count visits and understand which pages are used across our website and portals. Google receives information about the pages you visit, but we do not include query parameters in page addresses sent for measurement. The Google Analytics script is loaded only after you allow it. We store your choice for six months and share it across oslostudenthub.no subdomains. You can change your choice using the Analytics button on any page.</p>
+            <p className="mt-3">If you decline, we do not load Google Analytics. Google Search Console reports clicks and appearances in Google Search using Google&apos;s search data; it does not require an analytics script on your device.</p>
           </section>
           <section>
             <h2 className="text-2xl font-bold text-primary">Contact</h2>
