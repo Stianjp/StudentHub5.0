@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getPublicRegistrationCopy } from "@/lib/event-registration-copy";
 import { listPublicRegistrationCampaigns } from "@/lib/event-registration";
 import { resolvePublicRegistrationCampaignHref } from "@/lib/event-registration-links";
+import { StudentConnectInterestForm } from "@/components/student-connect-interest-form";
 
 // Supabase is not reachable from Vercel's prerender worker. Keep this route at
 // request time so a transient build-time outage cannot block deployments.
@@ -23,7 +24,9 @@ export default async function EventRegisterLandingPage() {
             Register your company for Oslo Student Hub events.
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-relaxed text-white/80">
-            Choose an open registration below to join Student Connect 2026 or another Oslo Student Hub event.
+            Choose an open registration below to join an Oslo Student Hub event.
+          </p>
+          <p className="mt-3 max-w-2xl text-base leading-relaxed text-white/80">
             All registrations are reviewed by OSH before approval.
           </p>
         </div>
@@ -35,7 +38,9 @@ export default async function EventRegisterLandingPage() {
           </h2>
           {campaigns.length === 0 ? (
             <div className="rounded-2xl border border-gray-200 bg-white px-6 py-8 shadow-sm">
-              <p className="text-sm text-gray-600">No public registrations are open right now.</p>
+              <p className="text-sm text-gray-600">
+                No events? Contact us on <a className="font-semibold text-[#140249] underline" href="mailto:event@oslostudenthub.no">event@oslostudenthub.no</a>
+              </p>
             </div>
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
@@ -84,6 +89,12 @@ export default async function EventRegisterLandingPage() {
               })}
             </div>
           )}
+        </section>
+        <section className="rounded-3xl bg-white p-6 shadow-sm md:p-8">
+          <p className="text-xs font-bold uppercase tracking-widest text-[#6d28d9]">Student Connect 2027</p>
+          <h2 className="mt-2 text-2xl font-extrabold text-[#140249]">Get contacted when registration opens</h2>
+          <p className="mt-2 text-sm text-gray-600">Leave your details and we will email you when registration for Student Connect 2027 opens.</p>
+          <StudentConnectInterestForm />
         </section>
       </div>
     </main>

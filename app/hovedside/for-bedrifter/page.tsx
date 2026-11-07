@@ -14,6 +14,7 @@ import {
   splitWebsiteEvents,
 } from "@/lib/hovedside/public-events";
 import { SITE_IMAGES } from "@/lib/hovedside/site-images";
+import { StudentConnectInterestForm } from "@/components/student-connect-interest-form";
 
 const COMPANY_REGISTRATION_URL = "https://eventregister.oslostudenthub.no/";
 
@@ -74,6 +75,16 @@ export default async function ForBedrifterPage() {
 
       {/* ── Gradient stripe ──────────────────────────────────── */}
       <div className="h-2 bg-gradient-to-r from-secondary via-pink to-purple" />
+
+      <SectionWrapper>
+        <div className="mx-auto max-w-2xl rounded-[28px] bg-mist/40 p-6 ring-1 ring-primary/10 md:p-8">
+          <p className="text-xs font-bold uppercase tracking-widest text-secondary">Sneak peek</p>
+          <h2 className="mt-2 text-3xl font-bold text-primary">Student Connect 2027</h2>
+          <p className="mt-3 font-semibold text-primary">Late October 2027 · More info coming.</p>
+          <p className="mt-3 text-sm text-ink/70">Get contacted when registration opens.</p>
+          <StudentConnectInterestForm />
+        </div>
+      </SectionWrapper>
 
       {/* ── Contact form ────────────────────────────────────── */}
       <SectionWrapper>

@@ -23,7 +23,7 @@ const nav = [
   { href: "/admin/event-catalog", label: "Pakker og tillegg" },
   { href: "/admin/company-packages", label: "Bedriftspakker" },
   { href: "/admin/students", label: "Studenter" },
-  { href: "/admin/leads", label: "Leads", children: [{ href: "/admin/leads/overview", label: "Oversikt" }] },
+  { href: "/admin/leads", label: "Leads", children: [{ href: "/admin/leads/overview", label: "Oversikt" }, { href: "/admin/student-connect-2027-interest", label: "Student Connect 2027" }] },
   {
     href: "/admin/crm",
     label: "CRM",

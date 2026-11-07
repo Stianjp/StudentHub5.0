@@ -1,221 +1,57 @@
-# OSH StudentHub 5.0 – MVP
+# OSH StudentHub 5.0
 
-Produksjonsklar MVP for screening, matching og eventverktøy for Oslo Student Hub (OSH).
+Nettside og portaler for Oslo Student Hub. Samme Next.js-app betjener hovedsiden, student- og bedriftsportaler, arrangementer og administrasjon. Prosjektet deployes til Vercel fra GitHub. Se Vercel-prosjektets innstillinger for hvilken gren og hvilke domener som er knyttet til produksjon; dette er ikke definert i repoet.
 
-Appen er bygget for karrieredager (QR/kiosk) og som en kontinuerlig plattform for rekruttering og employer branding.
+## Teknologi og oppbygging
 
-## Stack
+- Next.js 16 (App Router), React 19, TypeScript og Tailwind CSS 4. Globale stiler ligger i `app/globals.css`, som laster `tailwind.config.ts`.
+- Supabase brukes til database, autentisering og lagring. Klienter og serverhjelpere ligger i `lib/supabase/`; SQL-endringer ligger i `supabase/migrations/`.
+- Resend brukes til e-post. CRM kan lese og synkronisere data mot Google Sheets. Gemini brukes av `POST /api/ai/summary` når nøkkel er satt.
+- Sider og API-endepunkter ligger i `app/`, gjenbrukbar logikk i `lib/`, komponenter i `components/` og statiske filer i `public/`.
+- `apps/print-agent/` er en separat hjelpeapp med eget `package.json`.
 
-- Next.js 16 (App Router) + React + TypeScript
-- Tailwind CSS (design tokens i `tailwind.config.ts`)
-- Supabase (Postgres, Auth, RLS)
-- Resend (transactional e-post)
-- Google Gemini via server-side API route (`/api/ai/summary`)
+`proxy.ts` ruter etter domenenavn: hoveddomenet og `www` til `/hovedside`, `bedrift` til `/company`, `student` til `/student`, `admin` til `/admin`, `connecthub`/`studentconnect`/`event` til `/event`, `eventregister` til `/event-register` og `feedback` til `/feedback`. Lokalt kan du teste for eksempel `http://localhost:3000/?host=bedrift`.
 
-## Roller og porter
+## Kom i gang lokalt
 
-- Bedrift: `/company`
-- Student: `/student`
-- Event / ConnectHub: `/event`
-- Admin (OSH): `/admin`
+Bruk Node.js 22 (samme hovedversjon som GitHub Actions) og npm. Opprett `.env.local` i prosjektroten med minst:
 
-Host-basert routing er implementert i `proxy.ts`:
-
-- `bedrift.*` → `/company`
-- `admin.*` → `/admin`
-- `student.*` → `/student`
-- `connecthub.*` → `/event`
-
-I utvikling kan du teste host-routing med query param:
-
-- `http://localhost:3000/?host=bedrift`
-- `http://localhost:3000/?host=student`
-- `http://localhost:3000/?host=admin`
-- `http://localhost:3000/?host=connecthub`
-
-## Miljøvariabler
-
-Opprett `.env.local`:
-
-```bash
+```dotenv
 NEXT_PUBLIC_SUPABASE_URL=...
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
-
-# Valgfri (men anbefalt i prod)
-RESEND_API_KEY=...
-GEMINI_API_KEY=...
-
-# CRM (Google Sheets masterdata)
-CRM_GOOGLE_SHEET_ID=... # Sheet ID eller full Google Sheet URL
-CRM_GOOGLE_SHEET_NAME=OSH CRM Leads
-# Valgfri fallback for eldre oppsett:
-CRM_GOOGLE_SHEET_RANGE=OSH CRM Leads!A:ZZ
-CRM_GOOGLE_SERVICE_ACCOUNT_EMAIL=...
-CRM_GOOGLE_PRIVATE_KEY=\"-----BEGIN PRIVATE KEY-----\\n...\\n-----END PRIVATE KEY-----\\n\"
-CRM_DISCORD_GUILD_ID=... # valgfri, brukes for lenker til Discord-kanal/melding
-CRM_SYNC_WEBHOOK_SECRET=... # kreves for bot -> sheet sync endpoint
-
-# Fallback (kun hvis sheet er offentlig/publisert)
-GOOGLE_SHEETS_API_KEY=...
-
-# Hvis arket er offentlig delt, kan CRM lese via gviz uten nøkler.
-# Da holder det med CRM_GOOGLE_SHEET_ID.
-# Men admin-redigering og bot -> sheet sync krever service account-variablene over.
 ```
 
-Viktig:
-
-- Ikke hardkod Supabase URL eller nøkler.
-- Service role key skal kun brukes server-side (ikke i denne MVP-en).
-
-## Supabase-oppsett (må gjøres først)
-
-Kjør SQL i Supabase SQL Editor:
-
-1. Migrasjon: `supabase/migrations/0001_init.sql`
-2. Seed: `supabase/seed.sql`
-
-### Opprette admin-bruker (manuelt)
-
-Admin opprettes ikke automatisk (med vilje).
-
-Flyt:
-
-1. Logg inn via `/auth/sign-in` med rollen `admin`.
-2. Finn brukerens `id` i `auth.users`.
-3. Sett admin-rolle manuelt:
-
-```sql
-insert into public.profiles (id, role)
-values ('<AUTH_USER_ID>', 'admin')
-on conflict (id) do update set role = 'admin';
-```
-
-## Kjør lokalt
+Appen trenger et Supabase-prosjekt med relevante migrasjoner. `supabase/seed.sql` inneholder eksempeldata; det er ikke en erstatning for migrasjonene. Andre integrasjoner krever egne miljøvariabler etter behov, blant annet `SUPABASE_SERVICE_ROLE_KEY` for serveroperasjoner, `RESEND_API_KEY`, `GEMINI_API_KEY`, `CRM_GOOGLE_SHEET_ID`, servicekonto for Google Sheets, `CRM_SYNC_WEBHOOK_SECRET` og `CRON_SECRET`. Legg aldri hemmelige nøkler i `NEXT_PUBLIC_`-variabler.
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
-Nyttige kommandoer:
+## Tester og GitHub Actions
+
+`.github/workflows/ci.yml` kjører ved push til `main` og ved pull requests. Først bygger den appen og kjører enhetstester på Ubuntu. Deretter bygger den appen og kjører Playwright-tester i Chromium på macOS. Begge jobber krever `NEXT_PUBLIC_SUPABASE_URL` og `NEXT_PUBLIC_SUPABASE_ANON_KEY` som GitHub Variables eller Secrets. CI avbryter tidlig med en egen feilmelding hvis en av dem mangler.
 
 ```bash
-npm run lint
-npm run build
+npm run build          # samme byggesteg som CI
+npm run test:unit      # Vitest, tests/unit/
+npm run test:e2e       # Playwright, tests/e2e/
+npm run lint           # ESLint; kjøres ikke i dagens CI
 ```
 
-## Hva MVP-en dekker
+Før første lokale Playwright-kjøring: `npx playwright install chromium`. Standardoppsettet starter utviklingsserveren automatisk lokalt; CI starter den bygde appen. Testene i `student-portal.spec.ts` og `event-management.spec.ts` hoppes over i standardkjøringen. De har egne Playwright-oppsett med testservere: `tests/student.playwright.config.ts` og `tests/event.playwright.config.ts`. De er ikke egne steg i GitHub-workflowen.
 
-### Bedrift
+Ved feil på GitHub: åpne **Actions → CI → den feilede kjøringen**. Se først om feilen ligger i **Build and unit tests** eller **Playwright E2E**, og les loggen fra det feilede steget. Playwright-jobben laster også opp `playwright-report` og `test-results` som artefakter. En grønn lokal test garanterer ikke grønn CI når miljøvariabler, operativsystem eller testdata er ulike.
 
-- Magic link login (Supabase Auth)
-- Onboarding (firma-info, rekruttering, branding)
-- Eventpåmelding
-- Leads (kun samtykke)
-- CSV-eksport: `/api/company/leads/export`
-- ROI + AI-oppsummering (kun platinum + gyldig tilgang)
+## Viktige områder
 
-### Student
+- Hovedside og offentlige sider: `app/hovedside/`
+- Studentportal: `app/student/`
+- Bedriftsportal: `app/company/`
+- Arrangement, registrering og innsjekk: `app/event/`, `app/event-register/`, `app/checkin/`
+- Student Connect 2027-interesseliste: skjema på `/event-register` og `/partners`, adminliste og CSV på `/admin/student-connect-2027-interest`. Innsending krever `SUPABASE_SERVICE_ROLE_KEY` på serveren og migrasjonene for interessetabellen. Utsending skjer manuelt.
+- Administrasjon og CRM: `app/admin/`, `lib/crm*.ts`
+- API: `app/api/`
+- Supabase-endringer: `supabase/migrations/`
 
-- Mobil-først profil
-- Favoritt-bedrifter
-- Samtykke oversikt
-
-### Event / karrieredag
-
-- Event landing: `/event`
-- Event-side: `/event/{eventId}`
-- Stand-QR: `/event/{eventId}/company/{companyId}`
-- Kioskmodus: `/event/{eventId}/kiosk` (auto-reset etter 5 sek)
-
-### Admin (OSH)
-
-- Opprette/redigere events
-- Invitere bedrifter (Resend + `email_logs`)
-- Sette pakker per bedrift per event
-- Totaloversikt
-- CRM dashboard fra Google Sheet: `/admin/crm`
-- CRM board + oppfolgingsliste for manglende svar med auto-refresh hvert 30. sek.
-- CRM API (admin-beskyttet): `/api/admin/crm/leads`
-- Discord webhook for CRM sync: `POST /api/integrations/discord/crm`
-
-Eksempel payload (Discord bot):
-
-```json
-{
-  "action": "email_sent",
-  "leadId": "19c2ac6b5a31027f:heidi.bluhme@norwegian.com",
-  "company": "Norwegian",
-  "contactName": "heidi bluhme",
-  "contactEmail": "heidi.bluhme@norwegian.com",
-  "threadId": "19c2ac6b5a31027f",
-  "sourceMessageId": "19c2c8c0569f9130",
-  "leadStatus": "waiting",
-  "companyStatus": "Kontaktet",
-  "eventName": "Women in STEM / Student Connect 2026",
-  "temperature": "Warm",
-  "updatedAtIso": "2026-02-27T12:00:00.000Z"
-}
-```
-
-Header:
-
-- `x-crm-webhook-secret: <CRM_SYNC_WEBHOOK_SECRET>`
-
-Pipeline-steg i CRM standardiseres til:
-
-- `Kontaktet`
-- `Venter svar`
-- `Dialog`
-- `Påmeldt`
-- `Tapt`
-
-## Matching (regelbasert)
-
-Implementert i `lib/matching.ts` med vekting:
-
-- Studieretning/interesser: 40 %
-- Jobbtype: 20 %
-- Verdier/kultur: 20 %
-- Lokasjon/flytting: 10 %
-- Student liker bedriften: 10 %
-
-Resultater lagres i `match_scores` per event.
-
-## AI-endpoint (Gemini – server-side)
-
-- Endpoint: `POST /api/ai/summary`
-- Input: `{ event_id, company_id }`
-- Krever platinum + gyldig tilgangsperiode
-- Fallback brukes hvis `GEMINI_API_KEY` mangler
-
-## Personvern og sikkerhet (RLS)
-
-RLS er aktivert for alle tabeller.
-
-Viktig designvalg i MVP:
-
-- Kontaktinfo ligger i `students` (strengt begrenset via RLS).
-- Matching bruker `student_public_profiles` uten kontaktinfo.
-- Kontaktinfo vises kun når consent=true.
-
-Merk:
-
-- Det finnes midlertidige “public read (MVP)” policies for `companies` og `event_companies` for å forenkle event-sider. Disse bør strammes inn før full produksjon.
-
-## Filstruktur (hovedpunkter)
-
-- Supabase SQL: `supabase/migrations/0001_init.sql`, `supabase/seed.sql`
-- Proxy/host routing: `proxy.ts`
-- Supabase klienter: `lib/supabase/*`
-- Matching/ROI/CSV: `lib/matching.ts`, `lib/company.ts`, `lib/csv.ts`
-- UI-komponenter: `components/ui/*`
-
-## TODO etter MVP
-
-- Stramme inn public read policies
-- Flytte admin-operasjoner til service role / Edge Functions
-- Legge til robust feilhåndtering per action
-- Knytte seed-data til ekte brukere (`user_id`)
-- Vercel subdomener + DNS
+Før utrulling: kontroller at nødvendige miljøvariabler også finnes i Vercel, og at databaseendringer er brukt på riktig Supabase-prosjekt. En Git-push alene kjører ikke SQL-migrasjonene i dette repoet.
